@@ -1,0 +1,25 @@
+[
+    {
+        "value": "纪录片",
+        "pinyin": "jì lù piàn",
+        "breakdown": [
+            {
+                "grapheme": "纪",
+                "pinyin": "jì"
+            },
+            {
+                "grapheme": "录",
+                "pinyin": "lù"
+            },
+            {
+                "grapheme": "片",
+                "pinyin": "piàn"
+            }
+        ],
+        "part_of_speech": "noun",
+        "meanings": [
+            "documentary",
+            "documentary film"
+        ]
+    }
+]

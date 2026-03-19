@@ -1,0 +1,12 @@
+[package]
+name = "dict-builder"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94.0"
+
+[dependencies]
+
+
+[dependencies.xxhash-rust]
+version = "0.8.12"
+features = ["xxh3"]

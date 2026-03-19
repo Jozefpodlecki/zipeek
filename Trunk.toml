@@ -1,0 +1,27 @@
+[build]
+target = "./index.html"
+
+[serve]
+port = 1420
+open = false
+
+[watch]
+ignore = [
+    "docs/",
+    "dist/",
+    "crates/",
+    "icons/",
+    ".github/",
+    "target/",
+    ".gitignore"
+]
+
+[[hooks]]
+stage = "pre_build"
+command = "powershell"
+command_arguments = [
+    "npx",
+    "@tailwindcss/cli",
+    "-i", "./styles/main.css",
+    "-o", "./styles/output.css"
+]
