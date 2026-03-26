@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package dict;
+
+message Lexeme {
+    uint64 id = 1;
+    string traditional = 2;
+    string simplified = 3;
+    repeated string pinyin = 4;
+    // you can extend later for senses, classifiers, etc.
+}
+
+message Shard {
+    uint64 shard_id = 1;
+    repeated Lexeme lexemes = 2;
+}
+
+message HashToLexeme {
+    repeated Entry entries = 1;
+
+    message Entry {
+        uint64 hash = 1;
+        uint64 lexeme_id = 2;
+    }
+}

@@ -5,7 +5,16 @@ edition = "2024"
 rust-version = "1.94.0"
 
 [dependencies]
+anyhow = "1.0.90"
+log = "0.4.29"
+protobuf-parse = "3.7.2"
+cc-cedict-parser-rs = { path = "C:\\repos\\cc-cedict-parser-rs" }
+prost = "0.12"
+prost-types = "0.12"
+hashbrown = "0.16.1"
 
+[build-dependencies]
+prost-build = "0.12"
 
 [dependencies.xxhash-rust]
 version = "0.8.12"
