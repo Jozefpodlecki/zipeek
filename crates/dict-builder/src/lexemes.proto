@@ -7,7 +7,53 @@ message Lexeme {
     string traditional = 2;
     string simplified = 3;
     repeated string pinyin = 4;
-    // you can extend later for senses, classifiers, etc.
+
+    repeated Sense senses = 5;
+    repeated Classifier classifiers = 6;
+    repeated Reference references = 7;
+    repeated PartOfSpeech part_of_speech = 8;
+}
+
+message Sense {
+    repeated string glosses = 1;
+    repeated string tags = 2;
+    optional string qualifier = 3;
+}
+
+message Classifier {
+    string traditional = 1;
+    optional string simplified = 2;
+    string pinyin = 3;
+}
+
+message Reference {
+    ReferenceKind kind = 1;
+    string traditional = 2;
+    optional string simplified = 3;
+    repeated string pinyin = 4;
+}
+
+enum PartOfSpeech {
+    Noun = 0;
+    Verb = 1;
+    Adjective = 2;
+    Adverb = 3;
+    Pronoun = 4;
+    Numeral = 5;
+    MeasureWord = 6;
+    Conjunction = 7;
+    Preposition = 8;
+    Particle = 9;
+    Interjection = 10;
+    Unknown = 11;
+}
+
+enum ReferenceKind {
+    UNKNOWN = 0;
+    SEE = 1;
+    VARIANT = 2;
+    ABBREVIATION = 3;
+    ALSOWRITTEN = 4;
 }
 
 message Shard {

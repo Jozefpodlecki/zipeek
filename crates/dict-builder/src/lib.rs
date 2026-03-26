@@ -3,9 +3,14 @@ pub mod dict {
 }
 
 mod models;
+mod hash_map;
+mod shard;
 mod builder;
-mod writer;
+mod conversions;
+mod utils;
 
 pub use models::*;
+pub use hash_map::*;
+pub use shard::*;
 pub use builder::*;
-pub use writer::*;
+pub use utils::*;

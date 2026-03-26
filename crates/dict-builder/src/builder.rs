@@ -1,16 +1,15 @@
-use std::{collections::BTreeMap, fs::{self, create_dir_all, File}, io::{BufReader, BufWriter, Read}};
+use std::{fs::File, io::BufReader};
 
 use cc_cedict_parser_rs::*;
 use hashbrown::HashMap;
 use xxhash_rust::xxh3::xxh3_64;
-use std::io::Write;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 
-use crate::{models::Lexeme, HashToLexemeMap, Shard, ShardsMap};
+use crate::{models::ChineseLexeme, HashToLexemeMap, Shard, InMemoryShardsMap};
 
 
 pub struct BuildOutput {
-    pub shards: ShardsMap,
+    pub shards: InMemoryShardsMap,
     pub hash_to_lexeme: HashToLexemeMap,
 }
 
@@ -31,7 +30,7 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
 
         let shard_id = lexeme_id % shards_count;
 
-        let lexeme = Lexeme {
+        let lexeme = ChineseLexeme {
             id: lexeme_id,
             traditional: entry.traditional.into(),
             simplified: entry.simplified.into(),
@@ -39,6 +38,7 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
             senses: entry.senses.into_iter().map(|s| s.to_owned()).collect(),
             classifiers: entry.classifiers.into_iter().map(|c| c.to_owned()).collect(),
             references: entry.references,
+            part_of_speech: vec![]
         };
 
         map.entry(shard_id).or_insert_with(|| Shard::empty(shard_id)).insert(lexeme_id, lexeme);
@@ -46,7 +46,7 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
         lexeme_id += 1;
     }
 
-    let shards_map = ShardsMap {
+    let shards_map = InMemoryShardsMap {
         shards_count,
         map,
     };
