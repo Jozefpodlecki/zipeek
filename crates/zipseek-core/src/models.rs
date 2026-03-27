@@ -1,7 +1,6 @@
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{collections::BTreeMap, path::Path};
 
 use cc_cedict_parser_rs::*;
-use hashbrown::HashMap;
 use prost::Message;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};

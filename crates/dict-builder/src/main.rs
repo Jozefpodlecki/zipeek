@@ -2,7 +2,8 @@ use std::{fs::create_dir_all, path::Path};
 
 use anyhow::Result;
 use cc_cedict_parser_rs::LineReader;
-use dict_builder::{build, clear_dir, BuildOutput, HashToLexemeMap, Hsk20, Hsk30, Refiner, ShardResolver};
+use dict_builder::{build, clear_dir, BuildOutput, Hsk20, Hsk30, Refiner};
+use zipseek_core::HashToLexemeMap;
 
 fn main() -> Result<()> {
     let current_dir = std::env::current_dir()?;

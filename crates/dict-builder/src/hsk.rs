@@ -2,8 +2,7 @@ use std::{fmt, fs, path::PathBuf};
 use anyhow::{Context, Result};
 use hashbrown::HashSet;
 use serde::Deserialize;
-
-use crate::ReferenceStandard;
+use zipseek_core::*;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Entry {

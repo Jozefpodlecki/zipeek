@@ -4,8 +4,7 @@ use cc_cedict_parser_rs::*;
 use hashbrown::HashMap;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-
-use crate::{ChineseLexeme, ChineseSense, PartOfSpeech, ReferenceStandard};
+use zipseek_core::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RefinedLexeme {
