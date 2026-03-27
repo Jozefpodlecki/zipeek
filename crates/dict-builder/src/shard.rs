@@ -1,10 +1,10 @@
-use std::{collections::BTreeMap, ops::Deref, path::{Path, PathBuf}};
+use std::{collections::BTreeMap, path::{Path, PathBuf}};
 
 use hashbrown::{hash_map, HashMap};
 use prost::Message;
 use anyhow::Result;
 
-use crate::{dict, ChineseLexeme};
+use crate::{storage, ChineseLexeme};
 
 #[derive(Clone)]
 pub struct Shard {
@@ -35,6 +35,10 @@ impl Shard {
         self.entries.get(&id)
     }
 
+    pub fn get_mut(&mut self, id: &u64) -> Option<&mut ChineseLexeme> {
+        self.entries.get_mut(&id)
+    }
+
     pub fn get_with_neighbors<'a>(&'a self, id: &u64) -> Option<LexemeNeighbors<'a>> {
         let current = self.entries.get(&id)?;
 
@@ -58,13 +62,31 @@ impl Shard {
     }
 
     pub fn decode<R: AsRef<[u8]>>(bytes: R) -> Result<Self> {
-        Ok(dict::Shard::decode(bytes.as_ref())?.into())
+        Ok(storage::Shard::decode(bytes.as_ref())?.into())
     }
 
     pub fn encode_to_vec(self) -> Result<Vec<u8>> {
-        let proto: dict::Shard = self.into();
+        let proto: storage::Shard = self.into();
 
         Ok(proto.encode_to_vec()?)
+    }
+}
+
+impl IntoIterator for Shard {
+    type Item = ChineseLexeme;
+    type IntoIter = std::collections::btree_map::IntoValues<u64, ChineseLexeme>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.into_values()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Shard {
+    type Item = (&'a u64, &'a mut ChineseLexeme);
+    type IntoIter = std::collections::btree_map::IterMut<'a, u64, ChineseLexeme>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter_mut()
     }
 }
 
@@ -94,7 +116,24 @@ impl IntoIterator for InMemoryShardsMap {
     }
 }
 
-impl InMemoryShardsMap {    
+impl<'a> IntoIterator for &'a mut InMemoryShardsMap {
+    type Item = (&'a u64, &'a mut Shard);
+    type IntoIter = hashbrown::hash_map::IterMut<'a, u64, Shard>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.map.iter_mut()
+    }
+}
+
+impl InMemoryShardsMap {
+    pub fn iter(&self) -> impl Iterator<Item = &Shard> {
+        self.map.values()
+    }
+
+    pub fn all_lexemes(&self) -> impl Iterator<Item = &ChineseLexeme> {
+        self.map.values().flat_map(|shard| shard.entries.values())
+    }
+
     pub fn file_path(&self, base_dir: &Path) -> PathBuf {
         let file_path = base_dir.join("index.pb");
         file_path

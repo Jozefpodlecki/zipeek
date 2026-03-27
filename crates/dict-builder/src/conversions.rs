@@ -1,6 +1,6 @@
-use cc_cedict_parser_rs::{OwnedClassifier, OwnedSense, Reference, ReferenceKind};
+use cc_cedict_parser_rs::{OwnedClassifier, OwnedSense, Reference, ReferenceKind, Sense};
 
-use crate::{dict, ChineseLexeme, HashToLexemeMap, PartOfSpeech, Shard};
+use crate::{storage, ChineseLexeme, ChineseSense, HashToLexemeMap, LexicalVariant, PartOfSpeech, ReferenceStandard, Shard};
 
 impl From<PartOfSpeech> for i32 {
     fn from(value: PartOfSpeech) -> Self {
@@ -27,72 +27,119 @@ impl From<i32> for PartOfSpeech {
     }
 }
 
-impl From<HashToLexemeMap> for dict::HashToLexeme {
+impl From<LexicalVariant> for storage::LexicalVariant {
+    fn from(value: LexicalVariant) -> Self {
+        storage::LexicalVariant {
+            traditional: value.traditional.into(),
+            pinyin: value.pinyin.into_iter().map(Into::into).collect(),
+            senses: value.senses.into_iter().map(Into::into).collect(),
+            classifiers: value.classifiers.into_iter().map(Into::into).collect(),
+            references: value.references.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<storage::LexicalVariant> for LexicalVariant {
+    fn from(value: storage::LexicalVariant) -> Self {
+        LexicalVariant {
+            traditional: value.traditional.into(),
+            pinyin: value.pinyin.into_iter().map(Into::into).collect(),
+            senses: value.senses.into_iter().map(Into::into).collect(),
+            classifiers: value.classifiers.into_iter().map(Into::into).collect(),
+            references: value.references.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<HashToLexemeMap> for storage::HashToLexeme {
     fn from(map: HashToLexemeMap) -> Self {
         let entries = map.0.into_iter()
-            .map(|(hash, lex_id)| dict::hash_to_lexeme::Entry {
+            .map(|(hash, lex_id)| storage::hash_to_lexeme::Entry {
                 hash,
                 lexeme_id: lex_id,
             })
             .collect();
 
-        dict::HashToLexeme { entries }
+        storage::HashToLexeme { entries }
     }
 }
 
-impl From<ChineseLexeme> for dict::Lexeme {
+impl From<ChineseLexeme> for storage::Lexeme {
     fn from(value: ChineseLexeme) -> Self {
-        dict::Lexeme {
+        storage::Lexeme {
             id: value.id,
-            traditional: value.traditional.into(),
             simplified: value.simplified.into(),
-            pinyin: value.pinyin.into_iter().map(Into::into).collect(),
-            senses: value.senses.into_iter().map(Into::into).collect(),
-            classifiers: value.classifiers.into_iter().map(Into::into).collect(),
-            references: value.references.into_iter().map(Into::into).collect(),
+            variants: vec![],
+            // traditional: value.traditional.into(),
+            // pinyin: value.pinyin.into_iter().map(Into::into).collect(),
+            // senses: value.senses.into_iter().map(Into::into).collect(),
+            // classifiers: value.classifiers.into_iter().map(Into::into).collect(),
+            // references: value.references.into_iter().map(Into::into).collect(),
             part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
+            standards: value.standards.into_iter().map(Into::into).collect(),
         }
     }
 }
 
-impl From<dict::Lexeme> for ChineseLexeme {
-    fn from(value: dict::Lexeme) -> Self {
+impl From<storage::Lexeme> for ChineseLexeme {
+    fn from(value: storage::Lexeme) -> Self {
         ChineseLexeme {
             id: value.id,
-            traditional: value.traditional.into(),
+            // traditional: value.traditional.into(),
             simplified: value.simplified.into(),
-            pinyin: value.pinyin.into_iter().map(Into::into).collect(),
-            senses: value.senses.into_iter().map(Into::into).collect(),
-            classifiers: value.classifiers.into_iter().map(Into::into).collect(),
-            references: value.references.into_iter().map(Into::into).collect(),
+            variants: value.variants.into_iter().map(Into::into).collect(),
+            // pinyin: value.pinyin.into_iter().map(Into::into).collect(),
+            // senses: value.senses.into_iter().map(Into::into).collect(),
+            // classifiers: value.classifiers.into_iter().map(Into::into).collect(),
+            // references: value.references.into_iter().map(Into::into).collect(),
+            part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
+            standards: value.standards.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl From<ChineseSense> for storage::Sense {
+    fn from(value: ChineseSense) -> Self {
+        storage::Sense {
+            glosses: value.glosses.into_iter().map(Into::into).collect(),
+            tags: value.tags.into_iter().map(Into::into).collect(),
+            qualifier: value.qualifier.map(Into::into),
             part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
         }
     }
 }
 
-impl From<OwnedSense> for dict::Sense {
+impl From<storage::Sense> for ChineseSense {
+    fn from(value: storage::Sense) -> Self {
+        ChineseSense {
+            glosses: value.glosses.into_iter().map(Into::into).collect(),
+            tags: value.tags.into_iter().map(Into::into).collect(),
+            qualifier: value.qualifier.map(Into::into),
+            part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl<'a> From<Sense<'a>> for ChineseSense {
+    fn from(value: Sense<'a>) -> Self {
+        value.to_owned().into()
+    }
+}
+
+impl From<OwnedSense> for ChineseSense {
     fn from(value: OwnedSense) -> Self {
-        dict::Sense {
+        ChineseSense {
             glosses: value.glosses.into_iter().map(Into::into).collect(),
             tags: value.tags.into_iter().map(Into::into).collect(),
             qualifier: value.qualifier.map(Into::into),
+            part_of_speech: vec![]
         }
     }
 }
 
-impl From<dict::Sense> for OwnedSense {
-    fn from(value: dict::Sense) -> Self {
-        OwnedSense {
-            glosses: value.glosses.into_iter().map(Into::into).collect(),
-            tags: value.tags.into_iter().map(Into::into).collect(),
-            qualifier: value.qualifier.map(Into::into),
-        }
-    }
-}
-
-impl From<OwnedClassifier> for dict::Classifier {
+impl From<OwnedClassifier> for storage::Classifier {
     fn from(value: OwnedClassifier) -> Self {
-        dict::Classifier {
+        storage::Classifier {
             traditional: value.traditional.into(),
             simplified: value.simplified.map(Into::into),
             pinyin: value.pinyin.into(),
@@ -100,8 +147,8 @@ impl From<OwnedClassifier> for dict::Classifier {
     }
 }
 
-impl From<dict::Classifier> for OwnedClassifier {
-    fn from(value: dict::Classifier) -> Self {
+impl From<storage::Classifier> for OwnedClassifier {
+    fn from(value: storage::Classifier) -> Self {
         OwnedClassifier {
             traditional: value.traditional.into(),
             simplified: value.simplified.map(Into::into),
@@ -110,9 +157,9 @@ impl From<dict::Classifier> for OwnedClassifier {
     }
 }
 
-impl From<Reference> for dict::Reference {
+impl From<Reference> for storage::Reference {
     fn from(value: Reference) -> Self {
-        dict::Reference {
+        storage::Reference {
             kind: value.kind as i32, // prost enum
             traditional: value.traditional.into(),
             simplified: value.simplified.map(Into::into),
@@ -125,8 +172,8 @@ impl From<Reference> for dict::Reference {
     }
 }
 
-impl From<dict::Reference> for Reference {
-    fn from(value: dict::Reference) -> Self {
+impl From<storage::Reference> for Reference {
+    fn from(value: storage::Reference) -> Self {
         Reference {
             kind: value.kind.into(),
             traditional: value.traditional.into(),
@@ -136,28 +183,48 @@ impl From<dict::Reference> for Reference {
     }
 }
 
-impl From<ReferenceKind> for dict::ReferenceKind {
-    fn from(value: ReferenceKind) -> Self {
-        match value {
-            ReferenceKind::See => dict::ReferenceKind::See,
-            ReferenceKind::Variant => dict::ReferenceKind::Variant,
-            ReferenceKind::Abbreviation => dict::ReferenceKind::Abbreviation,
-            ReferenceKind::AlsoWritten => dict::ReferenceKind::Alsowritten,
+impl From<storage::ReferenceStandard> for ReferenceStandard {
+    fn from(value: storage::ReferenceStandard) -> Self {
+        ReferenceStandard {
+            name: value.name.into(),
+            kind: value.kind.into(),
+            value: value.value.into(),
         }
     }
 }
 
-impl From<Shard> for dict::Shard {
+impl From<ReferenceStandard> for storage::ReferenceStandard {
+    fn from(value: ReferenceStandard) -> Self {
+        storage::ReferenceStandard {
+            name: value.name.into(),
+            kind: value.kind.into(),
+            value: value.value.into(),
+        }
+    }
+}
+
+impl From<ReferenceKind> for storage::ReferenceKind {
+    fn from(value: ReferenceKind) -> Self {
+        match value {
+            ReferenceKind::See => storage::ReferenceKind::See,
+            ReferenceKind::Variant => storage::ReferenceKind::Variant,
+            ReferenceKind::Abbreviation => storage::ReferenceKind::Abbreviation,
+            ReferenceKind::AlsoWritten => storage::ReferenceKind::Alsowritten,
+        }
+    }
+}
+
+impl From<Shard> for storage::Shard {
     fn from(value: Shard) -> Self {
-        dict::Shard {
+        storage::Shard {
             shard_id: value.id,
             lexemes: value.entries.into_iter().map(|(_, lexeme)| lexeme.into()).collect(),
         }
     }
 }
 
-impl From<dict::Shard> for Shard {
-    fn from(value: dict::Shard) -> Self {
+impl From<storage::Shard> for Shard {
+    fn from(value: storage::Shard) -> Self {
         Shard {
             id: value.shard_id,
             entries: value.lexemes.into_iter().map(|pr| (pr.id, pr.into())).collect(),
