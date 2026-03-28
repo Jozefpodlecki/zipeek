@@ -49,14 +49,14 @@ fn main() -> Result<()> {
         } = output;
 
         let file_path = HashToLexemeMap::file_path(base_dir);
-        let hash_to_lexeme = HashToLexemeMap::decode(&file_path)?;
+        let hash_to_lexeme = HashToLexemeMap::decode_from_file(&file_path)?;
 
         // let lexeme_id = hash_to_lexeme.get("海外").unwrap();
         
     }
     else {
         create_dir_all(base_dir)?;
-        output.save(base_dir);
+        output.save(base_dir)?;
     }   
 
     Ok(())

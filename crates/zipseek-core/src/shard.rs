@@ -6,16 +6,33 @@ use anyhow::Result;
 
 use crate::{storage, ChineseLexeme};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Shard {
     pub id: u64,
     pub entries: BTreeMap<u64, ChineseLexeme>
+}
+
+#[derive(Debug, Clone)]
+pub struct OwnedLexemeNeighbors {
+    pub prev: Option<ChineseLexeme>,
+    pub current: ChineseLexeme,
+    pub next: Option<ChineseLexeme>,
 }
 
 pub struct LexemeNeighbors<'a> {
     pub prev: Option<&'a ChineseLexeme>,
     pub current: &'a ChineseLexeme,
     pub next: Option<&'a ChineseLexeme>,
+}
+
+impl<'a> LexemeNeighbors<'a> {
+    pub fn to_owned(self) -> OwnedLexemeNeighbors {
+        OwnedLexemeNeighbors {
+            prev: self.prev.cloned(),
+            current: self.current.clone(),
+            next: self.next.cloned(),
+        }
+    }
 }
 
 impl Shard {

@@ -14,10 +14,6 @@ prost-types = "0.12"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 hashbrown = { version = "0.16.1", features = ["serde"] }
-
-[build-dependencies]
-prost-build = "0.12"
-
-[dependencies.xxhash-rust]
-version = "0.8.12"
-features = ["xxh3"]
+zipseek-core = { path = "../zipseek-core" }
+xxhash-rust = { version = "0.8.12",features = ["xxh3"] }
+# flexi_logger = { version = "0.31.7", default-features = false }

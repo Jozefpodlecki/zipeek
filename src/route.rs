@@ -5,15 +5,19 @@ use crate::pages::*;
 
 #[derive(Debug, Clone, PartialEq, Routable)]
 pub enum Route {
-    #[at("/*path")]
-    Home { path: String },
+    #[at("/")]
+    Home,
     #[at("/random")]
     Random,
+    #[at("/lexeme/*query")]
+    Lexeme { query: String },
 }
 
 pub fn switch(routes: Route) -> Html {
+    // log::info!("test");
     match routes {
-        Route::Home { path } => html! { <Home path={path} /> },
+        Route::Home => html! { <Home /> },
         Route::Random => html! { <Random/> },
+        Route::Lexeme { query } => html! { <LexemePage query={query} /> },
     }
 }

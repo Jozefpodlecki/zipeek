@@ -9,3 +9,5 @@ A statically indexed Chinese lexicon using client-side lookup and precomputed sh
 ### Credits  
 
 - <a href="https://www.flaticon.com/free-icons/asia" title="asia icons">Asia icons created by Freepik - Flaticon</a>
+- https://github.com/drkameleon/complete-hsk-vocabulary
+- https://cd.hwxnet.com/

@@ -6,6 +6,8 @@ use xxhash_rust::xxh3::xxh3_64;
 use anyhow::{anyhow, Result};
 use zipseek_core::*;
 
+use crate::search_index::SearchIndex;
+
 pub struct BuildOutput {
     pub shards: InMemoryShardsMap,
     pub hash_to_lexeme: HashToLexemeMap,
@@ -31,10 +33,17 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
     let mut lexeme_id = 0;
     let mut map: HashMap<u64, Shard> = HashMap::new();
     let mut hash_to_lexeme = HashMap::new();
+    let mut index = SearchIndex::new();
 
     for line in reader {
         let line = line?;
         let ccdict_entry = RichEntry::new(&line).ok_or_else(|| anyhow!("Could not parse entry"))?;
+
+        for sense in &ccdict_entry.senses {
+            for gloss in &sense.glosses {
+                index.insert(lexeme_id, gloss);
+            }
+        }
 
         let trad_hash = xxh3_64(ccdict_entry.traditional.as_bytes());
         let simp_hash = xxh3_64(ccdict_entry.simplified.as_bytes());

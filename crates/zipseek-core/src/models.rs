@@ -4,6 +4,7 @@ use cc_cedict_parser_rs::*;
 use prost::Message;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use xxhash_rust::xxh3::xxh3_64;
 
 use crate::storage;
 
