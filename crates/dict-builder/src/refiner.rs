@@ -67,7 +67,7 @@ impl Refiner {
             })
             .collect();
 
-        let path = r#"C:\repos\zipeek\crates\dict-builder\src\refined.json"#;
+        let path = r#"C:\repos\zipeek\crates\dict-builder\data\refined.json"#;
         let buffer = serde_json::to_vec_pretty(&map)?;
         fs::write(path, buffer)?;
 
@@ -75,7 +75,7 @@ impl Refiner {
     }
 
     pub fn new() -> Result<Self> {
-        let path = r#"C:\repos\zipeek\crates\dict-builder\src\refined.json"#;
+        let path = r#"C:\repos\zipeek\crates\dict-builder\data\refined.json"#;
         let buffer = fs::read(path)?;
         let lexemes = serde_json::from_slice(&buffer)?;
 

@@ -4,7 +4,7 @@ use web_sys::{Document, HtmlElement, Navigator, Storage, Window};
 use yew::*;
 use yew_router::{HashRouter, Switch};
 
-use crate::{api::ApiClient, components::{Background, Layout, Loader}, models::{AppState, Social}, route::{switch, Route}};
+use crate::{components::{Background, Layout, Loader}, models::{AppState, Social}, route::{switch, Route}, services::ApiClient};
 
 async fn fetch_social(client: ApiClient, app_state: UseStateHandle<AppState>) {
     app_state.set(AppState::Loading);
@@ -34,9 +34,8 @@ pub struct AppProps {
 #[function_component(App)]
 pub fn app(props: &AppProps) -> Html {
     let app_state = use_state(AppState::default);
-    let AppProps { window, .. } = props;
-
-    let client: ApiClient = ApiClient::new(window.clone());
+    let AppProps { window, app_name, version, .. } = props;
+    let client: ApiClient = ApiClient::new(window.clone(), app_name.clone(), version.clone());
     
     {
         let app_state = app_state.clone();
@@ -80,17 +79,4 @@ pub fn app(props: &AppProps) -> Html {
             }
         },
     }
-
-    // html! {
-    //     <ContextProvider<ApiClient> context={client}>
-    //         <ContextProvider<Social> context={social.clone()}>
-    //             <HashRouter>
-    //                 <Background/>
-    //                 <Layout>
-    //                     <Switch<Route> render={switch} />
-    //                 </Layout>
-    //             </HashRouter>
-    //         </ContextProvider<Social>
-    //     </ContextProvider<ApiClient>>
-    // }
 }

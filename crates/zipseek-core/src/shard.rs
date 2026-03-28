@@ -4,7 +4,7 @@ use hashbrown::{hash_map, HashMap};
 use prost::Message;
 use anyhow::Result;
 
-use crate::{storage, ChineseLexeme};
+use crate::{storage, ChineseLexeme, LexemeId, ProtobufDeserialize};
 
 #[derive(Debug, Clone)]
 pub struct Shard {
@@ -56,11 +56,11 @@ impl Shard {
         self.entries.get_mut(&id)
     }
 
-    pub fn get_with_neighbors<'a>(&'a self, id: &u64) -> Option<LexemeNeighbors<'a>> {
-        let current = self.entries.get(&id)?;
+    pub fn get_with_neighbors<'a>(&'a self, id: LexemeId) -> Option<LexemeNeighbors<'a>> {
+        let current = self.entries.get(&id.shard_id)?;
 
-        let prev = self.entries.range(..id).next_back();
-        let next = self.entries.range((id + 1)..).next();
+        let prev = self.entries.range(..id.id).next_back();
+        let next = self.entries.range((id.id + 1)..).next();
 
         Some(LexemeNeighbors {
             prev: prev.map(|(_, v)| v),
@@ -78,7 +78,7 @@ impl Shard {
         file_path
     }
 
-    pub fn decode<R: AsRef<[u8]>>(bytes: R) -> Result<Self> {
+    pub fn decode_from_slice<R: AsRef<[u8]>>(bytes: R) -> Result<Self> {
         Ok(storage::Shard::decode(bytes.as_ref())?.into())
     }
 
@@ -86,6 +86,12 @@ impl Shard {
         let proto: storage::Shard = self.into();
 
         Ok(proto.encode_to_vec()?)
+    }
+}
+
+impl ProtobufDeserialize for Shard {
+    fn decode_from_slice(data: &[u8]) -> Result<Self> {
+        Shard::decode_from_slice(data)
     }
 }
 

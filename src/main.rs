@@ -1,5 +1,4 @@
 mod app;
-mod api;
 mod components;
 mod services;
 mod models;

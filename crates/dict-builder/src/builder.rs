@@ -2,13 +2,11 @@ use std::{fs::File, io::BufReader, path::Path};
 
 use cc_cedict_parser_rs::*;
 use hashbrown::HashMap;
-use xxhash_rust::xxh3::xxh3_64;
 use anyhow::{anyhow, Result};
 use zipseek_core::*;
 
-use crate::search_index::SearchIndex;
-
 pub struct BuildOutput {
+    pub search_index: SearchIndex,
     pub shards: InMemoryShardsMap,
     pub hash_to_lexeme: HashToLexemeMap,
 }
@@ -25,6 +23,10 @@ impl BuildOutput {
             std::fs::write(file_path, buffer)?;        
         }
 
+        let file_path = self.search_index.file_path(base_dir);
+        let buffer = self.search_index.encode_to_vec()?;
+        std::fs::write(file_path, buffer)?;        
+
         Ok(())
     }
 }
@@ -32,8 +34,8 @@ impl BuildOutput {
 pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<BuildOutput> {
     let mut lexeme_id = 0;
     let mut map: HashMap<u64, Shard> = HashMap::new();
-    let mut hash_to_lexeme = HashMap::new();
-    let mut index = SearchIndex::new();
+    let mut hash_to_lexeme = HashToLexemeMap::new(shards_count);
+    let mut search_index = SearchIndex::new();
 
     for line in reader {
         let line = line?;
@@ -41,12 +43,12 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
 
         for sense in &ccdict_entry.senses {
             for gloss in &sense.glosses {
-                index.insert(lexeme_id, gloss);
+                search_index.insert(lexeme_id, gloss);
             }
         }
 
-        let trad_hash = xxh3_64(ccdict_entry.traditional.as_bytes());
-        let simp_hash = xxh3_64(ccdict_entry.simplified.as_bytes());
+        let trad_hash = LexemeHash::new(ccdict_entry.traditional);
+        let simp_hash = LexemeHash::new(ccdict_entry.simplified);
 
         hash_to_lexeme.insert(trad_hash, lexeme_id);
         hash_to_lexeme.insert(simp_hash, lexeme_id);
@@ -111,8 +113,11 @@ pub fn build(reader: LineReader<BufReader<File>>, shards_count: u64) -> Result<B
         map,
     };
 
+    search_index.finalize();
+
     Ok(BuildOutput {
+        search_index,
         shards: shards_map,
-        hash_to_lexeme: HashToLexemeMap::new(hash_to_lexeme),
+        hash_to_lexeme,
     })
 }

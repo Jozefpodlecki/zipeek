@@ -5,7 +5,7 @@ use prost::Message;
 use anyhow::Result;
 use xxhash_rust::xxh3::xxh3_64;
 
-use crate::storage;
+use crate::{storage, ProtobufDeserialize};
 
 pub struct LexemeHash(u64);
 
@@ -15,35 +15,41 @@ impl LexemeHash {
     }
 }
 
-pub struct HashToLexemeMap2 {
-    shard_count: u64,
-    map: HashMap<u64, u64>
-}
-
 pub struct LexemeId {
-    id: u64,
-    shard_count: u64,
+    pub id: u64,
+    pub shard_id: u64,
 }
 
-impl LexemeId {
-    pub fn shard_id(&self) -> u64 {
-        self.id % self.shard_count
-    }
+pub struct HashToLexemeMap {
+    pub(crate) shard_count: u64,
+    pub(crate) map: HashMap<u64, u64>
 }
-
-pub struct HashToLexemeMap(pub HashMap<u64, u64>);
 
 impl HashToLexemeMap {
-    pub fn new(map: HashMap<u64, u64>) -> Self {
-        Self(map)
+    pub fn new(shard_count: u64) -> Self {
+        Self {
+            map: Default::default(),
+            shard_count
+        }
     }
 
     pub fn file_path(base_dir: &Path) -> PathBuf {
         base_dir.join("index.pb")
     }
 
-    pub fn get(&self, hash: LexemeHash) -> Option<&u64> {
-        self.0.get(&hash.0)
+    pub fn insert(&mut self, hash: LexemeHash, lexeme_id: u64) {
+        self.map.insert(hash.0, lexeme_id);
+    }
+
+    pub fn get_shard_id(&self, lexeme_id: u64) -> u64 {
+        lexeme_id % self.shard_count
+    }
+
+    pub fn get(&self, hash: LexemeHash) -> Option<LexemeId> {
+        self.map.get(&hash.0).map(|&id| LexemeId {
+            id,
+            shard_id: id % self.shard_count
+        })
     }
 
     pub fn decode_from_slice(buffer: &[u8]) -> Result<Self> {
@@ -52,7 +58,10 @@ impl HashToLexemeMap {
             .map(|e| (e.hash, e.lexeme_id))
             .collect();
 
-        Ok(Self(map))
+        Ok(Self {
+            shard_count: proto.shard_count,
+            map
+        })
     }
 
     pub fn decode_from_file(path: &Path) -> Result<Self> {
@@ -68,5 +77,11 @@ impl HashToLexemeMap {
         proto.encode(&mut buffer)?;
 
         Ok(buffer)
+    }
+}
+
+impl ProtobufDeserialize for HashToLexemeMap {
+    fn decode_from_slice(data: &[u8]) -> Result<Self> {
+        HashToLexemeMap::decode_from_slice(data)
     }
 }

@@ -2,6 +2,15 @@ syntax = "proto3";
 
 package storage;
 
+message SearchIndex {
+    repeated Entry entries = 1;
+
+    message Entry {
+        string token = 1;
+        repeated uint64 lexeme_ids = 2;
+    }
+}
+
 message Lexeme {
     uint64 id = 1;
     repeated LexicalVariant variants = 2;
@@ -73,7 +82,8 @@ message Shard {
 }
 
 message HashToLexeme {
-    repeated Entry entries = 1;
+    uint64 shard_count = 1;
+    repeated Entry entries = 2;
 
     message Entry {
         uint64 hash = 1;

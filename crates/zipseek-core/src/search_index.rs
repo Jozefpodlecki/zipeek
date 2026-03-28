@@ -1,6 +1,12 @@
-use hashbrown::HashMap;
+use std::path::{Path, PathBuf};
 
-pub type LexemeId = u64;
+use hashbrown::HashMap;
+use anyhow::Result;
+use prost::Message;
+
+use crate::{storage, ProtobufDeserialize};
+
+type LexemeId = u64;
 
 #[derive(Debug)]
 pub struct SearchIndex {
@@ -27,12 +33,29 @@ impl SearchIndex {
         }
     }
 
-    pub fn finalize(mut self) -> Self {
+    pub fn finalize(&mut self) {
+
         for ids in self.inverted.values_mut() {
             ids.sort_unstable();
             ids.dedup();
         }
-        self
+    }
+
+    pub fn file_path(&self, base_dir: &Path) -> PathBuf {
+        let file_path = base_dir.join("search_index.pb");
+        file_path
+    }
+
+    pub fn encode_to_vec(self) -> Result<Vec<u8>> {
+        let proto: storage::SearchIndex = self.into();
+        let mut buffer = Vec::with_capacity(proto.encoded_len());
+        proto.encode(&mut buffer)?;
+        Ok(buffer)
+    }
+
+     pub fn decode_from_slice(buffer: &[u8]) -> Result<Self> {
+        let proto = storage::SearchIndex::decode(buffer)?;
+        Ok(Self::from(proto))
     }
 
     pub fn search(&self, query: &str) -> Vec<LexemeId> {
@@ -43,7 +66,7 @@ impl SearchIndex {
         for token in normalized.split_whitespace() {
             let ids = match self.inverted.get(token) {
                 Some(v) => v,
-                None => return vec![], // no match
+                None => return vec![],
             };
 
             results = Some(match results {
@@ -84,6 +107,12 @@ fn intersect_two(a: &[LexemeId], b: &[LexemeId]) -> Vec<LexemeId> {
     out
 }
 
+impl ProtobufDeserialize for SearchIndex {
+    fn decode_from_slice(data: &[u8]) -> Result<Self> {
+        SearchIndex::decode_from_slice(data)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -98,7 +127,7 @@ mod tests {
         index.insert(4, "to explore");
         index.insert(5, "search and explore");
         
-        let index = index.finalize();
+        index.finalize();
 
         let r1 = index.search("search");
         assert_eq!(r1, vec![1, 5]);

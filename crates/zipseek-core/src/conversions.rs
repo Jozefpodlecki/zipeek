@@ -2,6 +2,30 @@ use cc_cedict_parser_rs::{OwnedClassifier, OwnedSense, Reference, ReferenceKind,
 
 use crate::*;
 
+impl From<SearchIndex> for storage::SearchIndex {
+    fn from(index: SearchIndex) -> Self {
+        let entries = index.inverted.into_iter()
+            .map(|(token, ids)| storage::search_index::Entry {
+                token: token.into(),
+                lexeme_ids: ids,
+            })
+            .collect();
+
+        storage::SearchIndex { entries }
+    }
+}
+
+impl From<storage::SearchIndex> for SearchIndex {
+
+    fn from(proto: storage::SearchIndex) -> Self {
+        let inverted = proto.entries.into_iter()
+            .map(|e| (e.token.into_boxed_str(), e.lexeme_ids))
+            .collect();
+
+        Self { inverted }
+    }
+}
+
 impl From<PartOfSpeech> for i32 {
     fn from(value: PartOfSpeech) -> Self {
         value as i32
@@ -52,15 +76,18 @@ impl From<storage::LexicalVariant> for LexicalVariant {
 }
 
 impl From<HashToLexemeMap> for storage::HashToLexeme {
-    fn from(map: HashToLexemeMap) -> Self {
-        let entries = map.0.into_iter()
+    fn from(hash_to_lexeme: HashToLexemeMap) -> Self {
+        let entries = hash_to_lexeme.map.into_iter()
             .map(|(hash, lex_id)| storage::hash_to_lexeme::Entry {
                 hash,
                 lexeme_id: lex_id,
             })
             .collect();
 
-        storage::HashToLexeme { entries }
+        storage::HashToLexeme {
+            shard_count: hash_to_lexeme.shard_count,
+            entries
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 use log::*;
 use yew::prelude::*;
 use zipseek_core::{ChineseLexeme, LexicalVariant, OwnedLexemeNeighbors, PartOfSpeech};
-use crate::{api::ApiClient, components::{Error, FadeContainer, FadeState, Loaded, Loader}, models::{AppError, Lexeme, LexemeBreakdown}};
+use crate::{components::{Error, FadeContainer, FadeState, Loaded, Loader}, models::{AppError, Lexeme, LexemeBreakdown}, services::ApiClient};
 
 #[derive(Clone, Default, Debug)]
 pub enum PageState {

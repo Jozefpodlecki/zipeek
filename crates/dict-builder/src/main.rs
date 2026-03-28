@@ -2,17 +2,20 @@ use std::{fs::create_dir_all, path::Path};
 
 use anyhow::Result;
 use cc_cedict_parser_rs::LineReader;
-use dict_builder::{build, clear_dir, BuildOutput, Hsk20, Hsk30, Refiner};
+use dict_builder::{build, clear_dir, folder_has_files, BuildOutput, Hsk20, Hsk30, Refiner};
+use log::*;
 use zipseek_core::HashToLexemeMap;
 
 fn main() -> Result<()> {
+    flexi_logger::Logger::try_with_env().unwrap().start().unwrap();
     let current_dir = std::env::current_dir()?;
     let mut file_path = current_dir.join("crates/dict-builder/cedict_ts.u8");
     
     if !file_path.exists() {
         file_path = current_dir.join("cedict_ts.u8");
     }
-    println!("{file_path:?}");
+    info!("file_path={file_path:?}");
+
     let reader = LineReader::from_file(&file_path)?;
 
     let shards_count = 50;
@@ -39,17 +42,18 @@ fn main() -> Result<()> {
 
     let base_dir = Path::new("public/lexicon");
     
-    if base_dir.exists() {
-        // clear_dir(base_dir)?;
-        // output.save(base_dir)?;
+    if base_dir.exists() && folder_has_files(base_dir)? {
+        clear_dir(base_dir)?;
+        output.save(base_dir)?;
 
-        let BuildOutput {
-            mut shards,
-            hash_to_lexeme,
-        } = output;
+        // let BuildOutput {
+        //     search_index,
+        //     mut shards,
+        //     hash_to_lexeme,
+        // } = output;
 
-        let file_path = HashToLexemeMap::file_path(base_dir);
-        let hash_to_lexeme = HashToLexemeMap::decode_from_file(&file_path)?;
+        // let file_path = HashToLexemeMap::file_path(base_dir);
+        // let hash_to_lexeme = HashToLexemeMap::decode_from_file(&file_path)?;
 
         // let lexeme_id = hash_to_lexeme.get("海外").unwrap();
         
