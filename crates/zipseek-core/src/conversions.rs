@@ -96,12 +96,7 @@ impl From<ChineseLexeme> for storage::Lexeme {
         storage::Lexeme {
             id: value.id,
             simplified: value.simplified.into(),
-            variants: vec![],
-            // traditional: value.traditional.into(),
-            // pinyin: value.pinyin.into_iter().map(Into::into).collect(),
-            // senses: value.senses.into_iter().map(Into::into).collect(),
-            // classifiers: value.classifiers.into_iter().map(Into::into).collect(),
-            // references: value.references.into_iter().map(Into::into).collect(),
+            variants: value.variants.into_iter().map(Into::into).collect(),
             part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
             standards: value.standards.into_iter().map(Into::into).collect(),
         }
@@ -112,13 +107,8 @@ impl From<storage::Lexeme> for ChineseLexeme {
     fn from(value: storage::Lexeme) -> Self {
         ChineseLexeme {
             id: value.id,
-            // traditional: value.traditional.into(),
             simplified: value.simplified.into(),
             variants: value.variants.into_iter().map(Into::into).collect(),
-            // pinyin: value.pinyin.into_iter().map(Into::into).collect(),
-            // senses: value.senses.into_iter().map(Into::into).collect(),
-            // classifiers: value.classifiers.into_iter().map(Into::into).collect(),
-            // references: value.references.into_iter().map(Into::into).collect(),
             part_of_speech: value.part_of_speech.into_iter().map(Into::into).collect(),
             standards: value.standards.into_iter().map(Into::into).collect(),
         }

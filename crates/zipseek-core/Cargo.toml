@@ -15,6 +15,7 @@ serde_json = "1.0.149"
 hashbrown = { version = "0.16.1", features = ["serde"] }
 xxhash-rust = { version = "0.8.12",features = ["xxh3"] }
 ruzstd = "0.8.2"
+hex = "0.4.3"
 cc-cedict-parser-rs = { path = "C:\\repos\\cc-cedict-parser-rs", features = ["serde"]}
 
 [build-dependencies]

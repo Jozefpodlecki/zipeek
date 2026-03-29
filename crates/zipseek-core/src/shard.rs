@@ -84,8 +84,10 @@ impl Shard {
 
     pub fn encode_to_vec(self) -> Result<Vec<u8>> {
         let proto: storage::Shard = self.into();
-
-        Ok(proto.encode_to_vec()?)
+        let mut buffer = Vec::with_capacity(proto.encoded_len());
+        proto.encode(&mut buffer)?;
+        
+        Ok(buffer)
     }
 }
 
@@ -160,5 +162,80 @@ impl InMemoryShardsMap {
     pub fn file_path(&self, base_dir: &Path) -> PathBuf {
         let file_path = base_dir.join("index.pb");
         file_path
+    }
+}
+
+mod tests {
+    use anyhow::Result;
+    use crate::{ChineseSense, LexicalVariant, PartOfSpeech, ReferenceStandard};
+
+    use super::*;
+
+    fn setup_lexeme() -> ChineseLexeme {
+        ChineseLexeme {
+            id: 1,
+            simplified: "说".into(),
+
+            variants: vec![
+                LexicalVariant {
+                    traditional: "說".into(),
+                    pinyin: vec!["shuo1".into()],
+
+                    senses: vec![
+                        ChineseSense {
+                            glosses: vec!["to speak".into()],
+                            tags: vec![],
+                            qualifier: None,
+                            part_of_speech: vec![PartOfSpeech::Verb],
+                        }
+                    ],
+                    classifiers: vec![],
+                    references: vec![],
+                }
+            ],
+
+            part_of_speech: vec![PartOfSpeech::Verb],
+
+            standards: vec![
+                ReferenceStandard {
+                    name: "HSK".into(),
+                    kind: "level".into(),
+                    value: "1".into(),
+                }
+            ],
+        }
+    }
+
+    #[test]
+    fn should_encode_shard() {
+        let mut shard = Shard::empty(1);
+        let lexeme = setup_lexeme();
+
+        shard.entries.insert(lexeme.id, lexeme);
+
+        let buffer = shard.encode_to_vec().expect("Should encode shard");
+        assert!(!buffer.is_empty());
+
+        println!("{}", hex::encode(&buffer));
+    }
+
+    #[test]
+    fn should_roundtrip_shard() -> Result<()> {
+        let mut shard = Shard::empty(1);
+        let expected = setup_lexeme();
+
+        shard.entries.insert(expected.id, expected.clone());
+
+        let buffer = shard.encode_to_vec()?;
+        let decoded = Shard::decode_from_slice(&buffer)?;
+
+        let actual = decoded.get(&1).expect("Should have lexeme");
+
+        assert_eq!(actual.id, expected.id);
+        assert_eq!(actual.simplified, expected.simplified);
+        assert_eq!(actual.variants.len(), 1);
+        assert_eq!(actual.variants[0].senses[0].glosses[0], "to speak".into());
+
+        Ok(())
     }
 }

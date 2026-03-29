@@ -4,7 +4,7 @@ use web_sys::{Document, HtmlElement, Navigator, Storage, Window};
 use yew::*;
 use yew_router::{HashRouter, Switch};
 
-use crate::{components::{Background, Layout, Loader}, models::{AppState, Social}, route::{switch, Route}, services::ApiClient};
+use crate::{components::{Background, Layout, Loader}, contexts::SearchContext, models::{AppState, Social}, route::{switch, Route}, services::{ApiClient, HttpClient}};
 
 async fn fetch_social(client: ApiClient, app_state: UseStateHandle<AppState>) {
     app_state.set(AppState::Loading);
@@ -35,8 +35,10 @@ pub struct AppProps {
 pub fn app(props: &AppProps) -> Html {
     let app_state = use_state(AppState::default);
     let AppProps { window, app_name, version, .. } = props;
-    let client: ApiClient = ApiClient::new(window.clone(), app_name.clone(), version.clone());
-    
+    let http_client = HttpClient::new(window.clone(), version.clone(), app_name.clone());
+    let client: ApiClient = ApiClient::new(window.clone(), http_client, app_name.clone(), version.clone());
+    let context = SearchContext::new(use_state(|| "".to_string()));
+
     {
         let app_state = app_state.clone();
         let client = client.clone();
@@ -67,14 +69,16 @@ pub fn app(props: &AppProps) -> Html {
         AppState::Loaded(social) => {
             html! {
                 <ContextProvider<ApiClient> context={client}>
-                    <ContextProvider<Social> context={social.clone()}>
-                        <HashRouter>
-                            <Background/>
-                            <Layout>
-                                <Switch<Route> render={switch} />
-                            </Layout>
-                        </HashRouter>
-                    </ContextProvider<Social>>
+                    <ContextProvider<SearchContext> context={context}>
+                        <ContextProvider<Social> context={social.clone()}>
+                            <HashRouter>
+                                <Background/>
+                                <Layout>
+                                    <Switch<Route> render={switch} />
+                                </Layout>
+                            </HashRouter>
+                        </ContextProvider<Social>>
+                    </ContextProvider<SearchContext>>
                 </ContextProvider<ApiClient>>
             }
         },

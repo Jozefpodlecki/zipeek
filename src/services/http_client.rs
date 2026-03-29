@@ -6,6 +6,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 
 use web_sys::*;
+use zipseek_core::ProtobufDeserialize;
 
 use crate::models::AppError;
 
@@ -25,6 +26,13 @@ impl HttpResponse {
         
         serde_wasm_bindgen::from_value(js_value)
             .map_err(AppError::from)
+    }
+
+    pub async fn into_protobuf<T: ProtobufDeserialize>(self) -> Result<T, AppError> {
+        let bytes = self.into_bytes().await?;
+        
+        T::decode_from_slice(&bytes)
+            .map_err(|err| AppError::failed_to_read_body(err.to_string().into()))
     }
     
     pub async fn into_bytes(self) -> Result<Vec<u8>, AppError> {
@@ -109,6 +117,10 @@ impl HttpClient {
     
     pub async fn get_as_json<T: DeserializeOwned>(&self, url: &str) -> Result<T, AppError> {
         self.get_with_cors(url).await?.into_json().await
+    }
+
+    pub async fn get_as_protobuf<T: ProtobufDeserialize>(&self, url: &str) -> Result<T, AppError> {
+        self.get_with_cors(url).await?.into_protobuf().await
     }
     
     pub async fn get_as_bytes(&self, url: &str) -> Result<Vec<u8>, AppError> {

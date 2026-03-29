@@ -11,11 +11,11 @@ use web_sys::RequestCache;
 use web_sys::{Headers, Request, RequestInit, RequestMode, Response, Window};
 use zipseek_core::Shard;
 
-use crate::{models::AppError, services::TimestampLruCache};
+use crate::{models::AppError, services::{HttpClient, TimestampLruCache}};
 
 #[derive(Clone)]
 pub struct CachedShardMap {
-    window: Window,
+    client: HttpClient,
     map: Rc<RefCell<TimestampLruCache<u64, Shard>>>
 }
 
@@ -26,9 +26,9 @@ impl PartialEq for CachedShardMap {
 }
 
 impl CachedShardMap {
-    pub fn new(window: Window) -> Self {
+    pub fn new(client: HttpClient) -> Self {
         Self {
-            window,
+            client,
             map: Rc::new(RefCell::new(TimestampLruCache::new(10)))
         }
     }
@@ -61,29 +61,7 @@ impl CachedShardMap {
     async fn fetch_shard(&self, shard_id: u64) -> Result<Shard, AppError> {
         let url = format!("public/lexicon/shard_{}.json", shard_id);
         
-        let request_options = RequestInit::new();
-        request_options.set_method("GET");
-        request_options.set_mode(RequestMode::NoCors);
-        
-        let headers = Headers::new()?;
-        headers.set("Cache-Control", "no-cache")?;
-        request_options.set_headers(&headers);
-        
-        let request = Request::new_with_str_and_init(&url, &request_options)?;
-        let response_value = JsFuture::from(self.window.fetch_with_request(&request)).await?;
-        let response: Response = response_value.unchecked_into();
-        let array_buffer = response.array_buffer().map_err(AppError::failed_to_read_body)?;
-        
-        let buffer = JsFuture::from(array_buffer)
-            .await
-            .map_err(AppError::failed_to_read_body)?;
-        
-        let uint8_array = Uint8Array::new(&buffer);
-        let mut bytes = vec![0; uint8_array.length() as usize];
-        uint8_array.copy_to(&mut bytes);
-        
-        let shard = Shard::decode(bytes)
-            .map_err(|err| AppError::failed_to_read_body(err.to_string().into()))?;
+        let shard = self.client.get_as_protobuf(&url).await?;
 
         Ok(shard)
     }

@@ -19,10 +19,10 @@ pub fn footer(props: &Props) -> Html {
                 <Icon data={IconData::LUCIDE_EXTERNAL_LINK} width={"14px"}/>
             </a>
            <div class="flex gap-2 ml-auto text-white">
-                <a class="dark:text-white" href={props.social.github.clone()}>
+                <a class="transition-all dark:text-white hover:bg-black/80 hover:opacity-50" href={props.social.github.clone()}>
                     <Icon data={IconData::SIMPLE_ICONS_GITHUB} width={"20px"}/>
                 </a>
-                <a class="dark:text-white" href={props.social.linkedin.clone()}>
+                <a class="transition-all dark:text-white hover:bg-black/80 hover:opacity-50" href={props.social.linkedin.clone()}>
                     <Icon data={IconData::SIMPLE_ICONS_LINKEDIN} width={"20px"}/>
                 </a>
            </div>

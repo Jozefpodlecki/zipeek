@@ -1,9 +1,9 @@
 use log::*;
 use yew::prelude::*;
-use web_sys::{window, HtmlElement, SpeechSynthesisUtterance, SpeechSynthesisVoice};
+use web_sys::{console::info, window, HtmlElement, SpeechSynthesisUtterance, SpeechSynthesisVoice};
 use wasm_bindgen::JsCast;
 use yew_icons::{Icon, IconData};
-use crate::{models::{Lexeme, LexemeBreakdown}};
+use crate::{contexts::SearchContext, models::{Lexeme, LexemeBreakdown}, services::ApiClient};
 
 #[derive(Debug, Clone, PartialEq, Properties)]
 pub struct Props {
@@ -97,10 +97,47 @@ pub struct Props {
 
 #[function_component(Home)]
 pub fn home(props: &Props) -> Html {
- 
-    html! {
-        <>
+    let api_client = unsafe { use_context::<ApiClient>().unwrap_unchecked() };
+    let search_context = unsafe { use_context::<SearchContext>().unwrap_unchecked() };
+
+    let on_search: Callback<String> = {
+
+        Callback::from(move |value| {
+            
+
            
-        </>
+        })
+    };
+
+    {
+        let api_client = api_client.clone();
+        let search_context = search_context.clone();
+
+        use_effect(move || {
+            let api_client = api_client.clone();
+            let value = search_context.get().clone();
+
+            if value.is_empty() {
+                return;
+            }
+
+            wasm_bindgen_futures::spawn_local(async move {
+                match api_client.search(&value).await {
+                    Ok(result) => {
+                        info!("ok");
+                    },
+                    Err(err) => {
+                        info!("{}", err);
+                    },
+                }
+            });
+        });
+    }   
+    
+    
+    html! {
+        <div data-home="" class="">
+            {search_context.get()}
+        </div>
     }
 }

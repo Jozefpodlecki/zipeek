@@ -3,6 +3,7 @@ mod components;
 mod services;
 mod models;
 mod pages;
+mod contexts;
 mod route;
 
 use std::error::Error;

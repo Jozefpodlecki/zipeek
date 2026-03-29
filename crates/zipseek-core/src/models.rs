@@ -58,25 +58,23 @@ pub enum PartOfSpeech {
     Unknown,
 }
 
-impl storage::Shard {
-    pub fn new(shard_id: u64, entries: BTreeMap<u64, ChineseLexeme>) -> Self {
-        let lexemes = entries.into_values().map(Into::into).collect();
+// impl storage::Shard {
+//     pub fn new(shard_id: u64, entries: BTreeMap<u64, ChineseLexeme>) -> Self {
+//         let lexemes = entries.into_values().map(Into::into).collect();
 
-        Self {
-            shard_id,
-            lexemes
-        }
-    }
+//         Self {
+//             shard_id,
+//             lexemes
+//         }
+//     }
 
-    pub fn encode_to_vec(self) -> Result<Vec<u8>> {
-        let mut buffer = Vec::with_capacity(self.encoded_len());
-        self.encode(&mut buffer)?;
-        Ok(buffer)
-    }
+//     pub fn encode_to_vec(self) -> Result<Vec<u8>> {
+       
+//     }
 
-    pub fn from_path(path: &Path) -> Result<Self> {
-        let buf = std::fs::read(path)?;
-        Ok(storage::Shard::decode(&buf[..])?)
-    }
-}
+//     pub fn from_path(path: &Path) -> Result<Self> {
+//         let buf = std::fs::read(path)?;
+//         Ok(storage::Shard::decode(&buf[..])?)
+//     }
+// }
 
