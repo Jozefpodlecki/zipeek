@@ -1,0 +1,54 @@
+[
+  {
+    "simplified": "same",
+    "level": [
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "same",
+          "numeric": "a1"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  },
+  {
+    "simplified": "same",
+    "level": [
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "same",
+          "numeric": "a2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  }
+]

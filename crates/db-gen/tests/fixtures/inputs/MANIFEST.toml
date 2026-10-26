@@ -1,0 +1,15 @@
+duckdb_engine = "v2.0.0"
+storage_compatibility_version = "v1.4.0"
+duckdb_wasm_package = "@duckdb/duckdb-wasm@1.32.0"
+reproducibility = "logical-content-with-artifact-checksums"
+
+[[inputs]]
+name = "fixture-source"
+path = "sample.json"
+size_bytes = 37
+sha256 = "68ee12fc6ec1c4f134354433fc77b6045aa924ec2dcf7a558a70e9770335a5da"
+notices = ["NOTICE.txt"]
+
+[[notices]]
+path = "NOTICE.txt"
+sha256 = "b865a12f97c8f5f3f21159386ba4a0a18bea999162d19edc31a5fbadec06f5cd"

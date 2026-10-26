@@ -1,0 +1,21 @@
+[build]
+target = "./index.html"
+
+[serve]
+port = 1420
+open = false
+
+[tools]
+wasm_bindgen = "0.2.114"
+tailwindcss = "4.3.3"
+
+[watch]
+ignore = [
+    "docs/",
+    "dist/",
+    "crates/",
+    "icons/",
+    ".github/",
+    "target/",
+    ".gitignore"
+]

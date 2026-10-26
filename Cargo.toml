@@ -1,55 +1,8 @@
 [workspace]
 members = [
-    "crates/dict-builder",
-    "crates/zipseek-core",
+    "crates/db-gen",
+    "crates/zipeek-core",
+    "web",
+    "e2e"
 ]
 resolver = "2"
-
-[package]
-name = "zipeek"
-version = "0.1.0"
-edition = "2024"
-repository = "https://github.com/Jozefpodlecki/zipeek"
-description = ""
-keywords = ["wasm", "web", "yew"]
-categories = ["wasm", "web-programming"]
-rust-version = "1.94.0"
-
-[dependencies]
-yew = { version = "0.23", features = ["csr"] }
-yew-router = "0.20.0"
-yew_icons = {version = "0.10", features = ["lucide", "simple_icons"]}
-wasm-bindgen = "0.2.114"
-wasm-bindgen-futures = "0.4.64"
-js-sys = "0.3.91"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-serde-wasm-bindgen = "0.6"
-console_error_panic_hook = "0.1.7"
-futures = "0.3.29"
-log = "0.4.29"
-wasm-logger = "0.2.0"
-gloo = "0.11"
-rand = "0.10.0"
-getrandom = { version = "0.4.2", features = ["wasm_js"] }
-chrono = { version = "0.4.44", features = ["serde"] }
-hashbrown = { version = "0.16.1", features = ["serde"] }
-zipseek-core = { path = "crates/zipseek-core" }
-
-[dependencies.web-sys]
-version = "0.3"
-features = [
-    "console",
-    "Document",
-    "Navigator",
-    "Clipboard",
-    "ClipboardEvent",
-    "HtmlElement",
-    "MouseEvent",
-    "DomRect",
-    "DomTokenList",
-    "SpeechSynthesis",
-    "SpeechSynthesisUtterance",
-    "SpeechSynthesisVoice",
-    "DomStringMap"
-]

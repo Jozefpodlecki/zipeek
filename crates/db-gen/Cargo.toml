@@ -1,0 +1,17 @@
+[package]
+name = "db-gen"
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/Jozefpodlecki/zipeek"
+rust-version = "1.97.1"
+
+[dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
+duckdb-neo = { git = "https://github.com/duckdb/duckdb-rs.git", rev = "4acbea84794582c4cd962ee971a3d7a5dcb72e39", features = ["chrono", "r2d2", "uuid"] }
+sha2 = "=0.10.9"
+toml = { version = "=0.9.8", default-features = false, features = ["std", "serde", "parse"] }
+zipeek-core = { path = "../zipeek-core" }

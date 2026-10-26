@@ -1,0 +1,130 @@
+html, body {
+    height: 100%
+}
+
+body {
+    background: #000;
+    margin: 0;
+}
+
+.background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    filter: brightness(0.40);
+}
+
+#error {
+    text-align: center;
+}
+
+#error p {
+    margin: 0;
+    color: #ccc;
+    font-size: 16px;
+}
+
+#error button {
+    font-size: 20px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #ffffff22;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#error button:hover {
+    background: #ffffff33;
+}
+
+#error, .loader-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    
+    color: #FFFFFF88;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.error-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    background: #000000AA;
+    padding: 50px;
+}
+
+.error-icon {
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.icon-bg {
+    fill: rgba(255, 255, 255, 0.08);
+}
+
+.icon-line {
+    stroke: #ffffffcc;
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+}
+
+/* dot */
+.icon-dot {
+    fill: #ffffffcc;
+}
+
+.loader {
+    --size: 10px;
+    --scale: 1.5;
+    
+    display: grid;
+    grid-template-columns: repeat(3, calc(var(--size) * var(--scale)));
+    grid-template-rows: repeat(3, calc(var(--size) * var(--scale)));
+    gap: calc(var(--size) * var(--scale));
+}
+
+.square {
+    width: calc(var(--size) * var(--scale));
+    height: calc(var(--size) * var(--scale));
+    background: #ddd;
+    animation: loader 675ms ease-in-out infinite alternate;
+}
+
+.square:nth-child(1) { animation-delay: 0ms; }
+.square:nth-child(2) { animation-delay: 75ms; }
+.square:nth-child(3) { animation-delay: 150ms; }
+.square:nth-child(4) { animation-delay: 225ms; }
+.square:nth-child(5) { animation-delay: 300ms; }
+.square:nth-child(6) { animation-delay: 375ms; }
+.square:nth-child(7) { animation-delay: 450ms; }
+.square:nth-child(8) { animation-delay: 525ms; }
+.square:nth-child(9) { animation-delay: 600ms; }
+
+@keyframes loader {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

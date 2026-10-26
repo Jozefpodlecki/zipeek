@@ -1,0 +1,93 @@
+[
+  {
+    "simplified": "\u5b66\u4e60",
+    "level": [
+      "old-3",
+      "old-1",
+      "new-7+",
+      "new-7",
+      "bad",
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " "
+        ]
+      },
+      {
+        "traditional": "OTHER",
+        "transcriptions": {
+          "pinyin": "DISPLAY DRIFT",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  },
+  {
+    "simplified": "\u884c",
+    "level": [
+      "new-2"
+    ],
+    "pos": [
+      "n"
+    ],
+    "forms": [
+      {
+        "traditional": null,
+        "transcriptions": {
+          "pinyin": "h\u00e1ng",
+          "numeric": "hang2"
+        },
+        "meanings": []
+      },
+      {
+        "traditional": "\u884c",
+        "transcriptions": {
+          "pinyin": "x\u00edng",
+          "numeric": "xing2"
+        },
+        "meanings": [
+          "okay"
+        ]
+      }
+    ],
+    "frequency": null
+  },
+  {
+    "simplified": "O'Brien'); DROP TABLE words; --",
+    "level": [
+      "old-2"
+    ],
+    "pos": [],
+    "forms": [
+      {
+        "traditional": null,
+        "transcriptions": {
+          "pinyin": "a' } \\\" b",
+          "numeric": "quote1"
+        },
+        "meanings": [
+          "a'b"
+        ]
+      }
+    ],
+    "frequency": 100
+  }
+]
