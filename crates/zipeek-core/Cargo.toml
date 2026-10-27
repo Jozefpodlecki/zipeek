@@ -6,3 +6,4 @@ repository = "https://github.com/Jozefpodlecki/zipeek"
 rust-version = "1.97.1"
 
 [dependencies]
+rand = { version = "0.10.3", features = ["chacha"] }

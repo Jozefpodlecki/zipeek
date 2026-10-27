@@ -1,0 +1,89 @@
+{
+  "generator_version": "0.1.0",
+  "generator_manifest_sha256": "6724a247f7fa1cd194bfc9555623570854cff76d5099db3049633e6e05ff5b1c",
+  "engine": "v2.0.0",
+  "storage_compatibility": "v1.4.0",
+  "wasm_package": "@duckdb/duckdb-wasm@1.32.0",
+  "reproducibility": "logical-content-with-artifact-checksums",
+  "source_entries": 11494,
+  "rejected_entries": 64,
+  "rows": 12100,
+  "diagnostics": 514,
+  "logical_sha256": "bf2865b52fd3e4343979cf2952cb42c01314042df489129fd22287d8d4c38f25",
+  "diagnostics_sha256": "d893b30b15121068c88047c8ce1d4c0ab0550093b37659555d4de80391251dfc",
+  "tables": [
+    "words"
+  ],
+  "columns": [
+    "{\"name\":\"id\",\"type\":\"INTEGER\",\"nullable\":\"NO\",\"position\":1}",
+    "{\"name\":\"simplified\",\"type\":\"VARCHAR\",\"nullable\":\"NO\",\"position\":2}",
+    "{\"name\":\"traditional\",\"type\":\"VARCHAR\",\"nullable\":\"YES\",\"position\":3}",
+    "{\"name\":\"pinyin\",\"type\":\"VARCHAR\",\"nullable\":\"NO\",\"position\":4}",
+    "{\"name\":\"pinyin_numeric\",\"type\":\"VARCHAR\",\"nullable\":\"YES\",\"position\":5}",
+    "{\"name\":\"english\",\"type\":\"VARCHAR\",\"nullable\":\"YES\",\"position\":6}",
+    "{\"name\":\"part_of_speech\",\"type\":\"VARCHAR\",\"nullable\":\"YES\",\"position\":7}",
+    "{\"name\":\"hsk2_level\",\"type\":\"INTEGER\",\"nullable\":\"YES\",\"position\":8}",
+    "{\"name\":\"hsk3_level\",\"type\":\"INTEGER\",\"nullable\":\"YES\",\"position\":9}",
+    "{\"name\":\"frequency\",\"type\":\"INTEGER\",\"nullable\":\"YES\",\"position\":10}"
+  ],
+  "constraints": [
+    "{\"kind\":\"NOT NULL\",\"definition\":\"NOT NULL\",\"columns\":[\"simplified\"]}",
+    "{\"kind\":\"NOT NULL\",\"definition\":\"NOT NULL\",\"columns\":[\"pinyin\"]}",
+    "{\"kind\":\"NOT NULL\",\"definition\":\"NOT NULL\",\"columns\":[\"id\"]}",
+    "{\"kind\":\"PRIMARY KEY\",\"definition\":\"PRIMARY KEY(id)\",\"columns\":[\"id\"]}",
+    "{\"kind\":\"UNIQUE\",\"definition\":\"UNIQUE(simplified, pinyin)\",\"columns\":[\"simplified\",\"pinyin\"]}"
+  ],
+  "indexes": [
+    "{\"name\":\"idx_words_hsk2\",\"unique_index\":false,\"primary_index\":false,\"expressions\":\"[hsk2_level]\"}",
+    "{\"name\":\"idx_words_hsk3\",\"unique_index\":false,\"primary_index\":false,\"expressions\":\"[hsk3_level]\"}"
+  ],
+  "inputs": [
+    {
+      "path": "hsk-primary",
+      "size_bytes": 9668204,
+      "sha256": "fc474be223d2196b13bfc7c13e10054f1793c2f840eb1287dfc9620fa0d507d2"
+    },
+    {
+      "path": "cc-cedict-fallback",
+      "size_bytes": 9868269,
+      "sha256": "3d8967fe566bc23a74f8ba008d38ac83269a8c7550bd7dc48218fc9bdf284885"
+    }
+  ],
+  "files": [
+    {
+      "path": "hanzi.duckdb",
+      "size_bytes": 3158016,
+      "sha256": "491fae6f84a96b5825c860163701f3e138cf72e5b50763848fde0e96ba03c546"
+    },
+    {
+      "path": "hanzi.diagnostics.json",
+      "size_bytes": 83198,
+      "sha256": "d893b30b15121068c88047c8ce1d4c0ab0550093b37659555d4de80391251dfc"
+    },
+    {
+      "path": "INPUTS.toml",
+      "size_bytes": 1999,
+      "sha256": "0b4ca4b69ad99060d54f0ff82c6077d3090515521d5f455298e3d1e5c43336dc"
+    },
+    {
+      "path": "ATTRIBUTION.md",
+      "size_bytes": 1721,
+      "sha256": "04a3732409f621848d7ac1f0e23c0904877a6fc23c659e0a6c32fefaca555f1a"
+    },
+    {
+      "path": "notices/HSK-LICENSE.txt",
+      "size_bytes": 1075,
+      "sha256": "bc66c3799c6e6bc4c7671e6224baf00fad0ea735fe7aed429279de0a17d0d1d8"
+    },
+    {
+      "path": "notices/HSK-SOURCE-README.txt",
+      "size_bytes": 9522,
+      "sha256": "8fd758eaaacc89a96ff1fbdc2a059b5d57d0160919a1b3a9dd722a9822d29169"
+    },
+    {
+      "path": "notices/CC-BY-SA-4.0.txt",
+      "size_bytes": 20138,
+      "sha256": "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"
+    }
+  ]
+}

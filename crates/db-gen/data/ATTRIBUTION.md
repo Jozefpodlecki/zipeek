@@ -4,8 +4,10 @@ The approved D21 inputs are preserved byte-for-byte as identified in
 [MANIFEST.toml](MANIFEST.toml). They are generator inputs, not web assets or a
 generated database. Generator invocation remains manual/offline. The current binary loads the
 manifest, verifies all declared source/notice sizes and hashes, retains those
-verified bytes, and prepares the native engine with compatible storage. It does
-not parse/import dictionary entries or create a dictionary artifact.
+verified bytes, prepares the native engine with compatible storage, and imports
+the primary HSK readings into memory, applying CC-CEDICT fallback only for empty
+primary meanings. Its explicit generate command now writes a verified dictionary
+artifact with reports and notices; the default invocation remains in memory.
 
 The primary HSK source is jelleverheyen/hsk-vocabulary complete.json at commit
 `a66fd30b9580da2c2af7eb19e4b9d8099a29c061`. Retain the complete

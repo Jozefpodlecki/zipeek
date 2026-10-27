@@ -1,4 +1,5 @@
 use yew::prelude::*;
+pub mod database;
 
 #[derive(Clone, PartialEq)]
 pub struct SearchContext(UseStateHandle<String>);

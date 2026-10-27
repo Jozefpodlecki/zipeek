@@ -23,11 +23,11 @@ futures = "0.3.29"
 log = "0.4.29"
 wasm-logger = "0.2.0"
 gloo = "0.11"
-rand = { version = "0.10.3", features = ["chacha"] }
 getrandom = { version = "0.4.3", features = ["wasm_js"] }
 chrono = { version = "0.4.44", features = ["serde"] }
 hashbrown = { version = "0.17.1", features = ["serde"] }
 thiserror = "2.0.20"
+animato = { version = "1.7.3", features = ["path", "physics", "color"] }
 zipeek-core = { path = "../crates/zipeek-core" }
 
 [dependencies.web-sys]

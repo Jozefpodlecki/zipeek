@@ -263,6 +263,10 @@ fn command_verifies_the_preserved_inputs() -> Result<(), Box<dyn Error>> {
     assert!(output.contains("notices=3"), "{output}");
     assert!(output.contains("v2.0.0"), "{output}");
     assert!(output.contains("v1.4.0"), "{output}");
+    assert!(output.contains("source_entries=11494"), "{output}");
+    assert!(output.contains("rejected_entries=64"), "{output}");
+    assert!(output.contains("words=12100"), "{output}");
+    assert!(output.contains("no artifact written"), "{output}");
     Ok(())
 }
 

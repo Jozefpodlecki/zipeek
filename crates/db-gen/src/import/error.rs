@@ -2,6 +2,14 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ImportError {
+    #[error("CC-CEDICT is not UTF-8: {0}")]
+    CedictUtf8(#[source] std::str::Utf8Error),
+    #[error("invalid CC-CEDICT line {line}: {reason}; input: {original:?}")]
+    CedictLine {
+        line: usize,
+        original: String,
+        reason: &'static str,
+    },
     #[error("invalid HSK JSON: {0}")]
     Json(#[from] serde_json::Error),
     #[error("HSK source provenance did not match the parsed entry count")]

@@ -1,0 +1,13 @@
+# Synthetic test data; not dictionary source replacement.
+女 女 [nu:3] /variant of other entry/
+女 女 [nu:3] / female | woman / daughter /
+女 女 [nu:3] /ignored later definition/
+行 行 [xing2] /must not replace primary/
+行 行 [hang2] /line|row/
+嗎 吗 [ma5] /question particle/
+兒 儿 [r] /incorrect neutral match/
+兒 儿 [r5] /suffix/
+呣 呣 [ng] /incorrect consonant match/
+呣 呣 [ng5] /hmm/
+乙 乙 [yi3] /Variant of other entry/
+甲 甲 [jia3] /must not replace primary/

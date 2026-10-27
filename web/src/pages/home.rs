@@ -1,15 +1,26 @@
 use yew::prelude::*;
+use yew_icons::IconData;
+
+use crate::{
+    components::{DailyWordCard, NavigationTile},
+    route::Route,
+};
 
 #[derive(Debug, Clone, PartialEq, Properties)]
-pub struct Props {
-    // pub path: String
-}
+pub struct Props {}
 
 #[function_component(Home)]
 pub fn home(_props: &Props) -> Html {
     html! {
-        <div data-home="" class="">
-            <h1>{"Zipeek"}</h1>
+        <div data-home="" class="home-page">
+            <DailyWordCard />
+            <nav class="home-explore" aria-label="Practice, browse, or random">
+                <div class="navigation-tiles">
+                    <NavigationTile route={Route::PracticeSetup} title="Practice" description="Connect hanzi, pinyin, and meaning." icon={IconData::LUCIDE_GRADUATION_CAP} />
+                    <NavigationTile route={Route::Browse} title="Browse" description="Explore words and their readings." icon={IconData::LUCIDE_BOOK_OPEN} />
+                    <NavigationTile route={Route::Random} title="Random" description="Take a new word as your starting point." icon={IconData::LUCIDE_SHUFFLE} />
+                </div>
+            </nav>
         </div>
     }
 }

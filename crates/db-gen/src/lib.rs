@@ -1,3 +1,4 @@
+pub mod artifact;
 mod cli;
 pub mod database;
 mod generator;

@@ -1,0 +1,22 @@
+duckdb_engine = "v2.0.0"
+storage_compatibility_version = "v1.4.0"
+duckdb_wasm_package = "@duckdb/duckdb-wasm@1.32.0"
+reproducibility = "logical-content-with-artifact-checksums"
+
+[[inputs]]
+name = "hsk-primary"
+path = "hsk.json"
+size_bytes = 2756
+sha256 = "c183ea4e0b76f6c39d39f4064c853d900a55c9ca0a44f6805b0d2325f6b93463"
+notices = ["NOTICE.txt"]
+
+[[inputs]]
+name = "cc-cedict-fallback"
+path = "cedict.u8"
+size_bytes = 491
+sha256 = "08cb9c62aa2e30492ea85e244dd2a98dbad93bec4622c567c38f41554812f3e3"
+notices = ["NOTICE.txt"]
+
+[[notices]]
+path = "NOTICE.txt"
+sha256 = "61fed5238353554d7086417f452f357169f05e9bfbce0e7b8c51aa1c88472809"

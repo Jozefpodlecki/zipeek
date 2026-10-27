@@ -4,6 +4,6 @@ node_modules/
 /e2e/target/
 /app/target
 /web/dist
-/Cargo.lock
 /styles/output.css
 web/target/
+/web/vendor/

@@ -287,6 +287,8 @@ fn preserved_snapshot_reproduces_rows_ids_diagnostics_and_expected_audit_counts(
         ),
         (11494, 64, 12100)
     );
+    assert_eq!(imported.diagnostics.len(), 514);
+    assert!(imported.words.iter().all(|word| word.english.is_some()));
     assert_eq!(
         imported
             .diagnostics

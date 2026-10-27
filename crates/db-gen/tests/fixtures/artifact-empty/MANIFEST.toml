@@ -1,0 +1,15 @@
+duckdb_engine = "v2.0.0"
+storage_compatibility_version = "v1.4.0"
+duckdb_wasm_package = "@duckdb/duckdb-wasm@1.32.0"
+reproducibility = "logical-content-with-artifact-checksums"
+
+[[inputs]]
+name = "hsk-primary"
+path = "hsk.json"
+size_bytes = 3
+sha256 = "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+notices = ["NOTICE.txt"]
+
+[[notices]]
+path = "NOTICE.txt"
+sha256 = "36844e5c05314a7e1a69cdeabd032a4082452d7132a3fd877a892500ab8a58ea"

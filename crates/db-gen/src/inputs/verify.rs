@@ -42,11 +42,15 @@ impl VerifiedSource {
 
 #[derive(Debug)]
 pub struct VerifiedInputs {
+    manifest: Vec<u8>,
     sources: Vec<VerifiedSource>,
     notices: Vec<VerifiedFile>,
 }
 
 impl VerifiedInputs {
+    pub fn manifest_bytes(&self) -> &[u8] {
+        &self.manifest
+    }
     pub fn sources(&self) -> &[VerifiedSource] {
         &self.sources
     }
@@ -91,7 +95,11 @@ pub fn verify(manifest_path: &Path) -> Result<VerifiedInputs, InputError> {
         tracing::info!(path = %notice.path.display(), "Source notice checksum verified");
         notices.push(file);
     }
-    Ok(VerifiedInputs { sources, notices })
+    Ok(VerifiedInputs {
+        manifest: manifest.raw,
+        sources,
+        notices,
+    })
 }
 
 fn verify_file(

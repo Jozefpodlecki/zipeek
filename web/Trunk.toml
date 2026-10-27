@@ -1,5 +1,6 @@
 [build]
 target = "./index.html"
+locked = true
 
 [serve]
 port = 1420
@@ -10,12 +11,21 @@ wasm_bindgen = "0.2.114"
 tailwindcss = "4.3.3"
 
 [watch]
-ignore = [
-    "docs/",
-    "dist/",
-    "crates/",
-    "icons/",
-    ".github/",
-    "target/",
-    ".gitignore"
+watch = [
+    ".",
+    "../crates/zipeek-core",
+    "../Cargo.toml",
+    "../Cargo.lock",
+    "../rust-toolchain.toml"
 ]
+ignore = [
+    "dist/**",
+    "target/**",
+    "node_modules/**",
+    "vendor/**"
+]
+
+[[hooks]]
+stage = "pre_build"
+command = "node"
+command_arguments = ["scripts/prepare-duckdb.cjs"]

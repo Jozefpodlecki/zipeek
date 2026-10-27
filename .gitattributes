@@ -3,3 +3,14 @@
 /crates/db-gen/data/HSK-LICENSE.txt -text
 /crates/db-gen/data/HSK-SOURCE-README.txt -text
 /crates/db-gen/data/CC-BY-SA-4.0.txt -text
+
+# Preserve checksum-identified fallback fixture bytes.
+/crates/db-gen/tests/fixtures/fallback/hsk.json -text
+/crates/db-gen/tests/fixtures/fallback/cedict.u8 -text
+/crates/db-gen/tests/fixtures/fallback/NOTICE.txt -text
+
+/web/static/** -text
+/web/static/hanzi.duckdb binary
+
+/crates/db-gen/tests/fixtures/artifact-empty/hsk.json -text
+/crates/db-gen/tests/fixtures/artifact-empty/NOTICE.txt -text

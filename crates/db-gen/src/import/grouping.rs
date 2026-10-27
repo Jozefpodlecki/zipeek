@@ -1,12 +1,14 @@
 use std::collections::BTreeMap;
 
-use zipeek_core::{Hsk2Level, Hsk3Level, PartOfSpeech, Word, WordId};
+use zipeek_core::{Word, WordId};
 
 use super::{
     ImportDiagnostic, ImportError,
     diagnostics::{ImportDiagnosticKind as Kind, record},
-    levels,
-    source::{self, SourceForm},
+    glosses::glosses,
+    reading::Reading,
+    source,
+    validation::{validate_entry, validated_transcriptions},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,20 +19,6 @@ pub struct HskImport {
     pub rejected_entries: usize,
 }
 
-struct Reading {
-    simplified: String,
-    traditional: Option<String>,
-    pinyin: String,
-    numeric: String,
-    english: Option<String>,
-    pos: Vec<PartOfSpeech>,
-    old: Option<Hsk2Level>,
-    new: Option<Hsk3Level>,
-    frequency: Option<i32>,
-    original: String,
-    entry: usize,
-}
-
 pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
     let entries = source::parse(bytes)?;
     let source_entries = entries.len();
@@ -39,171 +27,38 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
     let mut readings: BTreeMap<(String, String), Reading> = BTreeMap::new();
     for (index, (source, original)) in entries.into_iter().enumerate() {
         let entry = index + 1;
-        let simplified = &source.simplified;
-        let pos = match PartOfSpeech::from_source_codes(source.pos.iter().map(String::as_str)) {
-            Ok(pos) => pos,
-            Err(_) => {
-                let unknown: Vec<_> = source
-                    .pos
-                    .iter()
-                    .filter(|code| PartOfSpeech::from_source_code(code).is_err())
-                    .collect();
-                record(
-                    &mut diagnostics,
-                    Kind::RejectedEntry,
-                    entry,
-                    simplified,
-                    format!(
-                        "unknown PoS codes {unknown:?}; rejecting all {} forms",
-                        source.forms.len()
-                    ),
-                );
-                rejected_entries += 1;
-                continue;
-            }
-        };
-        let (old, new) = levels::memberships(&source.level, entry, simplified, &mut diagnostics);
-        let frequency = match source.frequency.map(i32::try_from).transpose() {
-            Ok(value) => value,
-            Err(_) => {
-                record(
-                    &mut diagnostics,
-                    Kind::RejectedEntry,
-                    entry,
-                    simplified,
-                    format!(
-                        "frequency {:?} is outside SQL INTEGER range",
-                        source.frequency
-                    ),
-                );
-                rejected_entries += 1;
-                continue;
-            }
-        };
-        if simplified.trim().is_empty()
-            || (old.is_none() && new.is_none())
-            || source.forms.is_empty()
-        {
-            record(
-                &mut diagnostics,
-                Kind::RejectedEntry,
-                entry,
-                simplified,
-                "missing headword, HSK membership or forms",
-            );
+        let Some(metadata) = validate_entry(&source, entry, &mut diagnostics) else {
             rejected_entries += 1;
             continue;
-        }
+        };
+        let simplified = &source.simplified;
         let mut accepted_forms = 0;
         for (form_index, form) in source.forms.into_iter().enumerate() {
-            let Some(pinyin) = form
-                .transcriptions
-                .pinyin
-                .as_ref()
-                .filter(|text| !text.trim().is_empty())
+            let Some((pinyin, numeric)) =
+                validated_transcriptions(&form, form_index, entry, simplified, &mut diagnostics)
             else {
-                record(
-                    &mut diagnostics,
-                    Kind::RejectedForm,
-                    entry,
-                    simplified,
-                    format!("form {}: missing or blank display pinyin", form_index + 1),
-                );
-                continue;
-            };
-            let Some(numeric) = form
-                .transcriptions
-                .numeric
-                .as_ref()
-                .filter(|text| !text.trim().is_empty())
-            else {
-                record(
-                    &mut diagnostics,
-                    Kind::RejectedForm,
-                    entry,
-                    simplified,
-                    format!("form {}: missing or blank numeric pinyin", form_index + 1),
-                );
                 continue;
             };
             accepted_forms += 1;
             let key = (simplified.clone(), numeric.clone());
             let english = glosses(&form, entry, simplified, &mut diagnostics);
+            let incoming = Reading {
+                simplified: simplified.clone(),
+                traditional: form.traditional.clone(),
+                pinyin: pinyin.clone(),
+                numeric: numeric.clone(),
+                english,
+                pos: metadata.pos.clone(),
+                old: metadata.old,
+                new: metadata.new,
+                frequency: metadata.frequency,
+                original: original.clone(),
+                entry,
+            };
             if let Some(previous) = readings.get_mut(&key) {
-                record(
-                    &mut diagnostics,
-                    Kind::RepeatedReading,
-                    entry,
-                    simplified,
-                    format!(
-                        "form {} repeats numeric reading {numeric:?}; retaining first form",
-                        form_index + 1
-                    ),
-                );
-                if previous.pinyin != *pinyin {
-                    record(
-                        &mut diagnostics,
-                        Kind::DisplayDrift,
-                        entry,
-                        simplified,
-                        format!(
-                            "numeric {numeric:?}: retained {:?}, ignored {pinyin:?}",
-                            previous.pinyin
-                        ),
-                    );
-                }
-                if previous.english.is_none() {
-                    previous.english = english;
-                }
-                previous.pos.extend(pos.iter().copied());
-                previous.pos.sort_unstable_by_key(|value| value.as_str());
-                previous.pos.dedup();
-                levels::merge(
-                    &mut previous.old,
-                    old,
-                    "HSK 2.0",
-                    entry,
-                    simplified,
-                    &mut diagnostics,
-                );
-                levels::merge(
-                    &mut previous.new,
-                    new,
-                    "HSK 3.0",
-                    entry,
-                    simplified,
-                    &mut diagnostics,
-                );
-                if let (Some(first), Some(next)) = (previous.frequency, frequency) {
-                    if first != next {
-                        record(
-                            &mut diagnostics,
-                            Kind::FrequencyConflict,
-                            entry,
-                            simplified,
-                            format!("retained first rank {first}, ignored {next}"),
-                        );
-                    }
-                } else if previous.frequency.is_none() {
-                    previous.frequency = frequency;
-                }
+                previous.merge(incoming, form_index, &mut diagnostics);
             } else {
-                readings.insert(
-                    key,
-                    Reading {
-                        simplified: simplified.clone(),
-                        traditional: form.traditional.clone(),
-                        pinyin: pinyin.clone(),
-                        numeric: numeric.clone(),
-                        english,
-                        pos: pos.clone(),
-                        old,
-                        new,
-                        frequency,
-                        original: original.clone(),
-                        entry,
-                    },
-                );
+                readings.insert(key, incoming);
             }
         }
         if accepted_forms == 0 {
@@ -217,6 +72,19 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
             );
         }
     }
+    let words = finalize_readings(readings, &mut diagnostics)?;
+    Ok(HskImport {
+        words,
+        diagnostics,
+        source_entries,
+        rejected_entries,
+    })
+}
+
+fn finalize_readings(
+    readings: BTreeMap<(String, String), Reading>,
+    diagnostics: &mut Vec<ImportDiagnostic>,
+) -> Result<Vec<Word>, ImportError> {
     let mut display_keys = BTreeMap::new();
     let mut words = Vec::with_capacity(readings.len());
     for (index, reading) in readings.into_values().enumerate() {
@@ -233,12 +101,12 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
         }
         if reading.english.is_none() {
             record(
-                &mut diagnostics,
+                diagnostics,
                 Kind::MissingEnglish,
                 reading.entry,
                 &reading.simplified,
                 format!(
-                    "no primary gloss for {:?}; retained NULL pending A04 fallback",
+                    "no primary gloss for {:?}; fallback required",
                     reading.numeric
                 ),
             );
@@ -261,38 +129,5 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
             frequency: reading.frequency,
         });
     }
-    Ok(HskImport {
-        words,
-        diagnostics,
-        source_entries,
-        rejected_entries,
-    })
-}
-
-fn glosses(
-    form: &SourceForm,
-    entry: usize,
-    simplified: &str,
-    diagnostics: &mut Vec<ImportDiagnostic>,
-) -> Option<String> {
-    let values: Vec<_> = form
-        .meanings
-        .iter()
-        .map(|text| text.trim())
-        .filter(|text| !text.is_empty())
-        .map(|text| {
-            let replaced = text.replace('|', "｜");
-            if text != replaced {
-                record(
-                    diagnostics,
-                    Kind::GlossPipeReplacement,
-                    entry,
-                    simplified,
-                    format!("original {text:?}; replaced {replaced:?}"),
-                );
-            }
-            replaced
-        })
-        .collect();
-    (!values.is_empty()).then(|| values.join("|"))
+    Ok(words)
 }

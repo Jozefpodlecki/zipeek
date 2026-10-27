@@ -1,0 +1,3086 @@
+[
+  {
+    "kind": "RepeatedReading",
+    "entry": 51,
+    "simplified": "岸",
+    "detail": "form 2 repeats numeric reading \"an4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 62,
+    "simplified": "暗",
+    "detail": "form 2 repeats numeric reading \"an4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 62,
+    "simplified": "暗",
+    "detail": "form 3 repeats numeric reading \"an4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 83,
+    "simplified": "把",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 144,
+    "simplified": "板",
+    "detail": "form 2 repeats numeric reading \"ban3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 165,
+    "simplified": "半天",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 177,
+    "simplified": "帮",
+    "detail": "form 2 repeats numeric reading \"bang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 177,
+    "simplified": "帮",
+    "detail": "form 3 repeats numeric reading \"bang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 196,
+    "simplified": "包扎",
+    "detail": "form 2 repeats numeric reading \"bao1 za1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 202,
+    "simplified": "宝",
+    "detail": "form 2 repeats numeric reading \"bao3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 272,
+    "simplified": "杯",
+    "detail": "form 2 repeats numeric reading \"bei1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 272,
+    "simplified": "杯",
+    "detail": "form 3 repeats numeric reading \"bei1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 294,
+    "simplified": "背",
+    "detail": "form 2 repeats numeric reading \"bei1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 311,
+    "simplified": "奔",
+    "detail": "form 3 repeats numeric reading \"ben1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 311,
+    "simplified": "奔",
+    "detail": "form 4 repeats numeric reading \"ben4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 311,
+    "simplified": "奔",
+    "detail": "form 5 repeats numeric reading \"ben1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 341,
+    "simplified": "绷",
+    "detail": "form 2 repeats numeric reading \"beng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 345,
+    "simplified": "逼",
+    "detail": "form 2 repeats numeric reading \"bi1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 411,
+    "simplified": "编制",
+    "detail": "form 2 repeats numeric reading \"bian1 zhi4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 442,
+    "simplified": "遍",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 466,
+    "simplified": "表",
+    "detail": "form 2 repeats numeric reading \"biao3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 493,
+    "simplified": "别致",
+    "detail": "form 2 repeats numeric reading \"bie2 zhi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 499,
+    "simplified": "冰",
+    "detail": "form 2 repeats numeric reading \"bing1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 510,
+    "simplified": "并",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 4 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 681,
+    "simplified": "布",
+    "detail": "form 2 repeats numeric reading \"bu4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 686,
+    "simplified": "步",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 704,
+    "simplified": "才",
+    "detail": "form 2 repeats numeric reading \"cai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 722,
+    "simplified": "采",
+    "detail": "form 2 repeats numeric reading \"cai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 735,
+    "simplified": "踩",
+    "detail": "form 2 repeats numeric reading \"cai3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 749,
+    "simplified": "餐",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 787,
+    "simplified": "草",
+    "detail": "form 2 repeats numeric reading \"cao3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 806,
+    "simplified": "层",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 815,
+    "simplified": "插",
+    "detail": "form 2 repeats numeric reading \"cha1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 840,
+    "simplified": "差点儿",
+    "detail": "form 1 repeats numeric reading \"cha4 dian3 r5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 862,
+    "simplified": "铲",
+    "detail": "form 2 repeats numeric reading \"chan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 868,
+    "simplified": "肠",
+    "detail": "form 2 repeats numeric reading \"chang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 869,
+    "simplified": "尝",
+    "detail": "form 2 repeats numeric reading \"chang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 869,
+    "simplified": "尝",
+    "detail": "form 3 repeats numeric reading \"chang2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 889,
+    "simplified": "场",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 4 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 955,
+    "simplified": "扯",
+    "detail": "form 2 repeats numeric reading \"che3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 980,
+    "simplified": "趁",
+    "detail": "form 2 repeats numeric reading \"chen4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 985,
+    "simplified": "称",
+    "detail": "form 1 repeats numeric reading \"chen4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 985,
+    "simplified": "称",
+    "detail": "form 2 repeats numeric reading \"cheng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 985,
+    "simplified": "称",
+    "detail": "form 3 repeats numeric reading \"cheng4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1041,
+    "simplified": "乘",
+    "detail": "form 4 repeats numeric reading \"cheng2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1057,
+    "simplified": "吃",
+    "detail": "form 2 repeats numeric reading \"chi1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1065,
+    "simplified": "痴呆",
+    "detail": "form 2 repeats numeric reading \"chi1 dai1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1100,
+    "simplified": "冲",
+    "detail": "form 2 repeats numeric reading \"chong1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1103,
+    "simplified": "冲击",
+    "detail": "form 2 repeats numeric reading \"chong1 ji1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1123,
+    "simplified": "仇",
+    "detail": "form 4 repeats numeric reading \"chou2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1123,
+    "simplified": "仇",
+    "detail": "form 5 repeats numeric reading \"chou2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1138,
+    "simplified": "丑",
+    "detail": "form 3 repeats numeric reading \"chou3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1142,
+    "simplified": "瞅",
+    "detail": "form 2 repeats numeric reading \"chou3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1144,
+    "simplified": "出",
+    "detail": "form 2 repeats numeric reading \"chu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1206,
+    "simplified": "初",
+    "detail": "form 1 repeats numeric reading \"chu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1276,
+    "simplified": "船",
+    "detail": "form 2 repeats numeric reading \"chuan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1292,
+    "simplified": "床",
+    "detail": "form 2 repeats numeric reading \"chuang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1297,
+    "simplified": "创",
+    "detail": "form 2 repeats numeric reading \"chuang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1297,
+    "simplified": "创",
+    "detail": "form 4 repeats numeric reading \"chuang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1315,
+    "simplified": "捶",
+    "detail": "form 2 repeats numeric reading \"chui2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1316,
+    "simplified": "锤",
+    "detail": "form 2 repeats numeric reading \"chui2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1318,
+    "simplified": "春",
+    "detail": "form 3 repeats numeric reading \"chun1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1328,
+    "simplified": "蠢",
+    "detail": "form 2 repeats numeric reading \"chun3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1331,
+    "simplified": "词",
+    "detail": "form 2 repeats numeric reading \"ci2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1333,
+    "simplified": "词汇",
+    "detail": "form 2 repeats numeric reading \"ci2 hui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1339,
+    "simplified": "辞",
+    "detail": "form 2 repeats numeric reading \"ci2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 1360,
+    "simplified": "次",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1379,
+    "simplified": "从",
+    "detail": "form 3 repeats numeric reading \"cong2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1402,
+    "simplified": "粗",
+    "detail": "form 2 repeats numeric reading \"cu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1402,
+    "simplified": "粗",
+    "detail": "form 3 repeats numeric reading \"cu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1421,
+    "simplified": "脆",
+    "detail": "form 2 repeats numeric reading \"cui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1424,
+    "simplified": "村",
+    "detail": "form 2 repeats numeric reading \"cun1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1456,
+    "simplified": "答复",
+    "detail": "form 2 repeats numeric reading \"da2 fu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1655,
+    "simplified": "当",
+    "detail": "form 2 repeats numeric reading \"dang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1682,
+    "simplified": "挡",
+    "detail": "form 3 repeats numeric reading \"dang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1684,
+    "simplified": "荡漾",
+    "detail": "form 2 repeats numeric reading \"dang4 yang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1697,
+    "simplified": "岛",
+    "detail": "form 2 repeats numeric reading \"dao3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 1722,
+    "simplified": "道",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1731,
+    "simplified": "德",
+    "detail": "form 3 repeats numeric reading \"de2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1731,
+    "simplified": "德",
+    "detail": "form 4 repeats numeric reading \"de2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1813,
+    "simplified": "堤",
+    "detail": "form 2 repeats numeric reading \"di1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1843,
+    "simplified": "第",
+    "detail": "form 1 repeats numeric reading \"di4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 1855,
+    "simplified": "点",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1904,
+    "simplified": "雕",
+    "detail": "form 2 repeats numeric reading \"diao1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1904,
+    "simplified": "雕",
+    "detail": "form 3 repeats numeric reading \"diao1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1907,
+    "simplified": "吊",
+    "detail": "form 2 repeats numeric reading \"diao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1932,
+    "simplified": "叠",
+    "detail": "form 2 repeats numeric reading \"die2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1932,
+    "simplified": "叠",
+    "detail": "form 3 repeats numeric reading \"die2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1977,
+    "simplified": "冬",
+    "detail": "form 3 repeats numeric reading \"dong1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 1989,
+    "simplified": "动荡",
+    "detail": "form 2 repeats numeric reading \"dong4 dang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2019,
+    "simplified": "兜",
+    "detail": "form 2 repeats numeric reading \"dou1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2025,
+    "simplified": "斗",
+    "detail": "form 4 repeats numeric reading \"dou4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2025,
+    "simplified": "斗",
+    "detail": "form 5 repeats numeric reading \"dou4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2025,
+    "simplified": "斗",
+    "detail": "form 6 repeats numeric reading \"dou4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2058,
+    "simplified": "度",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2063,
+    "simplified": "端",
+    "detail": "form 2 repeats numeric reading \"duan1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2122,
+    "simplified": "顿",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2127,
+    "simplified": "多次",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2135,
+    "simplified": "多年",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2156,
+    "simplified": "朵",
+    "detail": "form 2 repeats numeric reading \"duo3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2159,
+    "simplified": "鹅",
+    "detail": "form 2 repeats numeric reading \"e2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2159,
+    "simplified": "鹅",
+    "detail": "form 3 repeats numeric reading \"e2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2165,
+    "simplified": "恶心",
+    "detail": "form 2 repeats numeric reading \"e3 xin1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2170,
+    "simplified": "略",
+    "detail": "form 2 repeats numeric reading \"lüe4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2183,
+    "simplified": "而",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2202,
+    "simplified": "发布",
+    "detail": "form 2 repeats numeric reading \"fa1 bu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2203,
+    "simplified": "发布会",
+    "detail": "form 2 repeats numeric reading \"fa1 bu4 hui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2247,
+    "simplified": "罚",
+    "detail": "form 2 repeats numeric reading \"fa2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2250,
+    "simplified": "法",
+    "detail": "form 3 repeats numeric reading \"fa3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2250,
+    "simplified": "法",
+    "detail": "form 4 repeats numeric reading \"fa3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2259,
+    "simplified": "帆",
+    "detail": "form 2 repeats numeric reading \"fan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2259,
+    "simplified": "帆",
+    "detail": "form 3 repeats numeric reading \"fan1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2261,
+    "simplified": "番",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2263,
+    "simplified": "翻",
+    "detail": "form 2 repeats numeric reading \"fan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2268,
+    "simplified": "凡",
+    "detail": "form 2 repeats numeric reading \"fan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2289,
+    "simplified": "反复",
+    "detail": "form 2 repeats numeric reading \"fan3 fu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2354,
+    "simplified": "仿",
+    "detail": "form 2 repeats numeric reading \"fang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2354,
+    "simplified": "仿",
+    "detail": "form 3 repeats numeric reading \"fang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2355,
+    "simplified": "仿佛",
+    "detail": "form 2 repeats numeric reading \"fang3 fu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2402,
+    "simplified": "废",
+    "detail": "form 2 repeats numeric reading \"fei4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2415,
+    "simplified": "分",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 2446,
+    "simplified": "分钟",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2530,
+    "simplified": "佛",
+    "detail": "form 3 repeats numeric reading \"fu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2586,
+    "simplified": "附",
+    "detail": "form 2 repeats numeric reading \"fu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2595,
+    "simplified": "复合",
+    "detail": "form 2 repeats numeric reading \"fu4 he2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2597,
+    "simplified": "复苏",
+    "detail": "form 2 repeats numeric reading \"fu4 su1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2598,
+    "simplified": "复习",
+    "detail": "form 2 repeats numeric reading \"fu4 xi2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2668,
+    "simplified": "感",
+    "detail": "form 1 repeats numeric reading \"gan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2687,
+    "simplified": "干",
+    "detail": "form 3 repeats numeric reading \"gan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2687,
+    "simplified": "干",
+    "detail": "form 4 repeats numeric reading \"gan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2687,
+    "simplified": "干",
+    "detail": "form 5 repeats numeric reading \"Gan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2687,
+    "simplified": "干",
+    "detail": "form 6 repeats numeric reading \"gan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2704,
+    "simplified": "刚才",
+    "detail": "form 2 repeats numeric reading \"gang1 cai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2787,
+    "simplified": "歌",
+    "detail": "form 2 repeats numeric reading \"ge1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2811,
+    "simplified": "个",
+    "detail": "form 3 repeats numeric reading \"ge4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 2970,
+    "simplified": "钩",
+    "detail": "form 2 repeats numeric reading \"gou1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3016,
+    "simplified": "鼓",
+    "detail": "form 2 repeats numeric reading \"gu3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3039,
+    "simplified": "雇",
+    "detail": "form 2 repeats numeric reading \"gu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3046,
+    "simplified": "刮",
+    "detail": "form 2 repeats numeric reading \"gua1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3056,
+    "simplified": "拐",
+    "detail": "form 2 repeats numeric reading \"guai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3056,
+    "simplified": "拐",
+    "detail": "form 3 repeats numeric reading \"guai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3059,
+    "simplified": "怪",
+    "detail": "form 2 repeats numeric reading \"guai4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3075,
+    "simplified": "关系",
+    "detail": "form 2 repeats numeric reading \"guan1 xi5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3101,
+    "simplified": "管",
+    "detail": "form 3 repeats numeric reading \"guan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3119,
+    "simplified": "罐",
+    "detail": "form 2 repeats numeric reading \"guan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3169,
+    "simplified": "柜台",
+    "detail": "form 2 repeats numeric reading \"gui4 tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3169,
+    "simplified": "柜台",
+    "detail": "form 3 repeats numeric reading \"gui4 tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3313,
+    "simplified": "焊",
+    "detail": "form 2 repeats numeric reading \"han4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3313,
+    "simplified": "焊",
+    "detail": "form 3 repeats numeric reading \"han4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3347,
+    "simplified": "好容易",
+    "detail": "form 1 repeats numeric reading \"hao3 rong2 yi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3374,
+    "simplified": "合",
+    "detail": "form 3 repeats numeric reading \"he2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3375,
+    "simplified": "合并",
+    "detail": "form 2 repeats numeric reading \"he2 bing4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 3399,
+    "simplified": "和",
+    "detail": "unknown PoS codes [\"cc\", \"qv\"]; rejecting all 8 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3411,
+    "simplified": "核",
+    "detail": "form 2 repeats numeric reading \"he2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3454,
+    "simplified": "哄",
+    "detail": "form 4 repeats numeric reading \"hong4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3480,
+    "simplified": "后",
+    "detail": "form 3 repeats numeric reading \"hou4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3525,
+    "simplified": "胡同",
+    "detail": "form 2 repeats numeric reading \"hu2 tong4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3547,
+    "simplified": "糊",
+    "detail": "form 2 repeats numeric reading \"hu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3547,
+    "simplified": "糊",
+    "detail": "form 4 repeats numeric reading \"hu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3549,
+    "simplified": "花",
+    "detail": "form 3 repeats numeric reading \"hua1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3549,
+    "simplified": "花",
+    "detail": "form 4 repeats numeric reading \"hua1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3559,
+    "simplified": "哗然",
+    "detail": "form 2 repeats numeric reading \"hua2 ran2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3571,
+    "simplified": "化",
+    "detail": "form 1 repeats numeric reading \"hua1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3571,
+    "simplified": "化",
+    "detail": "form 2 repeats numeric reading \"hua4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3581,
+    "simplified": "划",
+    "detail": "form 2 repeats numeric reading \"hua2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3594,
+    "simplified": "话",
+    "detail": "form 2 repeats numeric reading \"hua4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 3631,
+    "simplified": "换言之",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3665,
+    "simplified": "晃",
+    "detail": "form 2 repeats numeric reading \"huang3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 3675,
+    "simplified": "回",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3677,
+    "simplified": "回避",
+    "detail": "form 2 repeats numeric reading \"hui2 bi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3701,
+    "simplified": "毁",
+    "detail": "form 2 repeats numeric reading \"hui3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3701,
+    "simplified": "毁",
+    "detail": "form 3 repeats numeric reading \"hui3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3704,
+    "simplified": "汇",
+    "detail": "form 2 repeats numeric reading \"hui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3704,
+    "simplified": "汇",
+    "detail": "form 3 repeats numeric reading \"hui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3705,
+    "simplified": "汇报",
+    "detail": "form 2 repeats numeric reading \"hui4 bao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3707,
+    "simplified": "汇集",
+    "detail": "form 2 repeats numeric reading \"hui4 ji2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3726,
+    "simplified": "昏",
+    "detail": "form 2 repeats numeric reading \"hun1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3732,
+    "simplified": "魂",
+    "detail": "form 2 repeats numeric reading \"hun2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3768,
+    "simplified": "伙",
+    "detail": "form 2 repeats numeric reading \"huo3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3781,
+    "simplified": "获",
+    "detail": "form 2 repeats numeric reading \"huo4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3805,
+    "simplified": "机制",
+    "detail": "form 2 repeats numeric reading \"ji1 zhi4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 3840,
+    "simplified": "及",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 3842,
+    "simplified": "及其",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3895,
+    "simplified": "几",
+    "detail": "form 2 repeats numeric reading \"ji1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3971,
+    "simplified": "夹",
+    "detail": "form 4 repeats numeric reading \"jia2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3977,
+    "simplified": "家",
+    "detail": "form 2 repeats numeric reading \"jia1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 3980,
+    "simplified": "家伙",
+    "detail": "form 2 repeats numeric reading \"jia1 huo5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4001,
+    "simplified": "假",
+    "detail": "form 4 repeats numeric reading \"jia3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 4021,
+    "simplified": "架",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4128,
+    "simplified": "剑",
+    "detail": "form 2 repeats numeric reading \"jian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4148,
+    "simplified": "姜",
+    "detail": "form 3 repeats numeric reading \"jiang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4154,
+    "simplified": "僵",
+    "detail": "form 2 repeats numeric reading \"jiang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4244,
+    "simplified": "叫",
+    "detail": "form 2 repeats numeric reading \"jiao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4315,
+    "simplified": "劫",
+    "detail": "form 2 repeats numeric reading \"jie2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4315,
+    "simplified": "劫",
+    "detail": "form 3 repeats numeric reading \"jie2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4315,
+    "simplified": "劫",
+    "detail": "form 4 repeats numeric reading \"jie2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4369,
+    "simplified": "界",
+    "detail": "form 1 repeats numeric reading \"jie4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4373,
+    "simplified": "借",
+    "detail": "form 2 repeats numeric reading \"jie4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4528,
+    "simplified": "净",
+    "detail": "form 2 repeats numeric reading \"jing4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4575,
+    "simplified": "救",
+    "detail": "form 2 repeats numeric reading \"jiu4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 4607,
+    "simplified": "局",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4611,
+    "simplified": "局限",
+    "detail": "form 2 repeats numeric reading \"ju2 xian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4618,
+    "simplified": "举",
+    "detail": "form 2 repeats numeric reading \"ju3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4655,
+    "simplified": "据",
+    "detail": "form 3 repeats numeric reading \"ju4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4655,
+    "simplified": "据",
+    "detail": "form 4 repeats numeric reading \"ju4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4671,
+    "simplified": "卷",
+    "detail": "form 3 repeats numeric reading \"juan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4682,
+    "simplified": "绝",
+    "detail": "form 2 repeats numeric reading \"jue2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4706,
+    "simplified": "俊",
+    "detail": "form 2 repeats numeric reading \"jun4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4706,
+    "simplified": "俊",
+    "detail": "form 4 repeats numeric reading \"jun4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4796,
+    "simplified": "扛",
+    "detail": "form 3 repeats numeric reading \"gang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4802,
+    "simplified": "考",
+    "detail": "form 2 repeats numeric reading \"kao3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4861,
+    "simplified": "克",
+    "detail": "form 3 repeats numeric reading \"Ke4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4861,
+    "simplified": "克",
+    "detail": "form 4 repeats numeric reading \"ke4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4861,
+    "simplified": "克",
+    "detail": "form 5 repeats numeric reading \"ke4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 4865,
+    "simplified": "刻",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4886,
+    "simplified": "肯",
+    "detail": "form 2 repeats numeric reading \"ken3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4891,
+    "simplified": "坑",
+    "detail": "form 2 repeats numeric reading \"keng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4941,
+    "simplified": "扣",
+    "detail": "form 2 repeats numeric reading \"kou4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4961,
+    "simplified": "裤子",
+    "detail": "form 2 repeats numeric reading \"ku4 zi5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 4964,
+    "simplified": "夸",
+    "detail": "form 2 repeats numeric reading \"kua1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5009,
+    "simplified": "矿",
+    "detail": "form 2 repeats numeric reading \"kuang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5017,
+    "simplified": "捆",
+    "detail": "form 2 repeats numeric reading \"kun3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5019,
+    "simplified": "困",
+    "detail": "form 2 repeats numeric reading \"kun4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5033,
+    "simplified": "阔",
+    "detail": "form 2 repeats numeric reading \"kuo4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5046,
+    "simplified": "辣",
+    "detail": "form 2 repeats numeric reading \"la4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5067,
+    "simplified": "赖",
+    "detail": "form 3 repeats numeric reading \"lai4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5080,
+    "simplified": "懒",
+    "detail": "form 2 repeats numeric reading \"lan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5106,
+    "simplified": "老板",
+    "detail": "form 3 repeats numeric reading \"lao3 ban3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5142,
+    "simplified": "了",
+    "detail": "form 3 repeats numeric reading \"liao3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5145,
+    "simplified": "了解",
+    "detail": "form 2 repeats numeric reading \"liao3 jie3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5196,
+    "simplified": "里",
+    "detail": "form 2 repeats numeric reading \"li3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5196,
+    "simplified": "里",
+    "detail": "form 4 repeats numeric reading \"li3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5201,
+    "simplified": "里头",
+    "detail": "form 1 repeats numeric reading \"li3 tou5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5284,
+    "simplified": "联系",
+    "detail": "form 2 repeats numeric reading \"lian2 xi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5296,
+    "simplified": "炼",
+    "detail": "form 2 repeats numeric reading \"lian4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 5315,
+    "simplified": "两手",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5425,
+    "simplified": "留",
+    "detail": "form 2 repeats numeric reading \"liu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5425,
+    "simplified": "留",
+    "detail": "form 3 repeats numeric reading \"liu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5460,
+    "simplified": "卤味",
+    "detail": "form 2 repeats numeric reading \"lu3 wei4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5465,
+    "simplified": "录",
+    "detail": "form 3 repeats numeric reading \"lu4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 5472,
+    "simplified": "路",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5504,
+    "simplified": "率",
+    "detail": "form 1 repeats numeric reading \"lü4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5504,
+    "simplified": "率",
+    "detail": "form 2 repeats numeric reading \"shuai4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 5519,
+    "simplified": "轮",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5537,
+    "simplified": "裸",
+    "detail": "form 2 repeats numeric reading \"luo3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5537,
+    "simplified": "裸",
+    "detail": "form 3 repeats numeric reading \"luo3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5550,
+    "simplified": "麻",
+    "detail": "form 3 repeats numeric reading \"ma2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5559,
+    "simplified": "马后炮",
+    "detail": "form 2 repeats numeric reading \"ma3 hou4 pao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5568,
+    "simplified": "骂",
+    "detail": "form 2 repeats numeric reading \"ma4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5621,
+    "simplified": "茅台",
+    "detail": "form 1 repeats numeric reading \"Mao2 tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5625,
+    "simplified": "冒",
+    "detail": "form 3 repeats numeric reading \"mao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5695,
+    "simplified": "们",
+    "detail": "form 1 repeats numeric reading \"men5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5699,
+    "simplified": "蒙",
+    "detail": "form 3 repeats numeric reading \"meng2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5699,
+    "simplified": "蒙",
+    "detail": "form 6 repeats numeric reading \"meng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5699,
+    "simplified": "蒙",
+    "detail": "form 7 repeats numeric reading \"meng2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5710,
+    "simplified": "弥漫",
+    "detail": "form 2 repeats numeric reading \"mi2 man4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5752,
+    "simplified": "面",
+    "detail": "form 2 repeats numeric reading \"mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5752,
+    "simplified": "面",
+    "detail": "form 3 repeats numeric reading \"mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5753,
+    "simplified": "面",
+    "detail": "form 1 repeats numeric reading \"mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5753,
+    "simplified": "面",
+    "detail": "form 2 repeats numeric reading \"mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5753,
+    "simplified": "面",
+    "detail": "form 3 repeats numeric reading \"mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5770,
+    "simplified": "面子",
+    "detail": "form 2 repeats numeric reading \"mian4 zi5\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 5778,
+    "simplified": "秒",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5780,
+    "simplified": "妙",
+    "detail": "form 2 repeats numeric reading \"miao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5887,
+    "simplified": "亩",
+    "detail": "form 2 repeats numeric reading \"mu3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5887,
+    "simplified": "亩",
+    "detail": "form 3 repeats numeric reading \"mu3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5887,
+    "simplified": "亩",
+    "detail": "form 4 repeats numeric reading \"mu3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5912,
+    "simplified": "幕",
+    "detail": "form 2 repeats numeric reading \"mu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5916,
+    "simplified": "拿",
+    "detail": "form 2 repeats numeric reading \"na2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5916,
+    "simplified": "拿",
+    "detail": "form 3 repeats numeric reading \"na2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5923,
+    "simplified": "哪里",
+    "detail": "form 2 repeats numeric reading \"na3 li3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5931,
+    "simplified": "那里",
+    "detail": "form 2 repeats numeric reading \"na4 li5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5941,
+    "simplified": "乃",
+    "detail": "form 2 repeats numeric reading \"nai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5943,
+    "simplified": "奶",
+    "detail": "form 2 repeats numeric reading \"nai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5943,
+    "simplified": "奶",
+    "detail": "form 3 repeats numeric reading \"nai3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 5999,
+    "simplified": "闹",
+    "detail": "form 2 repeats numeric reading \"nao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6021,
+    "simplified": "嫩",
+    "detail": "form 2 repeats numeric reading \"nen4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6037,
+    "simplified": "你",
+    "detail": "form 2 repeats numeric reading \"ni3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6039,
+    "simplified": "拟",
+    "detail": "form 2 repeats numeric reading \"ni3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6043,
+    "simplified": "年",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6060,
+    "simplified": "念",
+    "detail": "form 2 repeats numeric reading \"nian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6065,
+    "simplified": "娘",
+    "detail": "form 2 repeats numeric reading \"niang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6069,
+    "simplified": "捏",
+    "detail": "form 2 repeats numeric reading \"nie1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6102,
+    "simplified": "弄",
+    "detail": "form 3 repeats numeric reading \"nong4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6102,
+    "simplified": "弄",
+    "detail": "form 4 repeats numeric reading \"long4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6116,
+    "simplified": "暖",
+    "detail": "form 2 repeats numeric reading \"nuan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6116,
+    "simplified": "暖",
+    "detail": "form 3 repeats numeric reading \"nuan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6116,
+    "simplified": "暖",
+    "detail": "form 4 repeats numeric reading \"nuan3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6161,
+    "simplified": "盘",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6183,
+    "simplified": "刨",
+    "detail": "form 3 repeats numeric reading \"bao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6191,
+    "simplified": "炮",
+    "detail": "form 4 repeats numeric reading \"pao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6227,
+    "simplified": "碰",
+    "detail": "form 2 repeats numeric reading \"peng4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6227,
+    "simplified": "碰",
+    "detail": "form 3 repeats numeric reading \"peng4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6256,
+    "simplified": "匹",
+    "detail": "form 3 repeats numeric reading \"pi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6282,
+    "simplified": "飘",
+    "detail": "form 2 repeats numeric reading \"piao1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6303,
+    "simplified": "品",
+    "detail": "form 1 repeats numeric reading \"pin3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6350,
+    "simplified": "凭",
+    "detail": "form 2 repeats numeric reading \"ping2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6357,
+    "simplified": "瓶",
+    "detail": "form 2 repeats numeric reading \"ping2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6395,
+    "simplified": "铺",
+    "detail": "form 3 repeats numeric reading \"pu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6403,
+    "simplified": "凄凉",
+    "detail": "form 2 repeats numeric reading \"qi1 liang2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6404,
+    "simplified": "期",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6436,
+    "simplified": "棋",
+    "detail": "form 2 repeats numeric reading \"qi2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6436,
+    "simplified": "棋",
+    "detail": "form 3 repeats numeric reading \"qi2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6450,
+    "simplified": "启蒙",
+    "detail": "form 2 repeats numeric reading \"qi3 meng2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6511,
+    "simplified": "千",
+    "detail": "form 2 repeats numeric reading \"qian1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6529,
+    "simplified": "铅",
+    "detail": "form 2 repeats numeric reading \"qian1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6533,
+    "simplified": "签",
+    "detail": "form 2 repeats numeric reading \"qian1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6533,
+    "simplified": "签",
+    "detail": "form 3 repeats numeric reading \"qian1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6585,
+    "simplified": "枪",
+    "detail": "form 3 repeats numeric reading \"qiang1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6588,
+    "simplified": "强",
+    "detail": "form 5 repeats numeric reading \"jiang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6588,
+    "simplified": "强",
+    "detail": "form 6 repeats numeric reading \"qiang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6588,
+    "simplified": "强",
+    "detail": "form 7 repeats numeric reading \"qiang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6605,
+    "simplified": "墙",
+    "detail": "form 2 repeats numeric reading \"qiang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6662,
+    "simplified": "琴",
+    "detail": "form 2 repeats numeric reading \"qin2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6750,
+    "simplified": "秋",
+    "detail": "form 3 repeats numeric reading \"qiu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6750,
+    "simplified": "秋",
+    "detail": "form 4 repeats numeric reading \"qiu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6774,
+    "simplified": "曲",
+    "detail": "form 4 repeats numeric reading \"qu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6774,
+    "simplified": "曲",
+    "detail": "form 5 repeats numeric reading \"qu1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6806,
+    "simplified": "圈",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6838,
+    "simplified": "拳",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6845,
+    "simplified": "券",
+    "detail": "form 2 repeats numeric reading \"quan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6855,
+    "simplified": "却",
+    "detail": "form 2 repeats numeric reading \"que4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6867,
+    "simplified": "群",
+    "detail": "form 2 repeats numeric reading \"qun2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 6885,
+    "simplified": "绕",
+    "detail": "form 2 repeats numeric reading \"rao4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6910,
+    "simplified": "人次",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6965,
+    "simplified": "任",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 6980,
+    "simplified": "日",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7010,
+    "simplified": "融",
+    "detail": "form 2 repeats numeric reading \"rong2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7046,
+    "simplified": "软",
+    "detail": "form 2 repeats numeric reading \"ruan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7061,
+    "simplified": "腮",
+    "detail": "form 2 repeats numeric reading \"sai1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 7070,
+    "simplified": "三维",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7071,
+    "simplified": "伞",
+    "detail": "form 2 repeats numeric reading \"san3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7072,
+    "simplified": "散",
+    "detail": "form 3 repeats numeric reading \"san4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7112,
+    "simplified": "晒",
+    "detail": "form 2 repeats numeric reading \"shai4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7241,
+    "simplified": "蛇",
+    "detail": "form 2 repeats numeric reading \"she2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7261,
+    "simplified": "射",
+    "detail": "form 2 repeats numeric reading \"she4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7294,
+    "simplified": "深",
+    "detail": "form 2 repeats numeric reading \"shen1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7341,
+    "simplified": "升",
+    "detail": "form 2 repeats numeric reading \"sheng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7341,
+    "simplified": "升",
+    "detail": "form 3 repeats numeric reading \"sheng1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 7376,
+    "simplified": "声",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7441,
+    "simplified": "湿",
+    "detail": "form 2 repeats numeric reading \"shi1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7450,
+    "simplified": "时",
+    "detail": "form 3 repeats numeric reading \"shi2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7575,
+    "simplified": "是",
+    "detail": "form 2 repeats numeric reading \"shi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7602,
+    "simplified": "收获",
+    "detail": "form 2 repeats numeric reading \"shou1 huo4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7741,
+    "simplified": "竖",
+    "detail": "form 2 repeats numeric reading \"shu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7833,
+    "simplified": "说",
+    "detail": "form 3 repeats numeric reading \"shuo1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7897,
+    "simplified": "松",
+    "detail": "form 3 repeats numeric reading \"song1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 7965,
+    "simplified": "岁",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 7995,
+    "simplified": "锁",
+    "detail": "form 2 repeats numeric reading \"suo3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8005,
+    "simplified": "塔",
+    "detail": "form 2 repeats numeric reading \"ta3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8011,
+    "simplified": "胎",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8013,
+    "simplified": "台",
+    "detail": "form 3 repeats numeric reading \"tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8013,
+    "simplified": "台",
+    "detail": "form 4 repeats numeric reading \"Tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8013,
+    "simplified": "台",
+    "detail": "form 5 repeats numeric reading \"tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8013,
+    "simplified": "台",
+    "detail": "form 6 repeats numeric reading \"tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8015,
+    "simplified": "台风",
+    "detail": "form 2 repeats numeric reading \"tai2 feng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8039,
+    "simplified": "坛",
+    "detail": "form 2 repeats numeric reading \"tan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8068,
+    "simplified": "糖",
+    "detail": "form 2 repeats numeric reading \"tang2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8076,
+    "simplified": "趟",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8077,
+    "simplified": "掏",
+    "detail": "form 2 repeats numeric reading \"tao1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8176,
+    "simplified": "剃",
+    "detail": "form 2 repeats numeric reading \"ti4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8176,
+    "simplified": "剃",
+    "detail": "form 3 repeats numeric reading \"ti4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8181,
+    "simplified": "天",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8278,
+    "simplified": "通",
+    "detail": "unknown PoS codes [\"qv\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8338,
+    "simplified": "筒",
+    "detail": "form 2 repeats numeric reading \"tong3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8349,
+    "simplified": "头",
+    "detail": "form 1 repeats numeric reading \"tou2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8349,
+    "simplified": "头",
+    "detail": "form 2 repeats numeric reading \"tou5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8411,
+    "simplified": "兔",
+    "detail": "form 2 repeats numeric reading \"tu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8413,
+    "simplified": "涂",
+    "detail": "form 3 repeats numeric reading \"tu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8415,
+    "simplified": "团",
+    "detail": "form 2 repeats numeric reading \"tuan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8446,
+    "simplified": "腿",
+    "detail": "form 2 repeats numeric reading \"tui3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8462,
+    "simplified": "托",
+    "detail": "form 2 repeats numeric reading \"tuo1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8465,
+    "simplified": "拖",
+    "detail": "form 2 repeats numeric reading \"tuo1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8477,
+    "simplified": "驮",
+    "detail": "form 3 repeats numeric reading \"tuo2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8544,
+    "simplified": "玩",
+    "detail": "form 2 repeats numeric reading \"wan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8553,
+    "simplified": "挽",
+    "detail": "form 2 repeats numeric reading \"wan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8568,
+    "simplified": "碗",
+    "detail": "form 2 repeats numeric reading \"wan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8568,
+    "simplified": "碗",
+    "detail": "form 3 repeats numeric reading \"wan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8568,
+    "simplified": "碗",
+    "detail": "form 4 repeats numeric reading \"wan3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8594,
+    "simplified": "往",
+    "detail": "form 2 repeats numeric reading \"wang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8611,
+    "simplified": "望",
+    "detail": "form 2 repeats numeric reading \"wang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8668,
+    "simplified": "为",
+    "detail": "form 3 repeats numeric reading \"wei2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8668,
+    "simplified": "为",
+    "detail": "form 4 repeats numeric reading \"wei4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8697,
+    "simplified": "喂",
+    "detail": "form 3 repeats numeric reading \"wei4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8697,
+    "simplified": "喂",
+    "detail": "form 4 repeats numeric reading \"wei4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8733,
+    "simplified": "吻",
+    "detail": "form 2 repeats numeric reading \"wen3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8759,
+    "simplified": "污蔑",
+    "detail": "form 2 repeats numeric reading \"wu1 mie4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8879,
+    "simplified": "溪",
+    "detail": "form 2 repeats numeric reading \"xi1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8888,
+    "simplified": "席",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8912,
+    "simplified": "戏",
+    "detail": "form 2 repeats numeric reading \"xi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8915,
+    "simplified": "系",
+    "detail": "form 2 repeats numeric reading \"xi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8915,
+    "simplified": "系",
+    "detail": "form 4 repeats numeric reading \"xi4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 8948,
+    "simplified": "下",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 8968,
+    "simplified": "下面",
+    "detail": "form 2 repeats numeric reading \"xia4 mian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9005,
+    "simplified": "鲜",
+    "detail": "form 2 repeats numeric reading \"xian3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9005,
+    "simplified": "鲜",
+    "detail": "form 4 repeats numeric reading \"xian3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9005,
+    "simplified": "鲜",
+    "detail": "form 5 repeats numeric reading \"xian1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9005,
+    "simplified": "鲜",
+    "detail": "form 6 repeats numeric reading \"xian3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9012,
+    "simplified": "闲",
+    "detail": "form 2 repeats numeric reading \"xian2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9016,
+    "simplified": "咸",
+    "detail": "form 3 repeats numeric reading \"xian2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9046,
+    "simplified": "线",
+    "detail": "form 2 repeats numeric reading \"xian4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9117,
+    "simplified": "享",
+    "detail": "form 2 repeats numeric reading \"xiang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9133,
+    "simplified": "向",
+    "detail": "form 3 repeats numeric reading \"xiang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9133,
+    "simplified": "向",
+    "detail": "form 4 repeats numeric reading \"xiang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9216,
+    "simplified": "笑",
+    "detail": "form 2 repeats numeric reading \"xiao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9233,
+    "simplified": "邪",
+    "detail": "form 2 repeats numeric reading \"xie2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9239,
+    "simplified": "鞋",
+    "detail": "form 2 repeats numeric reading \"xie2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9245,
+    "simplified": "泄",
+    "detail": "form 2 repeats numeric reading \"xie4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9387,
+    "simplified": "性",
+    "detail": "form 1 repeats numeric reading \"xing4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9396,
+    "simplified": "凶",
+    "detail": "form 2 repeats numeric reading \"xiong1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9397,
+    "simplified": "凶残",
+    "detail": "form 2 repeats numeric reading \"xiong1 can2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9398,
+    "simplified": "凶恶",
+    "detail": "form 2 repeats numeric reading \"xiong1 e4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9399,
+    "simplified": "凶狠",
+    "detail": "form 2 repeats numeric reading \"xiong1 hen3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9404,
+    "simplified": "胸",
+    "detail": "form 2 repeats numeric reading \"xiong1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9420,
+    "simplified": "修",
+    "detail": "form 3 repeats numeric reading \"xiu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9436,
+    "simplified": "绣",
+    "detail": "form 2 repeats numeric reading \"xiu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9439,
+    "simplified": "锈",
+    "detail": "form 2 repeats numeric reading \"xiu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9441,
+    "simplified": "须",
+    "detail": "form 2 repeats numeric reading \"xu1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9539,
+    "simplified": "熏",
+    "detail": "form 2 repeats numeric reading \"xun1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9539,
+    "simplified": "熏",
+    "detail": "form 3 repeats numeric reading \"xun1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9661,
+    "simplified": "咽",
+    "detail": "form 4 repeats numeric reading \"yan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9665,
+    "simplified": "验",
+    "detail": "form 2 repeats numeric reading \"yan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9671,
+    "simplified": "扬",
+    "detail": "form 3 repeats numeric reading \"yang2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9675,
+    "simplified": "阳台",
+    "detail": "form 2 repeats numeric reading \"yang2 tai2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9691,
+    "simplified": "痒",
+    "detail": "form 2 repeats numeric reading \"yang3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9701,
+    "simplified": "窑",
+    "detail": "form 2 repeats numeric reading \"yao2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9712,
+    "simplified": "咬",
+    "detail": "form 2 repeats numeric reading \"yao3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9714,
+    "simplified": "药",
+    "detail": "form 2 repeats numeric reading \"yao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9744,
+    "simplified": "野",
+    "detail": "form 2 repeats numeric reading \"ye3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9744,
+    "simplified": "野",
+    "detail": "form 3 repeats numeric reading \"ye3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9759,
+    "simplified": "夜",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 2 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9776,
+    "simplified": "一辈子",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9789,
+    "simplified": "一点儿",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9794,
+    "simplified": "一番",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9806,
+    "simplified": "一会儿",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9821,
+    "simplified": "一路",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9829,
+    "simplified": "一目了然",
+    "detail": "form 2 repeats numeric reading \"yi1 mu4 liao3 ran2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9849,
+    "simplified": "一头",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9855,
+    "simplified": "一下子",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9858,
+    "simplified": "一些",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9871,
+    "simplified": "一阵",
+    "detail": "unknown PoS codes [\"mq\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9925,
+    "simplified": "以",
+    "detail": "form 2 repeats numeric reading \"yi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9925,
+    "simplified": "以",
+    "detail": "form 4 repeats numeric reading \"yi3\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9928,
+    "simplified": "以及",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 9939,
+    "simplified": "以至",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9988,
+    "simplified": "因",
+    "detail": "form 2 repeats numeric reading \"yin1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 9994,
+    "simplified": "阴",
+    "detail": "form 3 repeats numeric reading \"yin1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10089,
+    "simplified": "映",
+    "detail": "form 2 repeats numeric reading \"ying4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10108,
+    "simplified": "涌",
+    "detail": "form 3 repeats numeric reading \"yong3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10147,
+    "simplified": "悠闲",
+    "detail": "form 2 repeats numeric reading \"you1 xian2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10171,
+    "simplified": "游",
+    "detail": "form 3 repeats numeric reading \"you2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10189,
+    "simplified": "有点儿",
+    "detail": "form 1 repeats numeric reading \"you3 dian3 r5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10217,
+    "simplified": "有些",
+    "detail": "form 1 repeats numeric reading \"you3 xie1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10242,
+    "simplified": "于",
+    "detail": "form 3 repeats numeric reading \"yu2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 10243,
+    "simplified": "于是",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10244,
+    "simplified": "余",
+    "detail": "form 3 repeats numeric reading \"yu2\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 10257,
+    "simplified": "与",
+    "detail": "unknown PoS codes [\"cc\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10309,
+    "simplified": "愈",
+    "detail": "form 2 repeats numeric reading \"yu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10313,
+    "simplified": "冤",
+    "detail": "form 2 repeats numeric reading \"yuan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10323,
+    "simplified": "员",
+    "detail": "form 1 repeats numeric reading \"yuan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10373,
+    "simplified": "愿",
+    "detail": "form 2 repeats numeric reading \"yuan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10403,
+    "simplified": "云",
+    "detail": "form 3 repeats numeric reading \"yun2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10427,
+    "simplified": "杂",
+    "detail": "form 2 repeats numeric reading \"za2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10434,
+    "simplified": "灾",
+    "detail": "form 2 repeats numeric reading \"zai1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10434,
+    "simplified": "灾",
+    "detail": "form 3 repeats numeric reading \"zai1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10461,
+    "simplified": "咱",
+    "detail": "form 3 repeats numeric reading \"zan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10461,
+    "simplified": "咱",
+    "detail": "form 4 repeats numeric reading \"zan2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10464,
+    "simplified": "暂",
+    "detail": "form 2 repeats numeric reading \"zan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10468,
+    "simplified": "赞不绝口",
+    "detail": "form 2 repeats numeric reading \"zan4 bu4 jue2 kou3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10474,
+    "simplified": "赞同",
+    "detail": "form 2 repeats numeric reading \"zan4 tong2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10479,
+    "simplified": "葬",
+    "detail": "form 2 repeats numeric reading \"zang4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10518,
+    "simplified": "怎么",
+    "detail": "form 2 repeats numeric reading \"zen3 me5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10535,
+    "simplified": "扎",
+    "detail": "form 4 repeats numeric reading \"zha1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10535,
+    "simplified": "扎",
+    "detail": "form 5 repeats numeric reading \"za1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10535,
+    "simplified": "扎",
+    "detail": "form 6 repeats numeric reading \"zha1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10537,
+    "simplified": "扎实",
+    "detail": "form 2 repeats numeric reading \"zha1 shi5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10540,
+    "simplified": "闸",
+    "detail": "form 2 repeats numeric reading \"zha2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10547,
+    "simplified": "榨",
+    "detail": "form 2 repeats numeric reading \"zha4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10554,
+    "simplified": "沾",
+    "detail": "form 2 repeats numeric reading \"zhan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10571,
+    "simplified": "占",
+    "detail": "form 3 repeats numeric reading \"zhan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10656,
+    "simplified": "照",
+    "detail": "form 2 repeats numeric reading \"zhao4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10674,
+    "simplified": "折",
+    "detail": "form 4 repeats numeric reading \"zhe2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10683,
+    "simplified": "者",
+    "detail": "form 1 repeats numeric reading \"zhe3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10689,
+    "simplified": "这里",
+    "detail": "form 2 repeats numeric reading \"zhe4 li3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10711,
+    "simplified": "针",
+    "detail": "form 2 repeats numeric reading \"zhen1\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 10741,
+    "simplified": "阵",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 1 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10769,
+    "simplified": "征",
+    "detail": "form 2 repeats numeric reading \"zheng1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10814,
+    "simplified": "证",
+    "detail": "form 2 repeats numeric reading \"zheng4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10903,
+    "simplified": "只",
+    "detail": "form 2 repeats numeric reading \"zhi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10903,
+    "simplified": "只",
+    "detail": "form 4 repeats numeric reading \"zhi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10903,
+    "simplified": "只",
+    "detail": "form 5 repeats numeric reading \"zhi1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10915,
+    "simplified": "纸",
+    "detail": "form 2 repeats numeric reading \"zhi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10946,
+    "simplified": "志愿者",
+    "detail": "form 1 repeats numeric reading \"zhi4 yuan4 zhe3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10947,
+    "simplified": "制",
+    "detail": "form 2 repeats numeric reading \"zhi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 10972,
+    "simplified": "致",
+    "detail": "form 2 repeats numeric reading \"zhi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11034,
+    "simplified": "钟",
+    "detail": "form 3 repeats numeric reading \"zhong1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11048,
+    "simplified": "众所周知",
+    "detail": "form 2 repeats numeric reading \"zhong4 suo3 zhou1 zhi1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11057,
+    "simplified": "重复",
+    "detail": "form 2 repeats numeric reading \"chong2 fu4\"; retaining first form"
+  },
+  {
+    "kind": "RejectedEntry",
+    "entry": 11076,
+    "simplified": "周",
+    "detail": "unknown PoS codes [\"qt\"]; rejecting all 3 forms"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11134,
+    "simplified": "煮",
+    "detail": "form 2 repeats numeric reading \"zhu3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11148,
+    "simplified": "注",
+    "detail": "form 2 repeats numeric reading \"zhu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11154,
+    "simplified": "注释",
+    "detail": "form 2 repeats numeric reading \"zhu4 shi4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11165,
+    "simplified": "筑",
+    "detail": "form 3 repeats numeric reading \"zhu4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11190,
+    "simplified": "砖",
+    "detail": "form 2 repeats numeric reading \"zhuan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11190,
+    "simplified": "砖",
+    "detail": "form 3 repeats numeric reading \"zhuan1\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11254,
+    "simplified": "准",
+    "detail": "form 2 repeats numeric reading \"zhun3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11265,
+    "simplified": "桌子",
+    "detail": "form 1 repeats numeric reading \"zhuo1 zi5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11341,
+    "simplified": "子",
+    "detail": "form 1 repeats numeric reading \"zi3\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11341,
+    "simplified": "子",
+    "detail": "form 2 repeats numeric reading \"zi5\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11406,
+    "simplified": "族",
+    "detail": "form 1 repeats numeric reading \"zu2\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11427,
+    "simplified": "钻",
+    "detail": "form 3 repeats numeric reading \"zuan4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11434,
+    "simplified": "最",
+    "detail": "form 2 repeats numeric reading \"zui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11434,
+    "simplified": "最",
+    "detail": "form 3 repeats numeric reading \"zui4\"; retaining first form"
+  },
+  {
+    "kind": "RepeatedReading",
+    "entry": 11441,
+    "simplified": "罪",
+    "detail": "form 2 repeats numeric reading \"zui4\"; retaining first form"
+  }
+]

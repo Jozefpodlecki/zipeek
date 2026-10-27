@@ -3,9 +3,9 @@ use yew::prelude::*;
 #[function_component(Random)]
 pub fn random() -> Html {
     html! {
-        <article class="flex justify-center items-center w-full h-full">
-            <main class="text-white">
-            </main>
-        </article>
+        <section class="route-placeholder">
+            <h1>{"Random"}</h1>
+            <p>{"Practice coming soon."}</p>
+        </section>
     }
 }

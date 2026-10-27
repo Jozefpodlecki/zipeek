@@ -7,6 +7,8 @@ use crate::policy::{ENGINE_VERSION, REPRODUCIBILITY, STORAGE_VERSION, WASM_PACKA
 
 #[derive(Debug, Deserialize)]
 pub(super) struct InputManifest {
+    #[serde(skip)]
+    pub raw: Vec<u8>,
     duckdb_engine: String,
     storage_compatibility_version: String,
     duckdb_wasm_package: String,
@@ -36,10 +38,11 @@ impl InputManifest {
             path: path.to_owned(),
             source,
         })?;
-        let manifest: Self = toml::from_str(&text).map_err(|source| InputError::Manifest {
+        let mut manifest: Self = toml::from_str(&text).map_err(|source| InputError::Manifest {
             path: path.to_owned(),
             source,
         })?;
+        manifest.raw = text.into_bytes();
         manifest.validate(path)?;
         Ok(manifest)
     }

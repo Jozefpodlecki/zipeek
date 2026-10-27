@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum ImportDiagnosticKind {
     RejectedEntry,
     RejectedForm,
@@ -9,9 +9,12 @@ pub enum ImportDiagnosticKind {
     FrequencyConflict,
     GlossPipeReplacement,
     MissingEnglish,
+    FallbackApplied,
+    FallbackUnavailable,
+    FallbackVariantSkipped,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ImportDiagnostic {
     pub kind: ImportDiagnosticKind,
     pub entry: usize,

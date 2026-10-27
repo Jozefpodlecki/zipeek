@@ -4,7 +4,11 @@ use web_sys::{ErrorEvent, PromiseRejectionEvent};
 use yew::*;
 use yew_router::{HashRouter, Switch};
 
-use crate::{AppEnvironment, route::*};
+use crate::{
+    AppEnvironment,
+    components::{AppShell, DatabaseProvider, ThemeProvider},
+    route::*,
+};
 
 #[function_component(App)]
 pub fn app(props: &AppEnvironment) -> Html {
@@ -26,12 +30,6 @@ pub fn app(props: &AppEnvironment) -> Html {
                     web_sys::console::error_2(&"Unhandled rejection:".into(), &reason);
                 });
 
-            // Timeout::new(1500, || {
-            //     // let _rejected = Promise::reject(&JsValue::from_str("boom!"));
-            //     panic!("test");
-            // })
-            // .forget();
-
             move || {
                 drop(error_listener);
                 drop(rejection_listener);
@@ -40,8 +38,12 @@ pub fn app(props: &AppEnvironment) -> Html {
     }
 
     html! {
-        <HashRouter>
-            <Switch<Route> render={switch} />
-        </HashRouter>
+        <ThemeProvider document={props.document.clone()} storage={props.local_storage.clone()}>
+            <HashRouter>
+                <AppShell>
+                    <DatabaseProvider><Switch<Route> render={switch} /></DatabaseProvider>
+                </AppShell>
+            </HashRouter>
+        </ThemeProvider>
     }
 }

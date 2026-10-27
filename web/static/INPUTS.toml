@@ -1,0 +1,46 @@
+duckdb_engine = "v2.0.0"
+storage_compatibility_version = "v1.4.0"
+duckdb_wasm_package = "@duckdb/duckdb-wasm@1.32.0"
+reproducibility = "logical-content-with-artifact-checksums"
+
+[[inputs]]
+name = "hsk-primary"
+path = "hsk-complete-a66fd30.json"
+url = "https://raw.githubusercontent.com/jelleverheyen/hsk-vocabulary/a66fd30b9580da2c2af7eb19e4b9d8099a29c061/complete.json"
+commit = "a66fd30b9580da2c2af7eb19e4b9d8099a29c061"
+retrieved_at = "2026-10-26T14:47:06Z"
+size_bytes = 9668204
+sha256 = "fc474be223d2196b13bfc7c13e10054f1793c2f840eb1287dfc9620fa0d507d2"
+license = "MIT; retain upstream CC-CEDICT provenance"
+transformation = "None; original JSON bytes"
+notices = ["HSK-LICENSE.txt", "HSK-SOURCE-README.txt", "CC-BY-SA-4.0.txt"]
+
+[[inputs]]
+name = "cc-cedict-fallback"
+path = "cc-cedict-2026-10-26.u8"
+url = "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz"
+published_at = "2026-10-26T02:33:39Z"
+retrieved_at = "2026-10-26T14:47:06Z"
+entries = 125320
+size_bytes = 9868269
+sha256 = "3d8967fe566bc23a74f8ba008d38ac83269a8c7550bd7dc48218fc9bdf284885"
+archive_size_bytes = 3982067
+archive_sha256 = "bf50c9b8944fb6dce62c1dc3923d189ce11957c97e7ccda8dcb8435bb079b060"
+license = "CC-BY-SA-4.0"
+transformation = "Gzip decompression only; original header, UTF-8, CRLF and text preserved"
+notices = ["CC-BY-SA-4.0.txt"]
+
+[[notices]]
+path = "HSK-LICENSE.txt"
+url = "https://raw.githubusercontent.com/jelleverheyen/hsk-vocabulary/a66fd30b9580da2c2af7eb19e4b9d8099a29c061/LICENSE"
+sha256 = "bc66c3799c6e6bc4c7671e6224baf00fad0ea735fe7aed429279de0a17d0d1d8"
+
+[[notices]]
+path = "HSK-SOURCE-README.txt"
+url = "https://raw.githubusercontent.com/jelleverheyen/hsk-vocabulary/a66fd30b9580da2c2af7eb19e4b9d8099a29c061/README.md"
+sha256 = "8fd758eaaacc89a96ff1fbdc2a059b5d57d0160919a1b3a9dd722a9822d29169"
+
+[[notices]]
+path = "CC-BY-SA-4.0.txt"
+url = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt"
+sha256 = "28a9529c7d0bb4dc51f4bf5c116a3d16ef247a052f7591466768ddf563fd1cf5"

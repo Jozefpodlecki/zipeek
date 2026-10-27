@@ -1,4 +1,7 @@
-use std::{path::Path, process::ExitCode};
+use std::{
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 
 use tracing_subscriber::EnvFilter;
 
@@ -27,6 +30,24 @@ pub fn run_cli() -> ExitCode {
         return ExitCode::FAILURE;
     }
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("data/MANIFEST.toml");
+    let arguments: Vec<_> = std::env::args_os().skip(1).collect();
+    match arguments.as_slice() {
+        [] => {}
+        [check] if check == "--check" => {}
+        [generate] if generate == "generate" => {
+            return generate_artifact(
+                &manifest,
+                &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../web/static"),
+            );
+        }
+        [generate, directory] if generate == "generate" => {
+            return generate_artifact(&manifest, &PathBuf::from(directory));
+        }
+        _ => {
+            eprintln!("Usage: db-gen [--check | generate [output-directory]]");
+            return ExitCode::FAILURE;
+        }
+    }
     match prepare(&manifest) {
         Ok(prepared) => {
             tracing::info!(
@@ -51,6 +72,21 @@ pub fn run_cli() -> ExitCode {
                     ExitCode::FAILURE
                 }
             }
+        }
+        Err(error) => {
+            eprintln!("Generation failed: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn generate_artifact(manifest: &Path, directory: &Path) -> ExitCode {
+    match crate::artifact::generate(manifest, directory) {
+        Ok(report) => {
+            tracing::info!(path = %directory.display(), rows = report.rows,
+                size_bytes = report.files[0].size_bytes, sha256 = %report.files[0].sha256,
+                "Verified database artifact generated");
+            ExitCode::SUCCESS
         }
         Err(error) => {
             eprintln!("Generation failed: {error}");
