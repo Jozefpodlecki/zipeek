@@ -1,7 +1,7 @@
 # MCQ checks
 
 D20 MCQ coverage plan. Part of the [testing index](TESTING.md). Approved
-requirement in [D20](../process/decisions/database-and-artifacts.md#d20-mcq-practice).
+requirement in [D20](../process/decisions/database-and-artifacts.md).
 
 ## Coverage plan
 
@@ -26,12 +26,35 @@ For each variant, verify:
   then one shuffle of `[correct, distractor_1, distractor_2]`. No reseeding,
   cloned-stream replay, or caller-owned second RNG.
 
-UI-detail assertions (feedback timing, number-key hints, button styling) wait
-for [A22](../process/TASKS.md) to resolve UX-MCQ01.
+A22 records UX-MCQ01. Required UI assertions when A10 implements it:
+
+- Immediate green/✓ for a correct selection or red/✗ for a wrong selection;
+  remaining options dimmed grey. All options lock after the first selection.
+- Continue remains visible/in place, disabled until selection, then advances.
+- Visible 1/2/3 badges and matching number-key shortcuts; Tab/Enter/Space work.
+- Large centred prompt; D32 Listen on hanzi/pinyin surfaces, verified by API spy.
+- Full-width stacked answers on narrow screens; adaptive row/stack on wide
+  screens based on label length. Implementation chooses exact text thresholds.
+- Fixed-only completed/total progress bar without a visible question-number
+  label; Endless shows streak/cumulative correct and no progress bar.
+- One wrong selection counts as one Fixed mistake; no Endless mistake total.
+  Wrong answers reset the in-session streak; flame appears at streak ≥ 3.
+- Reduced motion removes slides/fades and retains instantaneous colour/icons.
+  All controls have visible keyboard focus. No live practice announcements.
+
+Fixed summary application remains later A09/A10 work. A22 adds no summary
+behaviour assertions or Chart.js pin.
 
 ## Current status
 
 D20 is approved. A07 provides pure full-round MCQ data for all three variants
-via the same round builder; A10 owns playable MCQ routes and UI, and those routes
-are not yet declared in `web/src/route.rs`. These checks describe required
+via the same round builder. A21 declares the three routes and prepares their
+rounds from actual queries; A10 owns playable controls and session progression. These checks describe required
 coverage; they are not evidence that MCQ practice is implemented.
+
+## A37 traditional display requirement
+
+Hanzi-labeled prompts/answers show traditional as secondary text. Primary
+simplified text and answer-label uniqueness/comparison remain unchanged. Do not
+add hanzi to English/pinyin-only surfaces under this rule. Verify retained full
+round replay as well as display when A10 implements the controls.

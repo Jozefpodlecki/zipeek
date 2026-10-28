@@ -77,13 +77,13 @@ Canonical `query_pairs` returns decoded values for the router to serialize once.
 Loading a URL has no saved-exclusion input and does not rewrite browser history.
 
 `web/services/practice_url.rs` uses the existing router decoder; Practice logs
-diagnostics only in debug builds. Without A06 data it only parses, retaining
-seed intent for later normalization. `RecoveryRequired` is an A07 builder input,
+diagnostics only in debug builds. A21 supplies dictionary-backed ID lookup
+and calls normalization before loading ordered candidate views. `RecoveryRequired` is an A07 builder input,
 not an RNG operation: original URL seed/filter stay canonical and the builder
 owns the single recovery/generation stream.
 
-Normalization accepts a pure `Word` lookup; the page only parses until A06 supplies
-actual dictionary rows. `RecoveryRequired` retains the original seed/filter at
+Normalization accepts a pure `Word` lookup, supplied by A21 from validated
+browser dictionary rows. `RecoveryRequired` retains the original seed/filter at
 offset zero; A07 performs recovery and generation with its single RNG stream.
 The published canonical golden remains `0xa0e531d76df62844`.
 

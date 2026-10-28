@@ -102,5 +102,5 @@ browser database or gameplay integration.
 The pure builder exists in `crates/zipeek-core/src/round/` (A07). The executable
 wasm replay check is documented in
 [browser-db.md](browser-db.md#executable-nativewasm-replay-check-a07). Database
-and UI integration remain A21/A09/A10 and are not claimed by the pure builder's
-passing tests.
+integration is implemented by A21 and verified separately in Chrome; playable
+UI remains A09/A10 and is not claimed by the pure builder's passing tests.

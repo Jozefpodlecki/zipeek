@@ -10,7 +10,7 @@ implemented.
 ## D09 E2e lifecycle
 
 **Status:** Approved 2026-10-26.
-**Owner:** [TESTING](../testing/e2e.md), [AGENTS](../../../AGENTS.md).
+**Owner:** [TESTING](../../testing/e2e.md), [AGENTS](../../../AGENTS.md).
 **Index row:** [D09](index.md#approved-decisions).
 
 Harness owns a Trunk child and one managed Chrome WebDriver session per test
@@ -20,7 +20,7 @@ binary.
   install ChromeDriver separately or put it on PATH; the `manager` feature
   handles matching, download, subprocess and teardown. Driver download/cache
   availability is a prerequisite.
-- **Serial by default:** `cargo test -p e2e -- --test-threads=1`. One session
+- **Serial by default:** `cargo test -p e2e --locked -- --test-threads=1`. One session
   per binary avoids port/browser conflicts.
 - **Readiness helper:** shared once in the e2e crate. 30-second timeout,
   100 ms exponential backoff capped at 2 s, HTTP-response or TCP-connect
@@ -31,18 +31,18 @@ binary.
   deployment concern validated separately.
 - **Cleanup:** child guard kills and reaps the Trunk child on drop, including
   setup failure and test failure. Never leave an owned process behind.
-- **Renames pending:** the current manifest is `zipeek-e2e`; renaming to `e2e`
-  is required to support the target command.
+- **Implemented by A15, 2026-10-28:** package renamed to `e2e`; the root
+  lockfile records only that identity change, with dependencies preserved.
 
-This decision specifies the lifecycle; concrete modular harness layout remains
-A15 work (see D28).
+A15 implements this lifecycle and D28 modularity. Root owns Trunk serve; Pages
+owns its separate prefix build and Node static server. Both are verified in Chrome.
 
 ---
 
 ## D27 Workspace lockfile
 
 **Status:** Approved 2026-10-27.
-**Owner:** [AGENTS](../../../AGENTS.md), [TESTING](../testing/TESTING.md),
+**Owner:** [AGENTS](../../../AGENTS.md), [TESTING](../../testing/TESTING.md),
 [CI](../CI.md).
 **Index row:** [D27](index.md#approved-decisions).
 
@@ -66,16 +66,17 @@ unresolved.
 
 ---
 
-## D28 Modular e2e infrastructure (proposed)
+## D28 Modular e2e infrastructure
 
-**Status:** Proposed 2026-10-27 by user review. Existence of the need is
-approved; concrete layout requires implementation review by A15.
-**Owner:** [TESTING](../testing/e2e.md).
+**Status:** Proposed 2026-10-27; concrete A15 scope approved and implemented
+2026-10-28. No dependency additions or upgrades.
+**Owner:** [TESTING](../../testing/e2e.md).
 **Index row:** [D28](index.md#approved-decisions).
 
-The user's 2026-10-27 review identified `e2e/tests/smoke.rs` as a dumping ground
-and requested modular infrastructure. Concrete proposal lives at
-[TESTING §A15 modularization proposal](../testing/e2e.md#a15-modularization-proposal-from-the-2026-10-27-review).
+The user's 2026-10-27 review identified e2e/tests/smoke.rs as a dumping ground.
+A15 implements the layout in [testing/e2e.md](../../testing/e2e.md#implemented-layout-and-ownership),
+with a typed harness error module and failure-process fixture in addition to the
+proposed modules. Named scenarios share one session per binary.
 
 Approved requirements:
 
@@ -92,8 +93,12 @@ Approved requirements:
   deliberately.
 - No new framework, driver service, or ChromeDriver subprocess.
 
-Implementation: A15 owns the split. Proposed layout in `TESTING/e2e.md` is a
-proposal, not approved structure.
+Implemented by A15: eight root scenarios (seven original scenarios with the
+adapter probe separated) and one Pages scenario, represented by two integration
+tests. Four lifecycle tests prove failure/unwind/descendant cleanup; two expected
+browser faults prove same-session isolation. Artifact capture preserves primary
+failures. The stale Home h1 selector now targets the existing header Home link,
+retaining the Zipeek text assertion and user branding without app changes.
 
 ---
 
@@ -102,12 +107,12 @@ proposal, not approved structure.
 **Status:** Proposed 2026-10-27 by user review. Existence of the boundary is
 approved; concrete crate name, dependency moves, and migration require explicit
 approval before A33 starts.
-**Owner:** [ARCHITECTURE](../architecture/ARCHITECTURE.md).
+**Owner:** [ARCHITECTURE](../../architecture/ARCHITECTURE.md).
 **Index row:** [D30](index.md#approved-decisions).
 
 Extract the A06 browser adapter into a dedicated crate
 `crates/zipeek-db-wasm` (package `zipeek-db-wasm`). Detailed proposal at
-[ARCHITECTURE §A33](../architecture/modules/target-architecture.md#proposed-browser-database-crate-extraction-a33).
+[ARCHITECTURE §A33](../../architecture/modules/target-architecture.md).
 
 Dependency direction:
 
@@ -116,6 +121,7 @@ web -> zipeek-db-wasm -> zipeek-core
 web ------------------> zipeek-core
 db-gen ---------------> zipeek-core
 db-gen -> native duckdb-neo
+```
 
 Approved constraints:
 
@@ -170,3 +176,22 @@ Benefit: dependency/test isolation and a stable client boundary. Cost: another
 manifest, target configuration, and JS asset integration boundary. Keep it
 proposed until the user approves those concrete changes; feature work can use
 the existing facade meanwhile.
+
+## D33 Accept build-tool Picomatch advisories
+
+**Status:** User acceptance recorded 2026-10-28; existing ReDoS answer reconfirmed
+and extended to the POSIX advisory during A37.
+**Owner:** [CI](../CI.md).
+**Index row:** [D33](index.md#approved-decisions).
+
+Accept picomatch 2.3.1's CVE-2026-33671 (extglob ReDoS) and CVE-2026-33672
+(POSIX character-class matching) under the condition that it remains a build-tool
+dependency receiving developer-controlled glob patterns, not application user
+input. Do not add an override, run npm audit fix or refresh the lockfile for these
+advisories. Reassess if that input/deployment boundary changes. An independently
+approved future Trunk/Tailwind upgrade may naturally bring a fixed version.
+
+Affected version 2.3.1 and patched lines 2.3.2 / 4.0.4 are retained for reference.
+Acceptance is not remediation: npm may continue to report the advisory. A39's
+proposed repair was created despite the existing acceptance and is retired by
+this correction. No dependency target or graph changes.

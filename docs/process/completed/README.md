@@ -24,6 +24,7 @@ former single-file `docs/COMPLETED.md`.
 | --- | --- |
 | [2026-10-26.md](2026-10-26.md) | Outcomes dated 2026-10-26: foundation, generator, schema, import, shell scaffolding |
 | [2026-10-27.md](2026-10-27.md) | Outcomes dated 2026-10-27: shell refinements, practice URLs, round builder, lockfile, browser DB, docs review, Tailwind correction |
+| [2026-10-28.md](2026-10-28.md) | A15 modular owned Chrome harness, package rename and failure-isolation validation |
 | [archive.md](archive.md) | Frozen migration: one-time STATUS reconciliation and preserved documentation history |
 
 ## Related

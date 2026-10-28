@@ -10,8 +10,8 @@ implemented.
 ## D12 Deterministic round builder
 
 **Status:** Approved 2026-10-26; refined by D17 and D19.
-**Owner:** [ROUND_GENERATION](../product/ROUND_GENERATION.md),
-[DB](../architecture/schema/DB.md), [TESTING](../testing/round-builder.md).
+**Owner:** [ROUND_GENERATION](../../product/ROUND_GENERATION.md),
+[DB](../../architecture/schema/DB.md), [TESTING](../../testing/round-builder.md).
 **Index row:** [D12](index.md#approved-decisions).
 
 Pure `CandidatePool` function; three exclusion-clean SQL-ordered nested views;
@@ -48,8 +48,8 @@ the only format.
 ## D13 Counts, URLs, exclusions, offsets
 
 **Status:** Approved 2026-10-26; refined by D15.
-**Owner:** [PRODUCT](../product/PRODUCT.md), [DB](../architecture/schema/DB.md),
-[TESTING](../testing/practice-url.md).
+**Owner:** [PRODUCT](../../product/PRODUCT.md), [DB](../../architecture/schema/DB.md),
+[TESTING](../../testing/practice-url.md).
 **Index row:** [D13](index.md#approved-decisions).
 
 Fixed 5/10/20, default 10, no custom count. Canonical HSK/level and optional PoS
@@ -58,10 +58,16 @@ saved/current/pending union; load exactly the URL set (absent means empty), neve
 merge saved state. D15 defers new exclusions until the next URL. Deterministic
 replay and four-step nominal offsets. Advanced tier uses 7 (7-9 alias).
 
+Amendment recorded by A22 on 2026-10-27: mid-round exclusion affordance
+deferred, not part of v1. Keep the saved/pending lifecycle below; setup Reset
+remains available. No replay bytes, comparison key, RNG behaviour or dependency
+changes are approved by this amendment.
+
 Canonical unseeded URL:
 
 ```text
 /practice/<variant>?mode=<endless|fixed>&rounds=<5|10|20>&hsk=<2.0|3.0>&level=<1..7>[&pos=<noun,verb>][&exclude=<id,id,id>][&offset=<n>]
+```
 
 rounds included iff mode=fixed; ignored in Endless.
 
@@ -95,7 +101,8 @@ Nominal offsets advance by four per round; offset + 4 > pool_size wraps to
 zero with a one-time "pool exhausted, looping" hint. Fixed completion tracking
 is independent of offset wrapping.
 
-D14 Reproducible hashing and date override
+## D14 Reproducible hashing and date override
+
 Status: Approved 2026-10-26.
 Owner: AGENTS, PRODUCT,
 TESTING.
@@ -120,7 +127,8 @@ Do not persist hash state anywhere.
 Invalid debug override silently uses the real local date; release builds
 ignore wotd entirely. No testing Cargo feature in v1.
 
-D15 URL defaults and session lifecycle
+## D15 URL defaults and session lifecycle
+
 Status: Approved 2026-10-26.
 Owner: PRODUCT, ROUND_GENERATION,
 TESTING.
@@ -162,7 +170,8 @@ clears seed, keeps the filter, and advances the normalized offset from zero
 to four for the unseeded next round. Raw ignored offsets must not affect that
 transition.
 
-D17 RNG provider
+## D17 RNG provider
+
 Status: Approved 2026-10-26; supersedes D12's direct-crate proposal.
 Owner: AGENTS, ROUND_GENERATION,
 TESTING.
@@ -181,7 +190,8 @@ The user approved moving rand from web to zipeek-core for A07. web
 retains its existing getrandom wasm_js support. The core manifest enables
 chacha. Do not silently substitute StdRng or change versions.
 
-D19 V1 replay stream and draw order
+## D19 V1 replay stream and draw order
+
 Status: Approved 2026-10-26; supersedes the earlier speculative v2 forecast.
 Owner: ROUND_GENERATION,
 TESTING, AGENTS.
@@ -215,3 +225,11 @@ correction, not a commitment to implement v2 now.
 
 Authoritative single-stream contract lives at AGENTS §5;
 if this file and AGENTS conflict, AGENTS wins.
+
+## A37 display clarification to D12 — 2026-10-28
+
+Traditional hanzi is secondary presentation on hanzi-labeled match/MCQ surfaces.
+Primary simplified labels and existing comparison/uniqueness keys remain unchanged.
+Do not concatenate traditional text into core Card.label, hash/canonical bytes
+or answer keys. This is not the earlier conditional composite-label proposal;
+there is no replay break or v2 selection.

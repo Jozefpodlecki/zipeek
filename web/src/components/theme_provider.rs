@@ -1,7 +1,10 @@
 use web_sys::{Document, Storage};
 use yew::prelude::*;
 
-use crate::theme::{Theme, ThemeContext};
+use crate::{
+    reducers::theme::{ThemeAction, ThemeState},
+    theme::{Theme, ThemeCommands},
+};
 
 #[derive(Properties, PartialEq)]
 pub struct ThemeProviderProps {
@@ -13,16 +16,28 @@ pub struct ThemeProviderProps {
 #[function_component(ThemeProvider)]
 pub fn theme_provider(props: &ThemeProviderProps) -> Html {
     let storage = props.storage.clone();
-    let theme = use_state(move || Theme::load(storage.as_ref()));
+    let theme = use_reducer_eq(move || ThemeState::new(Theme::load(storage.as_ref())));
+    let toggle = use_callback(theme.dispatcher(), |(), dispatch| {
+        dispatch.dispatch(ThemeAction::Toggle)
+    });
     {
         let document = props.document.clone();
-        use_effect_with(*theme, move |theme| {
-            theme.apply(&document);
-        });
+        let storage = props.storage.clone();
+        use_effect_with(
+            (theme.current, theme.modified, document, storage),
+            move |(current, modified, document, storage)| {
+                current.apply(document);
+                if *modified {
+                    current.save(storage.as_ref());
+                }
+            },
+        );
     }
     html! {
-        <ContextProvider<ThemeContext> context={ThemeContext { state: theme, storage: props.storage.clone() }}>
-            {props.children.clone()}
-        </ContextProvider<ThemeContext>>
+        <ContextProvider<ThemeCommands> context={ThemeCommands::new(toggle)}>
+            <ContextProvider<Theme> context={theme.current}>
+                {props.children.clone()}
+            </ContextProvider<Theme>>
+        </ContextProvider<ThemeCommands>>
     }
 }

@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum DbError {
+    #[error("Dictionary is not ready; wait for readiness or retry initialization")]
+    NotReady,
     #[error("{operation}: {message}")]
     Operation {
         operation: &'static str,

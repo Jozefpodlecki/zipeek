@@ -132,3 +132,164 @@ compatibility blocker, stop and report commands, versions, and error evidence.
 See [architecture/schema/DB.md](../architecture/schema/DB.md) and
 [architecture/schema/runtime.md](../architecture/schema/runtime.md) for the pin
 rationale.
+
+## A15 handoff — 2026-10-28
+
+A15 implements the package e2e, owned lifecycle, modular suites and explicit
+adapter fixture. Use [testing/e2e.md](../testing/e2e.md) for current commands;
+earlier handoff paragraphs about external servers are historical. The root suite
+has eight named scenarios plus two expected-failure recovery probes; Pages has
+one scenario. Each binary owns one managed Chrome session and an isolated build.
+Four lifecycle unit tests and all five gates pass. Evidence and artifacts are
+listed in [testing/evidence.md](../testing/evidence.md#a15-modular-chrome-harness--2026-10-28).
+
+Next is A35: preserve current user branding, landscape and accessibility, apply
+the recorded shell cleanup/responsive changes and migrate component styling to
+Tailwind utilities. Use the new run/scenario directories for visual comparisons.
+Keep the source scratchpad unchanged pending separately approved A38 cleanup;
+remaining UX decisions stay in A37. D29 motion and D30 extraction remain separate.
+
+
+## A35 handoff — 2026-10-28
+
+A35 implements D31 utilities, explicit Rust source detection and theme aliases;
+there is no legacy v3 config or bespoke shell/card stylesheet. Critical inline
+loading/backdrop CSS, source scratchpad, dependency graph and dictionary/image
+bytes remain unchanged. The approved shell cleanup is applied: label-only
+navigation with aria-current, footer repository icon, full-width mobile panel/
+main and md/lg boundaries. The user approved attribution wrapping inside a single
+footer row. Light muted text was darkened for contrast; focus defaults use the
+base layer and tile motion is guarded by motion-safe.
+
+All five gates and root/Pages Chrome pass after the final focus-offset fix.
+See [A35 evidence](../testing/evidence.md#a35-tailwind-component-migration--2026-10-28)
+for before/after artifacts and contrast scope. A31 is next in the approved order:
+review its concrete scoped read/command context and reducer plan before editing.
+A21 follows. D29 motion profiles/A32, D30 extraction/A33, A37 remaining UX choices
+and separately proposed A38 cleanup remain outside the completed styling task.
+Do not clear the source scratchpad implicitly. No commit or staging was performed
+by the agent; preserve the user's current staged snapshot.
+
+
+## A31 handoff — 2026-10-28
+
+A31 is complete. ThemeProvider → DatabaseProvider → HashRouter → AppShell →
+DatabaseBoundary → Switch is the mounted tree. Use use_dictionary for stable
+typed query access, use_database_status for readiness notifications and
+use_database_commands for Retry. Theme uses use_theme/use_theme_commands. No
+consumer receives raw reducer handles/setters. reducers/ holds pure metadata/theme
+transitions; provider effects own DOM/storage/initialization and a synchronous
+request gate rejects old results before cleanup. Pending JS opens cannot be
+aborted: stale successful handles close after settlement. A33 shutdown review
+remains separate. See the A31 architecture/evidence entries for details.
+
+All five gates, 100 workspace tests and twelve named root/Pages Chrome scenarios
+pass. The user-staged index, dependencies, scratchpad and previous outcomes are
+preserved; no staging/commit was performed. A21 routing/loading-shell integration
+is next in the approved order. Add concrete feature providers with their first
+consumers; leave Browse/practice product choices, motion profiles/A32 and adapter
+extraction/A33 to their own tasks. Never clear the scratchpad implicitly.
+
+
+## A21 handoff — 2026-10-28
+
+All six practice variant routes now use services/practice_loader.rs through
+hooks/practice.rs and a scoped pure request reducer. The loader validates seed/
+exclusion IDs, normalizes with core, obtains SQL-ordered candidate views and calls
+build_round once. It never reads saved exclusions or rewrites loaded URLs.
+Recovery preloads all possible context views; the core builder alone owns RNG.
+Ready retains PreparedPractice/normalized query/Round but renders coming-soon
+until A09/A10. Debug-only data-practice-round exposes card IDs/labels for replay
+checks; release omits it. Failures log detail and expose safe Retry copy.
+Cleanup aborts Rust orchestration, not the already-issued JS query; generation
+checks and render masking prevent stale results. No Database::open abortion.
+
+The app now mounts Switch inside the stable shell, with DatabaseBoundary per
+recognized route and independent 404 recovery. Titles/main focus follow route
+changes, including history; query-only changes preserve focus. MCQ variants share
+Practice navigation selection. Five gates pass with 101 Rust tests and seventeen
+named Chrome scenarios. See A21 evidence for paths and the corrected 404 fixture.
+
+A16 CI/Pages migration is next proposed implementation; A37 decision review is
+still open. A09/A10/A11/A13/A12 retain their feature behavior, and A32/A33 motion/
+extraction need separate review. Preserve the user-staged index, append-only
+history and untouched scratchpad. No staging or commit was performed.
+
+
+## A16 handoff — 2026-10-28
+
+CI now owns PR/master push/manual validation with the approved Rust 1.97.1,
+locked web install, all five gates and workspace Chrome suites. Successful
+non-PR master validation calls reusable deploy.yml for Ubuntu release build and
+web/dist/ Pages upload/deploy. Manual publication starts from CI on master;
+deploy.yml has only workflow_call. Existing action versions and Trunk latest
+remain; no package/feature/tool pin was selected. See process/CI.md for permissions,
+cache boundaries, source links and native/browser prerequisites.
+
+Validation exposed an actual harness startup race: TCP could accept while Trunk
+served 404. Bounded HTTP 200 readiness and a 404-then-200 fixture fix it; five
+lifecycle tests now pass. All local gates pass with 102 Rust tests and seventeen
+named Chrome scenarios, plus the release build and artifact/preservation checks.
+See A16 evidence for final paths. Hosted execution and actual publication still
+need confirmation after user commit/push; no remote action was performed here.
+
+A37 remaining decisions is next proposed work. A39 tracks the reviewed Picomatch
+advisory requiring separate dependency approval. A38 scratchpad cleanup and A32/
+A33 motion/extraction retain their own scopes. Preserve the source scratchpad and
+append-only history. The user staged work externally during interruption; use the
+resumed snapshot as the preservation reference. No staging/commit was performed
+by the agent.
+
+## A37 continuation — 2026-10-28
+
+Approved and recorded: secondary traditional on hanzi exercise labels without
+comparison-key changes; five Browse fields; q/strategy/f/page/page_size grammar
+with individually encoded filter tokens then outer query serialization; malformed
+range rejection with existing HSK clamping; Home fallback/Retry plus tiles; 150 ms
+fade-only route/drawer profile, preserving practice timings/reduced motion.
+Existing D04/D13/D15/D20/theme rules settle most old product-gap entries.
+
+The user requires social cards and a preview image before v1. The final proposed
+share-card layout/copy question is pending; do not infer acceptance. No card/image
+or metadata implementation has started. D33 accepts both tooling advisories under
+the build-tool-only input condition; A39 repair was retired, with an appended
+correction preserving A16 history. No override/audit fix or scratchpad edits.
+
+
+## A37 final answer and closure — 2026-10-28
+
+The share-card layout/copy is approved as D34, superseding the pending-design
+state above. A37 is complete and its outcome appended; A40 now owns image/metadata
+implementation before v1. Use UX's exact share copy and static site-wide 1200×630
+landscape/slate/wordmark/blue composition, /zipeek/ URLs and no round word/score.
+A32/A11/A13 have their A37 prerequisite satisfied. Scope/dependency approvals for
+implementation still apply. Documentation gates pass; no image, HTML, code,
+dependency, scratchpad or staged-index changes were made by this closing pass.
+
+
+## A38 selective cleanup — 2026-10-28
+
+The separately approved cleanup is complete: 11 fully recorded topics consumed,
+six sections retained (summary/Chart.js, conservative copy/product remnants,
+D30 extraction and two contributor-policy questions). Retained payloads remain
+with one reason note each and repaired relative links. The traditional composite-
+label branches are superseded by A37 secondary display with unchanged keys;
+summary application/exact Chart.js pin remain A09/A10. Do not treat the old retained
+question lists or proposed D-numbers as newly approved or reserved choices.
+
+The completed outcome records each topic's disposition and permanent owner.
+A41 tracks comment-exception/transitive-policy clarification without deciding it.
+Documentation/preservation checks pass; no code/dependency or staged-index change,
+Rust/Trunk/Chrome run, staging or commit. A40 is the next ready backlog item for
+approved D34 social metadata/preview implementation; it still needs its concrete
+implementation plan under the normal process.
+
+
+## User-directed quiz-first order — 2026-10-28
+
+This supersedes earlier next-A40 suggestions. Next implementation is A11 setup,
+then A10 MCQ gameplay, then A09 matching/summary. First playable milestone is the
+Endless MCQ question/feedback/Continue loop using A21 prepared rounds. Full task
+scopes and validation remain; do not claim full A10 completion from that milestone.
+Metadata/motion/extraction are later priorities, and A40 is still required before
+v1. No code/dependency or scratchpad change was made by this reorder.

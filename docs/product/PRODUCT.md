@@ -31,7 +31,7 @@ On a database load failure, show the retry state described for Word of the Day
 instead of leaving a permanent spinner. See [ARCHITECTURE](../architecture/modules/web-shell.md)
 for the startup stages. The shared centered loading presentation and persistent
 landscape are implemented in A30; the actual database readiness/retry pipeline
-remains A06/A21.
+is implemented by A06/A31; A21 adds practice-query loading after database Ready.
 
 ## Routes
 
@@ -39,7 +39,7 @@ Paths below are app-relative; deployment retains the `/zipeek/` prefix.
 
 | Route | Intended view |
 | --- | --- |
-| `/` | Left icon panel with theme switch, Word of the Day, Practice/Browse/Random tiles |
+| `/` | Shared collapsible drawer/top-panel theme switch, Word of the Day, Practice/Browse/Random tiles |
 | `/practice` | Setup: HSK system/level, practice mode, Fixed count, exclusions reset; PoS picker is future work |
 | `/practice/eng-pinyin` | English to pinyin matching |
 | `/practice/pinyin-hanzi` | Pinyin to hanzi matching |
@@ -47,10 +47,12 @@ Paths below are app-relative; deployment retains the `/zipeek/` prefix.
 | `/practice/mcq/hanzi-to-meaning` | MCQ: simplified hanzi prompt, English answers |
 | `/practice/mcq/meaning-to-hanzi` | MCQ: English prompt, simplified hanzi answers |
 | `/practice/mcq/meaning-to-pinyin` | MCQ: English prompt, display-pinyin answers |
-| `/browse` | Paginated results with part-of-speech, pinyin, and hanzi-character filters |
+| `/browse` | Paginated word list with a smart search box, filter chips and settings modal |
 
 All three matching variants and the D20 MCQ variants are in scope for v1. The overall query requirement
-also includes English; its exact browse control is still to be specified.
+also includes English; the answered Browse controls are specified in [UX](UX.md#browse).
+A37 selects simplified/pinyin/first-English-gloss/HSK/PoS result fields and
+the complete q/strategy/f/page/page_size URL contract in UX.
 Pinyin browse queries support both display-tone and original numbered forms (D07).
 Preserve D16's source transcriptions, including their spacing and conventions.
 Both English-bearing variants show the first gloss: left in eng-pinyin, right in
@@ -70,7 +72,7 @@ Missing membership is not a level or an inferred equivalence between systems.
 The HSK 3.0 advanced band has one domain value, `Hsk3Level::SevenToNine`, stored
 and canonically encoded as integer `7`. Values 8 and 9 are not separate levels.
 Accept `level=7-9` as an alias for HSK 3.0 and normalize to `level=7`. Display
-"HSK 7–9" or "Advanced (7–9)", never three separate level buttons. HSK 2.0 still
+"HSK 7–9", never three separate level buttons (A22 amendment, 2026-10-27). HSK 2.0 still
 accepts only 1-6. Missing/invalid levels default to 1 in the selected system (D15),
 never all levels. Invalid values produce a debug-only warning, not a page error.
 
@@ -114,7 +116,9 @@ duplicate right labels; widened views start at zero. Seeded rounds never slide.
 The user picks the mode on `/practice`:
 
 - **Endless:** infinite rounds with a Next round button between rounds. No
-  summary and no score persistence. A running streak/tally in the header is allowed.
+  summary and no score persistence. Show an in-session streak and cumulative
+  correct count; a wrong attempt/answer resets the streak. Show a flame at ≥ 3.
+  Matching also shows `N / 4` locally; Fixed adds `Round N of M` to its header.
 - **Fixed:** choose N rounds up front. After round N, show correct pairs, total
   mistakes, and time taken, with Play again and Back to setup actions. Offer
   exactly three round-count buttons: **5 / 10 / 20**, default **10**. No custom-N
@@ -192,10 +196,11 @@ URL normalization and fallbacks (D15: approved)
 Normalize input deterministically in memory; malformed URLs must not panic or
 error the page. Preserve the current URL until an explicit new URL is generated.
 
-A08 implements the pure parsing/normalization helpers and connects router decoding
-to the existing practice placeholders. Database-backed normalization awaits A06;
-RecoveryRequired is passed to A07's single-stream pipeline, which owns actual
-recovery draws. This does not yet provide playable exercises.
+A08 implements pure parsing/normalization helpers. A21 connects dictionary-backed
+normalization and ordered candidate views to A07's single-stream builder.
+RecoveryRequired retains original canonical inputs; the builder owns recovery
+draws. Prepared routes remain placeholders until A09/A10 gameplay. URL loading
+never reads saved exclusions or rewrites the entered link.
 
 Parse mode/count, HSK system/level, PoS, exclusions, and entered offset using
 the defaults above. The URL's exclusions are authoritative, not saved browser
@@ -297,21 +302,23 @@ Variant token	Prompt	Answer label
 hanzi-to-meaning	Simplified hanzi	First English gloss
 meaning-to-hanzi	First English gloss	Simplified hanzi
 meaning-to-pinyin	First English gloss	Display pinyin
-Routes are /practice/mcq/<variant> as listed above. These routes are specified
-but are not yet declared in web/src/route.rs.
+Routes are /practice/mcq/<variant> as listed above. A21 declares all three paths
+and connects their preparation/loading pipeline; gameplay remains A10.
 
 Use the same HSK/PoS filtering, exclusions, deterministic URL principles, and
 D02/D12 widening/answer-label uniqueness rules, adapted to two distractors.
 All three variants require English, so apply D18 eligibility rules. D19 fixes
 MCQ prompt selection, two distractor samples, and final option shuffle on one
 continuous RNG stream. A07 implements all six variants' pure round data and
-native/wasm golden tests; MCQ routes, controls and gameplay remain A10 work.
+native/wasm golden tests; A21 declares MCQ routes, while controls/gameplay remain A10 work.
 
 Support Endless and Fixed. Fixed offers 5/10/20 questions, default 10, with
 session progress kept independently of the pool offset. Advance the nominal
 offset by one per question; matching continues to advance by four per round.
-Endless has no Fixed summary. UI feedback timing, number-key hints, and answer
-button styling remain UX-MCQ01 details for A22.
+Endless has no Fixed summary. UX-MCQ01 now specifies immediate feedback, one
+locked selection, number-key badges/shortcuts, Continue gating and adaptive
+answer layout; see [UX](UX.md#mcq-interaction-ux-mcq01). These are A10
+implementation requirements, not implemented controls.
 
 Landing and theme
 Show exactly three navigation tiles: Practice, Browse, Random.
@@ -319,6 +326,13 @@ Show exactly three navigation tiles: Practice, Browse, Random.
 Random starts the approved shortcut described above (D04).
 
 Show a Word of the Day card using the approved selection below (D05).
+The field order is HSK/PoS badges, large simplified hanzi, muted traditional
+hanzi, accent pinyin and first English gloss; add Listen near hanzi/pinyin.
+Daily and practice pronunciation uses browser speech synthesis (D32), reading
+the represented word's simplified hanzi with zh-CN under the supplied fallback
+rule. Voice availability/quality varies; there are no new DB fields/audio assets.
+Match cards and MCQ hanzi/pinyin surfaces offer the same control.
+See [UX](UX.md#pronunciation-d32) for surface and accessibility requirements.
 
 Use the shared left sidebar, theme controls, and footer described below.
 
@@ -333,13 +347,18 @@ using the existing boolean storage key and browser storage facilities.
 Apply the same selected theme to the static HTML loading shell, Yew's initial
 loading view, and the ready app. Avoid a light flash during startup or route changes.
 
-Anchor a GitHub icon at the bottom of the left sidebar, linking to the
-project repository: https://github.com/Jozefpodlecki/zipeek. Give the icon link
-an accessible name identifying the repository.
+A22 shell amendment (2026-10-27): move the existing GitHub icon from the drawer
+to the footer, linking to https://github.com/Jozefpodlecki/zipeek. Retain its
+"Zipeek repository on GitHub" accessible name, target="_blank",
+rel="noopener noreferrer", simple_icons icon and existing licence notice.
+Navigation links show labels only: no numbers or visual active-route decoration;
+keep aria-current="page" as the sole active indication.
 
 Include a footer with Jozef Podlecki and the copyright symbol/year, for
 example © 2026 Jozef Podlecki. Use the current year when implementing it.
-Keep the dictionary attribution below alongside the personal copyright.
+Copyright, dictionary attribution and GitHub icon form one dot-separated footer
+row. A35 implements the row with the user-approved attribution wrapping inside
+its item on narrow screens; the app does not force the full text onto one line.
 
 D24/A27 implements the slate/blue shell; D25/A28 adds the permanent top panel
 and collapsible drawer, removes decorative headers and fixes accidental overflow.
@@ -351,8 +370,10 @@ The shell retains
 saved theme and attribution footer. HTML and Yew use dark by default and honor
 saved light. The landing arrangement and navigation tiles are present; the
 daily-word area uses the agreed unavailable copy until A06/A12 supplies actual
-selection data. Practice, Browse and Random routes remain functional-feature
-placeholders; they do not yet query the database or generate exercises.
+selection data. A11 implements the six-activity setup and canonical Start links.
+A21 prepares deterministic practice rounds from dictionary
+queries behind explicit placeholders; playable controls remain A09/A10. Browse
+and Random remain feature placeholders without their feature queries.
 
 When dictionary data is served, show this attribution in the visible site footer,
 with links to the project and licence:
@@ -415,3 +436,65 @@ An invalid override, such as 2026-13-40, silently falls back to the real browser
 local date. Do not panic or show a page error. An optional warn! is allowed only
 in debug builds. Use the valid override to assert a specific word in e2e. No Clock
 trait is required.
+
+## A22 scope boundary — 2026-10-27
+
+The answered UX requirements in [UX](UX.md) guide later feature work. Mid-round
+exclusion affordance deferred, not part of v1; retain D13/D15 URL/exclusion
+lifecycle and setup Reset. A37 now adds secondary traditional text to hanzi-labeled exercise surfaces,
+while primary simplified labels and replay comparison keys remain unchanged.
+
+UX-SUM01 is deferred to A09/A10/Fixed-summary implementation by explicit user
+instruction. A22 does not change the existing summary/restart contract above.
+The later task must apply the approved first-attempt metric and reconcile the
+summary as a whole. Chart.js is summary-ring-only intent; confirm and exactly
+pin the latest stable version when implementation is approved. The suggested
+4.4.x/4.4.6 candidate is unconfirmed; A22 adds no dependency or AGENTS policy row.
+A37 records the initial motion profile and reconciles product gaps below;
+feature implementation and Fixed-summary application remain separate.
+
+## A37 product reconciliation — 2026-10-28
+
+Traditional display is secondary presentation on hanzi exercise labels; D12
+comparison keys and replay bytes stay unchanged. Browse uses the five approved
+fields and complete URL/range rules in UX. Home must retain the daily fallback/
+Retry and navigation tiles during dictionary failure, implemented with A12.
+
+The earlier product-gap list does not reopen these existing decisions:
+
+- D04 Random selects among the three match variants and always starts Endless;
+  adding MCQ to Random is not approved by this pass.
+- D13/D15 keep loaded URL exclusions authoritative, saved/pending IDs for generated
+  URLs, and explicit setup Reset. Counts reflect the deduplicated valid saved set;
+  there is no per-card exclusion/reset control in v1 exercises.
+- D15 keeps Fixed progress independent of pool wrapping and resets it on reload.
+- D20 meaning-to-pinyin answers use display pinyin; no prompt-variety expansion.
+- UX-MATCH02/MCQ01 already define practice progress/streak presentation.
+- Theme stays dark by default with saved-choice precedence; automatic OS-theme
+  selection is not part of the approved policy.
+- Wrong attempts/answers follow the recorded UX. The user's later first-attempt
+  summary metric remains an A09/A10 application task, not a new A37 definition.
+
+The 150 ms fade-only motion profile is selected; A32 implementation remains
+separate. No schema, URL replay format, scoring implementation or dependency
+change is made by this documentation pass.
+
+## Site sharing metadata (D34)
+
+Before v1, A40 implements static Open Graph and Twitter/X large-image cards with
+one 1200×630 image for every current hash route. Use the existing landscape with
+a dark slate overlay, Zipeek wordmark and blue accent; no particular word, round
+or score. Approved title: "Zipeek — Chinese hanzi practice". Approved description:
+"Look up Chinese words and practise hanzi, pinyin, and meanings." Keep absolute
+canonical/image URLs under /zipeek/. This design is approved, not an implemented
+asset or a promise that social platforms have fetched it.
+
+## A11 setup delivery
+
+Setup now selects all six variants and starts a new unseeded URL using the
+approved HSK/mode/count and validated saved exclusions. Start uses offset zero;
+Endless omits rounds, empty exclusions are omitted, and no seed/PoS is invented.
+Reset clears storage/local exclusions and updates the next Start URL while
+remaining on setup. This does not alter a loaded round. Setup defaults to the
+first MCQ activity for the quiz-first priority. The actual MCQ question loop
+remains next work in A10; A11 delivers controls/navigation, not gameplay.

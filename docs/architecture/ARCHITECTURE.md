@@ -2,12 +2,12 @@
 
 This file is the overview. Detailed module notes live under
 [modules/](modules/); database and schema details live under
-[schema/](schema/); UI state and motion proposals live in
+[schema/](schema/); UI state boundaries and motion proposals live in
 [UI_ARCHITECTURE.md](UI_ARCHITECTURE.md).
 
 ## Repository snapshot
 
-Described as of 2026-10-27 during an ongoing staged repository migration. This
+Described as of 2026-10-28 during an ongoing staged repository migration. This
 describes files on disk, not the last committed release.
 
 - Root `Cargo.toml` includes `web`, `crates/db-gen`, `crates/zipeek-core`, and
@@ -15,22 +15,26 @@ describes files on disk, not the last committed release.
 - `web` is the Rust 2024 Yew CSR package `zipeek`. `main.rs` initializes the
   environment, logging, and renderer; `lib.rs` declares the app modules.
 - `web/src/` contains `app`, `components`, `contexts`, `env`, `models`, `pages`,
-  `route`, `services` and `theme` modules. App mounts `ThemeProvider`,
-  `HashRouter`, `AppShell`, `DatabaseProvider` and `Switch`.
+  `route`, `reducers`, `hooks`, `services` and `theme` modules. App mounts
+  `ThemeProvider`, `DatabaseProvider`, `HashRouter`, `AppShell`,
+  `Switch`, then `DatabaseBoundary` for recognized routes. The 404 fallback
+  bypasses database readiness so unavailable data cannot hide route recovery.
 - `route.rs` declares Home, Random, PracticeSetup, three match variants, Browse,
-  and a `/404` fallback. MCQ routes are approved by D20 but not declared. Browse
-  and setup are placeholders; Practice parses query state and renders Loader.
+  three MCQ variants, and a `/404` fallback. Browse and Random remain feature
+  placeholders; A11 implements setup controls and canonical Start navigation. Practice normalizes URL state against dictionary rows,
+  loads candidate views and builds a deterministic round, with guarded
+  Loading/Ready/Failed+Retry. Ready remains a placeholder until A09/A10 gameplay.
 - Trunk configuration and HTML live in `web/`. Development port is `1420`.
   Styles live in `web/styles/`; HTML copies `web/public/` assets and the
   generated static bundle.
 - D27 makes root `Cargo.lock` authoritative. Trunk enforces locked builds and
   explicitly watches web, zipeek-core and root workspace manifest/lock/toolchain
   files.
-- `zipeek-e2e` is a workspace package with `src/main.rs` and `tests/smoke.rs`.
-  Both use managed Chrome and an external Trunk server on port 1420. Only the
-  test enables headless mode; the executable suppresses the automation banner.
-  Shared readiness, owned Trunk lifecycle, and the package rename to `e2e`
-  remain open (A15).
+- `e2e` is a workspace library/executable with modular root and Pages suites.
+  A15 owns hidden Trunk/Node children, dynamic ports, shared bounded readiness,
+  one managed headless Chrome session per integration binary, scenario reset and
+  diagnostic artifacts. Root serves `/`; Pages builds/serves `/zipeek/` with an
+  isolated dist directory. No external server is required.
 - `db-gen` has a modular verified-input preparation pipeline and the D21/D23
   native-engine/storage guards. It creates the approved words table and two HSK
   indexes, imports 12,100 primary readings in memory, applies empty-primary
@@ -46,17 +50,18 @@ describes files on disk, not the last committed release.
 
 The 2026-10-27 review requests stronger feature/provider boundaries and motion
 support. [UI_ARCHITECTURE](UI_ARCHITECTURE.md) proposes scoped reducers/contexts,
-an Animato adapter and a stable route-transition host. The existing providers
-still use state handles; these proposals are not implemented or implicitly
-approved dependency changes. A15's concrete modular e2e proposal is in
-[testing/e2e.md](../testing/e2e.md#a15-modularization-proposal-from-the-2026-10-27-review).
+an Animato adapter and a stable route-transition host. A31 implements scoped
+theme/readiness reducers, stable typed dictionary access and named commands.
+Motion and future feature reducers remain proposals, with no implicit dependency
+or feature approvals. A15's implemented modular e2e harness is documented in
+[testing/e2e.md](../testing/e2e.md#implemented-layout-and-ownership).
 
-D31 requires Tailwind-first component styling. Tailwind's build/import is still
-active, but much of the recent shell/card UI uses bespoke main.css selectors;
-this is recorded drift, not an approved architectural switch. A35 owns migration
-with visual parity; see
-[UI_ARCHITECTURE](UI_ARCHITECTURE.md#tailwind-styling-correction-d31) and
-[CODING_STANDARDS §Tailwind](../process/CODING_STANDARDS.md#tailwind-styling-d31).
+D31/A35 implements Tailwind-first component styling. Complete utilities live in
+mounted Yew components, with explicit Rust source detection, shared theme-token
+aliases and focused critical bootstrap/loading CSS. The unused v3 configuration
+and bespoke shell/card selectors are removed. Shell cleanup/responsive defaults
+are implemented; A31 state boundaries are implemented and motion remains proposed. See
+[UI_ARCHITECTURE](UI_ARCHITECTURE.md#tailwind-styling-implementation-d31--a35).
 
 Proposed browser database crate extraction (A33, D30): see
 [modules/target-architecture.md](modules/target-architecture.md#proposed-browser-database-crate-extraction-a33).
@@ -100,3 +105,50 @@ This does not authorize changing pinned dependencies without approval (D10).
 
 Round-seed replay is a narrow exception: D19 keeps v1 as the only format; a
 future v2 requires explicit approval.
+
+## A21 route integration — 2026-10-28
+
+Practice loading lives in services/practice_loader.rs, hooks/practice.rs and
+reducers/practice.rs. The page renders the scoped loading snapshot and Retry
+command; data queries and build_round stay outside render. Six variant routes
+share the pipeline and active Practice navigation semantics. AppShell updates
+document.title and focuses main on route changes, including Back/Forward, while
+query-only changes leave focus alone for future input controls. The 404 view uses
+a router link instead of an unchecked navigator context and retains shell sizing.
+No route-transition animation, gameplay, Browse search, Random shortcut or daily
+selection is implemented by this integration.
+
+## CI and publication (A16)
+
+ci.yml validates PR/push/manual runs on Windows with the approved toolchain and
+all five gates/owned Chrome suites. Successful non-PR master runs call deploy.yml
+as a reusable Ubuntu release build and Pages deployment, using web/ and /zipeek/.
+See [CI](../process/CI.md) for permissions, caches and remaining hosted validation.
+No package or runtime architecture changes were made by the workflow migration.
+
+## Practice setup (A11)
+
+PracticeSetup owns a local pure SetupState reducer; ActivityPicker, HskPicker and
+SetupChoice are presentational leaves with immutable inputs/named callbacks.
+Six activity tiles lead through Route::practice and the existing router query
+serializer. Start emits core query_pairs with offset zero, no seed/PoS, and the
+validated saved exclusion set. Initial selection is Hanzi to meaning for the
+user's quiz-first priority, HSK 3.0 level 1, Endless; Fixed defaults to 10.
+Valid numeric levels survive system changes; HSK 3.0 advanced resets to level 1
+on switching to HSK 2.0. Selected Fixed count survives an Endless toggle.
+
+hooks/exclusions.rs owns asynchronous saved-ID validation using the stable
+Dictionary reader, generation checks and abortable orchestration. The storage
+key is zipeek.excluded_words, a JSON array of integer WordIds. Parsing deduplicates
+valid typed IDs; one bound batch lookup removes unknown IDs before count/Start.
+No storage normalization or writes occur on load. Reset explicitly removes the
+key and clears the local set; setup stays visible and the next Start URL omits
+exclude. Query failures expose Retry and keep Start disabled. Reset failure keeps
+the count/storage and shows an inline error. Storage read failure/unavailability
+logs and uses an empty in-memory set; malformed values only warn in debug.
+
+The page is a scrollable full-width column with Tailwind utilities and native
+fieldset/button semantics. There is no extra global filter provider or setup
+persistence. Practice URL loads remain independent of saved exclusions. Actual
+question controls remain A10/A09; setup navigation reaching a prepared placeholder
+does not claim a playable quiz.

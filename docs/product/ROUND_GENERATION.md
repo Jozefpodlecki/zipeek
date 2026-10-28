@@ -4,7 +4,8 @@ These approved requirements are implemented by A07 in `zipeek-core/round`. See
 [PRODUCT](PRODUCT.md) for the four-pair exercise and
 [DECISIONS](../process/decisions/index.md) for approved source contracts (D18)
 and the resolved v1 replay contract (D19). The pure builder and native/wasm golden
-fixtures exist; database and UI integration remain A06/A09/A10/A21 work.
+fixtures exist; A21 integrates database queries/normalization and calls the
+builder. Playable UI remains A09/A10 work.
 
 ## Pure builder and candidate bundle
 

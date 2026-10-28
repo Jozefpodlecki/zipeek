@@ -1,0 +1,56 @@
+const failures = [];
+const check = (condition, message) => { if (!condition) failures.push(message); };
+const topbar = document.querySelector('[data-topbar]').getBoundingClientRect();
+const main = document.querySelector('main').getBoundingClientRect();
+const drawer = document.querySelector('#app-drawer');
+const links = [...document.querySelectorAll('[data-navigation-link]')];
+const footer = document.querySelector('[data-app-footer]');
+const repository = document.querySelector('[aria-label="Zipeek repository on GitHub"]');
+const repoRect = repository.getBoundingClientRect();
+check(document.documentElement.scrollWidth <= innerWidth, 'Horizontal overflow');
+check(topbar.width === innerWidth && topbar.height === 48, 'Top panel geometry');
+check(Math.abs(main.right - innerWidth) < 1, 'Main must fill available width');
+check(getComputedStyle(document.querySelector('main')).maxWidth === 'none', 'Main max-width cap');
+check(getComputedStyle(drawer).position === (innerWidth >= 768 ? 'sticky' : 'static'), 'Drawer breakpoint');
+check(links.map(link => link.textContent.trim()).join(',') === 'Home,Practice,Browse', 'Label-only navigation');
+check(links.every(link => !link.querySelector('[aria-hidden]')), 'Navigation decoration remains');
+const appearance = link => {
+    const style = getComputedStyle(link);
+    return JSON.stringify([style.backgroundColor, style.color, style.fontWeight, style.textDecorationLine, style.border]);
+};
+check(links.every(link => appearance(link) === appearance(links[0])), 'Active route visually decorated');
+check(links[0].getAttribute('aria-current') === 'page', 'Home aria-current');
+check(footer.contains(repository) && !drawer.contains(repository), 'Repository placement');
+check(repository.getAttribute('target') === '_blank' && repository.getAttribute('rel') === 'noopener noreferrer', 'Repository link attributes');
+check(repoRect.width >= 24 && repoRect.height >= 24, 'Repository touch target');
+check(getComputedStyle(footer).flexDirection === 'row' && getComputedStyle(footer).flexWrap === 'nowrap', 'Footer must stay one row');
+const columns = getComputedStyle(document.querySelector('[data-navigation-tiles]')).gridTemplateColumns.split(' ').length;
+check(columns === (innerWidth >= 1024 ? 3 : 1), 'Landing tile breakpoint');
+const theme = getComputedStyle(document.querySelector('[data-theme-toggle]'));
+check(parseFloat(theme.borderTopWidth) === 0, 'Theme resting border');
+check(document.querySelector('[data-daily-word]').textContent.includes('No word available'), 'Daily placeholder');
+check(!document.querySelector('#root').contains(document.querySelector('.app-backdrop')), 'Backdrop ownership');
+const root = getComputedStyle(document.documentElement);
+const rgba = name => {
+    const value = root.getPropertyValue(name).trim();
+    if (value.startsWith('#')) return [1, 3, 5].map(offset => parseInt(value.slice(offset, offset + 2), 16)).concat(1);
+    return value.match(/[\d.]+/g).map(Number);
+};
+const over = (foreground, background) => foreground.slice(0, 3).map((value, i) => value * foreground[3] + background[i] * (1 - foreground[3]));
+const luminance = color => color.map(value => {
+    const channel = value / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+}).reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
+const contrast = (a, b) => {
+    const values = [luminance(a), luminance(b)].sort((a, b) => b - a);
+    return (values[0] + 0.05) / (values[1] + 0.05);
+};
+const backing = document.documentElement.classList.contains('dark') ? [255, 255, 255] : [0, 0, 0];
+const backdrop = over(rgba('--backdrop-shade'), backing);
+const surfaces = ['--surface', '--card-tint'].map(name => over(rgba(name), backdrop));
+const minimumText = Math.min(...surfaces.map(surface => contrast(rgba('--muted').slice(0, 3), surface)));
+const focus = contrast(rgba('--accent').slice(0, 3), surfaces[0]);
+window.e2eStyleContrast = {minimumMutedText: minimumText, focusAgainstSurface: focus, method: 'Conservative black/white image backing and translucent theme layers'};
+check(minimumText >= 4.5, `Muted text contrast ${minimumText}`);
+check(focus >= 3, `Focus/icon contrast ${focus}`);
+return failures;

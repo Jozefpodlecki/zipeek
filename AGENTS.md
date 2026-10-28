@@ -59,8 +59,8 @@ COMPLETED history preservation, or the rule against hand-editing DuckDB files.
 | `web/styles/`, `web/public/`, `web/icons/` | Current styles and static assets |
 | `crates/db-gen/` | Package `db-gen`; verified inputs, engine/storage guards, approved schema and HSK/fallback import, compatible artifact export, reports and native read-only verification |
 | `web/static/hanzi.duckdb` | Generated dictionary with reports/notices; A06 opens it read-only through pinned local browser workers |
-| `e2e/` | Workspace package `zipeek-e2e`; executable and smoke test exist; lifecycle harness pending |
-| `.github/workflows/` | Existing CI and Pages workflows; migration work pending |
+| `e2e/` | Workspace package `e2e`; modular owned Trunk/managed-Chrome lifecycle, root/Pages suites and headless executable |
+| `.github/workflows/` | PR/push/manual CI with five gates and owned Chrome; validated master calls reusable Pages release/deploy |
 | `docs/` | `product/`, `architecture/` (with `modules/` and `schema/`), `testing/`, `process/` (with `decisions/` and `completed/`) — see [docs/README.md](docs/README.md) for the index |
 
 The intended workspace includes the web app, generator, and e2e crate. Do not
@@ -169,21 +169,19 @@ trunk build --public-url /zipeek/
 ```
 
 ```
-# Repository root: approved target invocation after e2e package/harness setup
-cargo test -p e2e -- --test-threads=1
+# Repository root: owned harness, root and Pages suites
+cargo test -p e2e --locked -- --test-threads=1
 ```
 
-The current manifest is still named zipeek-e2e; renaming it to e2e and
-implementing the owned Trunk lifecycle remain follow-up work (A15). It is
-already a workspace member with an executable and tests/smoke.rs. The smoke
-test currently expects an externally running server on port 1420; the
-executable currently opens visible Chrome, while the test enables headless
-Chrome. D09 uses WebDriver::managed(DesiredCapabilities::chrome()), a
-harness-owned Trunk child, and shared readiness polling. Do not install or
-spawn ChromeDriver separately. See testing/e2e.md for
-the approved layout and
-process/decisions/process-and-infra.md
-for the binding decision.
+A15 implements package `e2e`, one managed Chrome session per integration-test
+binary and shared owned server/readiness/cleanup. Both the executable and tests
+run headless. D09 uses WebDriver::managed(DesiredCapabilities::chrome()); do not
+install or spawn ChromeDriver separately. Root tests own a Trunk development
+server at a dynamic port and serve at `/`; Pages tests build and serve under
+`/zipeek/` in an isolated directory. Neither requires an external server on 1420.
+See [testing/e2e.md](docs/testing/e2e.md) for commands, prerequisites, layout and
+failure-isolation evidence, and [D09/D28](docs/process/decisions/process-and-infra.md)
+for the binding decisions.
 
 For code changes, all five gates must pass:
 
@@ -240,7 +238,7 @@ testing/	Per-area test plans (e2e, browser-db, word-of-the-day, practice-url, ro
 process/BASELINE.md	A00 diagnostic evidence (historical)
 process/CI.md	Workflow structure, gates, caching, deployment; CI changes
 process/CODING_STANDARDS.md	Rust/Yew conventions and no-comments policy; coding convention changes
-process/decisions/index.md	Index of D01–D31; each decision has one home file grouped by family
+process/decisions/index.md	Index of D01–D34; each decision has one home file grouped by family
 process/TASKS.md	Ordered open backlog, prerequisites, and ready markers
 process/CURRENT.md	Active work, blockers, and next task; update every task
 process/handoff.md	Per-task continuation notes for the next session; reference only

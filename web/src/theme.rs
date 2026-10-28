@@ -39,7 +39,7 @@ impl Theme {
         }
     }
 
-    fn save(self, storage: Option<&Storage>) {
+    pub(crate) fn save(self, storage: Option<&Storage>) {
         let Some(storage) = storage else {
             log::warn!("Theme preference cannot persist because storage is unavailable");
             return;
@@ -65,19 +65,14 @@ impl Theme {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct ThemeContext {
-    pub(crate) state: UseStateHandle<Theme>,
-    pub(crate) storage: Option<Storage>,
-}
+pub struct ThemeCommands(Callback<()>);
 
-impl ThemeContext {
-    pub fn current(&self) -> Theme {
-        *self.state
+impl ThemeCommands {
+    pub(crate) fn new(toggle: Callback<()>) -> Self {
+        Self(toggle)
     }
 
     pub fn toggle(&self) {
-        let next = self.current().toggled();
-        next.save(self.storage.as_ref());
-        self.state.set(next);
+        self.0.emit(());
     }
 }

@@ -7,16 +7,15 @@ Current CI state, required gates, and the PR checklist. Part of the
 
 ## Current CI and target coverage
 
-- `ci.yml` currently runs `cargo test` on Windows using Rust `1.97.0`, triggered
-  by pushes to `master` or manual dispatch.
-- `deploy.yml` builds on Ubuntu using root-level npm/style/Trunk paths from the
-  previous layout and no explicit `/zipeek/` public URL.
-- Full fmt, Clippy, workspace, wasm, and Chrome smoke coverage is intended, but
-  the exact CI matrix is not implemented. PR-triggered validation also needs work.
+A16 configures PR/push/manual CI with Rust 1.97.1, locked npm assets and all five
+required gates in a Windows job. Workspace tests run the owned root/Pages Chrome
+harness with installed Chrome and managed driver. The Pages reusable workflow is
+called only after successful non-PR master validation; it builds on Ubuntu from
+web/ with --release --public-url /zipeek/ and uploads web/dist/.
 
-Track these gaps in [TASKS](../process/TASKS.md) and [CURRENT](../process/CURRENT.md).
-Editing workflows or fixing application build failures requires a separate
-approved implementation plan.
+See [CI](../process/CI.md) for triggers, permissions, caching and tool selections.
+Local gates and workflow checks are evidence; hosted execution and actual
+publication remain unverified until the first GitHub run after push.
 
 ## Required gates
 
@@ -47,21 +46,18 @@ required.
   documents are updated.
 - The PR describes resulting behaviour and validation, with relevant failure output.
 
-## A16 follow-up (open)
+## A16 implementation and remaining checks
 
-A16 owns CI and Pages deployment migration. Required:
+A16 implements the approved migration. Validate YAML and dependency ordering,
+then run the five local gates plus the release build. Check that the built HTML,
+workers/modules and dictionary retain /zipeek/ paths and copied notices. Use
+fresh locked npm assets before Trunk, matching the workflow sequence.
 
-- Use the approved Rust `1.97.1` toolchain; current workflows select `1.97.0`.
-- Use the `web/` working directory for npm/Trunk.
-- Run all five gates and Chrome smoke coverage with the A15 lifecycle harness.
-- Preserve the separate root base path for development e2e and `/zipeek/` for
-  Pages; upload `web/dist/`.
-- Add PR validation and account for Chrome, managed-driver availability, and
-  Trunk readiness.
-- Preserve locked npm assets (`npm ci --ignore-scripts`) and the focused
-  Pages/browser compatibility check added in A06.
-- Review the pre-existing Picomatch tooling advisory
-  (`target/a06-npm-audit.json`) before any separately approved dependency fix.
-
-Workflow/dependency edits and any new tool pins require their own approved
-implementation scope; this reconciliation changes no workflow.
+Under D33, both Picomatch tooling advisories are accepted while patterns remain
+developer-controlled build input; do not add overrides or run audit fix for them.
+Acceptance is not a package remediation, and the boundary must be reassessed if
+application input can reach the dependency. Trunk latest remains the pre-existing unpinned selection.
+Hosted action setup, fresh runner behavior, repository Pages publishing/settings
+and actual deployment require a GitHub run after commit/push. No such run is
+claimed by local validation. No external server or separately spawned driver is
+needed by the owned Chrome suite.

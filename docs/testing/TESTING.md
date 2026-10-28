@@ -32,11 +32,14 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo check --target wasm32-unknown-unknown -p zipeek --locked
+```
 
-powershell
+```powershell
 # From web/
 npm ci --ignore-scripts
 trunk build --public-url /zipeek/
+```
+
 Use cargo fmt --all to apply formatting, then rerun the check. The wasm target
 must be installed. The Cargo wasm check is a useful intermediate check, not a
 replacement for the deployment build.
@@ -58,7 +61,7 @@ itself.
 
 Files
 File	Contents
-e2e.md	Chrome e2e strategy, driver ownership, Trunk lifecycle, A15 modularization proposal
+e2e.md	Chrome e2e strategy, driver ownership, Trunk lifecycle, implemented A15 modular harness
 browser-db.md	A06 browser database checks, Pages-prefix test, native/wasm replay
 word-of-the-day.md	D05 coverage plan and FNV-1a behaviour checks
 practice-url.md	D13/D15 URL, exclusion, offset, and fallback coverage
@@ -98,3 +101,43 @@ CURRENT/TASKS, completed outcomes, and affected architecture/product/DB/testing
 documents are updated.
 
 The PR describes resulting behaviour and validation, with relevant failure output.
+## Owned Chrome harness (A15)
+
+From the repository root, cargo test -p e2e --locked -- --test-threads=1 runs
+five harness lifecycle unit tests and two integration entry points: root with
+fifteen named scenarios plus two expected fault/recovery probes, and Pages
+with six scenarios.
+Each integration binary owns its single managed headless Chrome session and its
+servers/build directory. Workspace tests include both; no external server or
+ignored-test opt-in. See [e2e](e2e.md) for prerequisites, cleanup and artifacts.
+
+## Scoped state checks (A31)
+
+Six web-native reducer/gate tests cover stale/duplicate initialization, retry,
+unmount invalidation and latest-state theme toggles. The root providers Chrome
+scenario checks dictionary ownership through loading/ready navigation and rapid
+theme commands; the two integration entry points cover twelve named scenarios.
+These checks add no dependency or wasm-browser-test harness.
+
+## Practice route integration checks (A21)
+
+A native request-reducer test covers URL-input and retry generations and duplicate
+settlement. Root/Pages Chrome suites exercise all six variant preparations and
+replay, normalization against the real dictionary, held/failing queries, stale
+result rejection and Retry. Root also checks 404 recovery during dictionary
+failure. All five code gates remain required; these checks add no dependencies.
+
+## CI workflow integration (A16)
+
+CI runs the five gates and owned Chrome workspace tests after locked npm install.
+Validated non-PR master runs call the reusable release/Pages workflow. See
+[CI](../process/CI.md) for working directories, cache boundaries, prerequisites
+and the distinction between local evidence and an actual hosted deployment.
+
+## A11 setup checks
+
+Three native setup/parsing tests cover typed HSK transitions, URL omission/count
+semantics and saved-ID parsing. The shared Chrome setup suite exercises all six
+Start paths, saved-ID validation/reset/error handling, keyboard and responsive
+layout at root and /zipeek/. No new dependency or dedicated browser-test framework.
+All five gates remain required for the implementation.

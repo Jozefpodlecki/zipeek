@@ -22,8 +22,9 @@ crates/db-gen is the native generator (db-gen).
 
 crates/zipeek-core is the shared domain crate (D01).
 
-e2e is the browser harness package; currently named zipeek-e2e, pending
-rename to e2e in A15 (D09).
+e2e is the implemented browser harness package (A15, 2026-10-28), with owned
+Trunk/fixture servers, one managed Chrome session per integration binary and
+separate root/Pages builds. See [e2e](../../testing/e2e.md).
 
 Do not add nonexistent crates merely to match this map.
 
@@ -54,7 +55,8 @@ The generator keeps its native connection and engine/storage guards; it does not
 import the browser crate. Web continues to call A07 directly for deterministic
 round construction. No new framework-neutral domain crate is needed.
 
-Proposed browser database crate extraction (A33)
+## Proposed browser database crate extraction (A33)
+
 The A06 services/database module is a reasonable extraction boundary now that
 it owns transport, typed decoding and SQL independently of Yew. Unlike an earlier
 suggestion of another generic shared-logic crate, this isolates a concrete browser

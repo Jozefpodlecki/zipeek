@@ -2,13 +2,14 @@
 
 DuckDB-WASM integration checks, the Pages-prefix test, and the native/wasm
 replay runner. Part of the [testing index](TESTING.md). Approved runtime pin in
-[D08](../process/decisions/database-and-artifacts.md#d08-duckdb-wasm-version);
-required engine/storage in [D23](../process/decisions/database-and-artifacts.md#d23-native-neo-engine-and-compatible-storage).
+[D08](../process/decisions/database-and-artifacts.md);
+required engine/storage in [D23](../process/decisions/database-and-artifacts.md).
 
 ## A06 browser database checks
 
-The standard Chrome suite still needs a ready external Trunk server on 1420.
-It verifies:
+A15 now owns the root/Pages servers and managed Chrome. Run the commands in
+[e2e](e2e.md#run-commands-and-prerequisites), without a separately started server.
+The preserved A06 scenarios verify:
 
 - Mounted-app Loading while a controlled fetch is held; no early Home render.
 - Download failure and successful Retry.
@@ -22,20 +23,22 @@ exclusion-before-offset rules.
 
 ### Pages-specific test
 
-The Pages test is ignored in a normal workspace run because it requires a
-separate server exposing `web/dist` at `/zipeek/` on 1421. Build with the Pages
-public URL, serve that directory under the prefix, then run:
+A15's Pages binary is included in normal workspace tests and owns its prefix
+build/static server. No fixed 1421 port or ignored-test opt-in is required:
 
 ```powershell
-# Repository root, after starting a static server for web/dist under /zipeek/ on 1421
-cargo test -p zipeek-e2e --test smoke pages_dictionary_and_workers_use_the_zipeek_base_path --locked -- --ignored
+cargo test -p e2e --test pages --locked -- --test-threads=1
+```
+
+The A06 results below are historical evidence from the earlier external-server
+setup; they are not the current harness commands or counts.
 
 The test passes against the real built assets, checks Ready with 12,100 rows, and
 verifies same-origin resource URLs stay under /zipeek/. A06 ran this separately:
 one pass. The ordinary workspace suite passes 88 domain/generator/query tests and
 seven Chrome tests, with this one Pages test explicitly ignored there. Logs:
 target/a06-workspace-tests.log and target/a06-pages-chrome.log. All five gates
-pass; no deployed-site validation is claimed. A15 still owns server lifecycle.
+pass; no deployed-site validation is claimed. A15 now implements server lifecycle; see [e2e](e2e.md).
 
 Browser database operational notes
 Run npm ci --ignore-scripts from web/ before Trunk. The pre-build hook verifies
@@ -50,10 +53,12 @@ WordIds/levels/PoS without changing source display text; queries.rs provides
 lookup, full-pool count/ordered offset/rows, pagination and the three clamped
 HSK/PoS views.
 
-DatabaseProvider inside AppShell starts Loading before effects, keeps navigation
-usable, renders routes only after a typed probe, and exposes concise failure plus
-Retry. contexts/database.rs supplies DatabaseContext/DatabaseState for
-future route queries. The existing practice Loader is still a feature
+A31 places DatabaseProvider above the router/shell; DatabaseBoundary inside
+AppShell starts Loading before effects and renders routes only after a typed
+probe, with concise failure plus Retry. contexts/database.rs supplies separate
+Dictionary, DatabaseStatus and DatabaseCommands contexts through focused hooks.
+Native tests reject stale/duplicate completions and cover retry/unmount gates.
+Chrome verifies navigation/theme changes keep the same download and worker count. The existing practice Loader is still a feature
 placeholder; do not interpret it as DB readiness. No Browse/daily/exercise UI
 was implemented.
 
@@ -69,7 +74,7 @@ existing package records were preserved and Picomatch is not copied into browser
 assets. A16 tracks review; dependency upgrades require specific approval. Do not
 run npm audit fix as an unapproved follow-up to this task.
 
-Executable native/wasm replay check (A07)
+## Executable native/wasm replay check (A07)
 From the repository root, with Node and the wasm target installed:
 
 powershell

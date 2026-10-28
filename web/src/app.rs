@@ -39,11 +39,13 @@ pub fn app(props: &AppEnvironment) -> Html {
 
     html! {
         <ThemeProvider document={props.document.clone()} storage={props.local_storage.clone()}>
-            <HashRouter>
-                <AppShell>
-                    <DatabaseProvider><Switch<Route> render={switch} /></DatabaseProvider>
-                </AppShell>
-            </HashRouter>
+            <DatabaseProvider>
+                <HashRouter>
+                    <AppShell>
+                        <Switch<Route> render={switch} />
+                    </AppShell>
+                </HashRouter>
+            </DatabaseProvider>
         </ThemeProvider>
     }
 }

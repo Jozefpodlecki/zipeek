@@ -70,10 +70,11 @@ testing strategy in [testing/TESTING.md](../testing/TESTING.md); architecture in
 
 ### Tailwind styling (D31)
 
-Tailwind CSS 4.3.3 remains the required component styling approach. The existing
-Trunk pipeline imports Tailwind, but the recent shell/card work drifted into
-bespoke selectors in main.css. That drift is corrective work tracked by A35,
-not an approved replacement of Tailwind with a custom CSS component framework.
+Tailwind CSS 4.3.3 remains the required component styling approach. A35 corrected
+the shell/card stylesheet drift on 2026-10-28: mounted components use utilities,
+main.css holds theme aliases and minimal foundation rules, and inline.css retains
+critical bootstrap/loading styling. Rust source detection is explicit; the
+unused v3 configuration and bespoke shell/card selectors are removed.
 
 - Use Tailwind utilities in Yew markup for layout, spacing, sizing, typography,
   borders, responsive rules and interaction states. Keep conditional variants as
@@ -90,8 +91,8 @@ not an approved replacement of Tailwind with a custom CSS component framework.
   conflicting rules as components migrate. Do not assume legacy v3 configuration
   is automatically active or upgrade packages during the correction.
 
-The intended migration and visual checks are in
-[UI_ARCHITECTURE](../architecture/UI_ARCHITECTURE.md#tailwind-styling-correction-d31).
+The implemented styling boundary and visual checks are in
+[UI_ARCHITECTURE](../architecture/UI_ARCHITECTURE.md#tailwind-styling-implementation-d31--a35).
 
 ### Components
 

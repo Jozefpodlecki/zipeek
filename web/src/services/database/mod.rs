@@ -4,4 +4,4 @@ mod row;
 mod runtime;
 
 pub use error::DbError;
-pub use runtime::Database;
+pub use runtime::{Database, DatabaseInfo};

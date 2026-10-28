@@ -26,7 +26,7 @@ parallel state log.
 | How the shell, loading, and backdrop work | [architecture/modules/web-shell.md](architecture/modules/web-shell.md) |
 | How data moves from source to browser | [architecture/modules/data-flow.md](architecture/modules/data-flow.md) |
 | The target crate graph and A33 proposal | [architecture/modules/target-architecture.md](architecture/modules/target-architecture.md) |
-| Proposed scoped state and motion | [architecture/UI_ARCHITECTURE.md](architecture/UI_ARCHITECTURE.md) |
+| Implemented scoped state and proposed motion | [architecture/UI_ARCHITECTURE.md](architecture/UI_ARCHITECTURE.md) |
 | Sources, licensing, and the pinned snapshot | [architecture/schema/sources.md](architecture/schema/sources.md) |
 | The `words` table and indexes | [architecture/schema/schema.md](architecture/schema/schema.md) |
 | How source rows become `words` rows | [architecture/schema/import-rules.md](architecture/schema/import-rules.md) |
@@ -37,7 +37,7 @@ parallel state log.
 | What "reproducible" means for artifacts | [architecture/schema/reproducibility.md](architecture/schema/reproducibility.md) |
 | What each generator stage actually does | [architecture/schema/artifacts.md](architecture/schema/artifacts.md) |
 | How to regenerate the dictionary | [architecture/schema/regeneration.md](architecture/schema/regeneration.md) |
-| Every approved decision D01–D31 | [process/decisions/index.md](process/decisions/index.md) |
+| Every approved decision D01–D34 | [process/decisions/index.md](process/decisions/index.md) |
 | Testing strategy and commands | [testing/TESTING.md](testing/TESTING.md) |
 | Chrome e2e and the A15 split | [testing/e2e.md](testing/e2e.md) |
 | Browser DB checks and the wasm replay runner | [testing/browser-db.md](testing/browser-db.md) |

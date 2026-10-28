@@ -7,6 +7,18 @@ use zipeek_core::{
 };
 
 impl Database {
+    pub async fn words_by_ids(&self, ids: &BTreeSet<WordId>) -> Result<Vec<Word>, DbError> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders = vec!["?"; ids.len()].join(",");
+        self.words(
+            &format!("SELECT * FROM words WHERE id IN ({placeholders}) ORDER BY id ASC"),
+            ids.iter().map(|id| json!(id.as_i32())).collect(),
+        )
+        .await
+    }
+
     pub(super) async fn words(
         &self,
         sql: &str,

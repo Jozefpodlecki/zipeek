@@ -75,8 +75,21 @@ database-backed normalization remains A06/A21. No dependency was added.
 ## Current status
 
 A08 implements the pure parsing, normalization, canonical encoding and session
-state helpers in `crates/zipeek-core/src/practice/`. Web currently only parses;
-A21 must supply dictionary rows and call normalization. Recovery draws and the
-round builder remain A07/A21. These checks describe required coverage; they are
+state helpers in `crates/zipeek-core/src/practice/`. A21 supplies dictionary rows
+and calls normalization/candidate queries/build_round for all six routes. A07
+continues to own every recovery/selection RNG draw. Chrome verifies full card
+ID/label replay, Fixed seed ignoring, unknown/excluded seed fallback, ID validation,
+unchanged loaded URLs and saved-exclusion independence at root and Pages. These checks describe required coverage; they are
 not all passing today. Where a check is blocked by an unimplemented feature,
 report it as blocked rather than passed.
+
+## A11 generated setup URLs
+
+Native tests cover invalid/stale cross-system level selection, advanced-band
+fallback, count preservation across modes, and canonical omission of seed/PoS/
+empty exclusions/Endless count. Saved-ID parsing tests reject noninteger/string/
+invalid/out-of-range inputs and deduplicate typed IDs. Root/Pages setup scenarios
+start every variant through the UI and validate actual decoded query values,
+count/exclusion semantics and dictionary-backed Ready preparation. Unknown saved
+IDs do not enter Start, and initial validation never writes storage. Reset updates
+the next URL to omit exclude; shared practice URLs still ignore saved state.

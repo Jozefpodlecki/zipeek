@@ -3,21 +3,76 @@ name: CI
 on:
   push:
     branches: ["master"]
-    
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  build:
+  validate:
     runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
     steps:
       - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
       - uses: actions/cache@v5
         with:
           path: |
-            ~/.cargo/bin
-            ~/.cargo/git
             ~/.cargo/registry
+            ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: dtolnay/rust-toolchain@1.97.0
-      - run: cargo test
+          key: ${{ runner.os }}-rust-1.97.1-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'web/Trunk.toml', 'web/package-lock.json') }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: jetli/trunk-action@v0.5.0
+        with:
+          version: latest
+      - name: Check browser and build prerequisites
+        run: |
+          $chromePath = Join-Path $env:ProgramFiles 'Google/Chrome/Application/chrome.exe'
+          if (!(Test-Path -LiteralPath $chromePath)) {
+            throw "Installed Google Chrome is required by the managed WebDriver harness"
+          }
+          Write-Output "Chrome $((Get-Item -LiteralPath $chromePath).VersionInfo.ProductVersion)"
+          rustc --version
+          cargo --version
+          node --version
+          npm --version
+          trunk --version
+      - name: Install locked web assets
+        working-directory: web
+        run: npm ci --ignore-scripts
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Lint workspace
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Test workspace and owned Chrome suites
+        run: cargo test --workspace --locked
+      - name: Check wasm target
+        run: cargo check --target wasm32-unknown-unknown -p zipeek --locked
+      - name: Build Pages base path
+        working-directory: web
+        run: trunk build --public-url /zipeek/
+
+  pages:
+    needs: validate
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy.yml

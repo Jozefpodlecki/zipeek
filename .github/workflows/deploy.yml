@@ -1,58 +1,62 @@
-
 name: Deploy to GH Pages
 
 on:
-  push:
-    branches: ["master"]
+  workflow_call:
 
-  workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          targets: wasm32-unknown-unknown
       - uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin
             ~/.cargo/git
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - uses: dtolnay/rust-toolchain@1.97.0
-        with:
-          targets: wasm32-unknown-unknown
+          key: ${{ runner.os }}-rust-1.97.1-pages-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'web/Trunk.toml', 'web/package-lock.json') }}
       - name: Install matching wasm-bindgen CLI
         run: cargo install wasm-bindgen-cli --version 0.2.114 --locked
       - uses: jetli/trunk-action@v0.5.0
         with:
-          version: "latest"
-      - run: rustup target add wasm32-unknown-unknown
+          version: latest
       - name: Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install
-      - run: npx @tailwindcss/cli -i ./styles/main.css -o ./styles/output.css --minify 
-      - run: trunk build --release
-      - uses: actions/configure-pages@v3
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install locked web assets
+        working-directory: web
+        run: npm ci --ignore-scripts
+      - name: Build release for GitHub Pages
+        working-directory: web
+        run: trunk build --release --public-url /zipeek/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist/"
+          path: web/dist/
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

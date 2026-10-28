@@ -10,8 +10,8 @@ implemented.
 ## D24 Web shell and landing direction
 
 **Status:** Approved 2026-10-27.
-**Owner:** [UX](../product/UX.md), [PRODUCT](../product/PRODUCT.md),
-[ARCHITECTURE](../architecture/ARCHITECTURE.md).
+**Owner:** [UX](../../product/UX.md), [PRODUCT](../../product/PRODUCT.md),
+[ARCHITECTURE](../../architecture/ARCHITECTURE.md).
 **Index row:** [D24](index.md#approved-decisions).
 
 The user selected the shell/landing direction on 2026-10-27:
@@ -39,8 +39,8 @@ Superseded in part by D25's theme placement change.
 
 **Status:** Approved 2026-10-27 by direct user request; supersedes D24's
 theme-in-sidebar placement.
-**Owner:** [UX](../product/UX.md), [PRODUCT](../product/PRODUCT.md),
-[ARCHITECTURE](../architecture/ARCHITECTURE.md).
+**Owner:** [UX](../../product/UX.md), [PRODUCT](../../product/PRODUCT.md),
+[ARCHITECTURE](../../architecture/ARCHITECTURE.md).
 **Index row:** [D25](index.md#approved-decisions).
 
 Amendments to D24:
@@ -70,8 +70,8 @@ routes, reset on reload.
 ## D26 Persistent landscape and loading presentation
 
 **Status:** Approved 2026-10-27 by direct user request.
-**Owner:** [UX](../product/UX.md), [PRODUCT](../product/PRODUCT.md),
-[ARCHITECTURE](../architecture/ARCHITECTURE.md).
+**Owner:** [UX](../../product/UX.md), [PRODUCT](../../product/PRODUCT.md),
+[ARCHITECTURE](../../architecture/ARCHITECTURE.md).
 **Index row:** [D26](index.md#approved-decisions).
 
 Reuse the existing unmodified landscape image as the shared loading and app
@@ -104,14 +104,15 @@ A06/A21.
 
 ## D29 Scoped UI state and motion (proposed)
 
-**Status:** Proposed 2026-10-27 by user review. Existence of the need is
-approved; concrete plan requires implementation review.
-**Owner:** [UI_ARCHITECTURE](../architecture/UI_ARCHITECTURE.md), [UX](../product/UX.md).
+**Status:** Requested 2026-10-27. A31 scoped theme/database state implementation
+approved 2026-10-28; A37 selects the initial 150 ms fade-only profile on that
+date. A32 implementation remains separate.
+**Owner:** [UI_ARCHITECTURE](../../architecture/UI_ARCHITECTURE.md), [UX](../../product/UX.md).
 **Index row:** [D29](index.md#approved-decisions).
 
 The user's 2026-10-27 code review requested modular e2e, scoped UI state, and
 motion support. This decision records the *requirement*; the detailed plan in
-[UI_ARCHITECTURE](../architecture/UI_ARCHITECTURE.md) is a proposal, not approval
+[UI_ARCHITECTURE](../../architecture/UI_ARCHITECTURE.md) is a proposal, not approval
 to add crates or change dependency features.
 
 Approved requirements:
@@ -129,17 +130,19 @@ Approved requirements:
 - No app-wide reducer containing every result list, input, and animation tick.
   Providers belong at the nearest shared ownership boundary.
 
-Implementation: A31 owns scoped providers/reducers; A32 owns motion profile and
-route transitions. Both are open in TASKS. Choose motion profiles before
-enabling Animato features.
+A31 implements pure theme/readiness reducers, stable typed dictionary access,
+read/command hooks and DatabaseBoundary separate from ownership above the router.
+Browse/practice reducers are added with their concrete feature tasks. A32 owns
+the still-proposed motion profile and route transitions. Choose motion profiles
+before enabling Animato features; A31 changes no dependencies or features.
 
 ---
 
 ## D31 Tailwind-first component styling
 
-**Status:** Required by the user on 2026-10-27. Implementation not started.
+**Status:** Required 2026-10-27; implemented by A35 on 2026-10-28.
 **Owner:** [CODING_STANDARDS](../CODING_STANDARDS.md),
-[UI_ARCHITECTURE](../architecture/UI_ARCHITECTURE.md).
+[UI_ARCHITECTURE](../../architecture/UI_ARCHITECTURE.md).
 **Index row:** [D31](index.md#approved-decisions).
 
 Correct the drift from Tailwind to bespoke component CSS. Tailwind 4.3.3
@@ -170,4 +173,92 @@ A35 owns migration with visual/behaviour parity: before/after screenshots at
 selectors to stable semantic/data hooks when a styling class is removed.
 
 This direction does not approve dependency upgrades, a redesign, or a new
-styling framework. The migration itself has not started.
+styling framework. A35 completed the migration with root/Pages visual and behavioural coverage.
+
+## A22 amendments to D24/D25 — 2026-10-27
+
+Record these shell requirements for later implementation: navigation labels have
+no numbering or active-route decoration, with aria-current="page" retained.
+Move the existing repository icon/link into the single dot-separated footer row
+with copyright and attribution, preserving its accessible name, link attributes
+and licence notice. Do not replace the removed decoration with other chrome.
+
+Daily-card fields are now recorded in [UX](../../product/UX.md#daily-card-fields-ux-land01).
+The 400px width policy and Tailwind defaults are also specified there. Current
+shell markup/CSS still reflects A27–A30; this amendment is documentation only.
+D29 motion profiles and implementation review remain open.
+
+## D32 Web Speech API for pronunciation
+
+**Status:** Approved UX requirement, recorded 2026-10-27 in A22; not implemented.
+**Owner:** [UX](../../product/UX.md#pronunciation-d32),
+[PRODUCT](../../product/PRODUCT.md),
+[web-shell](../../architecture/modules/web-shell.md#planned-pronunciation-boundary-d32).
+**Index row:** [D32](index.md#approved-decisions).
+
+Provide the existing yew_icons/lucide volume icon as a Listen action on the daily
+card, match cards and MCQ prompts/answers displaying hanzi or pinyin. Use
+window.speechSynthesis.speak with a SpeechSynthesisUtterance and lang='zh-CN'.
+No audio files, assets or DB columns. Voice support/quality varies by OS/browser.
+
+Apply the supplied fallback assumption: speak the simplified hanzi of the word
+the control represents regardless of its displayed label. No alternative
+per-surface rule has been selected. Tests spy/stub the invocation and its text/
+language, never assert that sound was audible. Browser interop stays in web;
+any feature/dependency additions still require an explicit implementation plan.
+
+
+## A35 implementation amendment — 2026-10-28
+
+D31 is implemented: Rust-source utilities, @theme aliases and critical bootstrap
+exceptions replace the bespoke shell/card stylesheet. The legacy v3 config is
+removed; no dependency pins/features change. D24/D25 shell cleanup is implemented
+with label-only navigation and the repository icon in the footer. The user
+explicitly approved a single horizontal footer row with attribution text allowed
+to wrap inside its item at 400px. This refines the previous single-text-line
+requirement without changing attribution or external repository-link semantics.
+
+Light muted text changes from slate #64748b to #475569 to meet conservative
+contrast checks over translucent surfaces. The landscape and other palette tokens
+are preserved. Tailwind md/lg boundaries and full-width content implement the
+recorded responsive policy; future exercise/Browse layouts remain their feature
+tasks. D29 state/motion proposals and D32 pronunciation remain unimplemented.
+
+## A31 implementation amendment — 2026-10-28
+
+D29 state scope is implemented for the current theme and database consumers.
+Read-only snapshots and named commands replace exposed status setters. Native
+reducers reject stale and duplicate results; a synchronous request gate also
+rejects results before old effect cleanup. Pending JS opens are logically
+cancelled and stale successful handles disposed after settlement, using existing
+async last-handle cleanup. No awaited shutdown contract is claimed. Theme DOM
+and storage writes are effect-owned; rapid toggles use current reducer state.
+DatabaseBoundary retains existing loading/failure visuals inside the stable shell.
+Motion profiles, Animato integration and route transitions remain A32 proposals;
+future feature state belongs with its UI task. URL/RNG authority is unchanged.
+
+## A37 amendment to D29 — 2026-10-28
+
+Approved initial profile: 150 ms fade-only route and drawer transitions, no slide
+or scale. Query/pagination changes do not animate the whole route. Existing
+practice feedback timings remain. Reduced motion commits movement/fades instantly
+with semantic/color changes intact. Easing and phase allocation are implementation
+details to review within that profile in A32, alongside cancellation, focus and
+live preferences. This approval adds no Animato feature or dependency.
+
+## D34 Static social cards and preview image
+
+**Status:** Design and copy approved 2026-10-28 during A37; not implemented.
+**Owner:** [UX](../../product/UX.md#social-metadata-and-preview-image-a37--d34),
+[PRODUCT](../../product/PRODUCT.md#site-sharing-metadata-d34).
+**Index row:** [D34](index.md#approved-decisions).
+
+Use one static site-wide 1200×630 preview for Open Graph and Twitter/X large-image
+cards, shared by all current hash routes. Reuse the existing landscape, dark slate
+overlay, Zipeek wordmark and blue accent, without a round-specific word or score.
+Approved title: "Zipeek — Chinese hanzi practice". Approved description:
+"Look up Chinese words and practise hanzi, pinyin, and meanings."
+
+A40 owns image creation and initial HTML metadata/asset validation before v1.
+Keep /zipeek/ in canonical/image URLs and retain route-specific browser titles.
+No dependency or hosting change is approved by this design decision.

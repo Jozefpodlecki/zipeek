@@ -80,3 +80,49 @@ exercises) is not tested by these shell tests — see [browser-db.md](browser-db
 and the per-feature coverage files. Theme bootstrapping during startup is covered
 above and by [startup.md](startup.md); they overlap intentionally because the
 failure modes differ (blank frame vs. wrong colour flash).
+
+## A22 target acceptance — not yet implemented
+
+The baseline evidence above describes the existing shell. Later A35/feature
+coverage must replace decorative-navigation/drawer-repository expectations with
+label-only links and aria-current="page", plus the preserved external repository
+link in the dot-separated footer row. Assert the agreed copy in [UX](../product/UX.md#copy-rules-answered-part-of-ux-copy01),
+including neutral sentence case, HSK 7–9 and Listen, as surfaces are implemented.
+
+Cover keyboard operation of every control, visible focus, committed route focus
+to main/heading, route-specific document.title and an escapable mobile drawer.
+Correct/wrong states include ✓/✗, not colour alone. Manually spot-check text
+contrast ≥4.5:1 and component/focus/icon contrast ≥3:1 in both themes. Include
+muted traditional hanzi, dimmed answers, footer, theme button and feedback.
+Do not add an automated accessibility dependency or claim WCAG conformance.
+
+Target viewport widths are 400/640/768/1024/1280/1920px: no horizontal overflow
+at 400, desktop rail and two match columns at 768+, Browse cards below 1280 and
+table at 1280+, full-width content and readable future summary at 1920. Below
+768, match columns stack in separate visual containers. Check both orientations,
+pointer/touch/keyboard and natural scrolling as features land. One-line footer
+fit at 400px is an explicit implementation review item. These checks do not
+replace historical evidence or claim the target CSS already exists.
+
+
+## A35 current shell acceptance — 2026-10-28
+
+A35 implements the answered shell styling/cleanup requirements above. Navigation
+is label-only with aria-current and no active visual decoration; the preserved
+repository link is now icon-only in the footer. The user approved attribution
+wrapping inside its item while keeping copyright, separators and icon in a single
+horizontal row. No horizontal overflow appears at 400px; the top panel and main
+fill available width, including ultrawide screens.
+
+The shared root/Pages styling scenario checks dark/light at 400/640/768/1024/1280/
+1920px, md rail and lg three-tile boundaries, uncapped main, focus outline/offset,
+resting borderless theme control, footer link attributes/touch target, backdrop
+ownership and reduced-motion hover. Bootstrap and mounted Loading/Failed/Ready+
+Retry remain covered. Screenshot/metric comparisons preserve card geometry,
+typography, gradient and blur outside deliberate breakpoint/width changes.
+
+The minimum muted-text contrast bound on surface/card layers is about 5.39:1
+(dark) and 5.43:1 (light). Focus/accent against surface is about 8.75:1 and 5.50:1.
+These use conservative black/white backing composition, not a full rendered-pixel
+or WCAG audit. Future exercise feedback and daily word field contrast still need
+checks when those features exist. See [evidence](evidence.md#a35-tailwind-component-migration--2026-10-28).
