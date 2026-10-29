@@ -1,6 +1,6 @@
 {
   "generator_version": "0.1.0",
-  "generator_manifest_sha256": "6724a247f7fa1cd194bfc9555623570854cff76d5099db3049633e6e05ff5b1c",
+  "generator_manifest_sha256": "1fbb358fe9fdc31d8bedf2568d1de450cbe809bb708356a9d7b9b81729637519",
   "engine": "v2.0.0",
   "storage_compatibility": "v1.4.0",
   "wasm_package": "@duckdb/duckdb-wasm@1.32.0",
@@ -53,7 +53,7 @@
     {
       "path": "hanzi.duckdb",
       "size_bytes": 3158016,
-      "sha256": "491fae6f84a96b5825c860163701f3e138cf72e5b50763848fde0e96ba03c546"
+      "sha256": "728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02"
     },
     {
       "path": "hanzi.diagnostics.json",

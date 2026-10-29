@@ -11,7 +11,7 @@ task is not a current gate claim.
 
 ## Implemented input preparation (A26)
 
-`cargo run -p db-gen` now performs real offline preparation. The three-line
+`cargo run -p db-gen --locked -- check` performs real offline preparation. The three-line
 binary delegates to CLI handling; library modules own manifest loading, file
 verification, orchestration and database setup. Set `RUST_LOG=info` to see the
 verification summary; an invalid explicit filter fails rather than hiding it.
@@ -48,7 +48,7 @@ accepted-entry grouping in the documented simplified/numeric-pinyin order.
 
 ## Implemented primary HSK import (A03)
 
-`cargo run -p db-gen` verifies all inputs/notices, checks native v2.0.0 and storage
+`cargo run -p db-gen --locked -- check` verifies all inputs/notices, checks native v2.0.0 and storage
 compatibility v1.4.0, creates the schema and imports the primary source into
 memory. `import_primary(prepared)` parses only retained verified hsk-primary bytes.
 `prepare()` alone still returns an empty schema for fixtures and later pipelines.
@@ -196,3 +196,20 @@ records the *operational contract*; the test evidence records what was verified.
 - Reproducibility rule: [reproducibility.md](reproducibility.md).
 - Regeneration commands: [regeneration.md](regeneration.md).
 - Browser module: [../modules/browser-db.md](../modules/browser-db.md).
+
+
+## A44 regenerated bundle and A46 workflow
+
+On 2026-10-29 the explicit cargo make dev workflow regenerated the pinned
+snapshot and installed a complete verified bundle. Current database SHA-256 is
+728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02 (3,158,016 bytes).
+All 12,100 rows, schema/indexes, input records, logical hash and 514 diagnostics
+match the prior A05/A06 snapshot. Physical bytes may differ under D22. Original
+bundle bytes are preserved together in the workflow backup. The A05/A06 hashes
+above remain historical evidence, not the current file checksum.
+
+Native export/read-only verification, complete-file checksums, exact development
+HTTP bytes and one managed Chrome dictionary/MCQ load pass. Four focused Node
+checks cover complete installation/backup, checksum rejection, path/missing-notice
+rejection and rollback. No full application or Pages regression was rerun under
+D36. See regeneration.md for cargo-make commands and testing/evidence.md for logs.

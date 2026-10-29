@@ -156,13 +156,19 @@ page components. Core round content and progress helpers remain authoritative.
 Reducers receive resolved rounds and user actions; the effect boundary calls the
 builder once for those normalized inputs. A22 records match/MCQ feedback and
 controls in UX; implement those approved interactions in the feature tasks.
-Summary application is deferred to A09/A10, while remaining product choices and
+The shared summary applies D35/D39 matching and MCQ accounting, with D40 weighted
+requirements for mixed sessions.
 A37 selects the initial D29 fade profile below; A32 implementation remains
 separate. Do not persist scores, progress or hash state.
 
 use_dictionary, use_database_status, use_database_commands, use_theme and
-use_theme_commands are implemented access points. use_motion and
-use_practice_session remain proposed. Expose read-only snapshots and
+use_theme_commands are implemented access points.
+use_practice_session is now implemented by A09/A48 at Practice's local boundary.
+One SessionState owner delegates active-round behavior to pure matching/MCQ
+reducers and retains shared FixedProgress, counters and frozen timing across
+expected type changes. The earlier separate MCQ hook is replaced by immutable
+family projections and named commands. use_motion remains separate A32 work.
+Expose read-only snapshots and
 named commands rather than raw UseStateHandle setters or unrestricted dispatch.
 Handle a missing required provider deliberately; do not unwrap context in render.
 Use small context values and stable Rc handles. Split contexts when their update
@@ -334,10 +340,15 @@ not evidence that this newly approved Home behavior exists.
 
 ## A11 setup boundary
 
+The later A09/A48 implementation uses the shared practice session described
+above. Its matching/MCQ reducers own the actual interaction fields; session
+metadata carries selected types while core replay inputs remain authoritative.
+
 Setup inputs are page-local until Start, not a second global URL authority.
 reducers/setup.rs owns typed activity/HSK/mode/count transitions. Children get
 values and semantic callbacks; no raw reducer handles or storage access. The
-existing core query_pairs and router serialization remain the sole URL format.
+core query_pairs and router serialization format round fields; D40 adds the
+optional types metadata without changing canonical round bytes or v1 replay.
 No empty context/provider framework was added for a single setup consumer.
 
 use_saved_exclusions keeps Loading/Ready/Failed separate from the selection

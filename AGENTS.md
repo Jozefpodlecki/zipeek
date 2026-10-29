@@ -67,8 +67,8 @@ The intended workspace includes the web app, generator, and e2e crate. Do not
 add nonexistent crates merely to match this map. The approved shared crate name
 is `zipeek-core`; Word/WordId, HSK and canonical PoS types are implemented;
 practice URL state and the pure deterministic round builder are implemented;
-typed browser database queries are implemented; playable exercise UI remains
-future work (D01).
+typed browser database queries, matching/MCQ gameplay and mixed-type sessions
+are implemented in Endless/Fixed modes (D01/D39/D40).
 
 ## 4. Version and dependency policy
 
@@ -90,6 +90,9 @@ such changes specifically; general task approval does not implicitly approve the
 | Build | Trunk; no exact version selected yet |
 | Round RNG | `rand` `0.10.3` with approved `chacha` feature; use `rand::rngs::ChaCha12Rng` (D17), no separate rand_chacha |
 | Animato | User-added `1.7.3` with `path`, `physics`, `color`; additional integration features still require approval |
+| Chart.js | Exact npm pin `chart.js@4.6.1`; Fixed-summary ring only, tree-shaken DoughnutController/ArcElement (D35) |
+| Summary asset build | Exact dev-only npm pin `esbuild@0.28.2`; local summary bundle, no runtime bundler (D35) |
+| Generator CLI | Exact `clap =4.6.7`, default features plus `derive`; native db-gen only (D37) |
 
 These are policy targets, not a claim that all manifests and workflows agree.
 Cargo version requirements are not necessarily exact pins. Record discrepancies
@@ -168,6 +171,13 @@ trunk serve
 trunk build --public-url /zipeek/
 ```
 
+From the repository root, the explicit local workflow is cargo make dev:
+generate a fresh verified bundle, install the entire bundle with a backup, then
+start Trunk in web/. Separate tasks are db-check, db-generate, db-install and
+serve. cargo make serve reuses the installed bundle. These tasks use installed
+cargo-make and Node; they add no dependency or automatic install step. Generation
+runs once when explicitly requested, never during Trunk rebuilds or Pages builds.
+
 ```
 # Repository root: owned harness, root and Pages suites
 cargo test -p e2e --locked -- --test-threads=1
@@ -183,7 +193,13 @@ See [testing/e2e.md](docs/testing/e2e.md) for commands, prerequisites, layout an
 failure-isolation evidence, and [D09/D28](docs/process/decisions/process-and-infra.md)
 for the binding decisions.
 
-For code changes, all five gates must pass:
+Choose local validation proportionate to the change. Routine fixes and small
+iterations need focused checks and an obvious representative sample of affected
+behavior, not full regression every time. Reuse successful evidence for unchanged
+code. After a fix, rerun affected checks instead of restarting the entire suite.
+
+Reserve full regression for very major work: substantial feature completion,
+broad architecture/runtime/data changes, or release readiness. The full set is:
 
 cargo fmt --all -- --check
 
@@ -195,22 +211,28 @@ cargo check --target wasm32-unknown-unknown -p zipeek --locked
 
 trunk build --public-url /zipeek/ (from web/)
 
-The wasm check does not replace the Pages build; both are required. UI
-behaviour changes also require Chrome e2e smoke coverage once the e2e
-harness exists. If any gate is blocked by a missing prerequisite, report
-it honestly — never mark it as passed.
+For a full run, the wasm check does not replace the Pages build; run both.
+For a routine UI change, check a representative affected path in Chrome;
+expand coverage when failures or risk justify it. Report the sample, checks
+not run and why. Missing prerequisites are blocked, never passed. Existing
+automated CI gates remain unchanged by this local workflow policy.
 
 A06 requires npm dependencies installed in web/ before Trunk. Its pre-build hook
 packages the exact pinned DuckDB-WASM worker/module assets and Arrow dependency
 locally under ignored web/vendor/; it never installs packages or generates a DB.
 Retain the packaged library licenses/notices. Avoid CDN/latest substitutions.
+The additional summary pre-build hook requires the approved Chart.js/esbuild
+packages, bundles the summary ring locally and retains their licenses. npm ci
+--ignore-scripts installs both runtime and build dependencies from the lockfile;
+the hooks perform no install or database generation.
 
 For documentation-only changes, check Markdown structure, relative links, command
 accuracy, and consistency with repository facts. Rust builds and e2e are not required.
 
 Before declaring completion:
 
-Run the applicable checks in TESTING, including Chrome e2e for UI changes.
+Run applicable focused checks or the major-work regression set in TESTING,
+including a representative Chrome sample for UI changes.
 Report failures or unavailable prerequisites
 honestly; never mark an unavailable gate as passed.
 
@@ -238,7 +260,7 @@ testing/	Per-area test plans (e2e, browser-db, word-of-the-day, practice-url, ro
 process/BASELINE.md	A00 diagnostic evidence (historical)
 process/CI.md	Workflow structure, gates, caching, deployment; CI changes
 process/CODING_STANDARDS.md	Rust/Yew conventions and no-comments policy; coding convention changes
-process/decisions/index.md	Index of D01–D34; each decision has one home file grouped by family
+process/decisions/index.md	Index of D01–D40; each decision has one home file grouped by family
 process/TASKS.md	Ordered open backlog, prerequisites, and ready markers
 process/CURRENT.md	Active work, blockers, and next task; update every task
 process/handoff.md	Per-task continuation notes for the next session; reference only

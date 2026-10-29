@@ -11,20 +11,39 @@ validation state live in [TASKS](../process/TASKS.md) and
 | Change | Required checks |
 | --- | --- |
 | Documentation only | Markdown structure, local links, command accuracy, factual consistency |
-| Rust/application/build/dependency changes | Formatting, Clippy, workspace tests, Pages-ready Trunk build |
-| UI behaviour | Code gates plus Chrome e2e smoke covering changed behaviour |
-| Test or CI changes | Relevant code gates and exercise affected harness/workflow where possible |
+| Routine Rust/application fix | Formatting and relevant package checks/tests; a representative affected behavior sample |
+| Routine UI change | Focused code checks and a representative Chrome path; avoid the whole browser regression suite |
+| Test or CI changes | Exercise the changed test/harness/workflow where possible |
+| Very major work or release readiness | Full five-gate regression set, including root/Pages Chrome coverage |
 
 Always update [CURRENT](../process/CURRENT.md) and [TASKS](../process/TASKS.md),
 and append finished outcomes to [completed/](../process/completed/). For mixed
 changes, apply all relevant checks. Unavailable gates are blocked, not passed;
-report prerequisites and failures. Do not silently weaken gates to make the
-current scaffold appear complete.
+report prerequisites and failures. State the sample used and checks omitted;
+never claim a focused sample as a full regression pass.
+
+## Proportionate local validation (D36)
+
+The user requested on 2026-10-29 that routine changes use obvious representative
+samples, with full regression only after very major work. Choose checks based on
+the behavior and scope changed. A small fix normally needs its relevant unit test
+or a short manual/browser path plus applicable formatting/compilation;
+documentation-only work needs documentation gates. Do not run unrelated database,
+browser or workspace suites just because a file changed.
+
+Reuse still-valid successful results. After correcting a failure, rerun the
+affected test/sample and expand only when failures or new scope justify it.
+Very major work includes substantial feature completion and broad architecture,
+runtime or data changes; use the full set below at that milestone or release
+readiness. Record scope, results and material gaps. Existing automated CI keeps
+its configured full gates; this policy changes local iteration, not workflow
+execution. A10's complete MCQ/summary feature warranted the full run already
+underway when this instruction arrived.
 
 ## Commands
 
 Full prerequisites, working directories, and per-area invocation live in the
-relevant file below. The five code gates required for any code change are:
+relevant file below. The five-gate set for very major work/full regression is:
 
 ```powershell
 # Repository root
@@ -66,7 +85,8 @@ browser-db.md	A06 browser database checks, Pages-prefix test, native/wasm replay
 word-of-the-day.md	D05 coverage plan and FNV-1a behaviour checks
 practice-url.md	D13/D15 URL, exclusion, offset, and fallback coverage
 round-builder.md	D12/D19 round-generation and single-stream vector checks
-mcq.md	D20 MCQ coverage plan
+mcq.md	D20 MCQ coverage and shared summary checks
+matching.md	A09 matching and A48 mixed-session native/Chrome checks
 startup.md	Static loading shell, handoff, database readiness coverage
 shell.md	Theme, sidebar, footer, and shell behaviour coverage
 provenance.md	Data source hashing, schema, import, and PoS fixture coverage
@@ -104,9 +124,9 @@ The PR describes resulting behaviour and validation, with relevant failure outpu
 ## Owned Chrome harness (A15)
 
 From the repository root, cargo test -p e2e --locked -- --test-threads=1 runs
-five harness lifecycle unit tests and two integration entry points: root with
-fifteen named scenarios plus two expected fault/recovery probes, and Pages
-with six scenarios.
+five harness lifecycle unit tests and four integration entry points: regular root
+with nineteen named scenarios, matching root with three, mixed root with two,
+and Pages with fifteen, plus the existing expected fault/recovery probes.
 Each integration binary owns its single managed headless Chrome session and its
 servers/build directory. Workspace tests include both; no external server or
 ignored-test opt-in. See [e2e](e2e.md) for prerequisites, cleanup and artifacts.

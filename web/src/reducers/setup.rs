@@ -10,7 +10,7 @@ use zipeek_core::{
 
 #[derive(Clone, PartialEq)]
 pub(crate) struct SetupState {
-    pub variant: ExerciseVariant,
+    pub types: Vec<ExerciseVariant>,
     pub level: HskLevel,
     pub fixed: bool,
     pub rounds: FixedRounds,
@@ -27,7 +27,7 @@ pub(crate) enum SetupAction {
 impl Default for SetupState {
     fn default() -> Self {
         Self {
-            variant: ExerciseVariant::HanziToMeaning,
+            types: vec![ExerciseVariant::HanziToMeaning],
             level: HskLevel::Hsk3(Hsk3Level::One),
             fixed: false,
             rounds: FixedRounds::Ten,
@@ -60,7 +60,17 @@ impl Reducible for SetupState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut next = (*self).clone();
         match action {
-            SetupAction::Activity(value) => next.variant = value,
+            SetupAction::Activity(value) => {
+                if next.types.contains(&value) {
+                    if next.types.len() == 1 {
+                        return self;
+                    }
+                    next.types.retain(|variant| *variant != value);
+                } else {
+                    next.types.push(value);
+                }
+                next.types = crate::services::exercise_types::canonical(&next.types);
+            }
             SetupAction::System(system) => {
                 next.level = match system {
                     HskSystem::Hsk2 => HskLevel::Hsk2(
@@ -85,6 +95,21 @@ impl Reducible for SetupState {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn multiple_types_toggle_but_the_last_type_cannot_be_removed() {
+        let state = Rc::new(SetupState::default());
+        let unchanged = state
+            .clone()
+            .reduce(SetupAction::Activity(ExerciseVariant::HanziToMeaning));
+        assert!(Rc::ptr_eq(&state, &unchanged));
+        let state = state.reduce(SetupAction::Activity(ExerciseVariant::HanziEng));
+        assert_eq!(
+            state.types,
+            vec![ExerciseVariant::HanziToMeaning, ExerciseVariant::HanziEng]
+        );
+        let state = state.reduce(SetupAction::Activity(ExerciseVariant::HanziToMeaning));
+        assert_eq!(state.types, vec![ExerciseVariant::HanziEng]);
+    }
     #[test]
     fn advanced_band_cannot_survive_switch_to_hsk2_or_stale_level_event() {
         let state = Rc::new(SetupState::default())

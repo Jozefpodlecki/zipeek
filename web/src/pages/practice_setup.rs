@@ -4,7 +4,6 @@ use crate::{
     reducers::setup::{SetupAction, SetupState},
     route::Route,
 };
-use std::collections::BTreeMap;
 use yew::prelude::*;
 use yew_router::prelude::use_navigator;
 use zipeek_core::practice::FixedRounds;
@@ -18,19 +17,24 @@ pub fn practice_setup() -> Html {
     let ready = matches!(saved.status, SavedExclusions::Ready(_)) && navigator.is_some();
     let on_start = {
         let query = match &saved.status {
-            SavedExclusions::Ready(ids) => Some(
-                state
-                    .query(ids.clone())
-                    .query_pairs()
-                    .into_iter()
-                    .collect::<BTreeMap<_, _>>(),
-            ),
+            SavedExclusions::Ready(ids) => Some(crate::services::exercise_types::query_pairs(
+                &state.query(ids.clone()),
+                &state.types,
+            )),
             _ => None,
         };
-        let variant = state.variant;
+        let types = state.types.clone();
         let start_failed = start_failed.clone();
         Callback::from(move |_| {
             if let (Some(navigator), Some(query)) = (&navigator, &query) {
+                let variant = match crate::services::exercise_types::random_type(&types, None) {
+                    Ok(variant) => variant,
+                    Err(error) => {
+                        log::error!("Could not choose starting type: {error}");
+                        start_failed.set(true);
+                        return;
+                    }
+                };
                 match navigator.push_with_query(&Route::practice(variant), query) {
                     Ok(()) => start_failed.set(false),
                     Err(error) => {
@@ -58,7 +62,7 @@ pub fn practice_setup() -> Html {
     html! {
         <section data-practice-setup="" class="flex w-full flex-col gap-8">
             <h1 class="text-3xl font-bold tracking-tight">{"Practice"}</h1>
-            <ActivityPicker selected={state.variant} on_select={select_activity} />
+            <ActivityPicker selected={state.types.clone()} on_select={select_activity} />
             <HskPicker level={state.level} on_system={select_system} on_level={select_level} />
             <fieldset class="min-w-0" data-mode-picker="">
                 <legend class="mb-3 text-lg font-semibold">{"Mode"}</legend>

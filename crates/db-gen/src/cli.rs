@@ -3,11 +3,50 @@ use std::{
     process::ExitCode,
 };
 
+use clap::{Parser, Subcommand};
 use tracing_subscriber::EnvFilter;
 
 use crate::{import_primary, prepare};
 
+#[derive(Parser)]
+#[command(
+    name = "db-gen",
+    version,
+    about = "Generate the Zipeek dictionary from verified local inputs",
+    after_help = "Examples (repository root):\n  cargo run -p db-gen --locked -- check\n  cargo run -p db-gen --locked -- generate --output target/reviewed-dictionary\n\nNo database is written by check or by displaying this help."
+)]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    #[command(about = "Verify and import inputs in memory without writing a database")]
+    Check,
+    #[command(about = "Write a complete verified database bundle to a new directory")]
+    Generate {
+        #[arg(short, long, value_name = "DIRECTORY", default_value_os_t = default_output(), help = "Output bundle directory; must not already exist")]
+        output: PathBuf,
+    },
+}
+
+fn default_output() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../web/static")
+}
+
 pub fn run_cli() -> ExitCode {
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(error) => {
+            let code = error.exit_code() as u8;
+            if let Err(error) = error.print() {
+                eprintln!("Could not print CLI help/error: {error}");
+                return ExitCode::FAILURE;
+            }
+            return ExitCode::from(code);
+        }
+    };
     let filter = if std::env::var_os("RUST_LOG").is_some() {
         match EnvFilter::try_from_default_env() {
             Ok(filter) => filter,
@@ -30,23 +69,8 @@ pub fn run_cli() -> ExitCode {
         return ExitCode::FAILURE;
     }
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("data/MANIFEST.toml");
-    let arguments: Vec<_> = std::env::args_os().skip(1).collect();
-    match arguments.as_slice() {
-        [] => {}
-        [check] if check == "--check" => {}
-        [generate] if generate == "generate" => {
-            return generate_artifact(
-                &manifest,
-                &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../web/static"),
-            );
-        }
-        [generate, directory] if generate == "generate" => {
-            return generate_artifact(&manifest, &PathBuf::from(directory));
-        }
-        _ => {
-            eprintln!("Usage: db-gen [--check | generate [output-directory]]");
-            return ExitCode::FAILURE;
-        }
+    if let Command::Generate { output } = cli.command {
+        return generate_artifact(&manifest, &output);
     }
     match prepare(&manifest) {
         Ok(prepared) => {
@@ -65,6 +89,10 @@ pub fn run_cli() -> ExitCode {
                         diagnostics = imported.diagnostics.len(),
                         "Primary HSK import complete in memory; no artifact written"
                     );
+                    println!(
+                        "Check complete: {} readings imported in memory. No database file was written.\nTo write a bundle: cargo run -p db-gen --locked -- generate --output <NEW_DIRECTORY>",
+                        imported.words.len()
+                    );
                     ExitCode::SUCCESS
                 }
                 Err(error) => {
@@ -81,16 +109,69 @@ pub fn run_cli() -> ExitCode {
 }
 
 fn generate_artifact(manifest: &Path, directory: &Path) -> ExitCode {
-    match crate::artifact::generate(manifest, directory) {
+    let directory = match std::path::absolute(directory) {
+        Ok(directory) => directory,
+        Err(error) => {
+            eprintln!(
+                "Could not resolve output directory {}: {error}",
+                directory.display()
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    println!("Output directory: {}", directory.display());
+    match crate::artifact::generate(manifest, &directory) {
         Ok(report) => {
             tracing::info!(path = %directory.display(), rows = report.rows,
                 size_bytes = report.files[0].size_bytes, sha256 = %report.files[0].sha256,
                 "Verified database artifact generated");
+            println!(
+                "Database written: {}\nReadings: {}\nManifest: {}",
+                directory.join("hanzi.duckdb").display(),
+                report.rows,
+                directory.join("hanzi.manifest.json").display()
+            );
             ExitCode::SUCCESS
         }
         Err(error) => {
-            eprintln!("Generation failed: {error}");
+            eprintln!("Generation failed for {}: {error}", directory.display());
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::{CommandFactory, error::ErrorKind};
+
+    #[test]
+    fn missing_command_shows_help_instead_of_silently_importing() {
+        Cli::command().debug_assert();
+        let error = Cli::try_parse_from(["db-gen"]).err().unwrap();
+        assert_eq!(
+            error.kind(),
+            ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand
+        );
+        let help = error.to_string();
+        assert!(help.contains("check") && help.contains("generate --output"));
+    }
+
+    #[test]
+    fn explicit_output_and_default_directory_are_unambiguous() {
+        let explicit =
+            Cli::try_parse_from(["db-gen", "generate", "--output", "target/review bundle"])
+                .unwrap();
+        let Command::Generate { output } = explicit.command else {
+            panic!("Expected generate")
+        };
+        assert_eq!(output, PathBuf::from("target/review bundle"));
+        let default = Cli::try_parse_from(["db-gen", "generate"]).unwrap();
+        let Command::Generate { output } = default.command else {
+            panic!("Expected generate")
+        };
+        assert_eq!(output, default_output());
+        assert!(Cli::try_parse_from(["db-gen", "generate", "--output"]).is_err());
+        assert!(Cli::try_parse_from(["db-gen", "--unknown"]).is_err());
     }
 }

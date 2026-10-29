@@ -15,6 +15,7 @@ pub(crate) enum PracticeStatus {
     Loading,
     Ready(Rc<PreparedPractice>),
     Failed(String),
+    InsufficientPool,
 }
 
 #[derive(Clone, PartialEq)]

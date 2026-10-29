@@ -29,12 +29,15 @@ No user value becomes an identifier.
 - Engine: `v1.4.3`.
 - Reads the native neo v2.0.0 artifact with explicit v1.4.0 storage.
 - Actual `web/static/hanzi.duckdb`: 12,100 rows, ten columns, 3,158,016 bytes,
-  SHA-256 `491fae6f84a96b5825c860163701f3e138cf72e5b50763848fde0e96ba03c546`.
+  SHA-256 `728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02`
+  after A44/A46 regeneration on 2026-10-29. Logical/diagnostic hashes, schema,
+  indexes, inputs and row count match the previous artifact.
 - Opens the full fetched buffer `READ_ONLY`. No OPFS persistence, no automatic
   DB generation.
 - Worker/WASM/Arrow assets are served locally, not from a CDN.
-- The `/zipeek/` build passes Chrome verification without cross-origin isolation
-  headers.
+- A06 verified `/zipeek/` routing without cross-origin isolation headers. A44/A46
+  verified the new artifact through development HTTP bytes and one Chrome load;
+  the full Pages/browser regression was not rerun for this workflow task.
 
 Future regenerated artifacts must repeat compatibility checks; no default neo
 storage compatibility is implied.
@@ -144,3 +147,19 @@ queries with no schema or artifact changes. DatabaseBoundary is composed per
 recognized route; the unknown-route fallback does not need database readiness.
 Feature effects discard late results and abort only their Rust orchestration;
 the app-owned client survives route changes.
+
+## A11 setup consumer
+
+The page-local saved-exclusion hook uses words_by_ids for one bound validation
+lookup, deduplicating and removing unknown IDs before count/Start generation.
+Loaded storage is not normalized back to disk. Retry is generation-guarded;
+Reset is explicit storage removal. No database schema/query-semantic change or
+saved-exclusion union on shared practice URL loads is introduced.
+
+## A10 Endless MCQ consumer
+
+After building an MCQ round, preparation batch-fetches its selected WordIds for
+secondary traditional text and Listen. Missing display rows fail preparation.
+The exclusion-clean strict pool size drives the existing nominal-offset helper;
+seed contexts differing from the URL filter also fetch the next unseeded pool.
+Round labels, comparison keys and the core replay stream remain unchanged.

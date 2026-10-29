@@ -262,3 +262,76 @@ Approved title: "Zipeek — Chinese hanzi practice". Approved description:
 A40 owns image creation and initial HTML metadata/asset validation before v1.
 Keep /zipeek/ in canonical/image URLs and retain route-specific browser titles.
 No dependency or hosting change is approved by this design decision.
+
+## D35 Fixed summary and chart packaging
+
+**Status:** Approved 2026-10-29 during A10 implementation.
+**Owner:** [UX](../../product/UX.md#summary-screen),
+[PRODUCT](../../product/PRODUCT.md#practice),
+[AGENTS](../../../AGENTS.md#4-version-and-dependency-policy).
+**Index row:** [D35](index.md#approved-decisions).
+
+Apply the previously approved UX-SUM01 summary: after the last Fixed Continue/
+Next round only, show Session complete, a doughnut ring and four real DOM stats:
+First-attempt, Mistakes, Time, Highest streak. No summary in Endless. Matching's
+approved expanded label is First-attempt correct pairs: a pair counts only if
+matched on its first attempt, with denominator rounds × 4. During A10 the user
+explicitly approved MCQ's compact First-attempt label: correct first selections /
+total questions (5/10/20). One locked wrong selection is one MCQ mistake.
+
+Time runs from first round render to final Continue/Next round, never pauses on
+hidden tabs, freezes at completion and is not persisted. Keep the maximum
+consecutive-correct streak. Play again retains mode/count/filter/exclusions but
+starts a fresh session at a random in-pool offset, replacing the earlier D13/
+product reset-to-zero restart behavior. Back to setup returns to the default
+setup, without preselection. Leaving/reloading loses session progress and scores;
+ordinary reload still honors its URL offset. Wrapping does not reset progress.
+
+The user approved exact chart.js@4.6.1 and build-only esbuild@0.28.2 after npm
+metadata confirmed those releases. Chart.js is restricted to the summary ring;
+import/register only DoughnutController and ArcElement with Chart, never auto,
+scales, tooltips or legend. esbuild emits a local tree-shaken ESM bundle; no CDN,
+runtime bundler or general charting scope. Retain Chart.js, its color dependency
+and build-tool licenses alongside packaged assets. Preserve unrelated locks.
+Use opaque wasm-bindgen handles, mount in an effect and destroy on unmount,
+including late async creation. Failure keeps all numeric text and actions usable.
+Count and arc fill animate for 300 ms; reduced motion makes both instant and
+an active preference change finishes them immediately. A09 reuses this summary
+infrastructure when matching is implemented. No persisted chart/session data.
+
+
+## D39 Matching first-attempt pair accounting
+
+Approved explicitly during A09 on 2026-10-29. A wrong attempt using a card for
+word A and a card for word B disqualifies BOTH represented pairs from the
+First-attempt correct pairs numerator. Later correct matches still increase
+live correct and consecutive-correct/streak counts. Every wrong attempt adds
+one Fixed mistake, regardless of whether either pair was already disqualified.
+Per-round disqualification resets on the next round. Summary denominator remains
+four required pairs per matching round. This clarifies D35 without changing
+WordIds, label comparisons, layout, canonical inputs or the round RNG stream.
+
+
+## D41 Practice board readability and pinyin
+
+Approved 2026-10-29 under A49. Center the practice board at a 56rem maximum
+width with an opaque theme-aware surface. Matching uses two equal columns
+including phones, aligned card heights, contained separate audio controls and
+readable matched cards instead of whole-card opacity. Keep feedback timing,
+keyboard behavior, shuffled positions and persistent progression actions.
+Show display pinyin beneath hanzi/traditional and above Listen for Hanzi-to-
+English matching and Hanzi-to-meaning MCQ. Existing comparison keys, canonical
+round input, RNG stream, DB and dependencies remain unchanged. This supersedes
+the earlier full-width/stacked-on-mobile exercise presentation in UX.
+
+The user's additional drawer-icon/width and setup exercise-help dialog requests
+are recorded as A50/A51 follow-ups, with accessible interaction requirements in
+UX. They are documentation-only in A49, not implemented by this decision.
+
+
+D41 amendment, A52 (user-directed 2026-10-29): make matching cards smaller and
+place Listen at the right edge alongside the text, removing the audio footer.
+Pinyin stays under hanzi/traditional; MCQ's pinyin-above-audio layout is unchanged.
+Keep full-page matching free of vertical scroll at representative desktop sizes,
+while allowing natural scrolling for long content or small/short viewports.
+Maintain native independent audio and a minimum 44px target.

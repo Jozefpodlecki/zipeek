@@ -18,7 +18,7 @@ npm ci --ignore-scripts
 ```
 
 ```powershell
-# Repository root: both Chrome binaries and lifecycle checks
+# Repository root: all four Chrome binaries and lifecycle checks
 cargo test -p e2e --locked -- --test-threads=1
 
 # Focused invocations; no separately started server required
@@ -44,7 +44,9 @@ e2e/src/harness/{mod,server,browser,scenario,artifacts,error}.rs
 e2e/src/main.rs
 e2e/tests/smoke.rs
 e2e/tests/pages.rs
-e2e/tests/suites/{mod,bootstrap,database,providers,practice,setup,routing,shell,pages,styling}.rs
+e2e/tests/matching.rs
+e2e/tests/mixed.rs
+e2e/tests/suites/{mod,bootstrap,database,providers,practice,setup,mcq,fixed_mcq,matching,mixed,routing,shell,pages,styling}.rs
 e2e/tests/page_objects/{mod,home,shell}.rs
 e2e/fixtures/browser_probes/{database,hold_download,release_download,provider_lifetime,practice_queries,diagnostics,styling,styling_acceptance}.js
 e2e/fixtures/pages-server.cjs
@@ -56,13 +58,19 @@ modules own product assertions. Page helpers contain reusable queries only;
 suites retain assertions. A15 supplied eight root scenarios and one Pages
 scenario, preserving the original cases and separating the adapter probe from
 retry. A35 adds styling, A31 adds provider lifetime and A21 adds practice/route
-coverage. Root now runs fifteen named scenarios and Pages six, each binary on
-its own single managed session. Two Rust integration tests cover twenty-one named
+coverage. Regular root runs nineteen named scenarios, matching root three, mixed
+root two and Pages fifteen, each binary on its own single managed session. Four
+Rust integration tests cover thirty-nine named
 scenarios, plus the existing root expected error/panic recovery probes.
 
 Root scenarios cover held dictionary Loading, bootstrap landscape/themes,
 failure/Retry, real adapter row/binding/read-only checks, practice URL parsing,
 landing theme/storage, responsive navigation/skip and drawer/scroll behaviour.
+Two shared A10 milestone scenarios exercise the three Endless MCQ variants,
+answer locking, keyboard/feedback/counters, pronunciation API calls, canonical
+Continue URLs, seeded Next, overflow wrapping, reload/reset and responsive layout.
+Two further shared scenarios implement Fixed 5/10/20, progress/accounting, frozen
+time, restart/reset, chart cleanup, reduced motion and responsive summary coverage.
 The prior Home h1 lookup was stale against the existing user branding markup;
 A15 preserves the Zipeek text assertion using the actual header Home brand link.
 No app markup or styling changes accompany that selector correction.

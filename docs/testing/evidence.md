@@ -1,3 +1,4 @@
+# Validation evidence
 
 
 ## A15 modular Chrome harness — 2026-10-28
@@ -264,3 +265,238 @@ target/a38/document-validation.json. Earlier completed history/current-date pref
 application/test/workflow sources, dependency/data files and staged index are
 preserved. No product/policy decision, Rust/Trunk/Chrome run, staging or commit
 was made for this documentation-only cleanup. A40 remains the next ready item.
+
+
+## A11 practice setup — 2026-10-29
+
+All five gates pass after the final setup-surface correction: fmt, workspace/
+all-targets Clippy with warnings denied, locked workspace tests (105 Rust tests),
+wasm check and the /zipeek/ Trunk build. Three new native tests exercise typed
+HSK switching/stale-level rejection, Fixed-count retention/canonical URL omissions,
+and saved-ID parsing/deduplication. No core replay or dependency changes.
+
+Root runs fifteen named scenarios and Pages six, plus existing expected fault/
+recovery probes. Shared setup checks start all six activities through actual UI
+and verify real PreparedPractice plus HSK/mode/count/offset/exclusion query values,
+omitted seed/PoS and single-pass serialization. Unknown/duplicate/invalid saved IDs
+are handled without load writes; Reset clears storage and the next Start URL.
+Held/failing lookup disables Start and reaches Retry; blocked storage removal
+preserves count and shows an error; malformed JSON remains untouched. Space/Enter
+and 400/768/1280px dark/light screenshots cover setup selection/navigation/layout.
+
+Final log: target/a11/workspace-tests-final.log. Artifacts:
+target/e2e/root-19824-1793235095678890800 and
+target/e2e/pages-26020-1793235051591505900. Visual review of the first passing
+run caught the undefined bg-card utility; the final surface token paints selected
+and unselected controls. A computed-background assertion guards that behavior.
+The final Pages dark-400 setup image was inspected. The first ID-conversion
+compile error was also corrected before the final gates. No unavailable gate is
+counted as passed.
+
+Documentation structure/links, command accuracy, consistency and protected-file/
+index checks pass; report: target/a11/document-validation.json. Previous outcome
+date files stay unchanged; completion is dated 2026-10-29 after the interruption.
+The implementation was committed externally; no agent staging/commit occurred.
+Storage key is zipeek.excluded_words; only explicit Reset writes/removes it.
+Practice URL loads remain independent of saved exclusions. MCQ interaction is
+still the next A10 task, not a claim made by setup completion.
+
+
+## A10 Endless MCQ milestone ? 2026-10-29
+
+All five gates pass: fmt, locked workspace/all-target Clippy with warnings denied,
+workspace tests (107 Rust tests), wasm check and /zipeek/ Trunk build from web/.
+No missing prerequisites or failed gates. Log: target/a10/workspace-tests.log.
+Two added pure reducer tests exercise invalid/stale/duplicate answers, first-answer
+locking, Continue gating, expected next-round counter retention and wrong-answer
+streak reset. Core deterministic builder/replay remains unchanged.
+
+Root runs seventeen named scenarios and Pages eight, plus the original root
+expected fault/recovery probes. Both new shared MCQ scenarios pass against real
+rounds for all three Endless variants: wrong/correct feedback and locked/dimmed
+answers, persistent Continue, number keys/Space/Enter, editable-field shortcut
+exclusion, cumulative correct/streak/flame, no Endless progress bar, canonical
+single-encoded exclusions, offset +1, seed clearing, overflow wrap retaining counts,
+reload reset and return through setup. Native speech calls are spied for zh-CN
+hanzi; audible output is not asserted.
+
+Artifacts: target/e2e/root-46084-1793235660799282700 and
+target/e2e/pages-28504-1793235595415036900. Captures cover all three variants at
+400/768/1280px in light/dark; horizontal overflow and Continue visibility are
+asserted. Reviewed meaning-to-hanzi-dark-400.png and
+hanzi-to-meaning-light-1280.png in the Pages responsive scenario. Both summaries
+confirm browser quit and owned servers reaped; recorded PIDs have exited.
+
+Documentation structure/local links/commands/facts and protected-file/index checks
+pass (target/a10/document-validation.json). Dependency/feature pins, core replay,
+database/landscape, bootstrap CSS, earlier outcomes and saved exclusions remain
+unchanged. No agent staging/commit. A10 remains open for Fixed gameplay/progress/
+completion and summary; this is the first playable Endless milestone.
+
+
+## A10 Fixed MCQ and summary - 2026-10-29
+
+All five full-regression gates pass for complete A10: fmt, locked all-target
+workspace Clippy with warnings denied, locked workspace tests (110 Rust tests),
+wasm check and /zipeek/ Trunk build from web/. Locked npm ci --ignore-scripts
+and summary packaging also pass. Chart.js 4.6.1 and dev-only esbuild 0.28.2 are
+approved under D35. Pre-existing npm records are unchanged; the additions are
+Chart.js, its color dependency and esbuild/platform packages. License copies and
+local tree-shaken bundle metadata are retained. No runtime bundler/CDN.
+
+Final log: target/a10-fixed/workspace-tests-wrap.log. Artifacts:
+target/e2e/root-45940-1793236646515334800 and
+target/e2e/pages-40276-1793236540546127000. Nineteen root and ten Pages scenarios
+pass, plus original expected fault/recovery probes. New Fixed checks cover
+5/10/20 across all variants, completed/total progress, exact final completion,
+first-selection accuracy/mistakes/highest streak, controlled frozen wall-clock
+time, reload/navigation reset, fresh-offset replay and default setup return.
+Chart checks cover actual canvas, four DOM text stats, destroy on replay/leave,
+300 ms normal and instant/live reduced motion, blocked-module fallback and
+400/768/1280px screenshots in light/dark. Empty-strict-pool fixture retains real
+widened rows and verifies unchanged-URL Continue and replay. Both summaries report
+clean shutdown and owned PID checks find no remaining processes.
+
+An initial timer fixture missed hash-only navigation; current-document clock
+installation corrected it. Review found and fixed a same-URL preparation stall.
+Final dark/mobile and light/desktop captures were reviewed across the validation
+runs, including final Pages light-1280. Earlier valid evidence was retained.
+D36 now reserves routine work for focused samples; this major feature's full
+run was already underway when the user requested the policy change.
+
+Documentation structure, local links, commands/facts, prior-outcome prefix,
+protected files and preserved external staged-snapshot checks pass:
+target/a10-fixed/document-validation.json. DIGEST and core replay/data artifacts
+remain unchanged. No agent commit/staging occurred. A10 is complete; next is A09.
+
+External staging was detected during final documentation validation. The agent
+made no index edits; target/a10-fixed/index-resumed records the snapshot retained
+for the final preservation check. Final documentation updates remain unstaged.
+
+
+## A46 workflow and A44 regeneration - 2026-10-29
+
+Four focused node --test scripts/db-workflow.test.cjs checks pass: complete bundle
+installation with preserved backup, checksum refusal without touching installed
+files, path/missing-notice refusal and rollback after simulated publication failure.
+Node syntax and cargo-make task discovery/ordered dev plan pass. Existing installed
+cargo-make 0.37.24 is used without adding/upgrading tools or project dependencies.
+
+The real cargo make dev sequence passed. It generated a native-verified 12,100-
+reading candidate, installed the complete verified bundle with backup, then served
+Trunk on 1420. Downloaded hanzi.duckdb bytes exactly matched web/static. One managed
+headless Chrome session loaded the installed read-only dictionary, prepared three
+MCQ options and read the 12,100-row report. Browser quit succeeded and the owned
+cargo-make/Trunk process tree was stopped. Port 1420 is no longer listening.
+
+Evidence: target/a46-workflow/dev.log, browser.log, smoke.json, cleanup.log,
+bundle-comparison.json and retained temporary db_workflow_probe.rs. The live
+example file was removed after validation. Original complete bundle is retained
+at target/db-workflow/backups/1793266078908-32d25ff9-f7b4-4ec6-97c9-a2571cc8fc05;
+each backup file hash matches the pre-install snapshot. Logical rows, schema,
+indexes, input records and diagnostics are unchanged. New DB SHA-256:
+728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02.
+
+The first helper test caught confusion between generator Cargo-manifest and input-
+manifest hashes; validation now compares pinned INPUTS.toml's file record and the
+corrected tests pass. No full workspace/root/Pages regression was run for this
+workflow change under D36. Docs/links/commands/facts, old outcome prefix, root lock
+and staged-index preservation checks pass. No agent staging or commit occurred.
+
+
+## A09 and A48 matching and mixed sessions - 2026-10-29
+
+Passed: cargo fmt --all -- --check; workspace/all-targets Clippy --locked with
+-D warnings; cargo check --target wasm32-unknown-unknown -p zipeek --locked;
+trunk build --public-url /zipeek/ from web/. No missing prerequisites.
+
+The initial cargo test --workspace --locked run passed all 53 generator tests,
+matching (three scenarios) and mixed (two scenarios), then exited 101 because
+Pages late_queries_and_retry_keep_current_route expected AppShell main-content
+focus after browser Back. The initial matching heading effect stole that focus.
+The fix limits matching heading focus to subsequent rounds. All other fourteen
+Pages scenarios passed in that run. Only the failing scenario was rerun with a
+temporary Pages harness probe, which passed; its source is retained under
+target/a09/a09_focus_probe.rs and removed from the integration-test tree.
+
+The remaining root binary passed all nineteen scenarios and existing expected
+error/panic recovery probes. cargo test -p zipeek -p zipeek-core --locked passed
+the remaining 65 native tests. Combined coverage is 118 native tests and 39
+distinct Chrome scenarios (19 root, 3 matching root, 2 mixed root, 15 Pages).
+This is retained successful coverage plus targeted recovery under D36, not a
+claim that the original workspace command exited successfully. No full rerun
+was performed after the focused fix. Final fmt/Clippy/wasm/Pages build passed.
+
+Logs: target/a09/workspace-tests.log, focus-rerun.log, root-tests.log and
+native-remaining.log. Focused development logs: matching-focused.log and
+mixed-focused.log. Final preservation/document report: target/a09/validation.json.
+Chrome artifact runs under target/e2e/: matching root-31616-1793284867114747800;
+mixed root-4864-1793284926624856000; Pages pages-35916-1793284952246064600;
+corrected focus pages-37024-1793285168716333400; root root-37340-1793285185707760400.
+
+Inspected matching mobile/desktop light/dark captures and mixed-summary layout.
+The controlled Date.now clock in mixed tests freezes Chart.js animation in its
+screenshot; reduced-motion summary captures exercise the final ring. Tests cover
+all variants, 5/10/20 fixed counts, both-pair retry accounting, 11/14 mixed accuracy,
+wrong/timer/stale-event handling, keyboard/Listen, restart, no-repeat transitions,
+seed/reload/exclusion URLs, insufficient pools, wrapping and responsive layouts.
+No dependency, installed dictionary, input/source or v1 replay changes.
+
+Final documentation checks cover 32 Markdown files and 381 relative links. New
+feature links/anchors pass, command examples match package/test names, and
+completion history retains its exact original byte prefix. Nine pre-existing
+links in database module/schema notes target missing D08/D16/D18/D21/D23 sections
+or an old A06 heading; these unrelated documentation gaps remain recorded in
+target/a09/validation.json. Installed artifacts, dependency policy/pins, retained
+scratchpad and frozen history are unchanged. The user updated the index during
+work; no agent staging occurred. All thirteen recorded owned server/build PIDs
+are absent after the runs. git diff --check passes.
+
+
+## A49 practice presentation - 2026-10-29
+
+Passed: cargo fmt --all -- --check; cargo clippy -p zipeek -p e2e --all-targets
+--locked -- -D warnings; cargo test -p zipeek --lib --locked (27 tests);
+cargo check --target wasm32-unknown-unknown -p zipeek --locked;
+trunk build --public-url /zipeek/ from web/.
+
+Focused Chrome cargo test -p e2e --test matching --locked passed its three
+interaction/layout, Fixed summary/restart and recovery/seed/same-URL scenarios.
+After tightening padding/type spacing and strengthening card border contrast,
+only the affected interaction/layout scenario was rerun via an archived temporary
+probe, passing both times. The probe is retained at target/a49/a49_layout_probe.rs
+and removed from e2e/tests. No full regression under D36; reducer/round/database
+behavior is unchanged.
+
+Logs: target/a49/matching.log, layout-final.log, layout-contrast-final.log.
+Initial run: target/e2e/root-8744-1793286262301659900. Refined layout run:
+root-32572-1793286348954224500. Final contrast/layout run:
+root-21556-1793286425029938100. Fresh cards captured at 400/1280px in both themes;
+1920px dark verifies the 896px cap. Existing matched captures also cover 768px.
+Checks assert equal row heights, contained audio, opaque board, no overflow and
+pinyin placement only on approved surfaces. Existing keyboard/audio, feedback,
+Next gating and URL checks pass. MCQ pinyin captures cover mobile light/desktop
+dark. Final matching light/dark, fresh/matched and MCQ screenshots were inspected.
+
+Enabled card borders use slate-500 against white or slate-900, exceeding 3:1.
+Matched text remains opaque with slate-600 on slate-100 or slate-300 on slate-800.
+A49 documents A50/A51 without claiming drawer/help-dialog implementation.
+Preservation/link/process results are recorded in target/a49/validation.json.
+
+
+## A52 compact matching layout - 2026-10-29
+
+Passed the existing matching_interaction_and_layout scenario alone through a
+temporary owned Root harness entry. It samples all three matching variants,
+400px mobile light/dark, desktop 1280?720 light/dark and 1920?720 dark, verifies
+no desktop page vertical scroll, contained right-edge 44px audio, pinyin beneath
+hanzi, selection/keyboard/audio independence, wrong/correct feedback and Next.
+Log: target/a52/layout.log. Artifacts:
+target/e2e/root-33448-1793286774690346000/matching_interaction_and_layout.
+Desktop dark and mobile light captures were visually inspected.
+
+Passed fmt --all -- --check, affected zipeek/e2e all-target Clippy --locked
+-D warnings, zipeek wasm32 check --locked and Trunk Pages build /zipeek/.
+No full regression or unchanged native reducer tests repeated under D36 for
+this focused layout iteration. Probe source archived to target/a52 and removed
+from e2e/tests. Preservation/docs results: target/a52/validation.json.

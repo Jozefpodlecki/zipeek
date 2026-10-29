@@ -1,6 +1,20 @@
 @import "tailwindcss" source(none);
 @source "../src";
 
+@theme {
+    --animate-match-shake: match-shake 200ms ease-in-out;
+    --animate-match-dim: match-dim 350ms ease-out;
+    @keyframes match-shake {
+        0%, 100% { transform: translateX(0); }
+        25%, 75% { transform: translateX(-4px); }
+        50% { transform: translateX(4px); }
+    }
+    @keyframes match-dim {
+        0%, 50% { background-color: var(--match-success); }
+        100% { background-color: var(--match-rest); }
+    }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
@@ -19,6 +33,8 @@
 
 :root {
     color-scheme: light;
+    --match-success: #d1fae5;
+    --match-rest: #f1f5f9;
     --topbar-height: 3rem;
     --canvas: #f8fafc;
     --surface: rgba(255, 255, 255, .86);
@@ -39,6 +55,8 @@
 
 :root.dark {
     color-scheme: dark;
+    --match-success: #064e3b;
+    --match-rest: #1e293b;
     --canvas: #0b1120;
     --surface: rgba(15, 23, 42, .86);
     --raised: rgba(30, 41, 59, .9);

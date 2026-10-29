@@ -2,6 +2,8 @@ use e2e::{Harness, HarnessResult};
 
 mod bootstrap;
 mod database;
+mod fixed_mcq;
+mod mcq;
 mod practice;
 mod providers;
 mod routing;
@@ -10,6 +12,30 @@ mod shell;
 mod styling;
 
 pub async fn run(harness: &mut Harness) -> HarnessResult<()> {
+    harness
+        .run(
+            "fixed_mcq_counts_stats_and_restart",
+            fixed_mcq::fixed_mcq_counts_stats_and_restart,
+        )
+        .await?;
+    harness
+        .run(
+            "fixed_summary_motion_layout_and_setup",
+            fixed_mcq::fixed_summary_motion_layout_and_setup,
+        )
+        .await?;
+    harness
+        .run(
+            "endless_mcq_answers_lock_and_continue",
+            mcq::endless_mcq_answers_lock_and_continue,
+        )
+        .await?;
+    harness
+        .run(
+            "endless_mcq_seed_wrap_and_responsive_layout",
+            mcq::endless_mcq_seed_wrap_and_responsive_layout,
+        )
+        .await?;
     harness
         .run(
             "setup_controls_generate_all_six_practice_urls",

@@ -293,3 +293,194 @@ Endless MCQ question/feedback/Continue loop using A21 prepared rounds. Full task
 scopes and validation remain; do not claim full A10 completion from that milestone.
 Metadata/motion/extraction are later priorities, and A40 is still required before
 v1. No code/dependency or scratchpad change was made by this reorder.
+
+
+## A11 setup handoff — 2026-10-29
+
+A11 is complete. Page-local SetupState reducer plus ActivityPicker/HskPicker/
+SetupChoice implement all six activity paths, HSK levels and modes/counts. Initial
+activity is Hanzi to meaning for quiz-first priority, HSK 3.0 level 1/Endless;
+Fixed defaults to 10 and preserves selected count across toggles. Start uses core
+query_pairs and existing router serialization, never a hand-built query string.
+
+use_saved_exclusions validates JSON-array WordIds via words_by_ids, counts known
+unique IDs, and exposes Retry/Reset without raw handles. Load never writes storage;
+explicit Reset removes zipeek.excluded_words and updates the next Start URL while
+remaining on setup. Failed removal keeps count and shows an error. Generation
+checks and orchestration cancellation reject stale work. Shared practice URLs
+continue to ignore saved exclusions. No shared exclusion provider is needed yet.
+
+All five gates pass with 105 Rust tests and twenty-one named Chrome scenarios.
+Surface correction uses bg-surface; do not reintroduce undefined bg-card. See
+A11 evidence for final screenshots/logs. Completion is in 2026-10-29.md; earlier
+date files are frozen. Work was committed externally during interruption; preserve
+that commit and existing index. No agent staging/commit was performed.
+
+Next quiz-first task: A10 question/answer/feedback/Continue, starting with the
+Endless MCQ loop using A21's PreparedPractice. Full Fixed requirements remain;
+Chart.js/summary pin work must not block the first playable Endless milestone.
+
+
+## A10 Endless milestone handoff ? 2026-10-29
+
+The quiz is playable in all three Endless MCQ variants from setup. A10 remains
+open for Fixed gameplay/progress/completion and summary. Keep this milestone
+separate from full A10 completion; do not remove its TASKS row yet.
+
+McqPractice stays mounted through query loading/error/retry. use_mcq_session wraps
+one pure McqState reducer; no handles/setters escape. Resolve retains counters
+only for the expected normalized Continue query. Select accepts the first valid
+answer and ignores stale/double commands. Continue uses advance_offset plus core
+query_pairs/router serialization, clears seed, retains filters/exclusions and
+preserves counters on wrap. External query/variant changes, leaving or reload
+reset scores. No session persistence, per-card exclusions or core RNG changes.
+
+PreparedPractice now includes selected MCQ Word rows and the next strict pool
+size; seed context/filter differences fetch the next unseeded pool. ListenButton
+uses existing web-sys speech bindings and simplified hanzi, independent of visible
+pinyin/English. Hanzi traditional is secondary only; comparison labels stay intact.
+The wide-row threshold is 24 primary-label characters; long answers stack.
+
+All five gates pass: 107 Rust tests and 25 named Chrome scenarios. Root and Pages
+artifacts and inspected screenshots are in the A10 evidence section. No dependency,
+feature, data/schema or scratchpad changes. The six retained scratchpad sections
+remain deferred. Confirm/approve an exact stable Chart.js version when the summary
+implementation is undertaken; this milestone adds no package or AGENTS row.
+
+
+## A10 completion and A43 validation policy - 2026-10-29
+
+A10 is fully complete: Endless/Fixed MCQ 5/10/20, progress, accounting, timing,
+shared summary and restart/setup actions. D35 pins chart.js 4.6.1 and build-only
+esbuild 0.28.2; no Cargo feature/dependency changes. prepare-summary.cjs packages
+only Chart/DoughnutController/ArcElement locally with licenses. Chart effects
+clean up normal and late handles; text/actions survive chart failure. MCQ's
+approved metric is First-attempt / total questions; matching will track first-
+attempt correct pairs / required pairs. Use the same ring rather than repinning.
+
+The hook explicitly reloads preparation when Continue/replay leaves normalized
+query unchanged (empty strict view with usable widened rows). Zero-offset repeat
+must still increment FixedProgress and restart must reset it. Tests use a Worker
+fixture for this case. Ordinary replay RNG/canonical inputs remain unchanged.
+
+Full feature validation passes: 110 Rust tests, 19 root and 10 Pages scenarios,
+plus fmt/Clippy/wasm/Pages gates. See A10 Fixed evidence for final artifacts.
+Completion is appended in 2026-10-29.md; earlier rows/date files are preserved.
+No agent staging or commit. Scratchpad entries remain unchanged pending separately
+scoped cleanup after owning documents/implementations are fully applied.
+
+A43/D36 applies the user's testing instruction: routine work uses focused checks
+and obvious samples, not full regression each time. Reuse valid evidence and
+rerun affected checks after fixes. Full regression only for very major work or
+release readiness; existing automated CI is unchanged. Next task: A09 matching
+with shared-summary integration. Present its focused scope before starting.
+
+
+## Database-first priority - 2026-10-29
+
+User now prioritizes A44 generation before A09 matching. Existing generator,
+pinned inputs and 12,100-reading artifact are implemented. Both source hashes/
+sizes and all three notice hashes pass read-only preflight; report:
+target/a44-priority/preflight.json. Do not assume the user requested new sources,
+schema or dependencies. Proposed command after scope approval, from root:
+
+```powershell
+cargo run -p db-gen --locked -- generate --output target/db-generation-review-2026-10-29
+```
+
+The review directory does not exist at proposal time. Preserve the current bundle
+and compare rows, logical/diagnostic hashes, schema/indexes and notices. Verify
+native v2.0.0/storage v1.4.0 and focused pinned-WASM read-only loading before
+replacing the complete web/static bundle within approved scope. Database bytes
+may differ with logically equal content. No generation/replacement has run yet.
+Use focused generator/compatibility validation under D36; do not rerun unrelated
+MCQ or full browser regression for the priority edit.
+
+
+## A45 CLI handoff - 2026-10-29
+
+Clap 4.6.7 is approved/implemented for native db-gen with defaults plus derive.
+Bare cargo run now shows help (usage exit 2); --help exits 0. Use check for an
+in-memory import and generate --output NEW_DIRECTORY for writing. Absolute output
+and final database/manifest paths print independently of log filtering. Default
+remains repository web/static and existing directories always fail, without force.
+
+The focused CLI smoke generated target/a45-cli/review bundle/hanzi.duckdb with
+12,100 readings and matching current logical/diagnostic hashes. Native export
+verification passes. It is not installed in web/static; A44 can reuse it for
+further browser compatibility/review, subject to that task's scope approval.
+Logs are under target/a45-cli; checked-in artifacts and sources remain untouched.
+Five selected native tests, package Clippy and fmt pass. No full app/browser
+regression for this CLI task under D36. Existing Cargo versions/index preserved.
+
+
+## A46/A44 workflow and database handoff - 2026-10-29
+
+Both tasks are complete under the user's explicit workflow approval. From root,
+cargo make dev generates into a fresh target/db-workflow/generated directory,
+checks the complete bundle, backs up/replaces web/static and starts Trunk.
+Separate db-check/db-generate/db-install/serve tasks exist; bare cargo make lists
+commands. Installed cargo-make 0.37.24 was used, with existing Node/Rust/Trunk and
+no dependency change. Web npm dependencies must already be installed as documented.
+
+The actual pipeline installed the new database and matching manifest. All other
+bundle files were verified/copied and are byte-identical. Logical rows/schema/
+indexes/inputs/diagnostics match the original. New DB hash is
+728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02. Complete original
+bundle is at target/db-workflow/backups/1793266078908-32d25ff9-f7b4-4ec6-97c9-a2571cc8fc05.
+
+Focused verification passed: four Node installer/failure tests, task plan/syntax,
+real generation/install/Trunk serving, matching HTTP bytes and one managed Chrome
+dictionary/MCQ load. Logs and a temporary probe source are in target/a46-workflow.
+Temporary e2e/example source was removed after validation. Browser/server stopped;
+no full application/Pages regression was run under D36. Existing index and prior
+completed history were preserved. Next proposed feature is A09 matching.
+
+
+## A09/A48 handoff - 2026-10-29
+
+Both approved scopes are complete. Practice supports all six variants, multi-type
+selection and shared mixed-session summaries. The single session hook delegates
+to pure matching/MCQ reducers. D39/D40 own retry accounting and URL/type behavior;
+core round generation and dependencies are unchanged.
+
+Combined validation covered 118 native tests and 39 Chrome scenarios. One Pages
+browser-Back focus failure in the initial workspace run was fixed by preserving
+shell focus on the first matching round, then directly rerun successfully. Root
+and remaining native binaries ran separately; no second full suite was needed.
+See testing/evidence.md for precise logs and artifact runs. The temporary probe
+was archived to target/a09/a09_focus_probe.rs and removed from e2e/tests.
+
+Next proposed work is A13 Browse; present its files/validation plan before editing.
+Use cargo make serve for the existing dictionary; cargo make dev explicitly
+regenerates/install-backs-up the bundle before serving. Preserve user staging,
+prior completed history, pinned packages and untouched retained scratchpad.
+
+
+## A49 presentation handoff - 2026-10-29
+
+The approved practice redesign is complete under D41: bounded opaque board,
+consistent card rows/audio, readable matched states and pinyin on the two
+hanzi-to-meaning surfaces. Existing reducers, URL/replay and DB are unchanged.
+The matching interaction/layout suite now checks pinyin, board cap and audio
+containment, and captures fresh as well as matched states plus MCQ prompts.
+Focused matching checks passed; only layout was rerun after visual refinements.
+See testing/evidence.md for logs. The temporary layout probe is archived under
+target/a49/a49_layout_probe.rs and removed from e2e/tests.
+
+User also requested documentation of drawer icons/reduced width and exercise
+info dialogs with explanations/examples. These are recorded in UX and TASKS as
+A50/A51, not implemented. Final drawer width remains for that implementation plan.
+A13 is still first ready in backlog order. Preserve staging and retained digest.
+
+
+## A52 compact matching handoff - 2026-10-29
+
+The user requested smaller cards and audio on the right after noticing vertical
+scroll. Matching now uses an 88px minimum with no audio footer, compact board
+spacing and independent right-edge audio. Pinyin remains beneath hanzi. D41
+is amended; MCQ presentation is unchanged. The existing interaction/layout
+scenario now checks no document vertical scroll at 1280?720 and 1920?720, plus
+mobile and audio containment. Focused run passed; no full regression repeated.
+Temporary entry archived in target/a52/a52_layout_probe.rs, removed from tests.
+A50/A51 remain documentation-only requests pending their implementation plans.

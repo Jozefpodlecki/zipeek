@@ -119,8 +119,9 @@ The user picks the mode on `/practice`:
   summary and no score persistence. Show an in-session streak and cumulative
   correct count; a wrong attempt/answer resets the streak. Show a flame at ≥ 3.
   Matching also shows `N / 4` locally; Fixed adds `Round N of M` to its header.
-- **Fixed:** choose N rounds up front. After round N, show correct pairs, total
-  mistakes, and time taken, with Play again and Back to setup actions. Offer
+- **Fixed:** choose N rounds up front. After round N, show First-attempt,
+  Mistakes, Time and Highest streak with an accuracy ring, Play again and Back
+  to setup actions (D35). Offer
   exactly three round-count buttons: **5 / 10 / 20**, default **10**. No custom-N
   input in v1 (D13).
 
@@ -199,7 +200,7 @@ error the page. Preserve the current URL until an explicit new URL is generated.
 A08 implements pure parsing/normalization helpers. A21 connects dictionary-backed
 normalization and ordered candidate views to A07's single-stream builder.
 RecoveryRequired retains original canonical inputs; the builder owns recovery
-draws. Prepared routes remain placeholders until A09/A10 gameplay. URL loading
+draws. All six practice routes now have playable controls under A09/A10. URL loading
 never reads saved exclusions or rewrites the entered link.
 
 Parse mode/count, HSK system/level, PoS, exclusions, and entered offset using
@@ -271,7 +272,8 @@ wrapping, a fresh session's zero-based round r uses offset = r * 4: displayed
 round 1 starts at 0, round 2 at 4. Deep links/reloads retain their entered offset
 even when in-memory progress restarts. Next round advances nominal offset by four.
 Fixed stops after the selected number of
-rounds and shows the summary; Play again resets offset to 0. Endless continues.
+rounds and shows the summary; Play again starts at a fresh random in-pool offset
+under D35. Endless continues.
 
 If offset + 4 > pool_size, wrap to offset 0 and show a small
 "pool exhausted, looping" hint once. Strict slices without sliding are distinct
@@ -318,7 +320,18 @@ offset by one per question; matching continues to advance by four per round.
 Endless has no Fixed summary. UX-MCQ01 now specifies immediate feedback, one
 locked selection, number-key badges/shortcuts, Continue gating and adaptive
 answer layout; see [UX](UX.md#mcq-interaction-ux-mcq01). These are A10
-implementation requirements, not implemented controls.
+implementation requirements. The first A10 milestone implements them for all
+three Endless variants, including the in-session streak/correct counters,
+secondary traditional text, Listen and offset/seed progression. Fixed MCQ and
+its summary are now implemented under D35. Fixed progress uses completed/total
+above the prompt, independently of the pool offset. The last Continue captures
+completion instead of navigating to an extra question. First-attempt is correct
+first selections / total questions; Mistakes counts each locked wrong selection.
+Time runs from first render to final Continue without pausing when hidden and
+freezes on completion; Highest streak records the session maximum. All four stats
+are DOM text beside the local Chart.js accuracy ring. Play again retains mode,
+count/filter/exclusions at a fresh random offset; Back to setup restores defaults.
+Leaving/reloading loses scores/progress without confirmation or resume.
 
 Landing and theme
 Show exactly three navigation tiles: Practice, Browse, Random.
@@ -372,7 +385,7 @@ saved light. The landing arrangement and navigation tiles are present; the
 daily-word area uses the agreed unavailable copy until A06/A12 supplies actual
 selection data. A11 implements the six-activity setup and canonical Start links.
 A21 prepares deterministic practice rounds from dictionary
-queries behind explicit placeholders; playable controls remain A09/A10. Browse
+queries; playable controls are implemented by A09/A10. Browse
 and Random remain feature placeholders without their feature queries.
 
 When dictionary data is served, show this attribution in the visible site footer,
@@ -444,14 +457,12 @@ exclusion affordance deferred, not part of v1; retain D13/D15 URL/exclusion
 lifecycle and setup Reset. A37 now adds secondary traditional text to hanzi-labeled exercise surfaces,
 while primary simplified labels and replay comparison keys remain unchanged.
 
-UX-SUM01 is deferred to A09/A10/Fixed-summary implementation by explicit user
-instruction. A22 does not change the existing summary/restart contract above.
-The later task must apply the approved first-attempt metric and reconcile the
-summary as a whole. Chart.js is summary-ring-only intent; confirm and exactly
-pin the latest stable version when implementation is approved. The suggested
-4.4.x/4.4.6 candidate is unconfirmed; A22 adds no dependency or AGENTS policy row.
-A37 records the initial motion profile and reconciles product gaps below;
-feature implementation and Fixed-summary application remain separate.
+UX-SUM01 was deferred from A22 by explicit user instruction. A10 now applies its
+summary/restart/timer requirements under D35; A09 applies matching's first-attempt
+pair accounting, clarified under D39. Chart.js 4.6.1 is approved for the ring only,
+with esbuild 0.28.2 for the local tree-shaken build and retained licenses.
+A22 itself added no dependency or policy row. A37 records the initial route/
+drawer motion profile; that separate A32 work does not block practice.
 
 ## A37 product reconciliation — 2026-10-28
 
@@ -473,7 +484,9 @@ The earlier product-gap list does not reopen these existing decisions:
 - Theme stays dark by default with saved-choice precedence; automatic OS-theme
   selection is not part of the approved policy.
 - Wrong attempts/answers follow the recorded UX. The user's later first-attempt
-  summary metric remains an A09/A10 application task, not a new A37 definition.
+  metric was deferred from A37 and is now applied to MCQ by A10/D35; matching's
+  implementation is now provided by A09, including both-pair disqualification
+  on a wrong A/B attempt (D39).
 
 The 150 ms fade-only motion profile is selected; A32 implementation remains
 separate. No schema, URL replay format, scoring implementation or dependency
@@ -491,10 +504,35 @@ asset or a promise that social platforms have fetched it.
 
 ## A11 setup delivery
 
+The A48 extension permits a nonempty selection of any of the six types. Start
+chooses randomly; each Next chooses a random selected type excluding the previous
+one when possible. Mixed matching/MCQ sessions share Fixed round/question counts,
+stats and timing. Summary requirements accumulate four pairs per matching round
+and one answer per MCQ. D39 disqualifies both pairs on a wrong A/B match attempt.
+The optional types URL parameter carries canonical selected tokens, encoded once;
+the current route still controls current-round replay. Unknown/duplicate types
+are ignored; if the route type is absent from the valid set, use that type alone
+without rewriting the loaded link. Single-type URLs remain unchanged. D40 records
+the approved session metadata/selection/accounting contract, with no v1 RNG break.
+
 Setup now selects all six variants and starts a new unseeded URL using the
 approved HSK/mode/count and validated saved exclusions. Start uses offset zero;
 Endless omits rounds, empty exclusions are omitted, and no seed/PoS is invented.
 Reset clears storage/local exclusions and updates the next Start URL while
 remaining on setup. This does not alter a loaded round. Setup defaults to the
-first MCQ activity for the quiz-first priority. The actual MCQ question loop
-remains next work in A10; A11 delivers controls/navigation, not gameplay.
+first MCQ activity for the quiz-first priority. The Endless MCQ question loop
+is now playable under A10; A11 delivered setup controls/navigation.
+
+
+## Practice presentation refinement (A49 / D41)
+
+Matching and MCQ use a centered, opaque practice board capped at 56rem inside
+the full-width shell. Matching keeps two aligned columns on phones and desktop,
+with audio contained in each card and readable settled matched states. Hanzi-to-
+English matching and Hanzi-to-meaning MCQ add display pinyin beneath hanzi.
+A52 makes matching rows compact with right-edge Listen; MCQ keeps Listen below
+the pinyin. Representative desktop matching views fit without vertical scroll. This is presentation only; matching/replay keys are unchanged.
+
+Requested follow-ups A50/A51 are documented in [UX](UX.md#requested-navigation-and-exercise-help-follow-ups):
+narrower icon-labelled drawer navigation and per-exercise info dialogs explaining
+the activity. A49 records these requests without implementing those features.

@@ -22,7 +22,8 @@ testing strategy in [testing/TESTING.md](../testing/TESTING.md); architecture in
 ### Formatting and lints
 
 - `cargo fmt --all` — mandatory, no exceptions.
-- `cargo clippy --workspace --all-targets -- -D warnings` — mandatory, no
+- Clippy checks deny warnings; use affected packages/targets during routine
+  work and workspace/all-targets for full regression under AGENTS §6. No
   `#[allow(...)]` without a comment explaining why.
 - Edition 2024, Rust 1.97.1 (see `rust-toolchain.toml`).
 

@@ -29,3 +29,8 @@ ignore = [
 stage = "pre_build"
 command = "node"
 command_arguments = ["scripts/prepare-duckdb.cjs"]
+
+[[hooks]]
+stage = "pre_build"
+command = "node"
+command_arguments = ["scripts/prepare-summary.cjs"]

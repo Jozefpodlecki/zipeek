@@ -233,3 +233,39 @@ Primary simplified labels and existing comparison/uniqueness keys remain unchang
 Do not concatenate traditional text into core Card.label, hash/canonical bytes
 or answer keys. This is not the earlier conditional composite-label proposal;
 there is no replay break or v2 selection.
+
+
+## D40 Multiple exercise types per session
+
+Approved 2026-10-29. Setup allows any nonempty subset of the six existing exercise
+types, including a mix of matching and MCQ. Default is Hanzi to meaning only.
+Start chooses randomly from the selected set; each next round/question chooses
+randomly while excluding the previous type when the set has multiple members.
+A single selected type repeats normally. Play again retains the set and excludes
+the last type for its new starting choice when possible.
+
+An optional types query parameter carries comma-separated existing variant
+tokens in canonical setup order: hanzi-to-meaning, meaning-to-hanzi,
+meaning-to-pinyin, eng-pinyin, pinyin-hanzi, hanzi-eng. Omit it for a single type.
+Encode the outer query once with the existing router serializer. Loaded values
+ignore unknown/duplicate tokens; if the valid set excludes the route's current
+type, fall back to the route type only without rewriting the link. The current
+route always selects the displayed exercise; never randomize an initial URL load.
+
+This extends session metadata, not the D19 v1 round-seed format. The builder,
+canonical bytes, comparison keys, single-stream RNG and current-round replay
+remain unchanged. Random type choice happens only on explicit Start/Next/replay
+commands, using existing ambient entropy separately from build_round. Next
+clears a retained seed, keeps filters/exclusions and advances nominal offset by
+the COMPLETED type's step: four for matching, one for MCQ. No seed-format v2 or
+format-selection parameter is introduced. Global Random shortcut scope is still
+D04/A12; it is not changed by this mixed-session chooser.
+
+One session owner preserves counts, mistakes, streak/highest streak, Fixed
+progress and wall-clock timing across type routes. Fixed 5/10/20 counts total
+rounds/questions. Summary numerator adds first-attempt correct pairs (D39) and
+correct first MCQ answers. Denominator adds four required pairs per matching
+round and one required answer per MCQ, for the actual sequence played. The
+compact label stays First-attempt. Reload/external navigation resets session
+counters while honoring the current URL; Back to setup restores defaults.
+No database, dependency, replay-format or score-persistence changes.

@@ -7,6 +7,22 @@ async fn choice(driver: &WebDriver, value: &str) -> WebDriverResult<WebElement> 
         .await
 }
 
+async fn only_activity(driver: &WebDriver, value: &str) -> WebDriverResult<()> {
+    let target = choice(driver, value).await?;
+    if target.attr("aria-pressed").await?.as_deref() != Some("true") {
+        target.click().await?;
+    }
+    for button in driver
+        .find_all(By::Css("[data-activity-picker] [aria-pressed='true']"))
+        .await?
+    {
+        if button.attr("data-setup-choice").await?.as_deref() != Some(value) {
+            button.click().await?;
+        }
+    }
+    Ok(())
+}
+
 async fn setup(driver: &WebDriver) -> WebDriverResult<WebElement> {
     driver
         .query(By::Css(
@@ -22,6 +38,7 @@ pub async fn setup_controls_generate_all_six_practice_urls(
     let driver = &ctx.driver;
     driver.execute("window.savedSetupExclusions = '[1,2,2,\"bad\",0,2147483647]'; localStorage.setItem('zipeek.excluded_words', window.savedSetupExclusions); location.hash = '#/practice';", vec![]).await?;
     setup(driver).await?;
+    assert!(driver.execute("return [...document.querySelectorAll('[data-activity-picker] button')].every(button => getComputedStyle(button).backgroundColor !== 'rgba(0, 0, 0, 0)');", vec![]).await?.convert::<bool>()?);
     assert_eq!(
         driver
             .find_all(By::Css("[data-activity-picker] button"))
@@ -98,7 +115,7 @@ pub async fn setup_controls_generate_all_six_practice_urls(
         ("hanzi-eng", "/practice/hanzi-eng"),
     ] {
         setup(driver).await?;
-        choice(driver, variant).await?.click().await?;
+        only_activity(driver, variant).await?;
         choice(driver, "HSK 2.0").await?.click().await?;
         choice(driver, "level-3").await?.click().await?;
         choice(driver, "Fixed").await?.click().await?;

@@ -1,5 +1,14 @@
 # Practice URL checks
 
+D40 adds optional types session metadata. Selected variant tokens are canonical,
+deduplicated and joined before one outer router encoding. Single-type links omit
+types. The current route controls the displayed exercise; initial URL loads do
+not choose randomly or rewrite malformed type lists. If the valid list excludes
+the current type, fall back to that type only. Next/replay choices exclude the
+previous type when multiple are selected. These rules do not enter the v1 round
+canonical input or alter builder draw order. Current-round reload is deterministic;
+only explicit commands choose a future type. See [matching/mixed checks](matching.md).
+
 D13/D15 URL, exclusion, offset, and fallback coverage. Part of the
 [testing index](TESTING.md). Approved requirements in
 [D13](../process/decisions/rounds-and-replay.md#d13-counts-urls-exclusions-offsets)

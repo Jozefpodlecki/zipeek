@@ -165,6 +165,12 @@ button or new feature. Voice availability and quality vary by OS/browser; tests
 stub/spy the API text/language/call rather than listening for sound.
 No new assets, DB columns or audio dependency is required by the specification.
 
+The A10 Endless milestone implements ListenButton as a small browser event
+boundary using the existing web-sys speech bindings. It cancels queued speech
+before speaking the represented simplified hanzi, sets zh-CN, and reports API
+failure as Audio unavailable. Answers keep Listen outside the selection button.
+Other planned surfaces still need their feature integrations.
+
 
 ## A35 current styling and shell — 2026-10-28
 
@@ -199,8 +205,9 @@ main-content focus on route changes, including initial deep links and history
 navigation. Query-only changes do not steal input focus. The fallback uses the
 shared placeholder sizing and a safe Home router link without a navigator unwrap.
 Practice now has its own query Loading/Ready/Failed+Retry after dictionary Ready;
-its prepared view remains a coming-soon placeholder until gameplay is implemented.
-Browse, setup, Random and the daily card retain their separate feature scope.
+Both MCQ modes now use A10's answer/feedback/Continue view, with Fixed completion
+and summary; matching keeps its prepared placeholder. A11 implements setup. Browse, Random
+and the daily card retain their separate feature scope.
 
 ## Planned social metadata (D34 / A40)
 

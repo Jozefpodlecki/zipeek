@@ -3,8 +3,8 @@ use yew_router::prelude::use_location;
 use zipeek_core::{practice::PracticeMode, round::RoundContent};
 
 use crate::{
-    components::{Loader, RoutePlaceholder},
-    hooks::use_prepared_practice,
+    components::{MatchingPractice, McqPractice},
+    hooks::{use_practice_session, use_prepared_practice},
     reducers::practice::PracticeStatus,
 };
 
@@ -23,6 +23,8 @@ pub fn practice(props: &PracticeProps) -> Html {
         .map(crate::services::practice_url::read_query)
         .unwrap_or_default();
     let (status, retry) = use_prepared_practice(props.variant, parsed.clone());
+    let types = crate::services::exercise_types::read_types(location.as_ref(), props.variant);
+    let session = use_practice_session(props.variant, types.clone(), status.clone(), retry.clone());
     let query = match &status {
         PracticeStatus::Ready(prepared) => Some(&prepared.query),
         _ => None,
@@ -39,16 +41,10 @@ pub fn practice(props: &PracticeProps) -> Html {
         PracticeMode::Endless => "endless",
         PracticeMode::Fixed(_) => "fixed",
     };
-    let (load_state, content) = match &status {
-        PracticeStatus::Loading => ("loading", html! { <Loader /> }),
-        PracticeStatus::Ready(_) => (
-            "ready",
-            html! { <RoutePlaceholder title="Practice" message="Practice coming soon." /> },
-        ),
-        PracticeStatus::Failed(_) => (
-            "failed",
-            html! { <RoutePlaceholder title="Practice unavailable" message="This round could not be prepared. Try again or choose another level."><button type="button" class="mt-6 rounded px-3 py-2 text-ink hover:bg-raised" data-practice-retry="" onclick={Callback::from(move |_| retry.emit(()))}>{"Retry"}</button></RoutePlaceholder> },
-        ),
+    let load_state = match &status {
+        PracticeStatus::Loading => "loading",
+        PracticeStatus::Ready(_) => "ready",
+        PracticeStatus::Failed(_) | PracticeStatus::InsufficientPool => "failed",
     };
     let debug_round = match &status {
         PracticeStatus::Ready(prepared) if cfg!(debug_assertions) => {
@@ -73,6 +69,7 @@ pub fn practice(props: &PracticeProps) -> Html {
     };
     html! {
         <div data-practice-variant={props.variant.seed_token()}
+            data-practice-types={types.iter().map(|variant|variant.seed_token()).collect::<Vec<_>>().join(",")}
             data-practice-state={load_state}
             data-practice-mode={mode}
             data-practice-level={query.map_or(parsed.filter.level.as_i32(), |query| query.filter.level.as_i32()).to_string()}
@@ -81,7 +78,9 @@ pub fn practice(props: &PracticeProps) -> Html {
             data-practice-seed={query.and_then(|query| query.seed.original_id()).map(|id| id.to_string())}
             data-practice-exclusions={query.map(|query| query.exclusions.iter().map(ToString::to_string).collect::<Vec<_>>().join(","))}
             data-practice-round={debug_round}>
-            {content}
+            {if props.variant.is_mcq() {
+                html!{<McqPractice variant={props.variant} status={status.clone()} {retry} {session} />}
+            } else {html!{<MatchingPractice variant={props.variant} status={status.clone()} {retry} {session} />}}}
         </div>
     }
 }

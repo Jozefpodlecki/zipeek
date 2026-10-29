@@ -186,6 +186,7 @@ fn command_refuses_existing_output_and_unknown_options() -> Result<(), Box<dyn E
     fs::create_dir(&output)?;
     let result = std::process::Command::new(env!("CARGO_BIN_EXE_db-gen"))
         .arg("generate")
+        .arg("--output")
         .arg(&output)
         .output()?;
     assert!(!result.status.success());

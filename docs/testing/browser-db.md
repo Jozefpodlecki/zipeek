@@ -64,7 +64,7 @@ was implemented.
 
 The pinned package reports engine v1.4.3 and reads the native neo v2.0.0 artifact
 with v1.4.0 storage. This resolves compatibility for this snapshot. The
-dictionary checksum remains
+dictionary checksum at A06 was
 491fae6f84a96b5825c860163701f3e138cf72e5b50763848fde0e96ba03c546.
 Future regenerated artifacts must repeat compatibility checks.
 
@@ -98,3 +98,16 @@ HSK/PoS view validation, bounded failure and no extra recovery RNG requests.
 The latest workspace run passes 84 domain/generator tests plus five Chrome tests.
 All five gates pass; log: target/a07-workspace-tests.log. The new code is pure;
 existing Chrome tests validate the unchanged app after the dependency move.
+
+
+## A44/A46 regenerated dictionary smoke - 2026-10-29
+
+The cargo make dev sequence generated and installed a complete 12,100-reading
+bundle, then served it through Trunk. Downloaded database bytes match web/static
+exactly. One managed headless Chrome session loaded the read-only dictionary and
+prepared three MCQ options. New SHA-256:
+728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02.
+Logical rows/schema/indexes/input and diagnostic hashes match the prior bundle.
+Original complete bundle is retained in target/db-workflow/backups. Server and
+browser cleanup passed. This is a focused development-path compatibility sample;
+full root/Pages regressions were not rerun. Evidence: target/a46-workflow.

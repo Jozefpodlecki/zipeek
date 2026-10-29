@@ -137,16 +137,20 @@ pub async fn bootstrap_loader_is_centered_and_landscape_survives_both_themes(
     driver.query(By::Css("html.dark")).single().await?;
     assert!(driver.execute("return window.backdropBeforeToggle === document.querySelector('.app-backdrop') && !document.querySelector('#root').contains(window.backdropBeforeToggle);", vec![]).await?.convert::<bool>()?);
     driver.goto(ctx.url("/#/practice/eng-pinyin")).await?;
+    driver
+        .query(By::Css("[data-practice-state='ready'] [data-matching]"))
+        .single()
+        .await?;
     assert_eq!(
-        driver
-            .query(By::Css(
-                "[data-practice-state='ready'] [data-route-placeholder] p"
-            ))
-            .single()
+        driver.find_all(By::Css("[data-match-side]")).await?.len(),
+        8
+    );
+    assert!(
+        !driver
+            .find(By::Css("[data-match-next]"))
             .await?
-            .text()
-            .await?,
-        "Practice coming soon."
+            .is_enabled()
+            .await?
     );
     Ok(())
 }

@@ -195,3 +195,47 @@ Affected version 2.3.1 and patched lines 2.3.2 / 4.0.4 are retained for referenc
 Acceptance is not remediation: npm may continue to report the advisory. A39's
 proposed repair was created despite the existing acceptance and is retired by
 this correction. No dependency target or graph changes.
+
+
+## D36 Proportionate local validation
+
+Approved by direct user instruction on 2026-10-29. Routine edits use focused
+checks and an obvious representative sample of affected behavior. Full
+regression is reserved for very major work, such as substantial feature
+completion or broad architecture/runtime/data changes, and release readiness.
+Reuse successful evidence for unchanged code. After fixes, rerun affected checks;
+expand only when failures or scope warrant it. Report the sample, omitted checks
+and material gaps honestly. Documentation-only work retains documentation gates.
+The five commands remain the full-regression set; existing automatic CI workflows
+are unchanged. This supersedes the old local rule requiring all five gates and
+the full browser suite for every code change. AGENTS section 6 is authoritative;
+TESTING gives practical change-type guidance.
+
+
+## D37 Clap generator CLI
+
+Approved 2026-10-29: exact clap 4.6.7 with its standard defaults plus derive,
+limited to native db-gen. Preserve existing locked package versions while adding
+the required dependency graph. No app/wasm dependency, DB schema or source changes.
+A45 replaces manual argument parsing with help/version, check and generate
+--output DIRECTORY. No arguments show help instead of doing an implicit in-memory
+import. Check explicitly reports that no database was written; generation prints
+absolute output/database/manifest paths regardless of log filtering. Default
+output remains repository web/static and existing directories are refused.
+Focused native parser/CLI checks validate the change; checked-in DB replacement
+remains separate A44 work. Owning instructions are in schema/regeneration.md.
+
+
+## D38 Explicit database-to-dev tasks
+
+Approved 2026-10-29: use installed cargo-make and existing Node/Rust/Trunk tools,
+with no new dependencies, to provide db-check, db-generate, db-install, serve and
+dev. The explicit dev command generates once, installs the complete verified
+bundle with backup/rollback, then starts Trunk. Bare cargo make lists tasks;
+serve alone reuses installed data. Never regenerate during Trunk rebuilds or
+Pages builds. Keep all reports/INPUTS/attribution/notices with the database.
+Validate every file checksum and pinned input manifest before replacement, stage
+and recheck the complete copy, retain the previous directory and roll back failed
+publication. Refuse unsafe paths, symlinks, partial bundles and checksum mismatch.
+User approval covers this workflow's real bundle installation and focused smoke
+validation. Candidates/backups remain under target/db-workflow for review.

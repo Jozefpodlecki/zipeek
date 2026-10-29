@@ -12,6 +12,7 @@ revision:
 
 ```toml
 [dependencies]
+clap = { version = "=4.6.7", features = ["derive"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
 thiserror = "=2.0.21"
@@ -23,7 +24,11 @@ toml = { version = "=0.9.8", default-features = false, features = ["std", "serde
 zipeek-core = { path = "../zipeek-core" }
 ```
 
-All eight registry versions in the proposal were checked against the public
+D37 adds exact Clap 4.6.7 with standard defaults plus derive for the native CLI.
+The user approved its version/features during A45; existing locked package
+versions remain unchanged. It is not an application/wasm dependency.
+
+All eight registry versions in the original D21 proposal were checked against the public
 crates.io version API: none was yanked at audit.
 The retained versions matched the audited local resolution; these exact pins
 and feature changes now have explicit D21 approval. The tagged native wrapper

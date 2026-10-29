@@ -4,6 +4,12 @@ Local commands and prerequisites live in [testing/TESTING.md](../testing/TESTING
 A16 implements the workflow migration on 2026-10-28. Configuration and local
 validation are recorded here; GitHub-hosted execution is not claimed by a local run.
 
+A10 adds exact chart.js 4.6.1 and dev-only esbuild 0.28.2 under D35. The same
+locked npm ci --ignore-scripts installs them; Trunk's additional pre-build hook
+verifies the pins and emits a local tree-shaken summary bundle plus licenses.
+The hook neither installs packages nor generates a database. Both root/Pages
+Chrome builds and the standalone Pages gate exercise this packaging locally.
+
 ## Entry points and validation
 
 .github/workflows/ci.yml handles pushes to master, pull requests and manual runs.
@@ -12,7 +18,8 @@ target, Node 22 and the existing Trunk installation action. It verifies installe
 Chrome, prints tool versions and installs web assets from web/ using
 npm ci --ignore-scripts before any build or browser test.
 
-The job runs all five required gates in order:
+The automated job runs all five full-regression gates in order. D36 permits
+focused local validation for routine work; it does not change this workflow:
 
 ```powershell
 cargo fmt --all -- --check

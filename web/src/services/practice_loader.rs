@@ -2,12 +2,12 @@ use super::database::{Database, DbError};
 use std::collections::BTreeMap;
 use thiserror::Error;
 use zipeek_core::{
-    HskLevel, Word,
+    HskLevel, Word, WordId,
     practice::{
         ExerciseVariant, NormalizedPracticeQuery, ParsedPracticeQuery, PracticeFilter,
         PracticeMode, SeedDisposition,
     },
-    round::{BuildError, ContextPool, Round, RoundCandidates, build_round},
+    round::{BuildError, ContextPool, Round, RoundCandidates, RoundContent, build_round},
 };
 
 #[derive(Debug, Error)]
@@ -22,6 +22,8 @@ pub enum PracticeLoadError {
 pub struct PreparedPractice {
     pub query: NormalizedPracticeQuery,
     pub round: Round,
+    pub words: BTreeMap<WordId, Word>,
+    pub next_pool_size: u64,
 }
 
 pub async fn prepare_practice(
@@ -85,7 +87,39 @@ pub async fn prepare_practice(
         variant,
         &query,
     )?;
-    Ok(PreparedPractice { query, round })
+    let cards = match &round.content {
+        RoundContent::Mcq {
+            prompt, options, ..
+        } => std::iter::once(prompt).chain(options).collect::<Vec<_>>(),
+        RoundContent::Matching { left, right } => left.iter().chain(right).collect(),
+    };
+    let ids = cards.iter().map(|card| card.word_id).collect();
+    let words = database
+        .words_by_ids(&ids)
+        .await?
+        .into_iter()
+        .map(|word| (word.id, word))
+        .collect::<BTreeMap<_, _>>();
+    if words.len() != ids.len() {
+        return Err(
+            DbError::Decode("Practice display words missing from dictionary".to_owned()).into(),
+        );
+    }
+    let next_pool_size = if initial_filter != query.filter {
+        database
+            .candidate_pool(&query.filter, &query.exclusions)
+            .await?
+            .strict
+            .len() as u64
+    } else {
+        initial.strict.len() as u64
+    };
+    Ok(PreparedPractice {
+        query,
+        round,
+        words,
+        next_pool_size,
+    })
 }
 
 fn seed_context(word: &Word) -> Option<PracticeFilter> {

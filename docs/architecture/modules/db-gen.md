@@ -11,12 +11,12 @@ and [D18](../../process/decisions/database-and-artifacts.md#d18-source-compariso
 ## Module map
 
 The generator is a native library plus a thin binary, with no new dependencies
-beyond the D21 approved set.
+beyond D21 and the explicitly approved D37 Clap CLI addition.
 
 | File/module | Responsibility |
 | --- | --- |
 | `crates/db-gen/src/main.rs` | Three-line entry point delegating to `run_cli` |
-| `cli.rs` | Logging configuration, human-readable failures, exit status, default manifest path |
+| `cli.rs` | Clap help/check/generate commands, logging, failures, exit status, default manifest and absolute output paths |
 | `generator.rs` | `prepare(path)`: verify sources/notices, open guarded database, create empty schema; return `PreparedGeneration` |
 | `database.rs` | Native connection, SQL-result handling, typed `DbError`, engine/storage checks |
 | `schema.rs` and `schema/words.sql` | Exact approved words DDL and two ordinary HSK indexes |
@@ -51,7 +51,7 @@ result through the same guarded connection. No network access occurs.
 
 ## Verified-input preparation (A26)
 
-`cargo run -p db-gen` performs real offline preparation. The three-line binary
+`cargo run -p db-gen --locked -- check` performs real offline preparation. The three-line binary
 delegates to CLI handling; library modules own manifest loading, file verification,
 orchestration and database setup. Set `RUST_LOG=info` to see the verification
 summary; an invalid explicit filter fails rather than hiding it.
@@ -174,6 +174,11 @@ static serving; browser query coverage is in
 [testing/browser-db.md](../../testing/browser-db.md).
 
 ## Regeneration
+
+The explicit cargo make dev workflow generates a fresh candidate, validates and
+installs the complete bundle with backup/rollback, then starts Trunk. Separate
+db-check/db-generate/db-install/serve tasks are available. No generation is added
+to Trunk pre-build hooks; the task helper uses Node built-ins, not new dependencies.
 
 Commands, manual review/replacement procedure, and sizing live in
 [schema/regeneration.md](../schema/regeneration.md). Generation is explicit and

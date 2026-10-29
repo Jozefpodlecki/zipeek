@@ -4,7 +4,7 @@ Bootstrapped on 2026-10-26. This is an ordered backlog of open work only; no tas
 below is implemented by the existence of this file. The user approved the action
 plan on 2026-10-26.
 
-A00/A01/A02/A03/A04/A05/A06/A07/A08/A14/A15/A16/A17/A18/A19/A20/A21/A22/A23/A24/A25/A26/A27/A28/A29/A30/A31/A35/A37/A38/A42
+A00/A01/A02/A03/A04/A05/A06/A07/A08/A10/A11/A14/A15/A16/A17/A18/A19/A20/A21/A22/A23/A24/A25/A26/A27/A28/A29/A30/A31/A35/A37/A38/A42/A43/A44/A45/A46/A47/A09/A48/A49/A52
 are logged in [completed](completed/).
 A34 records the documentation response to the 2026-10-27 architecture review.
 A36 records the user's Tailwind correction; A35 completed its implementation
@@ -45,7 +45,7 @@ D02-D18 and D20 are the user-declared resolved specification baseline for this
 bootstrap. [Decisions](decisions/index.md) records full D18 approval, resolved
 D19 (v1 only), and D20. A23 documented the approved stream/call order; A07
 implements the pure builder and native/wasm full-round vectors. Playable MCQ UI
-remains A10 work. A24 documents dependency/fallback-source proposals; D21/D22/D23
+is implemented by A10. A24 documents dependency/fallback-source proposals; D21/D22/D23
 are approved; A25 applied those choices with native v2.0.0 and verified v1.4.0
 storage. A06 now verifies the final dictionary in Node and actual Chrome workers,
 including the `/zipeek/` build. The user explicitly prioritized A06 over A15 and
@@ -63,25 +63,28 @@ audit.
 
 ## Ordered backlog
 
+User-directed database-first priority, 2026-10-29: A44/A46 are complete. The
+explicit cargo-make workflow generated, validated, backed up and installed the
+pinned 12,100-reading bundle and passed a focused browser load. A09 matching
+and mixed sessions are complete; use cargo make dev for the local database-to-server workflow.
+
 User-directed quiz-first priority, 2026-10-28: A11 → A10 → A09. The first playable
 milestone is setup → MCQ question → answer feedback → Continue in Endless mode.
-A21 already prepares real deterministic rounds; these tasks replace the remaining
-setup/gameplay placeholders. Complete each task's approved scope and validation;
-the early milestone does not mark full A10 complete or remove Fixed requirements.
+A11 setup and full A10 MCQ gameplay/summary are complete; A09 matching and A48 mixed sessions are complete; A13 Browse is next.
+A21 supplies deterministic rounds. Validate proportionately under D36.
 
 Metadata, animation and database extraction do not block answering quiz questions.
-Chart.js pin/summary application remains required for the later Fixed-summary work,
-not the first Endless question loop. A40 remains required before v1. Existing task
+D35 pins and the shared summary are implemented in A10; A09 adds matching
+accounting and integrates that summary. A40 remains required before v1. Existing task
 prerequisites, dependency approvals, replay/UX requirements and validation gates
 remain unchanged.
 
 | ID | Title | Goal (one line) | Prerequisites (task IDs) | Status | Ready to start |
 | --- | --- | --- | --- | --- | --- |
-| A11 | Practice setup screen | Implement HSK context, six-variant activity selection, Endless/Fixed modes, fixed counts, and exclusion reset using approved UX. | A08, A21, A37 | in progress | Yes |
-| A10 | MCQ exercise UI | Implement gameplay on A21's declared MCQ routes: Endless/Fixed, three options, N=2 distractors, and offset +1 using UX-MCQ01; review the deferred summary in implementation. | A06, A07, A11, A15, A37, A23 | todo | No |
-| A09 | Match exercise UI and Fixed summary | Deliver all three four-pair variants, approved feedback, progression, and in-memory Fixed summary with smoke coverage; apply approved first-attempt metric and confirm exact Chart.js pin during approved implementation. | A07, A11, A15, A37 | todo | No |
 | A13 | Browse view | Implement approved query controls, numeric/display-pinyin lookup, result presentation, and pagination with smoke coverage. | A06, A21, A37 | todo | Yes |
 | A12 | Landing tiles, Random, and Word of the Day | Connect the A27 landing tiles/card to actual queries, Random practice, deterministic daily selection and empty/failure states. | A06, A09, A13, A21, A37 | todo | No |
+| A50 | Narrower drawer with navigation icons | Pair icons with text and reduce the 15rem desktop rail; approve final width and implementation plan, preserve active/focus/collapse behavior. | A35 | requested; scope review pending | Yes |
+| A51 | Exercise-type help dialogs | Add adjacent info buttons with variant explanations/examples and accessible modal focus/close behavior; keep selection independent. | A11, A48 | requested; scope review pending | Yes |
 | A40 | Static social metadata and preview image | Implement D34 approved share title/copy, site-wide 1200×630 landscape/slate/wordmark/blue image and initial HTML Open Graph/Twitter large-image metadata with /zipeek/ URLs before v1. | A37 | todo | Yes |
 | A32 | Animato and route transitions | Implement D29 reduced-motion policy, local frame adapter and interruptible outlet lifecycle using the approved 150 ms fade-only profile; no additional features implicitly approved. | A31, A37, A35 | todo | Yes |
 | A33 | Extract browser database adapter | Proposed D30: move transport/typed decoding/private SQL to `zipeek-db-wasm` after approving facade, native target strategy and exact dependencies; retain UI providers/assets in web. | A06, A15 | todo | No |

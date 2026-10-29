@@ -99,6 +99,11 @@ Use a single scrollable column without decorative filler, in this order:
 
 1. Activity: six variant tiles in a grid, three match and three MCQ. Each has
    an icon, label and subtitle: "Match four pairs" or "Pick the right answer".
+   Select one or more with independent toggle buttons; keep at least one
+   selected. The default set contains Hanzi to meaning only. Start chooses
+   randomly from the selected set. Each subsequent round/question chooses a
+   random selected type other than the previous type when more than one is
+   selected; a single selected type repeats normally (D40).
 2. HSK level: `HSK 2.0` / `HSK 3.0` segmented control, then conditional level
    buttons (1–6 or 1–6 plus the combined `HSK 7–9` band). Default level 1;
    no all-levels button.
@@ -143,14 +148,14 @@ opposite side to attempt a pair. Escape clears the current selection.
 A wrong attempt flashes both cards red for about 400 ms with a horizontal shake
 of about 200 ms and a visible ✗. Ignore clicks during the flash, then clear
 selection and allow retries. A correct pair turns green with a visible ✓, then
-dims and remains in place. Preserve all card positions. Matching another pair
+settles into a muted, readable state and remains in place. Preserve all card positions. Matching another pair
 is allowed while a previous pair fades.
 
 Keep Next round in a persistent bottom action bar, always visible in the same
 position. It is dimmed and disabled until all four pairs match, then becomes
 the primary enabled action. The round cannot end with an unmatched pair.
 Reduced motion disables shake and fade; retain the red/green changes and icons,
-with the correct state snapping through green to dimmed.
+with the correct state snapping to the muted, readable final surface.
 
 Cards are Tab-focusable and Enter/Space-selectable with visible focus.
 Screen-reader announcements of selection, matches, errors and scores are
@@ -167,6 +172,13 @@ Matching shows `N / 4` near the round, updated after each correct pair.
 Fixed also shows `Round N of M` in the header. Summary accounting remains
 separate from these live counters and is deferred under UX-SUM01.
 
+A09 implements these matching interactions for all three variants. Correct
+cards remain disabled in their original grid positions; a 350 ms local background-color
+animation briefly retains green before settling to a muted solid surface. Wrong feedback locks selection
+for 400 ms, with a 200 ms shake. Reduced motion removes both animations and settles
+matched cards instantly. Listen controls do not select a card. Insufficient
+distinct words show the approved filter/reset explanation and Back to setup.
+
 ## MCQ exercise
 
 D20 approves three variants at `/practice/mcq/<variant>`: `hanzi-to-meaning`,
@@ -177,7 +189,8 @@ Each question offers three options: one correct answer and two distractors
 
 Both Endless and Fixed are in scope. Fixed offers 5/10/20 questions, default
 10. Advance offset by one per question; keep Fixed progress in memory separately
-from offset wrapping. These are approved requirements, not implemented routes.
+from offset wrapping. Routes and both gameplay modes, progress and the MCQ
+summary are implemented by A10.
 
 ### MCQ interaction (UX-MCQ01)
 
@@ -200,24 +213,62 @@ progress bar above the prompt without a visible "Question 3 of 10" label.
 Endless has no progress bar, only streak and cumulative-correct header counts.
 Reduced motion keeps colour changes instantaneous and removes slides/fades.
 
+The first A10 milestone implements these interactions for all three Endless
+variants. Options form a wide-screen row only when every primary label has at
+most 24 Unicode characters; otherwise they stack. New questions focus the prompt.
+Listen remains independent of answer selection, including after answers lock.
+The subsequent A10 extension implements Fixed progress and the summary below.
+
 ## Summary screen
 
-After Fixed round N, show correct pairs, total mistakes, and time taken, with
-Play again and Back to setup. Play again resets the pool offset to zero.
-Endless does not show a summary.
+After the last Fixed Continue/Next round, show Session complete, a doughnut
+accuracy ring and four stats as real DOM text: First-attempt, Mistakes, Time,
+Highest streak. Endless never shows a summary. D35 records application of
+UX-SUM01 during A10; matching applies the same requirements in A09.
 
-Fixed round progress is in memory only. Reload resets progress while honoring
-the URL's pool offset; wrapping that offset does not reset the session counter.
+For MCQ, First-attempt is correct first selections / total questions (5/10/20).
+Each question has one locked selection; a wrong selection contributes one
+mistake and no correct answer. For matching, the expanded metric label is
+First-attempt correct pairs (or First-attempt in a compact row). A pair matched
+on its first attempt counts; a pair needing any retry does not. The matching
+denominator is total required pairs (rounds × 4). Every wrong matching attempt
+contributes one mistake. These are distinct from eventually matched pairs.
+Under the A09 clarification (D39), a wrong attempt combining words A and B
+disqualifies both pairs from the first-attempt numerator. Both eventual matches
+still contribute to live correct/streak counts. Matching positions/WordIds and
+comparison keys remain unchanged.
 
-<!-- TBD: UX-SUM01 — Define correct-pair and mistake accounting, timer start/end/pause rules, and summary presentation. -->
+Mixed sessions (D40) use one shared Fixed count of 5/10/20 rounds/questions.
+Each matching round contributes four required pairs; each MCQ contributes one
+required answer. The First-attempt numerator adds eligible matching pairs and
+correct first MCQ selections. Its denominator is the sum of those requirements
+for the actual sequence played, not a fixed rounds × 4 formula for mixed types.
+Live correct/streak, highest streak, mistakes, timing and progress continue
+across type changes. Play again retains the selected types and starts a fresh
+session; with multiple types it also excludes the last type when choosing its
+starting type. Back to setup restores the single-type default. Reload/external
+navigation loses the session counters while honoring the current round URL.
 
-UX-SUM01 is deferred from A22 by explicit user instruction. Apply the approved
-first-attempt metric and reconcile the summary specification during A09/A10/
-Fixed-summary implementation. A22 does not amend the existing summary behaviour
-above. Chart.js is summary-ring-only intent: confirm and exactly pin the latest
-stable release when implementation is approved. The suggested 4.4.x/4.4.6
-candidate is unconfirmed, not a latest-version claim. A22 adds no dependency
-or AGENTS policy row.
+Time is wall-clock from the first round render until the final Continue/Next
+round click, never pauses when hidden, and freezes at completion. Display whole
+minutes/seconds, such as 2m 14s. Highest streak is the session's maximum
+consecutive-correct streak. Stats and session progress are memory-only. Leaving
+loses the session without confirmation/resume; reload resets progress and honors
+the URL offset. Pool wrapping leaves the session counter unchanged.
+
+Play again keeps the same mode/count/filter/exclusions and starts fresh with a
+random in-pool offset, replacing the old reset-to-zero behavior. Back to setup
+returns to default controls, with no preselected session filters. Render both
+actions as native buttons. The summary is a ring plus a responsive row/grid of
+text stats; no meaning depends on canvas alone. If the chart fails, text stats
+and actions remain usable. Count and arc animate for 300 ms; reduced motion
+makes both instant, including when the preference changes during animation.
+
+Chart.js is exactly pinned to 4.6.1, with esbuild 0.28.2 as a build-only tool.
+Use only the tree-shaken DoughnutController/ArcElement, no scales/tooltips/legend,
+with local assets and retained licenses. Create an opaque chart handle in an
+effect and destroy it on unmount, including late async creation. No chart data
+is persisted. This is summary-only scope, not general charting infrastructure.
 
 ## Browse
 
@@ -413,8 +464,8 @@ use `16 / 20` as formatting examples, not summary-accounting definitions.
 | Pronunciation tooltip | Listen |
 | Other summary stats | Mistakes; Time; Highest streak |
 
-Existing agreed strings above remain unchanged. The primary summary metric label
-and accounting are applied with UX-SUM01 during the later implementation task.
+Existing agreed strings above remain unchanged. D35 applies First-attempt for
+MCQ; matching uses First-attempt correct pairs or its compact First-attempt label.
 
 Traditional hanzi appears as secondary text on match/MCQ surfaces whose primary
 label is hanzi. Keep simplified hanzi as that primary label. Do not reveal hanzi
@@ -488,14 +539,46 @@ and removes the old 60rem rule. The shell/content stretch to the viewport.
 Browse table/card and exercise layouts remain future feature work using the
 requirements above; this does not claim those views exist.
 
-Below md, stack match columns vertically, left above right, each in a small
-bordered/subtly tinted container. Scrolling is accepted. At md and above, place
-them side by side. MCQ answers remain stacked on narrow screens. Browse is a
-card list below xl and a table at xl and above, using the five approved fields
-in UX-BROWSE01. All content stretches at wide widths.
+A49/D41 supersedes the earlier full-width exercise/stacked-column proposal.
+Matching uses two equal columns at all supported widths, preserving shuffled
+positions, with equal height per row and space for long labels. The practice
+board is centered at max-width 56rem (896px) inside the full-width shell, with
+an opaque white/slate background. Cards have solid theme-aware surfaces, larger
+hanzi, secondary traditional text and a separate Listen button at their right edge. Match buttons and Listen remain sibling native buttons.
 
-A37 resolves the Browse column choice. Shell width policy is implemented by A35;
-the specified exercise/Browse layouts remain feature implementation work.
+Hanzi-to-English matching cards show display pinyin under hanzi/traditional,
+with Listen alongside at the right. Hanzi-to-meaning MCQ prompts retain pinyin
+beneath hanzi/traditional and above Listen. This does not add
+pinyin hints to pinyin-to-hanzi answers or alter comparison keys, RNG or URLs.
+A52 tightens matching cards to an 88px minimum row height with compact padding
+and no audio footer. Representative 1280?720 and 1920?720 desktop layouts fit
+the full board, action and site footer without vertical scroll. Long labels
+may grow rows naturally; narrow/short viewports retain normal page scrolling
+without clipping content. The independent Listen target stays at least 44px.
+Matched cards briefly flash green, then use a muted solid surface and green
+checkmark; preserve text contrast rather than fading the whole card/background.
+Reduced motion snaps to that final state. The persistent Next/Continue bar uses
+a full-width button on phones and a compact right-aligned button from sm.
+MCQ options remain stacked on narrow screens. Browse is a card list below xl
+and a table at xl and above, with the five approved fields in UX-BROWSE01.
+
+### Requested navigation and exercise help follow-ups
+
+Recorded 2026-10-29; implementation is tracked separately as A50/A51.
+
+- Drawer navigation items should pair a nearby icon with their existing text.
+  Reduce the desktop drawer width from its current 15rem; the final width is
+  selected during the implementation plan and checked with labels/focus at
+  desktop and narrow sizes. Retain accessible names, active state and collapse.
+- Each setup exercise type should have an adjacent info button opening a
+  ?How it works? overlay/dialog with a short explanation and representative
+  matching/MCQ example for that variant. The info button must not toggle the
+  exercise selection, start a session or sit inside another button.
+- Give each info button a variant-specific accessible name. Dialogs need a
+  visible title and Close action, modal semantics, focus containment, Escape
+  dismissal and focus returned to the invoking info button. Examples explain
+  the exercise without changing live session data or requiring a new dependency.
+
 
 ## What UX.md does not cover
 

@@ -12,16 +12,91 @@ are no longer blockers.
 
 ## Active
 
-- **A11 active (approved 2026-10-28):** Local pure setup reducer and selection
-  controls for all six activities, HSK systems/levels and modes/counts; validated
-  saved exclusions with explicit Reset; Start uses existing canonical URL/router
-  encoding. No new dependencies or gameplay implementation. Five gates and
-  root/Pages Chrome setup coverage pending.
+- **A52 complete (2026-10-29):** Smaller matching cards and right-edge Listen
+  remove the audio footer height. Pinyin remains beneath hanzi. Focused Chrome
+  checks pass for all matching variants, mobile/both themes and no page scroll
+  at 1280?720/1920?720. Fmt, affected Clippy, wasm and Pages build pass; no full
+  regression under D36. D41 is amended.
+  [Outcome](completed/2026-10-29.md#a52-compact-matching-cards-and-right-edge-audio).
 
-- **Quiz-first priority (user-directed 2026-10-28):** Next implementation is A11
-  setup, then A10 MCQ gameplay, then A09 matching/summary. First playable milestone:
+- **A49 complete (2026-10-29):** Practice has a centered opaque board, aligned
+  cards with contained Listen controls, readable matched feedback and compact
+  desktop progression actions. Hanzi-to-English matching and Hanzi-to-meaning
+  MCQ show pinyin beneath hanzi/traditional (D41; A52 moves matching audio right). Focused
+  Chrome visual/keyboard/audio/progression/recovery checks, 27 web unit tests,
+  fmt, affected Clippy, wasm, Pages build and doc checks pass. No full regression
+  under D36. [Outcome](completed/2026-10-29.md#a49-practice-layout-and-requested-ui-follow-ups).
+  A50 narrower icon-labelled drawer and A51 exercise-help dialogs are recorded
+  requests; their implementation plans are still pending. Next ready task in
+  backlog order remains A13 Browse; no task is currently active.
+
+- **A09 and A48 complete (2026-10-29):** All three matching variants are playable
+  in Endless/Fixed. Setup accepts multiple matching/MCQ types, chosen randomly
+  without immediate repeats when more than one is selected. Shared progress,
+  timing, streak/mistakes and weighted first-attempt summary survive type changes.
+  D39 records both-pair retry accounting; D40 records types URL metadata.
+  118 native tests and all 39 Chrome scenarios pass across retained results and
+  targeted recovery of one corrected Pages focus failure. Formatting, workspace
+  Clippy, wasm and Pages build pass. No dependencies, DB or replay changes.
+  [Outcome](completed/2026-10-29.md#a09-matching-gameplay-and-a48-mixed-sessions),
+  [validation](../testing/evidence.md#a09-and-a48-matching-and-mixed-sessions---2026-10-29).
+  No task is currently active; next proposed scope is A13 Browse.
+
+- **A47 complete (2026-10-29):** README now gives first-run and repeat-run
+  PowerShell commands, localhost URL, quiz entry, Ctrl+C shutdown, regeneration
+  choices and troubleshooting. Documentation-only checks pass; no server/build/
+  generator or full tests rerun under D36. A09/A48 are now complete.
+  [Outcome](completed/2026-10-29.md#a47-readme-local-quickstart).
+
+- **A46 and A44 complete (2026-10-29):** cargo make dev now generates a fresh
+  verified candidate, installs the complete web/static bundle with backup and
+  rollback, then starts Trunk. Separate db-check/db-generate/db-install/serve
+  tasks are available. Four focused Node tests and one end-to-end managed Chrome
+  dictionary/MCQ load pass; served DB bytes match the installed file. Original
+  bundle is preserved under target/db-workflow/backups. Current artifact has
+  12,100 readings and unchanged logical/schema/index/input/diagnostic hashes;
+  physical SHA-256 is 728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02.
+  Existing tools only; no source/schema/dependency changes or full regression.
+  The smoke server/browser are stopped. [Outcome](completed/2026-10-29.md#a46-cargo-make-workflow-and-a44-regeneration).
+  Next: A13 Browse. Users can start the local workflow with cargo make dev.
+
+- **A45 complete (2026-10-29):** Approved exact Clap 4.6.7 now provides help,
+  check and generate --output for db-gen. Check states that no file was written;
+  generation prints absolute output/database/manifest paths and refuses existing
+  directories. Focused fmt/Clippy plus five selected native tests pass. A real
+  12,100-reading test bundle at target/a45-cli/review bundle matches the current
+  logical/diagnostic hashes. No checked-in DB replacement or full regression.
+  [Outcome](completed/2026-10-29.md#a45-clap-generator-cli). A44 review/installation is now complete under A46.
+
+- **A10 complete (2026-10-29):** All three MCQ variants are playable in Endless
+  and Fixed 5/10/20, with progress/completion and a four-stat Chart.js summary.
+  D35 approves First-attempt / total questions, exact chart.js 4.6.1 and build-only
+  esbuild 0.28.2. All five gates pass: 110 Rust tests and 29 root/Pages scenarios,
+  including unchanged-URL widening, timing, replay, chart teardown/failure and
+  reduced motion. No RNG/replay, schema/data or scratchpad changes.
+  [Outcome](completed/2026-10-29.md#a10-complete---fixed-mcq-and-summary).
+  A44/A46 and A09/A48 are complete; A13 Browse is next.
+
+- **A43 complete (2026-10-29):** D36 records the user's proportionate-validation
+  policy: focused checks and representative samples for routine work; full
+  regression after very major work or for release readiness. Reuse valid
+  evidence and rerun affected checks after corrections. Existing CI workflows
+  unchanged. Documentation checks pass.
+  [Outcome](completed/2026-10-29.md#a43-proportionate-validation-policy).
+
+- **A11 complete (2026-10-29):** Setup now selects all six activities, HSK
+  systems/levels and Endless/Fixed counts, validates saved exclusions and exposes
+  explicit Reset. Start uses existing canonical URL/router encoding. All five
+  gates pass: 105 Rust tests, fifteen root and six Pages scenarios. Corrected
+  setup surface styling after screenshot review and verified the final captures.
+  [Outcome](completed/2026-10-29.md#a11-practice-setup-and-start-urls),
+  [evidence](../testing/evidence.md#a11-practice-setup--2026-10-29).
+  No dependency/feature, DB/schema/replay or scratchpad changes. A10, A09 and A48 are complete; next proposed task is A13 Browse.
+
+- **Previous quiz-first priority (user-directed 2026-10-28):** A11/A10 are complete;
+  A09 matching now follows the 2026-10-29 database-first A44 priority. First playable milestone:
   select activity/level → start Endless → answer → feedback → Continue. A21 already
-  prepares the rounds; setup and ready gameplay views remain placeholders.
+  prepares the rounds; setup and both MCQ modes now work. Matching and mixed sessions are now implemented.
   Metadata/motion/extraction are later priorities, not quiz dependencies. No code
   was changed by this reorder. Required gates and full feature scopes remain.
 
@@ -30,7 +105,7 @@ are no longer blockers.
   payloads. Repaired retained relative links. Documentation and preservation
   checks pass; no code, dependency, product/policy decision or index changes.
   [Outcome](completed/2026-10-28.md#a38-selective-scratchpad-cleanup).
-  A41 tracks the unresolved contributor-policy questions. Next ready task: A11 under the later user-directed quiz-first order.
+  A41 tracks the unresolved contributor-policy questions. A11/A10/A09 and A48 mixed sessions are complete.
 
 - **A37 complete (2026-10-28):** Traditional secondary exercise display,
   Browse fields/URL/ranges, Home failure layout and initial 150 ms fade-only
@@ -111,8 +186,8 @@ are no longer blockers.
 
 - **A40:** Approved social-card image and metadata must be implemented before v1.
   A37 is complete; no image or HTML metadata has been implemented by that task.
-  UX-SUM01 remains A09/A10 implementation work with the approved first-attempt
-  metric; confirm the latest stable Chart.js pin in its implementation plan.
+  UX-SUM01 is applied to MCQ and matching under A10/A09/D35/D39; D40
+  records the mixed-session weighted denominator. Chart.js/esbuild exact pins are approved and recorded.
 
 - **D33:** Both Picomatch advisories are accepted while glob patterns remain
   developer-controlled build input. No override or audit fix. A39's repair
@@ -243,16 +318,14 @@ A22 left the source scratchpad untouched. A38 later performed separately approve
 selective cleanup after validation, retaining six deferred/partial/unresolved
 sections. Never clear those retained entries without applying their answers.
 
-Later A09/A10 summary handoff (approved by the user during A22, applied only
-at implementation): label the metric "First-attempt correct pairs", optionally
-"First-attempt" in a compact stat row. A pair that needed any retry contributes
-nothing to that numerator; the denominator is total required pairs (rounds × 4
-in match). Reconcile MCQ summary presentation during A10. A22 does not apply
-UX-SUM01's restart/timer/chart/stat amendments. Confirm and exactly pin the latest
-stable Chart.js when implementation is approved; the suggested 4.4.x/4.4.6
-candidate is unconfirmed. Leave AGENTS §4 and package manifests unchanged.
+A09 implemented summary: First-attempt correct pairs (or compact First-attempt)
+counts only pairs requiring no retry, with denominator rounds × 4. D35 applies
+MCQ's explicitly approved First-attempt / total questions metric and the
+restart/timer/chart/stat amendments during A10. Exact chart.js 4.6.1 and build-only
+esbuild 0.28.2 are approved in AGENTS/package manifests; the old 4.4.x candidate
+was unconfirmed and was not installed. A09 reuses the shared summary boundary.
 
-No Git commit has been made. Preserve existing user changes and append-only
-history. See [handoff.md](handoff.md) for per-task continuation notes and
+Work was committed externally during the interruption; the agent made no
+commit or staging change. Preserve existing changes and append-only history. See [handoff.md](handoff.md) for per-task continuation notes and
 [completed/validation-log.md](completed/validation-log.md) for the evidence
 behind each completed task.

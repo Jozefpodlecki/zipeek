@@ -62,7 +62,16 @@ pub(crate) fn use_prepared_practice(
                                 Ok(prepared) => PracticeStatus::Ready(Rc::new(prepared)),
                                 Err(error) => {
                                     log::error!("Practice loading failed: {error}");
-                                    PracticeStatus::Failed(error.to_string())
+                                    if matches!(
+                                        error,
+                                        crate::services::practice_loader::PracticeLoadError::Build(
+                                            zipeek_core::round::BuildError::InsufficientPool { .. }
+                                        )
+                                    ) {
+                                        PracticeStatus::InsufficientPool
+                                    } else {
+                                        PracticeStatus::Failed(error.to_string())
+                                    }
                                 }
                             }
                         }

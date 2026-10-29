@@ -32,7 +32,7 @@ The pinned package and its compatibility with the generated artifact:
 | OPFS | not used |
 | Cross-origin isolation | not required for the `/zipeek/` build |
 | Artifact | 12,100 rows, 3,158,016 bytes |
-| SHA-256 | `491fae6f84a96b5825c860163701f3e138cf72e5b50763848fde0e96ba03c546` |
+| Current SHA-256 (A44/A46, 2026-10-29) | `728dca2400ba8f23877043c6216a433e9c0adfad539097f3081cfb200605eb02` |
 
 Default neo output (storage version 999) is rejected by this pinned WASM; only
 explicit v1.4.0 storage is readable. Future regenerated artifacts must repeat

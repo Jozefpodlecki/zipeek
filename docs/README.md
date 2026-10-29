@@ -37,9 +37,10 @@ parallel state log.
 | What "reproducible" means for artifacts | [architecture/schema/reproducibility.md](architecture/schema/reproducibility.md) |
 | What each generator stage actually does | [architecture/schema/artifacts.md](architecture/schema/artifacts.md) |
 | How to regenerate the dictionary | [architecture/schema/regeneration.md](architecture/schema/regeneration.md) |
-| Every approved decision D01–D34 | [process/decisions/index.md](process/decisions/index.md) |
+| Every approved decision D01–D40 | [process/decisions/index.md](process/decisions/index.md) |
 | Testing strategy and commands | [testing/TESTING.md](testing/TESTING.md) |
 | Chrome e2e and the A15 split | [testing/e2e.md](testing/e2e.md) |
+| Matching and mixed-session checks | [testing/matching.md](testing/matching.md) |
 | Browser DB checks and the wasm replay runner | [testing/browser-db.md](testing/browser-db.md) |
 | CI structure and required gates | [process/CI.md](process/CI.md) |
 | Rust/Yew conventions | [process/CODING_STANDARDS.md](process/CODING_STANDARDS.md) |

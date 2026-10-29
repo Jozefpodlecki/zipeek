@@ -251,6 +251,7 @@ fn repeated_notice_files_are_rejected() -> Result<(), Box<dyn Error>> {
 #[test]
 fn command_verifies_the_preserved_inputs() -> Result<(), Box<dyn Error>> {
     let result = std::process::Command::new(env!("CARGO_BIN_EXE_db-gen"))
+        .arg("check")
         .env_remove("RUST_LOG")
         .output()?;
     assert!(
@@ -267,12 +268,18 @@ fn command_verifies_the_preserved_inputs() -> Result<(), Box<dyn Error>> {
     assert!(output.contains("rejected_entries=64"), "{output}");
     assert!(output.contains("words=12100"), "{output}");
     assert!(output.contains("no artifact written"), "{output}");
+    assert!(output.contains("No database file was written."), "{output}");
+    assert!(
+        output.contains("generate --output <NEW_DIRECTORY>"),
+        "{output}"
+    );
     Ok(())
 }
 
 #[test]
 fn invalid_logging_configuration_fails_clearly() -> Result<(), Box<dyn Error>> {
     let result = std::process::Command::new(env!("CARGO_BIN_EXE_db-gen"))
+        .arg("check")
         .env("RUST_LOG", "[")
         .output()?;
     assert!(!result.status.success());

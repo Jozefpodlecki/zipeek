@@ -1,0 +1,33 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[tasks.default]
+description = "List the explicit database and development tasks"
+command = "cargo"
+args = ["make", "--list-all-steps"]
+
+[tasks.db-check]
+description = "Validate pinned inputs and import in memory; write no database"
+command = "cargo"
+args = ["run", "-p", "db-gen", "--locked", "--", "check"]
+
+[tasks.db-generate]
+description = "Generate and validate a fresh candidate bundle; print its paths"
+command = "node"
+args = ["scripts/db-workflow.cjs", "generate"]
+
+[tasks.db-install]
+description = "Install the latest verified full bundle with backup and rollback"
+command = "node"
+args = ["scripts/db-workflow.cjs", "install"]
+
+[tasks.serve]
+description = "Serve the current installed bundle at http://localhost:1420"
+cwd = "web"
+command = "trunk"
+args = ["serve"]
+
+[tasks.dev]
+description = "Generate, install the complete bundle, then start Trunk"
+dependencies = ["db-generate", "db-install", "serve"]
