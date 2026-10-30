@@ -6,6 +6,7 @@ pub mod import;
 pub mod inputs;
 mod policy;
 pub mod schema;
+pub mod llm;
 
 pub use cli::run_cli;
 pub use generator::{GeneratorError, PreparedGeneration, import_primary, prepare};

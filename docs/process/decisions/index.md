@@ -11,7 +11,7 @@ This file is the index. Each decision is elaborated in one of the group files:
 | Group file | Decisions |
 | --- | --- |
 | [foundations.md](foundations.md) | D01–D05, D10, D11 (product and shared domain) |
-| [rounds-and-replay.md](rounds-and-replay.md) | D12–D15, D17, D19 (round construction, URLs, RNG) |
+| [rounds-and-replay.md](rounds-and-replay.md) | D12–D15, D17, D19, D40, D42 (round construction, URLs, RNG) |
 | [database-and-artifacts.md](database-and-artifacts.md) | D06–D08, D16, D18, D20–D23 (sources, schema, generator, runtime) |
 | [web-and-ui.md](web-and-ui.md) | D24–D26, D29, D31–D32, D34 (shell, motion, styling, pronunciation, social cards) |
 | [process-and-infra.md](process-and-infra.md) | D09, D27, D28, D30, D33 (e2e, lockfile, crate extraction, tooling acceptance) |
@@ -61,6 +61,9 @@ This file is the index. Each decision is elaborated in one of the group files:
 | D39 | Matching first-attempt accounting | Approved 2026-10-29: a wrong A/B attempt disqualifies both pairs from first-attempt summary eligibility; live eventual correct counts remain separate. | UX / PRODUCT | [web-and-ui](web-and-ui.md#d39-matching-first-attempt-pair-accounting) |
 | D40 | Multiple exercise types per session | Approved multi-select matching/MCQ sessions, random type choice without immediate repeats, optional types URL metadata and shared weighted Fixed accounting; current-round v1 replay unchanged. | UX / PRODUCT / practice URL | [rounds-and-replay](rounds-and-replay.md#d40-multiple-exercise-types-per-session) |
 | D41 | Practice board readability and pinyin | Approved 2026-10-29; A49 | UX / PRODUCT | [Web/UI](web-and-ui.md#d41-practice-board-readability-and-pinyin) |
+| D42 | Avoid duplicate hanzi targets | Approved future matching policy; replay/scope review required before A55 implementation. | FUTURE / ROUND_GENERATION | [rounds-and-replay](rounds-and-replay.md#d42-avoid-duplicate-hanzi-targets-in-matching-rounds) |
+| D43 | Future settings and experimental AI/audio directions | Matching checkmark removal, Settings/audio preference, two independently toggleable experimental audio exercises and sentence generation from a subset of 20 words. Open design choices retained. | FUTURE / UX / PRODUCT | [web-and-ui](web-and-ui.md#d43-future-settings-and-experimental-aiaudio-directions) |
+| D44 | Practice setup category/PoS filters | OR within each group, AND across groups and HSK; richer setup UI planned, category data awaits A56. | FUTURE / UX / PRODUCT | [web-and-ui](web-and-ui.md#d44-practice-setup-category-and-pos-filtering) |
 
 D27 (approved 2026-10-27): track the existing root Cargo.lock and remove its
 ignore entry, preserving the current resolved graph. A19 removes the obsolete

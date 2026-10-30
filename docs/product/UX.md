@@ -645,3 +645,33 @@ and leaves the user on setup. Failed removal retains the count and displays an
 inline error. Loading never rewrites malformed/unknown saved data. Storage read
 failure uses an empty local set and logs the failure. No custom count, all-levels,
 PoS picker, setup audio or gameplay has been added by A11.
+
+
+## Future feedback, settings and exercise directions (A53)
+
+The user requests removing matching success checkmarks, avoiding duplicate simplified hanzi in a matching round, and a Settings view with theme selection plus an option to
+hide Listen icons and speak on word/card click. Pronunciation and
+three-option listening are separate experimental exercises, independently
+toggleable in Settings and subject to eligibility review. Translate sentence
+uses a useful subset of 20 random candidate words and AI generation.
+See [FUTURE](FUTURE.md) for the source-data example, full requests and open
+interaction choices. A54-A60 own future work; current feedback/theme/audio
+controls and the six implemented exercise variants are unchanged by these notes.
+
+Sentence translation is also experimental and Settings-gated. Enabling it
+exposes AI connection configuration (URL/model, token when required and a
+proposed Test connection action). Connection/permission failures need clear
+feedback; the current app has none of this connection UI yet. See
+[FUTURE connection details](FUTURE.md#ai-connection-in-settings).
+
+
+### Future Practice setup filters (D44 / A61)
+
+Add a richer category/PoS filter section alongside HSK controls. Multiple
+selected values use OR within their group and AND across category, PoS and HSK
+groups; no selection in a group means no restriction from that group. Example:
+(medical OR technical) AND (noun OR verb) AND the selected HSK level.
+Searchable multi-select controls, active chips, Clear filters and pool count
+are proposed for implementation review; the precise layout is not yet chosen.
+See [requirements and dependencies](FUTURE.md#practice-setup-category-and-part-of-speech-filters).
+Current setup has no category or PoS picker; category data awaits A56.

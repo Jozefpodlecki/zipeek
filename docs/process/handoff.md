@@ -484,3 +484,21 @@ scenario now checks no document vertical scroll at 1280?720 and 1920?720, plus
 mobile and audio containment. Focused run passed; no full regression repeated.
 Temporary entry archived in target/a52/a52_layout_probe.rs, removed from tests.
 A50/A51 remain documentation-only requests pending their implementation plans.
+
+
+## A53 future product directions - 2026-10-29
+
+Documentation-only task complete. product/FUTURE.md owns the full requests and
+open choices; A54-A60 own live follow-ups. D42 approves avoiding duplicate
+simplified hanzi among a matching round's four target pairs, while retaining
+separate source readings. This still requires explicit replay review before
+builder changes. D43 records future checkmark removal, Settings/audio mode,
+independent experimental pronunciation/listening toggles, and sentence AI
+using a useful subset of 20 sampled words.
+
+AiMux/LM Studio additions are user-owned scaffold changes. Their 0.5.0 manifest
+ranges and root lock resolutions are observed at 0.5.0, not new exact policy
+pins. Preserve manifest/lock/llm changes and obtain the
+complete dependency/configuration/storage plan before classification work.
+No code was fixed or model called; doc-only validation leaves source intact.
+Next first ready task is A54 feedback removal; present its implementation plan.

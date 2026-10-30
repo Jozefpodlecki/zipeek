@@ -335,3 +335,54 @@ Pinyin stays under hanzi/traditional; MCQ's pinyin-above-audio layout is unchang
 Keep full-page matching free of vertical scroll at representative desktop sizes,
 while allowing natural scrolling for long content or small/short viewports.
 Maintain native independent audio and a minimum 44px target.
+
+
+## D43 Future settings and experimental AI/audio directions
+
+Recorded and clarified by the user 2026-10-29 under A53. Remove matching green
+success checkmarks in future A54, retaining clear matched state; MCQ feedback
+icons are not included. Add future Settings/theme selection and a preference
+to hide Listen icons and speak on a word/card click (A57).
+
+Two future audio exercises are distinct: microphone pronunciation (A58) and
+hearing a word then identifying it from three options (A60). Both are
+experimental and independently toggleable in Settings. Eligibility is required;
+the reported Chinese er/2 synthesis issue must be evaluated. Recognition,
+voice qualification, defaults, option labels and scoring remain open.
+
+Future sentence translation (A59) samples 20 random words and asks AI to make
+a sentence using a useful subset, not necessarily all 20. Direction, grading
+and generation/runtime architecture remain open. Local generator-side AI tags
+are requested under A56, but taxonomy and schema are not resolved.
+
+These are future requirements, not implemented routes, features, tag schema or
+new approved runtime dependencies. [FUTURE](../../product/FUTURE.md) owns the
+full requirements/open choices; TASKS owns their live status.
+
+
+D43 amendment (2026-10-29): sentence translation is experimental and enabled
+in Settings too. The user configures an AI connection, initially targeting
+local LM Studio: endpoint/model and API token when required by server auth.
+API-key necessity depends on server configuration, not merely on enabling the
+feature. A57/A59 must validate browser CORS and hosted Pages local/loopback
+permissions before claiming connection support; exact persistence and UI remain
+open. No hosted provider/model, shared secret, proxy or dependency is approved
+by this direction. See FUTURE's AI connection section for verified platform
+references and the distinction between local development and Pages.
+
+
+## D44 Practice setup category and PoS filtering
+
+Approved by the user 2026-10-29: add richer Practice setup filters for categories
+and parts of speech. Multiple choices combine with OR inside each group and
+AND across groups and the current HSK filter. For example, (medical OR technical)
+AND (noun OR verb) AND the selected HSK level. An empty group is unrestricted.
+The same session filter should remain effective across selected exercise types,
+with existing per-variant eligibility still applied.
+
+A61 owns the future setup UI. Searchable multi-select controls, chips, clearing
+and pool counts are proposals for its implementation review. Category support
+depends on A56's taxonomy/data/schema design; current PoS query support can be
+used by a separately scoped setup picker. No category URL encoding, schema,
+replay change, library or final UI layout is approved by this decision.
+See [future setup filters](../../product/FUTURE.md#practice-setup-category-and-part-of-speech-filters).

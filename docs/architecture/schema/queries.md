@@ -97,3 +97,11 @@ zero-based widened views.
 - Builder algorithm: [ROUND_GENERATION](../../product/ROUND_GENERATION.md).
 - Browser query implementation: [../modules/browser-db.md](../modules/browser-db.md).
 - Schema read by these queries: [schema.md](schema.md).
+
+## Future schema/query review (A62)
+
+Compare the existing candidate/search workload with normalized tag/PoS and
+optional English FTS proposals. Ensure membership joins do not duplicate WordIds
+or change deterministic order; preserve approved Browse search semantics.
+Measure plans/browser latency/size before selecting more indexes. See
+[review brief](REVIEW.md) for official support and the pinned-WASM/read-only probe.

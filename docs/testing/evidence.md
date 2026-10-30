@@ -500,3 +500,68 @@ Passed fmt --all -- --check, affected zipeek/e2e all-target Clippy --locked
 No full regression or unchanged native reducer tests repeated under D36 for
 this focused layout iteration. Probe source archived to target/a52 and removed
 from e2e/tests. Preservation/docs results: target/a52/validation.json.
+
+
+## A53 future requirements documentation - 2026-10-29
+
+Documentation-only checks cover Markdown structure, relative links/anchors,
+command accuracy and facts against source. Pinned input inspection confirms
+the same simplified hanzi has lowercase jing3 and uppercase Jing3 forms with
+well versus constellation/surname glosses. Current ROUND_GENERATION uniqueness
+checks right labels only. AiMux 0.5.0 ranges and LM Studio client scaffold are
+present in user edits; core/providers and their AiMux helpers resolve to 0.5.0
+in the root lock. The scaffold is unwired from generator CLI/import. No compile or runtime success is claimed.
+
+User clarified same-hanzi avoidance, two distinct experimental audio exercises
+with independent Settings toggles, and sentence generation using a useful subset
+of 20 words. D42/D43 and owning docs record these, retaining open schema/tag,
+API/eligibility/scoring, settings default and runtime-generation questions.
+No Rust/Trunk/Chrome or AI request was run for the doc-only task. Source/DB/
+manifest/lock hashes, staged index and exact prior completed prefix are checked
+in target/a53/validation.json. Retained scratchpad entries are untouched.
+
+Final A53 report covers 18 Markdown files, 305 existing relative-link targets
+and new anchors. New-change structure/link checks pass. Twelve inherited
+database-document link gaps remain (six missing anchors and six incorrect
+relative decision paths already present in the staged baseline); these are
+listed separately in validation.json, not claimed fixed. All 107 protected
+source/data/manifest/lock files match their starting hashes, staged index is
+unchanged and previous completed bytes are an exact prefix. git diff --check
+passes. Root lock inspection confirms all four AiMux packages at 0.5.0.
+
+
+## A53 experimental AI connection amendment - 2026-10-29
+
+Official LM Studio compatibility/settings/authentication docs verify local /v1,
+CORS enablement and optional-by-default API-token authentication. Official
+Chrome local-network guidance and GitHub Pages hosting docs support the
+distinction between localhost development and public-site browser permissions.
+References are linked beside the claims in product/FUTURE.md. These are source
+checks, not successful endpoint/model integration evidence. No Rust/Trunk/Chrome
+or local-server/model requests were run for the documentation-only amendment.
+Structure/links/commands/facts and preserved source/index/completed-prefix checks
+are recorded in target/a53-connection/validation.json.
+
+
+## A53 Practice filter amendment - 2026-10-29
+
+Docs-only structure/link/command/fact checks. Source inspection confirms setup
+currently creates PracticeFilter with an empty part_of_speech Vec, while core
+practice URL/query support for PoS exists. No setup picker/category schema was
+implemented. D44 records the clarified Boolean semantics; A61 owns follow-up
+review, with category data dependent on A56. Source/data/index/completed-prefix
+preservation and doc results: target/a53-filters/validation.json. No Rust/Trunk/
+Chrome checks or model calls for this documentation-only amendment.
+
+
+## A53 schema/index/FTS review brief - 2026-10-29
+
+Read generator schema DDL and current browser query predicates; confirmed the
+ordinary HSK index pair and PoS string_split/list_contains scan. Official
+DuckDB 1.4 WASM extensions/FTS/indexing docs establish platform availability
+and limitations, linked in schema/REVIEW.md. No native/WASM FTS loading, browser
+benchmark or generated-index query was performed; exact pinned compatibility
+is explicitly future A62 work, not a passed gate. Documentation-only validation
+and protected source/data/index/completed prefix results are recorded in
+target/a53-schema/validation.json. Existing replay/dependency/schema approvals
+remain in force; no Rust/Trunk/Chrome or model calls for this doc update.

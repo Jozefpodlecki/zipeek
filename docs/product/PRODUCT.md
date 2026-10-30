@@ -536,3 +536,28 @@ the pinyin. Representative desktop matching views fit without vertical scroll. T
 Requested follow-ups A50/A51 are documented in [UX](UX.md#requested-navigation-and-exercise-help-follow-ups):
 narrower icon-labelled drawer navigation and per-exercise info dialogs explaining
 the activity. A49 records these requests without implementing those features.
+
+
+## Recorded future directions (A53)
+
+[Future practice, settings and AI enrichment](FUTURE.md) owns the 2026-10-29
+requests: remove matching success checkmarks; address visually ambiguous
+readings such as jing/Jing; local generator-side AI category tags and filtering;
+a Settings route with theme and click-to-speak audio preference; two independently toggleable experimental audio exercises (microphone
+pronunciation and three-option listening) and AI-assisted sentence translation
+using a useful subset of 20 sampled words. These are planned
+features with explicit open questions, not implemented routes/schema/exercises
+or a change to the existing v1 round contract. A54-A60 track implementation
+review and prerequisites in TASKS.
+
+A53 follow-up: sentence translation is experimental too. It is enabled in
+Settings with a configured AI base URL, model and API token when the server
+requires authentication. Local LM Studio is the first intended connection
+target; Pages-to-local browser support is subject to CORS/permission validation.
+See [connection requirements](FUTURE.md#ai-connection-in-settings).
+
+Practice setup also needs richer category and part-of-speech selection (D44 /
+A61). Apply OR within each selected group and AND across category, PoS and the
+existing HSK filter. Category data depends on A56; existing practice PoS query
+support does not mean the setup picker already exists. See
+[future filter requirements](FUTURE.md#practice-setup-category-and-part-of-speech-filters).

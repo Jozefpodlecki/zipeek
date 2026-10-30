@@ -12,6 +12,43 @@ are no longer blockers.
 
 ## Active
 
+- **A53 schema-review amendment complete (2026-10-29, docs only):** A62 now
+  tracks schema/index/table review and pinned-WASM FTS verification. Official
+  DuckDB 1.4 docs list FTS for WASM; exact Zipeek compatibility remains untested.
+  [Review brief](../architecture/schema/REVIEW.md) records current indexes and
+  PoS scans, candidate tag/PoS/sense designs, English-vs-hanzi/pinyin semantics
+  and required plan/latency/size/memory evidence. No schema/dependency/artifact
+  changes or benchmarks were run. A56 storage changes depend on the review.
+
+- **A53 filter amendment complete (2026-10-29, docs only):** Practice setup
+  category/PoS filters requested under A61. D44 approves OR within each group
+  and AND across groups plus HSK. UI controls/counts remain proposals; category
+  data awaits A56, while PoS query support exists without a setup picker.
+  [Requirements](../product/FUTURE.md#practice-setup-category-and-part-of-speech-filters).
+  Documentation checks only; no code, URL/schema or data changes.
+
+- **A53 connection amendment complete (2026-10-29, docs only):** Sentence
+  translation is also experimental and Settings-gated, with a configured AI
+  endpoint/model and token when required. Local LM Studio is the first target;
+  browser CORS and Pages-to-local permissions need a future integration spike.
+  Official LM Studio/Chrome/GitHub references and open token-persistence choices
+  are recorded in [FUTURE](../product/FUTURE.md#ai-connection-in-settings).
+  A57/A59 and D43 updated. Documentation-only checks; no model/endpoint calls.
+
+- **A53 complete (2026-10-29, documentation only):**
+  [Future requirements](../product/FUTURE.md) records matching checkmark removal,
+  duplicate-hanzi avoidance (D42), local AI category tags/filters, Settings/theme/
+  click-to-speak, experimental pronunciation and three-choice listening with
+  independent Settings toggles, and sentence generation from a subset of 20
+  words (D43). A54-A60 track future implementation and unresolved design choices.
+  User-added AiMux/LM Studio source and manifest ranges are documented as an
+  incomplete, unwired scaffold; core/providers and their AiMux helpers resolve
+  to 0.5.0 in the user-updated root lockfile. No policy pin/schema/runtime/code change is implied. Source/DB/
+  lock/index/scratchpad and earlier history preserved; documentation checks pass.
+  [Outcome](completed/2026-10-29.md#a53-future-ai-settings-and-experimental-exercise-requirements).
+  No task is active. A54 feedback is first ready; A55 needs replay review before
+  implementing its approved duplicate policy.
+
 - **A52 complete (2026-10-29):** Smaller matching cards and right-edge Listen
   remove the audio footer height. Pinyin remains beneath hanzi. Focused Chrome
   checks pass for all matching variants, mobile/both themes and no page scroll
@@ -40,7 +77,7 @@ are no longer blockers.
   Clippy, wasm and Pages build pass. No dependencies, DB or replay changes.
   [Outcome](completed/2026-10-29.md#a09-matching-gameplay-and-a48-mixed-sessions),
   [validation](../testing/evidence.md#a09-and-a48-matching-and-mixed-sessions---2026-10-29).
-  No task is currently active; next proposed scope is A13 Browse.
+  No task is currently active; next proposed scope is A54 feedback.
 
 - **A47 complete (2026-10-29):** README now gives first-run and repeat-run
   PowerShell commands, localhost URL, quiz entry, Ctrl+C shutdown, regeneration

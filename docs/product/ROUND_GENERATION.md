@@ -346,3 +346,14 @@ allowed fresh-Random path. D19 above fixes sampling/shuffle/recovery call order
 and the only current format, v1. Do not silently change versions
 or substitute StdRng to make it compile.
 
+
+
+## Future duplicate-hanzi matching requirement (D42)
+
+The user approved avoiding different readings with identical simplified hanzi
+in the four target pairs of a matching round after reporting jing/Jing. A55
+tracks this future policy. Current v1 implementation still applies the
+right-label-only rules above; no selection, draw-order or canonical encoding
+was changed by A53. Before altering the builder, present the replay impact and
+obtain explicit format/compatibility approval required by AGENTS. Do not merge
+source reading identities. See [FUTURE](FUTURE.md#matching-feedback-and-ambiguous-entries).

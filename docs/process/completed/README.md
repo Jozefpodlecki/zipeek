@@ -25,7 +25,7 @@ former single-file `docs/COMPLETED.md`.
 | [2026-10-26.md](2026-10-26.md) | Outcomes dated 2026-10-26: foundation, generator, schema, import, shell scaffolding |
 | [2026-10-27.md](2026-10-27.md) | Outcomes dated 2026-10-27: shell refinements, practice URLs, round builder, lockfile, browser DB, docs review, Tailwind correction |
 | [2026-10-28.md](2026-10-28.md) | A15 modular owned Chrome harness, package rename and failure-isolation validation |
-| [2026-10-29.md](2026-10-29.md) | A11 setup; complete A10 MCQ/summary; A43 proportionate validation policy; A44 database-first planning; A45 Clap CLI; A44/A46 regenerated DB and cargo-make workflow; A47 quickstart; A09 matching and A48 mixed sessions; A49 practice presentation; A52 compact cards/right-edge audio |
+| [2026-10-29.md](2026-10-29.md) | A11 setup; complete A10 MCQ/summary; A43 proportionate validation policy; A44 database-first planning; A45 Clap CLI; A44/A46 regenerated DB and cargo-make workflow; A47 quickstart; A09 matching and A48 mixed sessions; A49 practice presentation; A52 compact cards/right-edge audio; A53 future AI/settings/audio requirements |
 | [archive.md](archive.md) | Frozen migration: one-time STATUS reconciliation and preserved documentation history |
 
 ## Related

@@ -18,6 +18,7 @@ parallel state log.
 | --- | --- |
 | What v1 does and which routes exist | [product/PRODUCT.md](product/PRODUCT.md) |
 | What the user sees and open UX items | [product/UX.md](product/UX.md) |
+| Future AI tags, Settings, speaking/sentence exercises and ambiguous prompts | [product/FUTURE.md](product/FUTURE.md) |
 | How rounds are built and replayed | [product/ROUND_GENERATION.md](product/ROUND_GENERATION.md) |
 | What code exists and how modules fit | [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | Which generator module owns what | [architecture/modules/db-gen.md](architecture/modules/db-gen.md) |
@@ -29,6 +30,7 @@ parallel state log.
 | Implemented scoped state and proposed motion | [architecture/UI_ARCHITECTURE.md](architecture/UI_ARCHITECTURE.md) |
 | Sources, licensing, and the pinned snapshot | [architecture/schema/sources.md](architecture/schema/sources.md) |
 | The `words` table and indexes | [architecture/schema/schema.md](architecture/schema/schema.md) |
+| Requested schema/index/FTS review and benchmark criteria | [architecture/schema/REVIEW.md](architecture/schema/REVIEW.md) |
 | How source rows become `words` rows | [architecture/schema/import-rules.md](architecture/schema/import-rules.md) |
 | The 42-code PoS mapping | [architecture/schema/pos-mapping.md](architecture/schema/pos-mapping.md) |
 | Word of the Day and practice SQL contracts | [architecture/schema/queries.md](architecture/schema/queries.md) |

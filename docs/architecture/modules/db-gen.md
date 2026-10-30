@@ -183,3 +183,24 @@ to Trunk pre-build hooks; the task helper uses Node built-ins, not new dependenc
 Commands, manual review/replacement procedure, and sizing live in
 [schema/regeneration.md](../schema/regeneration.md). Generation is explicit and
 manual; never an automatic application build step.
+
+
+## User-added local LLM scaffold
+
+Observed during A53 on 2026-10-29: the user added aimux-core and aimux-providers
+requirements 0.5.0 to crates/db-gen/Cargo.toml and exported a new llm module.
+Its client wraps the LM Studio provider, normalizes a /v1 base URL and sketches
+model listing/text generation with timeout/retry and streaming/error helpers.
+This is scaffolding, not an implemented classifier or a verified working
+generator integration. Types/helpers referenced by this scaffold are not yet
+fully supplied locally; no compile/build/model call was run for this doc task.
+The generator CLI/import/export do not invoke it.
+
+The intended next feature is explicit local-model category enrichment and
+entry-tag filtering, tracked by A56 and [future requirements](../../product/FUTURE.md#local-ai-category-enrichment).
+No tag schema/output or new runtime AI endpoint exists. Preserve the user-added
+manifest/lock/source changes; review the complete dependency/configuration and
+classification/storage design before implementation. Root Cargo.lock resolves
+aimux-core, aimux-providers, aimux-provider-utils and aimux-stream to 0.5.0.
+The direct manifest requirements are semver ranges, not exact equals pins;
+this observation does not add new AGENTS dependency-policy targets.

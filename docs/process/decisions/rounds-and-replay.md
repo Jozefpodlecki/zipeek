@@ -269,3 +269,20 @@ round and one required answer per MCQ, for the actual sequence played. The
 compact label stays First-attempt. Reload/external navigation resets session
 counters while honoring the current URL; Back to setup restores defaults.
 No database, dependency, replay-format or score-persistence changes.
+
+
+## D42 Avoid duplicate hanzi targets in matching rounds
+
+Approved explicitly 2026-10-29 after the user reported jing/Jing: the four
+target pairs in a matching round must not represent different readings sharing
+the same simplified hanzi. Retain separate imported reading identities and
+permit them in different rounds. This is a future A55 requirement, not an
+implemented change to current D12 right-label-only uniqueness. It does not
+change MCQ duplicate rules.
+
+The pinned source includes two readings of the same hanzi with different
+English glosses, so the current builder can select both for hanzi-to-English.
+Changing candidate acceptance/draw order may break v1 replay. A55 must present
+the compatibility/format proposal and obtain the explicit approval required by
+AGENTS before changing the builder; this decision alone approves no v2 format
+or RNG change. See [future requirements](../../product/FUTURE.md#matching-feedback-and-ambiguous-entries).

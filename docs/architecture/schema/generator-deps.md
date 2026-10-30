@@ -161,3 +161,16 @@ Engine/storage facts: runtime.md.
 Artifact export verification: artifacts.md.
 
 Source bytes the generator consumes: sources.md.
+
+
+## User-added AI dependencies awaiting integration review
+
+A53 records user-added aimux-core and aimux-providers requirements 0.5.0 in
+db-gen, with an LM Studio client scaffold under src/llm. These are observed
+manifest ranges, not exact equals pins or additions to AGENTS policy targets.
+The user-updated root lock resolves aimux-core, aimux-providers,
+aimux-provider-utils and aimux-stream to 0.5.0. A56 must
+review the full graph/features/configuration before wiring classification.
+No dependency, lockfile or source edit was made by the documentation task.
+See [module notes](../modules/db-gen.md#user-added-local-llm-scaffold) and
+[future enrichment](../../product/FUTURE.md#local-ai-category-enrichment).

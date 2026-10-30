@@ -15,4 +15,7 @@ tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
 duckdb-neo = { git = "https://github.com/duckdb/duckdb-rs.git", rev = "4acbea84794582c4cd962ee971a3d7a5dcb72e39", features = ["chrono", "r2d2", "uuid"] }
 sha2 = "=0.10.9"
 toml = { version = "=0.9.8", default-features = false, features = ["std", "serde", "parse"] }
+aimux-core = { version = "0.5.0" }
+aimux-providers = { version = "0.5.0" }
 zipeek-core = { path = "../zipeek-core" }
+futures-util = { version = "0.3.34" }

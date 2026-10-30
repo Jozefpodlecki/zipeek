@@ -70,3 +70,20 @@ For a new contributor:
 - Browser database: [../modules/browser-db.md](../modules/browser-db.md).
 - Decisions: [../../process/decisions/database-and-artifacts.md](../../process/decisions/database-and-artifacts.md).
 - Testing: [../../testing/provenance.md](../../testing/provenance.md) and [../../testing/browser-db.md](../../testing/browser-db.md).
+
+## Future AI classification proposal
+
+The user requests entry-associated category/usage tags generated using a local
+LLM in db-gen, then usable as filters. A56 must settle reading/sense ownership,
+taxonomy, multiple-tag behavior and storage/query changes before schema approval.
+No tags, new table/column or classifier output were added to the approved
+schema by A53. See [future requirements](../../product/FUTURE.md#local-ai-category-enrichment).
+
+
+## Requested schema, index and FTS review
+
+A62 owns the requested schema/query review: index usefulness, tag/PoS/sense
+storage alternatives and DuckDB-WASM FTS compatibility. The
+[review brief](REVIEW.md) separates current facts, official platform support,
+proposals and required measurements. No DDL/index/extension or artifact change
+is approved by recording the review.
