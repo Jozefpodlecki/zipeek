@@ -15,10 +15,10 @@ Chrome builds and the standalone Pages gate exercise this packaging locally.
 .github/workflows/ci.yml handles pushes to master, pull requests and manual runs.
 Its Windows validate job selects Rust 1.97.1 with rustfmt, Clippy and the wasm32
 target, Node 22 and the existing Trunk installation action. It verifies installed
-Chrome, prints tool versions and installs web assets from web/ using
+Chrome, prints tool versions and installs web assets from crates/web/ using
 npm ci --ignore-scripts before any build or browser test.
 
-The automated job runs all five full-regression gates in order. D36 permits
+The automated job first runs the Node database installer rollback tests, then all five full-regression gates in order. D36 permits
 focused local validation for routine work; it does not change this workflow:
 
 ```powershell
@@ -29,7 +29,7 @@ cargo check --target wasm32-unknown-unknown -p zipeek --locked
 ```
 
 ```powershell
-# From web/
+# From crates/web/
 trunk build --public-url /zipeek/
 ```
 
@@ -57,15 +57,15 @@ checkout context; see [GitHub reusable workflows](https://docs.github.com/en/act
 
 The reusable Ubuntu build installs Rust 1.97.1/wasm32, matching wasm-bindgen-cli
 0.2.114, the existing Trunk selection and Node 22. It installs locked npm assets
-from web/, then runs:
+from crates/web/, then runs:
 
 ```sh
 trunk build --release --public-url /zipeek/
 ```
 
-That command runs from web/. Trunk handles the pinned Tailwind tool and local
+That command runs from crates/web/. Trunk handles the pinned Tailwind tool and local
 DuckDB asset packaging hook; no root npm install, separate npx stylesheet command
-or DB generation runs. actions/upload-pages-artifact@v3 uploads web/dist/.
+or DB generation runs. actions/upload-pages-artifact@v3 uploads crates/web/dist/.
 The dependent deploy job uses actions/deploy-pages@v4 and the github-pages
 environment, publishing its page_url output. Existing repository Pages publishing
 must be configured for GitHub Actions; this change does not modify remote settings.
@@ -84,10 +84,10 @@ pending-run handling.
 ## Caches and tool selections
 
 Cargo caches registry/Git sources and target/, keyed by OS, Rust 1.97.1, the
-root Cargo.lock, workspace manifests, rust-toolchain.toml, web/Trunk.toml and web
+root Cargo.lock, workspace manifests, rust-toolchain.toml, crates/web/Trunk.toml and web
 package lock. Pages release uses a separate key. Cargo executables are not cached:
 restoring old binaries must not replace selected tools. setup-node caches npm's
-package cache using web/package-lock.json; node_modules and generated vendor/dist
+package cache using crates/web/package-lock.json; node_modules and generated vendor/dist
 outputs are rebuilt by the locked install/hook/build.
 
 Existing action versions are retained: checkout v6, CI cache v5, Pages cache v4,

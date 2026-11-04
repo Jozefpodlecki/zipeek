@@ -219,3 +219,60 @@ fn fixed_progress_is_independent_of_wrapping_and_generation_unions() {
         [id(1), id(2), id(3)].into()
     );
 }
+
+#[test]
+fn word_set_snapshot_is_portable_canonical_and_does_not_change_v1_seed_format() {
+    let variant = ExerciseVariant::HanziToMeaning;
+    let parsed = ParsedPracticeQuery::from_pairs([("set_ids", "9,3,5"), ("offset", "4")]);
+    assert!(parsed.warnings.is_empty());
+    let normalized = parsed.normalize(variant, |_| None);
+    assert_eq!(normalized.query_pairs().into_iter().find(|(key, _)| key == "set_ids").unwrap().1, "3,5,9");
+    assert_eq!(normalized.canonical_seed_input(variant),
+        ParsedPracticeQuery::from_pairs([("offset", "4")]).normalize(variant, |_| None).canonical_seed_input(variant));
+    let parsed_again = ParsedPracticeQuery::from_pairs(normalized.query_pairs().iter().map(|(key,value)| (key.as_str(),value.as_str())).collect::<Vec<_>>());
+    assert_eq!(parsed_again.word_set, parsed.word_set);
+}
+
+#[test]
+fn invalid_word_set_snapshot_never_silently_becomes_unrestricted_practice() {
+    for value in ["", "1,,2", "2,2", "-1", "abc", "0", "2147483648"] {
+        let parsed = ParsedPracticeQuery::from_pairs([("set_ids", value)]);
+        assert!(parsed.word_set.is_none());
+        assert!(parsed.warnings.iter().any(|warning| warning.field == "set_ids"));
+    }
+    let overflow = (1..=129).map(|id| id.to_string()).collect::<Vec<_>>().join(",");
+    assert!(ParsedPracticeQuery::from_pairs([("set_ids", overflow.as_str())]).word_set.is_none());
+    let parsed = ParsedPracticeQuery::from_pairs([("set_ids", "2,1"), ("seed", "1")]);
+    assert!(parsed.seed.is_none());
+    assert!(parsed.warnings.iter().any(|warning| warning.field == "seed"));
+}
+
+#[test]
+fn filtered_practice_sources_preserve_legacy_seed_and_round_trip() {
+    let variant = ExerciseVariant::EngPinyin;
+    let legacy = ParsedPracticeQuery::from_pairs([("offset", "4")]).normalize(variant, |_| None);
+    let source = "filters:2.3,3.1|shopping|noun";
+    let parsed = ParsedPracticeQuery::from_pairs([("offset", "4"), ("source", source)]);
+    assert_eq!(parsed.dictionary_source.as_deref(), Some(source));
+    let filtered = parsed.normalize(variant, |_| None);
+    assert_eq!(filtered.canonical_seed_input(variant), format!("{}|{source}", legacy.canonical_seed_input(variant)));
+    let pairs = filtered.query_pairs();
+    let replay = ParsedPracticeQuery::from_pairs(pairs.iter().map(|(key, value)| (key.as_str(), value.as_str())));
+    assert_eq!(replay.dictionary_source.as_deref(), Some(source));
+    assert_eq!(replay.normalize(variant, |_| None).canonical_seed_input(variant), filtered.canonical_seed_input(variant));
+    assert_eq!(legacy.canonical_seed_input(variant), "zipeek-round-v1|eng-pinyin|hsk3|1||4|none");
+}
+
+#[test]
+fn filtered_practice_source_rejects_mixed_word_set_seed_and_invalid_text() {
+    for fields in [
+        vec![("source", "filters:3.1||"), ("seed", "1")],
+        vec![("source", "filters:3.1||"), ("set_ids", "1,2")],
+        vec![("source", "filters:3.1|bad;sql|")],
+        vec![("source", "filters:3.1|a b|")],
+    ] {
+        let parsed = ParsedPracticeQuery::from_pairs(fields);
+        assert!(parsed.dictionary_source.is_none());
+        assert!(parsed.warnings.iter().any(|warning| warning.field == "source"));
+    }
+}

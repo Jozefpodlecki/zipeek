@@ -12,9 +12,17 @@ This file is the index. Each decision is elaborated in one of the group files:
 | --- | --- |
 | [foundations.md](foundations.md) | D01–D05, D10, D11 (product and shared domain) |
 | [rounds-and-replay.md](rounds-and-replay.md) | D12–D15, D17, D19, D40, D42 (round construction, URLs, RNG) |
-| [database-and-artifacts.md](database-and-artifacts.md) | D06–D08, D16, D18, D20–D23 (sources, schema, generator, runtime) |
-| [web-and-ui.md](web-and-ui.md) | D24–D26, D29, D31–D32, D34 (shell, motion, styling, pronunciation, social cards) |
+| [database-and-artifacts.md](database-and-artifacts.md) | D06–D08, D16, D18, D20–D23, D46 (sources, schema, generator, runtime, AI workflow) |
+| [web-and-ui.md](web-and-ui.md) | D24–D26, D29, D31–D32, D34, D49–D51 (shell, motion, styling, pronunciation, social cards, setup UX) |
 | [process-and-infra.md](process-and-infra.md) | D09, D27, D28, D30, D33 (e2e, lockfile, crate extraction, tooling acceptance) |
+
+D51 (2026-11-04) approves exercise-first conditional setup, exclusive vocabulary sources, removable category chips, planned profiles and compact dictionary curation; see [web-and-ui](web-and-ui.md#d51-exercise-first-setup-and-dictionary-curation).
+
+D50 (2026-11-04) approves abandoning unfinished questions without scoring or evidence; see [web-and-ui](web-and-ui.md#d50-abandon-unfinished-exercises-on-navigation).
+
+D49 (2026-11-04) approves one shared quiz session across exercise routes,
+with specialized exercise reducers and finalized-result aggregation; see
+[web-and-ui](web-and-ui.md#d49-shared-cross-route-quiz-session).
 
 ## Approved decisions
 
@@ -64,6 +72,10 @@ This file is the index. Each decision is elaborated in one of the group files:
 | D42 | Avoid duplicate hanzi targets | Approved future matching policy; replay/scope review required before A55 implementation. | FUTURE / ROUND_GENERATION | [rounds-and-replay](rounds-and-replay.md#d42-avoid-duplicate-hanzi-targets-in-matching-rounds) |
 | D43 | Future settings and experimental AI/audio directions | Matching checkmark removal, Settings/audio preference, two independently toggleable experimental audio exercises and sentence generation from a subset of 20 words. Open design choices retained. | FUTURE / UX / PRODUCT | [web-and-ui](web-and-ui.md#d43-future-settings-and-experimental-aiaudio-directions) |
 | D44 | Practice setup category/PoS filters | OR within each group, AND across groups and HSK; richer setup UI planned, category data awaits A56. | FUTURE / UX / PRODUCT | [web-and-ui](web-and-ui.md#d44-practice-setup-category-and-pos-filtering) |
+| D45 | Hybrid Browse UX | Approved 2026-11-04: search bar, removable filter chips, vocabulary cards, responsive Word Set sidebar; retain A37 URL-driven query/filter/pagination semantics and replace-state navigation. Supersedes mandatory smart combobox and desktop table. | UX / UI_ARCHITECTURE / TASKS | [web-and-ui](web-and-ui.md#d45-hybrid-browse-layout-with-url-driven-search) |
+| D47 | Exercise definitions and shared quiz sessions | Approved 2026-11-04: versioned definitions distinct from instances, no central kind enum, pure `zipeek-exercises` session domain and AI-visible I/O contracts. | architecture / exercise domain | [foundations](foundations.md#d47--exercise-definitions-instances-and-shared-sessions) |
+| D48 | Visual theme domain | Approved 2026-11-04: pure `zipeek-themes` crate, deterministic topic resolver, async bundled background provider; remote generation deferred. | architecture / UX | [foundations](foundations.md#d48--visual-theme-domain-and-static-first-background-provider) |
+| D46 | Full AI-enriched database workflow | Approved 2026-11-04: one command resumes classification, requires completeness, exports the enriched artifact and installs atomically; normal dev remains offline. | README / regeneration | [database-and-artifacts](database-and-artifacts.md#d46-one-command-ai-enriched-database-publication) |
 
 D27 (approved 2026-10-27): track the existing root Cargo.lock and remove its
 ignore entry, preserving the current resolved graph. A19 removes the obsolete

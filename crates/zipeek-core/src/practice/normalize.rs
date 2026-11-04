@@ -27,6 +27,8 @@ pub struct NormalizedPracticeQuery {
     pub mode: PracticeMode,
     pub filter: PracticeFilter,
     pub exclusions: BTreeSet<WordId>,
+    pub word_set: Option<BTreeSet<WordId>>,
+    pub dictionary_source: Option<String>,
     pub offset: u64,
     pub seed: SeedDisposition,
     pub warnings: Vec<QueryWarning>,
@@ -83,6 +85,8 @@ impl ParsedPracticeQuery {
             mode: self.mode,
             filter: self.filter.clone(),
             exclusions,
+            word_set: self.word_set.clone(),
+            dictionary_source: self.dictionary_source.clone(),
             offset: if seed.original_id().is_some() {
                 0
             } else {
@@ -96,7 +100,11 @@ impl ParsedPracticeQuery {
 
 impl NormalizedPracticeQuery {
     pub fn canonical_seed_input(&self, variant: ExerciseVariant) -> String {
-        canonical_seed_input(variant, &self.filter, self.offset, self.seed.original_id())
+        let legacy = canonical_seed_input(variant, &self.filter, self.offset, self.seed.original_id());
+        match &self.dictionary_source {
+            Some(source) => format!("{legacy}|{source}"),
+            None => legacy,
+        }
     }
 
     pub fn query_pairs(&self) -> Vec<(String, String)> {
@@ -136,6 +144,12 @@ impl NormalizedPracticeQuery {
                     .collect::<Vec<_>>()
                     .join(","),
             ));
+        }
+        if let Some(source) = &self.dictionary_source {
+            pairs.push(("source".to_owned(), source.clone()));
+        }
+        if let Some(ids) = &self.word_set {
+            pairs.push(("set_ids".to_owned(), ids.iter().map(ToString::to_string).collect::<Vec<_>>().join(",")));
         }
         if self.seed == SeedDisposition::Unseeded {
             pairs.push(("offset".to_owned(), self.offset.to_string()));

@@ -1,3 +1,40 @@
+## R79 — Browse and Practice setup architecture boundary
+
+Browse retains its route-scoped search reducer and Word Set provider; R79
+renders five-row list results, reuses the browser speech-synthesis ListenButton
+and provides a validated saved-set-to-Practice handoff. The existing Practice
+setup still uses route-local controls; the approved exercise-first draft,
+conditional tabs, category multi-select and versioned profiles are specified
+in [Practice setup v2](../product/PRACTICE_SETUP_V2.md), **not implemented**.
+Profile storage must not share the Word Set storage key; session planning
+and assessment remain separate from UI draft configuration. No extra crate,
+package, schema or AI prompt is needed for this design.
+
+## R73 — Practice and Browse presentation, translation vocabulary sources
+
+Practice setup groups Matching/MCQ, Translation and Speaking into separate tabs.
+Speaking remains a distinct, currently unscored exercise definition and
+browser recorder, not a member of the deterministic Matching/MCQ round scheduler.
+This is a presentation grouping, not a migration to a shared exercise planner.
+The empty shared-session banner no longer appears on Home or Browse, or
+before the first completed exercise in a practice route.
+
+Translation vocabulary loading belongs to `web/services/translation_vocabulary.rs`:
+a typed source selector dispatches to the installed browser DuckDB for HSK-level
+words or IDs from the user's browser-local Word Sets; sample topics remain
+available. The web service bounds the data set, while `zipeek-ai` validates the
+returned sentence against an **owned**, per-request vocabulary contract. No
+new AI model endpoint, persistence, dictionary regeneration or classification
+prompt is required. The pool is deterministic and limited to 24 words: future
+work should provide reproducible seeded sampling across larger word sets and
+sense-aware reading/gloss selection rather than sending unrestricted lists.
+
+Browse keeps its independent search and Word Set providers; the work here is
+presentation-only (opaque surfaces, readable cards and layout). The global
+illustration is attenuated behind functional content so it does not compete
+with typography. Browser contrast, small-screen and keyboard acceptance still
+require Chrome verification.
+
 # Architecture
 
 This file is the overview. Detailed module notes live under
@@ -5,41 +42,80 @@ This file is the overview. Detailed module notes live under
 [schema/](schema/); UI state boundaries and motion proposals live in
 [UI_ARCHITECTURE.md](UI_ARCHITECTURE.md).
 
+## R83 practice vocabulary query boundary
+
+The web database adapter now owns SQL translation of the typed
+`zipeek-exercises::practice_draft::DictionaryFilters`, including combined HSK
+systems, category membership, part-of-speech membership, validation and
+parameter binding. Category suggestions are read from `sense_categories` in the
+installed database. The adapter is **not yet connected** to Matching/MCQ or
+Translation launch: both still use the earlier single-HSK path. No domain
+contract, schema, or database artifact was changed.
+
+## Typed practice setup draft (R80)
+
+`zipeek-exercises/src/practice_draft.rs` owns the pure configuration
+contract: exercise definition IDs, exclusive personal-set/dictionary sources,
+HSK-system-specific multi-selection, category/PoS groups, fixed/endless length,
+and translation-specific options. The model has no Yew/DB/storage dependency.
+Its selection validator checks structure, not actual database cardinality or
+availability of a personal Word Set. The app's current Practice setup still
+uses legacy route-local controls; R80 does not wire in the new builder.
+
+## Shared session identity (R70)
+
+`zipeek-exercises::session::QuizSession` is the pure domain authority for
+completed instance results and abandoned instance IDs. R70 uses a session-
+generation namespace plus a per-mounted-source counter to produce stable
+submission identities. The provider preserves the caller's ID; duplicate
+submissions are rejected without changing session totals. Abandoned instance
+IDs are terminal and cannot be scored by late results. Abandonment is not a
+failed assessment. In-flight translation AI replies are invalidated on route
+exit and when settings change.
+
+The Yew app-scoped session remains **an in-memory ledger**, not a complete
+cross-route exercise planner. Matching and MCQ maintain their existing local
+round reducers, and Translation maintains its local AI request state. Result
+publication is queued before advancing a practice route, but reducer
+acceptance is not synchronously acknowledged. Do not equate mixed scored units
+(Matching pairs versus MCQ/translation questions) with uniform question
+accuracy or persistent sense proficiency.
+
 ## Repository snapshot
 
-Described as of 2026-10-29 during an ongoing repository migration. This
+Source snapshot updated 2026-11-04 during active development. This
 describes files on disk, not the last committed release.
 
-- Root `Cargo.toml` includes `web`, `crates/db-gen`, `crates/zipeek-core`, and
-  `e2e`.
-- `web` is the Rust 2024 Yew CSR package `zipeek`. `main.rs` initializes the
+- Root `Cargo.toml` includes `crates/web`, `crates/db-gen`, `crates/zipeek-core`,
+  `crates/zipeek-ai`, `crates/zipeek-exercises`, `crates/zipeek-themes`, and `crates/e2e`.
+- `crates/web` is the Rust 2024 Yew CSR package `zipeek`. `main.rs` initializes the
   environment, logging, and renderer; `lib.rs` declares the app modules.
-- `web/src/` contains `app`, `components`, `contexts`, `env`, `models`, `pages`,
+- `crates/web/src/` contains `app`, `components`, `contexts`, `env`, `models`, `pages`,
   `route`, `reducers`, `hooks`, `services` and `theme` modules. App mounts
-  `ThemeProvider`, `DatabaseProvider`, `HashRouter`, `AppShell`,
+  `ThemeProvider`, `DatabaseProvider`, `QuizSessionProvider`, `HashRouter`, `AppShell`,
   `Switch`, then `DatabaseBoundary` for recognized routes. The 404 fallback
   bypasses database readiness so unavailable data cannot hide route recovery.
 - `route.rs` declares Home, Random, PracticeSetup, three match variants, Browse,
-  three MCQ variants, and a `/404` fallback. Browse and Random remain feature
-  placeholders; A11 implements setup controls and canonical Start navigation. Practice normalizes URL state against dictionary rows,
+  three MCQ variants, and a `/404` fallback. Browse composes scoped search and Word Set providers with focused UI components, pending a regenerated normalized database and browser validation; Random remains a feature
+  placeholder; A11 implements setup controls and canonical Start navigation. Practice normalizes URL state against dictionary rows,
   loads candidate views and builds a deterministic round, with guarded
   Loading/Ready/Failed+Retry. Endless MCQ has answer/feedback/Continue controls;
   Matching and MCQ have Endless/Fixed progress/completion and shared summaries;
   A48 also supports mixed-type sessions without changing core round replay.
-- Trunk configuration and HTML live in `web/`. Development port is `1420`.
-  Styles live in `web/styles/`; HTML copies `web/public/` assets and the
+- Trunk configuration and HTML live in `crates/web/`. Development port is `1420`.
+  Styles live in `crates/web/styles/`; HTML copies `crates/web/public/` assets and the
   generated static bundle.
 - D27 makes root `Cargo.lock` authoritative. Trunk enforces locked builds and
   explicitly watches web, zipeek-core and root workspace manifest/lock/toolchain
   files.
-- `e2e` is a workspace library/executable with modular root and Pages suites.
+- `crates/e2e` is a workspace library/executable with modular root and Pages suites.
   A15 owns hidden Trunk/Node children, dynamic ports, shared bounded readiness,
   one managed headless Chrome session per integration binary, scenario reset and
   diagnostic artifacts. Root serves `/`; Pages builds/serves `/zipeek/` with an
   isolated dist directory. No external server is required.
 - `db-gen` has a modular verified-input preparation pipeline and the D21/D23
-  native-engine/storage guards. It creates the approved words table and two HSK
-  indexes, imports 12,100 primary readings in memory, applies empty-primary
+  native-engine/storage guards. It creates the normalized source-sense and classification tables alongside
+  the compatibility words table, imports primary readings in memory, applies empty-primary
   CC-CEDICT fallback, and exports a compatible artifact. `zipeek-core` supplies
   Word/WordId, HSK and PoS types.
 - A06 opens the final dictionary through DuckDB-WASM 1.32.0 with matching local
@@ -48,11 +124,51 @@ describes files on disk, not the last committed release.
   v2.0.0 and verifies v1.4.0 storage compatibility on the output connection
   before any future dictionary file creation.
 
+R69 hardens the completed-result write path using the atomic
+`zipeek-exercises::session::QuizSession::record_completed` operation. R70 then
+preserves stable, producer-scoped instance IDs; retries of the same result are
+rejected as duplicates. The remaining risk is asynchronous publish/acknowledge
+coordination across route navigation, not replacement of caller-provided IDs.
+
+R68 introduces an app-scoped `QuizSessionProvider` above `HashRouter`. Its Yew
+reducer owns the **single in-memory completed-result ledger** and exposes an in-practice session summary after the first completed attempt,
+with explicit Finish and New session actions. Matching/MCQ
+continue to use their established specialized reducer, forwarding a finalized
+round to the shared ledger on Continue or fixed-session Finish. Sentence
+Translation holds its generated instance locally while awaiting a validated
+AI evaluation, then submits the completed instance/result to the same ledger.
+No pending AI request is registered globally, so navigation never leaves a
+blocking pending record. Every published instance gets a unique session-scoped
+ID. A reducer generation counter rejects late submissions from a previous
+shared session. This is cross-route *completed-result aggregation*, not yet a
+unified cross-route exercise planner, page-refresh persistence or per-skill
+proficiency evidence. Existing deterministic round seed and scoring rules are
+untouched. The unscored Speaking recorder contributes no result.
+
+R67 retains deterministic sentence word-bank operations in
+`zipeek-core::sentence_tiles`: tile identities, ordered selection, completeness
+checks and text assembly are pure/testable without Yew or AI. `crates/web`
+handles Yew events/dragging, while `zipeek-ai` continues to validate JSON and
+own prompts. `zipeek-exercises` is now that independent exercise-domain crate: it owns
+definitions, instances, shared session results and unpersisted skill evidence.
+R67 moves browser-only tile shuffle and the AI-visible instance projection into
+`web/services/translation_instance.rs`, away from the page's Yew lifecycle.
+The current sentence page still orchestrates requests; a reducer extraction
+remains separate, unapproved follow-up work.
+
+The AI classifier has a dedicated invalid-output recovery boundary at
+`crates/db-gen/src/llm/recovery.rs` alongside the native-only sense classifier.
+It intentionally does not live in `zipeek-core` (shared domain rules),
+`zipeek-ai` (interactive exercises), or the browser UI. Future independent
+exercise/agent capabilities can be extracted into crates once their public
+contracts and dependency direction are defined; a single AI dumping-ground
+crate is not the architecture goal.
+
 ## Target architecture
 
 The root Makefile.toml provides explicit local db-check/db-generate/db-install/
 serve/dev tasks. scripts/db-workflow.cjs validates whole-bundle checksums and
-pinned inputs, stages a complete copy, backs up web/static and rolls back a
+pinned inputs, stages a complete copy, backs up crates/web/static and rolls back a
 failed publication. Generated candidates/backups stay in target/db-workflow.
 Only explicit tasks generate data; Trunk hooks and rebuilds do not. A44/A46
 verified the regenerated bundle through native export, HTTP bytes and one managed
@@ -81,7 +197,7 @@ Proposal only; requires explicit approval before implementation.
 
 1. A developer manually runs the native `crates/db-gen` binary against approved,
    licensed sources.
-2. The generator produces `web/static/hanzi.duckdb`, which is committed and
+2. The generator produces `crates/web/static/hanzi.duckdb`, which is committed and
    deployed with the static app.
 3. DuckDB-WASM opens that file read-only in the browser.
 4. Query results drive browse pagination, Word of the Day, and practice rounds.
@@ -125,14 +241,13 @@ share the pipeline and active Practice navigation semantics. AppShell updates
 document.title and focuses main on route changes, including Back/Forward, while
 query-only changes leave focus alone for future input controls. The 404 view uses
 a router link instead of an unchecked navigator context and retains shell sizing.
-No route-transition animation, gameplay, Browse search, Random shortcut or daily
-selection is implemented by this integration.
+This historical A21 integration did not implement route transitions or Browse. Matching/MCQ gameplay and a source-level Browse interface were added later; Random shortcut and daily selection remain separate open tasks.
 
 ## CI and publication (A16)
 
 ci.yml validates PR/push/manual runs on Windows with the approved toolchain and
 all five gates/owned Chrome suites. Successful non-PR master runs call deploy.yml
-as a reusable Ubuntu release build and Pages deployment, using web/ and /zipeek/.
+as a reusable Ubuntu release build and Pages deployment, using crates/web/ and /zipeek/.
 See [CI](../process/CI.md) for permissions, caches and remaining hosted validation.
 No package or runtime architecture changes were made by the workflow migration.
 
@@ -266,3 +381,81 @@ without clipping. Display pinyin comes from the already-loaded
 Word metadata only on Hanzi-to-English matching and Hanzi-to-meaning MCQ. No
 loader/query/core/session changes. Match success animates background color for
 350 ms rather than making text/background translucent; reduced motion skips it.
+
+## AI exercise prompt architecture (R54)
+
+See [sentence exercises](modules/sentence-exercises.md) for versioned sentence-author, translation-evaluator and simulated-learner roles, strict JSON contracts, word-bank UI boundaries, and future scoring ownership. The native classification contract remains `sense-classification-v3` while the ongoing generator runs.
+
+### Translation page request lifecycle (R71)
+
+`web/pages/sentence_translation.rs` is a short entry point with companion files
+under `web/pages/sentence_translation/`. `sentence_translation.rs` owns the Yew hooks and route initialization; `state.rs` owns
+stage and ephemeral session/request handles, with one shared invalidation and
+abandonment path; `settings.rs` handles user configuration; `actions.rs` owns
+async generation/evaluation and tile callbacks; and `view.rs` renders the page.
+The reusable word-bank view remains in `components/sentence_word_bank.rs` and
+pure tile rules remain in `zipeek-core::sentence_tiles`. Learner-visible
+instance validation and shuffling remain in `services/translation_instance.rs`.
+
+Request epochs are invalidated on configuration changes, unmount, and retry.
+Each async closure owns a *clone* of the controller, preserving Yew's `Fn`
+callback requirement while still checking that the epoch matches before any
+result is applied. Unfinished generated instances are abandoned without
+scoring; evaluated results go to the shared session. This is **not** a general
+cross-exercise AI request manager, durable evidence store or a synchronous
+publish/acknowledge protocol. The microphone adapter's Rust imports are
+`wasm-bindgen` instance methods, invoked with `recorder.start()` etc., not
+free functions.
+
+## R60 — Definition-first exercise session architecture
+
+`crates/zipeek-exercises` owns immutable, versioned `ExerciseDefinition` entries and concrete `ExerciseInstance` / `QuizSession` transitions. Definition IDs are the extensibility key; the domain does not use an exhaustive `ExerciseKind` enum. Each definition carries its learner-facing purpose, visible input contract, response contract and verdict authority. The session domain is platform-independent and uses `zipeek-core` types only where needed; no UI, database, browser or AI SDK dependencies.
+
+The Yew Matching/MCQ session reducer now mirrors completed rounds into the domain `QuizSession`; existing gameplay reducers and scoring remain authoritative during this migration. Domain scoring totals can be compared against the legacy fixed-session summary. For AI-facing matching instances, the adapter exposes only side-local `L` and `R` tile IDs, never the shared internal WordId that would reveal pairs. `zipeek-ai` builds simulated learner requests from the public definition and visible instance data, never a hidden answer.
+
+Sentence Translation is not yet integrated into the shared session. Persistent history, runtime dynamic definition plugins, model response parsing for every exercise family, and autonomous browser driving are future work. This change does not touch classifier v3, generated dictionary artifacts or round-seed encoding.
+
+## R61 — Practice evidence without premature mastery scoring
+
+`zipeek-exercises::evidence` now owns an additive, I/O-free `PracticeEvidence` / `EvidenceLedger` foundation. Every observation identifies a word, exercise definition/instance, demonstrated skill, calendar day, score and whether assistance was used. The module validates evidence identity and score bounds, refuses duplicate event IDs and can aggregate observations by word, skill and day. Skill definitions are stable IDs rather than an exhaustive exercise-kind enum. A single practice session may produce several observations, but repeat attempts on one day never inflate the count of distinct observed days.
+
+This is **not** a browser-persisted mastery model. No source exercise has yet been mapped to skill evidence, no practice outcome is stored automatically, and no review intervals, confidence, time-based decay or mastery threshold is implemented. Choosing a local-day boundary, retention format and scheduling policy requires an explicit product decision; avoid inventing mastery percentages from current session totals. The Word Set list in web localStorage remains a collection of IDs, independent of proficiency.
+
+## R63 — optional visual theming domain
+
+`zipeek-themes` is an approved, dependency-free crate that owns topic-to-theme
+resolution and the background asset provider contract. The Yew web crate owns
+asynchronous lifecycle, fallback and decorative rendering; `zipeek-exercises`
+continues to own learning/session state. See
+[theme architecture](modules/zipeek-themes.md). The bundled wallpaper is the
+only runtime provider in this release; AI-generated artwork is deferred.
+
+R64 connects the experimental Sentence Translation page to the pure shared
+`zipeek-exercises::QuizSession`: it records visible-only instances and commits
+an exercise result only when the AI evaluator has returned a valid verdict.
+The page still owns the async request lifecycle, while the session crate owns
+sequencing and score aggregation. This is page-local and does not persist
+learner evidence or merge into Matching/MCQ scheduling. Speaking recording
+and its waveform UX are deferred under
+[audio-recording](audio-recording.md), separate from the session core and AI
+pronunciation grading.
+
+## R74 — E2E orchestration boundaries
+
+The existing `crates/e2e` crate remains the sole browser integration test
+runner. Its harness owns Trunk, managed Chrome and an isolated local AI fixture;
+tests never depend on an externally running LM Studio server unless explicitly
+marked ignored. Typed assertion failures are returned instead of panicking so
+existing failure capture and process cleanup still run. The fixture accepts
+OpenAI-style non-streaming `chat/completions` calls and has no access to
+`db-gen` classification or the installed dictionary's write path.
+
+`e2e::learner` owns **visible observation and browser action** only. The
+fixture server is deterministic test transport. The optional Node learner
+adapter is a process boundary to the configured local LM Studio model: it
+receives only rendered question text and available tiles and outputs a checked
+permutation of their visible IDs. No exercise score, answer key, hidden
+reference, or internal solution is sent to the simulated learner. A language
+model answer is not authoritative grading; the real application still controls
+feedback and session results. The test only verifies the UI/progression
+contract, not learner correctness.

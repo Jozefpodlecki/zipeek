@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::{
     database::{DbError, GeneratorDatabase},
-    import::{HskImport, ImportError, apply_cedict_fallback, insert_words, parse_hsk},
+    import::{HskImport, ImportError, apply_cedict_fallback, insert_dictionary, parse_hsk},
     inputs::{InputError, VerifiedInputs, verify},
 };
 
@@ -62,6 +62,6 @@ pub fn import_primary(prepared: &PreparedGeneration) -> Result<HskImport, Genera
             })?;
         apply_cedict_fallback(&mut imported, fallback.file().bytes())?;
     }
-    insert_words(prepared.database.connection(), &imported.words)?;
+    insert_dictionary(prepared.database.connection(), &imported.words, &imported.senses)?;
     Ok(imported)
 }

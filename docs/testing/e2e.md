@@ -8,12 +8,12 @@ feature is implemented; the harness itself is implemented.
 ## Run commands and prerequisites
 
 Install Chrome, Node and Trunk, and the repository's Rust/wasm toolchain. Before
-Trunk, install the locked web dependencies from web/ with npm ci --ignore-scripts.
+Trunk, install the locked web dependencies from crates/web/ with npm ci --ignore-scripts.
 The packaging hook verifies exact DuckDB-WASM 1.32.0 and retains worker/Arrow
 licences. Neither tests nor builds generate the checked-in dictionary.
 
 ```powershell
-# From web/, when npm dependencies are absent
+# From crates/web/, when npm dependencies are absent
 npm ci --ignore-scripts
 ```
 
@@ -39,18 +39,18 @@ only that workspace package identity, preserving resolved dependency versions.
 ## Implemented layout and ownership
 
 ```text
-e2e/src/lib.rs
-e2e/src/harness/{mod,server,browser,scenario,artifacts,error}.rs
-e2e/src/main.rs
-e2e/tests/smoke.rs
-e2e/tests/pages.rs
-e2e/tests/matching.rs
-e2e/tests/mixed.rs
-e2e/tests/suites/{mod,bootstrap,database,providers,practice,setup,mcq,fixed_mcq,matching,mixed,routing,shell,pages,styling}.rs
-e2e/tests/page_objects/{mod,home,shell}.rs
-e2e/fixtures/browser_probes/{database,hold_download,release_download,provider_lifetime,practice_queries,diagnostics,styling,styling_acceptance}.js
-e2e/fixtures/pages-server.cjs
-e2e/fixtures/lifecycle.cjs
+crates/e2e/src/lib.rs
+crates/e2e/src/harness/{mod,server,browser,scenario,artifacts,error}.rs
+crates/e2e/src/main.rs
+crates/e2e/tests/smoke.rs
+crates/e2e/tests/pages.rs
+crates/e2e/tests/matching.rs
+crates/e2e/tests/mixed.rs
+crates/e2e/tests/suites/{mod,bootstrap,database,providers,practice,setup,mcq,fixed_mcq,matching,mixed,routing,shell,pages,styling}.rs
+crates/e2e/tests/page_objects/{mod,home,shell}.rs
+crates/e2e/fixtures/browser_probes/{database,hold_download,release_download,provider_lifetime,practice_queries,diagnostics,styling,styling_acceptance}.js
+crates/e2e/fixtures/pages-server.cjs
+crates/e2e/fixtures/lifecycle.cjs
 ```
 
 The library owns process/browser lifecycle and ScenarioContext. Integration-test
@@ -77,13 +77,13 @@ No app markup or styling changes accompany that selector correction.
 
 ## Server lifecycle, readiness and base paths
 
-Each run writes under target/e2e/<suite>-<pid>-<timestamp>/. Root first builds into
+Each run writes under target/crates/e2e/<suite>-<pid>-<timestamp>/. Root first builds into
 its own dist directory, then owns a hidden trunk serve child with a dynamic port,
 loopback address and no Pages public URL. A separate small owned Node fixture
 server serves that same build for the explicit adapter fixture. Pages owns a
 trunk build --public-url /zipeek/ child, then its own Node static server under
-/zipeek/. Root and Pages never share dist directories or overwrite web/dist.
-The standalone Pages build gate still runs from web/:
+/zipeek/. Root and Pages never share dist directories or overwrite crates/web/dist.
+The standalone Pages build gate still runs from crates/web/:
 
 ```powershell
 trunk build --public-url /zipeek/
@@ -127,7 +127,7 @@ session with all poison absent. Their failure artifacts are expected evidence,
 not product failures or extra Chrome sessions.
 
 The read-only adapter probe navigates a dedicated fixture page and imports the
-production bridge through the fixture server's explicit __e2e/bridge.mjs mapping.
+production bridge through the fixture server's explicit __crates/e2e/bridge.mjs mapping.
 It uses the same built local DuckDB assets and unchanged dictionary, without
 private wasm-bindgen snippet discovery or a production testing API. Raw SQL stays
 in the adapter fixture; product suites assert visible readiness and Retry.
@@ -302,3 +302,178 @@ Retry; blocked storage removal preserves count and displays an error. Malformed
 JSON is tolerated without being rewritten. Screenshots cover 400/768/1280px in
 both themes with no horizontal overflow. These are setup/preparation checks;
 playable answer/Continue behavior is still A10.
+
+## Component selector contract (R28–R30)
+
+Prefer `[data-component="browse-page"]` for the mounted Browse route,
+`[data-component="practice-setup-page"]` for Practice Setup,
+`[data-component="matching-exercise"]` and
+`[data-component="mcq-exercise"]` for live exercise content, and
+`[data-component="practice-summary"]` for the completion view.
+Shell components use `app-shell`, `app-header`, `main-navigation`,
+`navigation-drawer`, `main-content`, and `theme-toggle` markers.
+
+A component marker identifies a stable DOM surface, not its loading or result
+state. Continue to use specific role/`data-*` assertions for state, and check
+that the expected control is interactable. Browse navigation tests must not
+look for `[data-route-placeholder] h1`, because Browse is implemented. The
+Random and 404 placeholder assertions are still applicable.
+
+Run `node --test scripts/component-selectors.test.cjs` for a quick source-level
+selector contract check. It does not replace browser E2E tests. The two smoke
+cases fixed in this cycle are `navigation_and_rapid_theme_commands_preserve_dictionary`
+and `responsive_shell_preserves_navigation_theme_and_keyboard_access`.
+
+## R31–R33 personal Word Set smoke coverage
+
+The root smoke suite includes
+`personal_sets_persist_across_navigation_and_backup_rejects_invalid_data`.
+It exercises the real Browse UI and browser localStorage: create a named set,
+confirm that Practice Setup offers it, refresh Browse, export it as JSON,
+then reject an invalid import while preserving the saved collection. The
+scenario uses the component/interaction `data-*` contract and does not
+require classification data. It must be run with Chrome locally; its presence
+in source is not a passing browser result.
+
+The separate `word_sets::browse_selection_rejects_missing_sets_instead_of_dropping_the_filter`
+unit test confirms that malformed or deleted saved-set references fail closed.
+Valid empty sets deliberately produce an empty candidate list rather than
+unrestricted Browse results. To validate actual hanzi/pinyin/gloss/HSK/PoS/
+category search results, first run `cargo make db-generate`,
+`cargo make db-install`, and `cargo make db-browse-check` with the approved
+native generator; the currently bundled database does not pass this preflight.
+
+## Browse retry safety regression (R34–R36)
+
+The root smoke harness includes `browse_retry_keeps_invalid_personal_set_filter_blocked`.
+It creates a personal set, simulates a stale selection, submits a search, then
+clicks Retry. The missing-set error must remain visible and no unrestricted
+Browse results may appear. The test uses `data-component` and existing stable
+`data-browse-*` attributes. The regression is distinct from validating live
+normalized search results, which requires a newly generated dictionary.
+
+The user confirmed a full `cargo test --workspace --locked` pass and separate
+Chrome smoke pass on the R33 baseline (2026-11-04), before this new scenario.
+To exercise the new case, rerun:
+
+```powershell
+cargo test -p e2e --test smoke --locked -- --nocapture
+```
+
+
+## Browse saved-set mutation coverage (R37–R39)
+
+`deleting_personal_set_requires_explicit_new_search` in the root Smoke suite creates and selects an empty personal set, confirms that the selected-set query remains empty, then deletes the set and checks that previous Browse results are invalidated. There is deliberately no Retry button in this state; a new Search is required to display unrestricted results. The scenario also exercises successful backup export/import and verifies that it blocks stale results until another explicit Search. This is distinct from the earlier invalid-backup and malformed-selection checks.
+
+The pure Browse unit test `saved_set_mutation_resets_page_without_losing_scope` checks that modifying a selected set resets its query offset to zero while retaining the search field and an explicit saved-ID filter (including an empty set). Run `cargo test -p zipeek --locked`, followed by `cargo test -p e2e --test smoke --locked -- --nocapture` on a machine with the approved Chrome/Trunk toolchain. The bundled single-table dictionary can exercise mutation guards, but real normalized text/category/HSK Browse acceptance still requires `cargo make db-generate`, `db-install`, and `db-browse-check`.
+
+## R42 Browse result-view composition
+
+`BrowseResults` now renders `BrowseLoading`, `BrowseError`, `BrowseEmpty`, `BrowseWordCard`, and `BrowsePagination` from `components/browse/results/`. Source selector regression coverage checks their `data-component` identifiers and existing `data-browse-*` hooks. The unit/browser smoke suite must be rerun after this structural change; the Node source checks are not a Rust compiler or Chrome substitute.
+
+## R74 — deterministic AI fixtures and opt-in browser learner
+
+The existing Rust/Thirtyfour harness remains authoritative. R74 adds a locally
+owned, dependency-free Node `chat/completions` fixture under
+`crates/e2e/fixtures/ai-server.cjs`. The same owned-process lifecycle and
+failure artifacts apply to this server, which runs on a dynamically allocated
+loopback port. Every scenario resets the fixture before execution. Fixture
+modes are `success`, `malformed-generation`, `server-error`, and
+`slow-evaluation`. Successful generation uses an intentionally synthetic
+bilingual sentence derived from **visible selected vocabulary**, not a
+language-quality reference. Evaluation compares the submitted answer to its
+reference for deterministic acceptance tests.
+
+Run the fixture contract tests independently of Rust and Chrome:
+
+```powershell
+node --test crates/e2e/fixtures/ai-server.test.cjs
+```
+
+Run deterministic root browser coverage, which includes selecting visible
+Translation tiles, handling malformed AI responses, discarding a delayed
+AI evaluation after navigation, and desktop/mobile screenshots for Browse and
+Practice:
+
+```powershell
+cargo test -p e2e --test translation_fixture --locked -- --test-threads=1 --nocapture
+```
+
+The `learner::TranslationPage` page object observes only rendered source text,
+target language and available tile IDs/text, then uses Thirtyfour to click
+those tiles. It never reads the hidden solution from script globals, the
+`data-practice-round` debug attribute, a database answer key or an evaluation
+prompt. This is intentionally separate from the existing legacy practice
+scenarios that inspect round internals to verify deterministic generation.
+
+The live simulated learner is **ignored by default** and requires a running
+LM Studio API accessible both to the browser and to Node. It uses the same
+Thirtyfour actions but asks a real model to order the visible tiles. A learner
+mistake is not a test failure; failure means no valid model action, broken UI
+progression or incorrect shared-session accounting. PowerShell invocation:
+
+```powershell
+$env:ZIPEEK_E2E_AI_ENDPOINT = "http://127.0.0.1:1234/v1/"
+$env:ZIPEEK_E2E_AI_MODEL = "your-loaded-model-id"
+cargo test -p e2e --test ai_learner --locked -- --ignored --nocapture --test-threads=1
+```
+
+Live learner artifacts capture its visible observation and selected tile IDs,
+plus the existing browser logs, screenshots, process logs and scenario
+summary. The test does **not** grade Mandarin pronunciation, run every
+exercise type, or establish reliable AI answer accuracy. It is the first
+live Translation path; Matching/MCQ learner observation and a multi-mode
+planner remain follow-up work.
+
+For layout testing the harness saves `practice-mobile.png`,
+`practice-desktop.png`, `browse-mobile.png`, and `browse-desktop.png` into
+scenario artifacts and checks for horizontal overflow. These are **captures,
+not approved pixel baselines**. Dynamic backgrounds, fonts and motion must be
+stabilized before image-difference assertions are introduced.
+
+## R75 deterministic fixed Translation acceptance
+
+`crates/e2e/tests/translation_fixture.rs` now includes
+`five_hsk6_translations_from_setup` in the normal Thirtyfour suite.
+The browser scenario opens Practice setup, chooses **Sentence translation**,
+selects **HSK 3.0 level 6**, sets **5 exercises**, enters the isolated AI
+fixture settings, generates the first sentence, and completes five full
+word-bank/evaluation/Continue cycles. It checks the progress counter, shared
+ledger, final completion screen, and absence of a sixth question. The test
+never reads the reference solution from the app/database; its deterministic
+fixture exposes an easily solvable learner-visible sentence instead.
+
+The setup Start button currently navigates to the Translation configuration
+page; that page still requires a model identifier and a separate Generate
+sentence click. This extra step is covered explicitly, not represented as
+an automatic start. HSK 2.0 level 6 is a separate vocabulary source from
+HSK 3.0 level 6 and needs its own case when desired.
+
+```powershell
+cargo test -p e2e --lib --locked
+cargo test -p e2e --test translation_fixture --locked -- --test-threads=1 --nocapture
+```
+
+The earlier R74 test compilation failure arose from exported macros expanding
+`$crate::AssertionKind` and `$crate::AssertionFailure` without corresponding
+root re-exports; both are now re-exported from `e2e::lib`.
+The deterministic fixture does not require LM Studio; Chrome/Trunk are managed
+by the existing harness. Full browser execution remains to be verified on
+Windows with the Rust toolchain.
+
+## R77 Browse automatic-search regression
+
+Thirtyfour Browse/Word Set tests must no longer click `[data-browse-search]`. The query field `[data-browse-query]` performs debounced search; each filter change issues a fresh request. `[data-browse-refresh]` manually repeats the current selection, and `[data-browse-clear]` clears filters. The list is marked `[data-component="browse-results-list"]`, with stable `[data-component="browse-result"]` rows. Test stale generations, invalid saved-set IDs, deletion auto-refresh, narrow viewport overflow, and repeated refresh.
+
+## R83 navigation icon and filter-query acceptance
+
+The root styling probe asserts that the three drawer navigation links contain
+an `aria-hidden` SVG icon and retain readable Home/Practice/Browse labels,
+`aria-current`, and existing responsive geometry. Run the existing root shell
+suite after the WASM build; source-level Node checks cannot verify SVG output.
+
+The new `database::practice_filter_queries` native unit tests cover multiple
+HSK memberships, OR-within/category/PoS group intersections, parameter binding,
+category-only filters, empty filters, invalid category codes and bounded sample
+sizes. These tests must pass before wiring the filters to live exercise starts.
+The current browser scenarios still configure a single HSK band by design.

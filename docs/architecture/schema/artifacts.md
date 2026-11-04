@@ -30,9 +30,9 @@ The current preserved manifest verifies two sources and three notices, totaling
 
 ## Implemented schema and domain boundary (A02)
 
-`schema/words.sql` is the exact approved D07 ten-column table; `schema.rs` adds
-only `idx_words_hsk3` and `idx_words_hsk2`. Preparation creates it after input and
-engine/storage checks. No CHECK constraints or schema changes were introduced:
+`schema.sql` defines the `words` table, normalized enrichment tables, HSK indexes,
+and controlled taxonomy seed rows. `schema.rs` executes these statements in order.
+Preparation runs after input and engine/storage checks. No CHECK constraints or schema changes were introduced:
 HSK ranges, at least one membership and import-level text policies remain the
 responsibility of typed conversions and the upcoming importer. Native fixtures
 assert column types/nullability, primary/display-key enforcement, exact source

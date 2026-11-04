@@ -9,5 +9,6 @@ mod selection;
 pub use builder::{BuildTrace, Round, RoundCandidates, build_round};
 pub use content::{Card, RoundContent};
 pub use error::BuildError;
+pub use labels::distinct_playable_answers;
 pub use pool::{CandidatePool, CandidateView, ContextPool};
 pub use selection::ViewAttempt;

@@ -19,7 +19,7 @@ beyond D21 and the explicitly approved D37 Clap CLI addition.
 | `cli.rs` | Clap help/check/generate commands, logging, failures, exit status, default manifest and absolute output paths |
 | `generator.rs` | `prepare(path)`: verify sources/notices, open guarded database, create empty schema; return `PreparedGeneration` |
 | `database.rs` | Native connection, SQL-result handling, typed `DbError`, engine/storage checks |
-| `schema.rs` and `schema/words.sql` | Exact approved words DDL and two ordinary HSK indexes |
+| `schema.rs` and `schema.sql` | Single ordered generator SQL script for tables, indexes and taxonomy seeds |
 | `policy.rs` | Approved native, storage, WASM-package and logical-reproducibility constants |
 | `inputs/manifest.rs` | Typed TOML loading, required metadata policy, names and notice-reference validation |
 | `inputs/verify.rs` | Local-file resolution, sizes, SHA-256, duplicate-file rejection and retained verified bytes |
@@ -86,9 +86,9 @@ script or an automatic application-build generation step.
 
 ## Schema creation (A02)
 
-`schema/words.sql` is the exact approved D07 ten-column table; `schema.rs` adds
-only `idx_words_hsk3` and `idx_words_hsk2`. Preparation creates it after input and
-engine/storage checks. No CHECK constraints or schema changes were introduced:
+`schema.sql` defines the `words` table, normalized enrichment tables, HSK indexes,
+and controlled taxonomy seed rows. `schema.rs` executes these statements in order.
+Preparation runs after input and engine/storage checks. No CHECK constraints or schema changes were introduced:
 HSK ranges, at least one membership and import-level text policies remain the
 responsibility of typed conversions and the importer. Native fixtures assert
 column types/nullability, primary/display-key enforcement, exact source text,
@@ -204,3 +204,30 @@ classification/storage design before implementation. Root Cargo.lock resolves
 aimux-core, aimux-providers, aimux-provider-utils and aimux-stream to 0.5.0.
 The direct manifest requirements are semver ranges, not exact equals pins;
 this observation does not add new AGENTS dependency-policy targets.
+
+## R06 classification orchestration
+
+`llm/batch.rs` plans source senses in stable `(word_id, sense_order)` order, validates and reuses current-model cache records, and invokes the existing `classification::classify` asynchronously for a bounded number of pending senses. Each successful inference writes a JSONL checkpoint; the next invocation resumes from valid cached records. Stale records are discarded by the planner. Failures stop processing without discarding previously saved successful records. The `classify-plan` CLI reports the counts without contacting LM Studio or writing files. Live CLI inference is not yet available because the required native async runtime has not been approved as a direct dependency.
+
+## R07–R09 native classification workflow
+
+`db-gen classify --model MODEL --cache PATH [--endpoint URL] [--limit N] [--timeout-ms MS] [--retries N]` invokes AiMux through a native Tokio current-thread runtime and checkpoints validated per-sense classifications to JSONL after each successful call. The default endpoint is `http://127.0.0.1:1234`; model names are supplied explicitly. `classify-plan` remains a no-network preview. A later explicit `generate --classification-cache PATH` applies validated results to DuckDB. No AI is invoked automatically by normal import or artifact generation. Implementation history is retained in the 2026-11-04 completed outcomes.
+
+## R11 classification prompt and diagnostic policy
+
+The offline sense classifier provides allowed PoS/category codes and uncertainty rules through AiMux `GenerateTextOptions.instructions`; the user prompt contains only the simplified/traditional word forms, pinyin and selected source meaning. Strict JSON decoding and allowlist validation still run after streaming completes. The classifier prompt lives in `crates/db-gen/src/llm/prompts/classification.rs` and is versioned as `sense-classification-v3`. It specifies evidence-first sense labeling, exact JSON, and uncertainty rules. Prior v2 classification labels are not reused under v3; the same source-sense input and model require new classifications.
+
+Routine repeated-reading events remain in structured import diagnostics and artifact checksums but emit at debug rather than warning level. An info-level importer summary reports repeated-reading and other diagnostic totals; genuinely unusual import events remain warnings.
+
+## Classification persistence boundary (R57)
+
+`llm/cache_store.rs` owns newly accepted sense checkpoints, while
+`llm/classification.rs` retains the legacy JSONL snapshot parser and canonical
+record validation. The model-specific `<hash>.jsonl` file remains the stable
+cache identity. New results are committed as separately synchronized, atomic
+`<hash>.jsonl.records/<word_id>-<sense_order>.json` files. `read_cache` combines
+both representations for native classification planning and enriched export.
+The reader fails closed on unexpected files, duplicate keys or malformed JSON.
+The native generator's completed-candidate publication policy is unchanged.
+This is a local generator storage concern, not part of the shared lexical core
+or interactive exercise crate.

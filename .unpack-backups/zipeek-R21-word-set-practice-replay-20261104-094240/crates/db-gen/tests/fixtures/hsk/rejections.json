@@ -1,0 +1,189 @@
+[
+  {
+    "simplified": "unknown",
+    "level": [
+      "old-3",
+      "old-1",
+      "new-7+",
+      "new-7",
+      "bad",
+      "old-1"
+    ],
+    "pos": [
+      "n",
+      "CC",
+      "QT"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      },
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "b2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  },
+  {
+    "simplified": "bad-level",
+    "level": [
+      "new-8",
+      "old-7"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  },
+  {
+    "simplified": "no-forms",
+    "level": [
+      "old-3",
+      "old-1",
+      "new-7+",
+      "new-7",
+      "bad",
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [],
+    "frequency": 100
+  },
+  {
+    "simplified": "bad-rank",
+    "level": [
+      "old-3",
+      "old-1",
+      "new-7+",
+      "new-7",
+      "bad",
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 2147483648
+  },
+  {
+    "simplified": "no-pinyin",
+    "level": [
+      "old-3",
+      "old-1",
+      "new-7+",
+      "new-7",
+      "bad",
+      "old-1"
+    ],
+    "pos": [
+      "V",
+      "n",
+      "v"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": " ",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      },
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": ""
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  },
+  {
+    "simplified": "valid",
+    "level": [
+      "new-7"
+    ],
+    "pos": [
+      "Mg",
+      "Rg"
+    ],
+    "forms": [
+      {
+        "traditional": "\u5b78\u7fd2",
+        "transcriptions": {
+          "pinyin": "xu\u00e9 x\u00ed",
+          "numeric": "xue2 xi2"
+        },
+        "meanings": [
+          " to Study ",
+          "he/she | learner",
+          ""
+        ]
+      }
+    ],
+    "frequency": 100
+  }
+]

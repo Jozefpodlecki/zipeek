@@ -16,6 +16,8 @@ testing strategy in [testing/TESTING.md](../testing/TESTING.md); architecture in
   it.
 - **Preserve intent when editing.** Do not refactor adjacent code to "clean up"
   while fixing a bug; keep diffs focused.
+- **Derive UI affordances from typed state.** Do not hide or enable actions by matching user-facing error-message text; pass explicit props from reducer-backed containers.
+- **Keep pagination contracts shared.** Query limits, lookahead checks and displayed results must use the same page-size constant.
 
 ## Rust
 
@@ -54,8 +56,8 @@ testing strategy in [testing/TESTING.md](../testing/TESTING.md); architecture in
   error, and in genuinely unreachable branches (documented with a comment).
 - **Not allowed:** on `Result`/`Option` from user input, DB queries, network
   calls, or parsing external data.
-- Never `panic!` in a Yew component render or an event handler — the app dies.
-  Use a Result-returning path and render an error state.
+- Required provider contexts are component-tree invariants: `use_context::<RequiredContext>().unwrap()` is allowed when the parent route always mounts that provider. A missing provider is a programming defect, not a user-facing recoverable condition.
+- Never panic on user input, database operations, localStorage, network failures, or other recoverable conditions in a Yew component or handler; render an error state or return a typed error instead.
 
 ### Modules and file organization
 
@@ -108,10 +110,19 @@ The implemented styling boundary and visual checks are in
   use props. Do not expose raw state setters as another feature's public command
   interface.
 
+### Yew presentation composition
+
+- Import components explicitly at the module boundary (`use crate::components::{BrowseProvider, WordSetsProvider};`) rather than repeating qualified paths in `html!` markup. Wildcard imports are not required for component composition.
+- Write nested providers and other multi-element Yew trees across multiple lines, with each element's closing tag aligned to its opener; do not compress provider nesting into one line.
+- Keep page-specific callback conditions and view-building chains readable with normal Rust multiline blocks, even where the formatter would tolerate a dense expression.
+- For nontrivial status-specific markup, compute `let status_component = match &state.status { ... };` before the parent `html!` and insert `{status_component}` in the shallow outer view.
+- Extract meaningful loading/error/empty, result-card, and pagination views into focused components. Prefer keeping short related status components in one module over one file per line of markup.
+- Container components access reducers/providers and wire callbacks; presentational components take focused `Properties` and do not reach into unrelated feature contexts.
+- Keep stable `data-component` and existing `data-*` E2E hooks during refactors.
+
 ### Hooks
 
-- `use_state` for local UI state; `use_reducer` when state changes are complex
-  or need to be shared.
+- `use_state` for temporary form input local to the owning component; use a pure `use_reducer` plus a scoped provider for shared feature state and interdependent transitions. Keep I/O in the provider/service, never inside `Reducible::reduce`.
 - `use_effect_with` for side effects, with explicit dependency lists — do not
   use empty dependency lists unless the effect is genuinely once-only.
 - `use_memo` for derived state that's expensive to compute; do not memoize
@@ -177,6 +188,20 @@ The implemented styling boundary and visual checks are in
   than ~20 lines. See TESTING.md's fixture patterns.
 - Golden tests (round builder, seed encoding) assert both the input string and
   the expected output hash — see ROUND_GENERATION.md for the contract.
+
+## E2E component selectors
+
+- Give significant mounted Yew page and feature roots a unique, stable
+  `data-component="kebab-case-name"` value. Prefer identifying the component
+  (for example, `browse-page`) rather than its current heading or CSS layout.
+- Use `data-action` for controls where action identity improves testing, and
+  `data-state` or an existing dedicated `data-*` attribute for observable state.
+  Retain semantic roles, accessible labels, and native keyboard behaviour.
+- E2E selectors must not infer a route from an incidental tag structure or
+  placeholder once the route renders a real component. Placeholders may still
+  be asserted for genuine unimplemented or not-found routes.
+- Preserve existing test-specific attributes during gradual migration; no
+  dependency or round-URL format changes are required.
 
 ## Documentation
 

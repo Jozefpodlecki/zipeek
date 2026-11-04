@@ -40,6 +40,29 @@ its configured full gates; this policy changes local iteration, not workflow
 execution. A10's complete MCQ/summary feature warranted the full run already
 underway when this instruction arrived.
 
+## LM Studio and AiMux classification tests
+
+Run `cargo test -p db-gen --locked llm::` for offline classification tests,
+including a loopback mock OpenAI-compatible SSE endpoint. The mock verifies
+that AiMux aggregates split JSON text chunks, transmits system instructions
+and sense data, and rejects empty final-text responses. These tests require
+no running LM Studio and make no database writes.
+
+Run `cargo make db-ai-smoke` **only when LM Studio is running** to verify one
+live classification through the same streaming and validation path used for
+batch inference. It does not write the classification cache or database.
+`cargo make db-full` now gates any new batch inference on this live smoke.
+For diagnosing a failed smoke, inspect model output and LM Studio logs for
+empty `content`, separate reasoning, or output-token exhaustion; do not
+interpret a JSON EOF as evidence of a bad source dictionary.
+
+The fake SSE tests must be compiled and executed on a Rust-equipped machine;
+Node workflow tests alone do not prove provider compatibility.
+
+## Normalized Browse database preflight
+
+From the repository root, run `cargo make db-browse-check` (or `node scripts/db-workflow.cjs browse-check`) to check the installed artifact's manifest for `words`, `word_hsk_membership`, `word_pos_membership`, `word_senses`, and `sense_categories`. This does not modify the database or prove query correctness. The currently bundled artifact is intentionally expected to fail because it contains only `words`. On an approved native generator machine use `cargo make db-generate`, `cargo make db-install`, then rerun the preflight. Confirm actual Browse queries in Chrome separately. Do not hand-edit the installed database.
+
 ## Commands
 
 Full prerequisites, working directories, and per-area invocation live in the
@@ -54,7 +77,7 @@ cargo check --target wasm32-unknown-unknown -p zipeek --locked
 ```
 
 ```powershell
-# From web/
+# From crates/web/
 npm ci --ignore-scripts
 trunk build --public-url /zipeek/
 ```
@@ -161,3 +184,16 @@ semantics and saved-ID parsing. The shared Chrome setup suite exercises all six
 Start paths, saved-ID validation/reset/error handling, keyboard and responsive
 layout at root and /zipeek/. No new dependency or dedicated browser-test framework.
 All five gates remain required for the implementation.
+
+## Prompt contracts and optional model-driven tests
+
+- `cargo test -p db-gen --locked` verifies classification prompt-role boundaries, strict JSON/taxonomy handling and streaming error handling. `cargo test -p zipeek-ai --locked` verifies independent sentence-generation/evaluation prompt contracts and validators. Both run offline.
+- `cargo make db-ai-smoke` is opt-in and requires a locally loaded LM Studio model; it sends one real classified sense without changing caches or the database. Normal workspace unit and Chrome E2E suites must remain independent of model availability.
+- Future AI-driven exercise/playthrough tests should use a separate explicit opt-in target. The model may propose answers or actions but must not declare its own success; assertions and pass/fail conditions remain deterministic in the test harness. Capture prompts/model identifiers and bound requests, duration and output sizes for reproducible diagnostics.
+- Changes to a classifier prompt version invalidate earlier cache records by design. Do not compare a fresh v3 batch's reuse count with a completed v2 run without accounting for this change.
+
+The offline `db-gen` SSE mock follows the Responses API (`/v1/responses`, `response.output_text.delta`) because the current AiMux OpenAI preset selects the Responses protocol. Do not substitute Chat Completions chunks for this fixture.
+
+## R60 definition/session validation
+
+`cargo test -p zipeek-exercises --locked` verifies definition uniqueness, contracts, session sequencing, score invariants and AI-visible context. `cargo test -p zipeek-ai --locked` verifies definition-aware simulator messages. `cargo test -p zipeek --locked reducers::session` tests the Matching/MCQ integration and prevents shared internal matching IDs from entering AI-visible input. Run `cargo check --target wasm32-unknown-unknown -p zipeek --locked` and the representative fixed mixed-session browser path locally; these cannot be validated by the Node suite alone.

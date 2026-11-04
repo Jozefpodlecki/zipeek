@@ -18,9 +18,10 @@ without naming the change in an approved implementation plan.
 ThemeProvider and DatabaseProvider now use pure reducers and separate read and
 command contexts. DatabaseProvider owns the session above HashRouter;
 DatabaseBoundary renders readiness inside AppShell. AppShell still owns drawer
-expansion locally. Route pages are mostly placeholders. There is no practice or
-Browse reducer, route-transition host, motion-preference provider or Animato
-frame driver yet. Add feature providers with their first concrete consumers.
+expansion locally. Practice and Browse are now implemented at source level. Browse has scoped
+search and Word Set feature reducers/providers (see the current section below);
+the route-transition host, motion-preference provider and Animato frame driver
+remain unimplemented proposals.
 
 The existing persistent landscape, compact top panel, top-right theme control,
 collapsible drawer and loading presentation remain requirements. Motion must
@@ -357,3 +358,74 @@ cleanup aborts further Rust orchestration and JS statements finish their own
 cleanup. Reset is the sole storage mutation, invalidates pending work and keeps
 storage/count unchanged if removal fails. There is no mid-round exclusion UI or
 saved-ID writer on practice URL loads.
+
+## Browse feature state (2026-11-04, R41 source refactor)
+
+Browse is composed in `pages/browse.rs`; it no longer owns dictionary queries,
+Word Set persistence, or form editing state. Its child components live in
+`components/browse/`: `search_form.rs` owns automatic search controls,
+`results/mod.rs` selects the status component and owns result-list wiring;
+`results/status.rs` renders loading/empty/error states,
+`results/word_card.rs` renders typed vocabulary entries, and
+`results/pagination.rs` renders page navigation;
+`word_set_panel.rs` owns the create/rename/delete/backup input fields.
+
+`BrowseProvider` owns the route-scoped `BrowseState` reducer and abortable
+DuckDB query effect. Search requests carry generation IDs, and superseded
+responses cannot replace the latest state. Search and Retry both validate the
+current saved-set boundary. Missing required Yew provider contexts are treated
+as developer invariant violations and unwrapped; storage, query and user-data
+failures remain recoverable results.
+
+`WordSetsProvider` owns `WordSetsState` with the saved collection, selected
+management target and a single success-or-error feedback state. Its callback
+executes validated mutations through `services/word_sets.rs`, writes storage
+before committing reducer state, and dispatches a failure without discarding
+the previous collection if persistence fails. Delete/import invalidate Browse
+rather than automatically displaying unrestricted results. An active saved-set
+toggle updates the exact candidate list and resets Browse pagination.
+
+Both providers currently mount only for Browse. Practice Setup still reads the
+same localStorage key independently when it mounts; a future cross-route
+Word Set provider requires a separately reviewed lifecycle and storage-sync
+design. Do not describe this route-local provider as app-global.
+
+The source Browse UI is a pragmatic dropdown/card implementation. It does **not**
+implement the D45/A37 canonical chips, strategy control, URL-authoritative
+query or numbered-page contracts. D45 approves the modern card/sidebar layout
+and preserves the A37 query/URL semantics. A13 retains
+that product discrepancy as open implementation work.
+
+### Route composition and component imports (R43–R45)
+
+Browse's route branch imports `BrowseProvider`, `WordSetsProvider`, and
+`DatabaseBoundary` explicitly at module scope. The route uses multiline nested
+Yew tags for its provider composition; the providers remain scoped to Browse,
+not the entire app. The Browse page and word-card component use readable
+multiline callback and optional-action expressions. These edits are source
+readability changes only: no provider ownership, event behaviour, or URL
+contract is altered. A Node source-layout regression check covers the route
+shape; Rust/Chrome checks remain local validation steps.
+
+### Browse results component boundaries (2026-11-04)
+
+The Browse input form observes query text, filter values and saved-set snapshots. Typing cancels the previous 320 ms debounce; filter changes and initial mount run immediately. Refresh explicitly reissues the current search, Clear resets the filter input state, and the reducer generation discards stale database responses. Word Set deletion clears the removed selection and reruns the query without an obsolete manual Search step. `BrowseResults` computes a `status_component` from the reducer state before its outer `html!` block. `BrowseLoading`, `BrowseEmpty`, and `BrowseError` are presentational status views; `BrowseWordCard` (now rendered as a compact single-column row) and `BrowsePagination` receive focused props/callbacks. The container alone resolves the required search and Word Set contexts and dispatches actions. `data-component` values and the older `data-browse-*` hooks remain stable. Do not fold these separate views back into nested match expressions inside `html!`. This source refactor still requires local Rust/Chrome validation.
+
+## Browse error ownership and pagination invariant (R46–R48)
+
+`BrowseResults` derives whether retry and regeneration guidance may be shown from
+`BrowseState.blocked`, then passes explicit boolean props to `BrowseError`.
+The presentational error component must not infer control availability from
+localized or variable error-message wording. Reducer actions remain responsible
+for blocking, canceling and resubmitting queries. The Browse reducer exports
+`PAGE_SIZE`; the search form and results container use that one constant for
+query limits, visible counts and lookahead navigation.
+
+D45 now approves the hybrid Browse target: URL-authoritative query/filter/page
+state and removable filter chips, presented through the modern search-bar,
+result-card and responsive Word Set panel layout. The former mandatory desktop
+table and smart-combobox requirements are superseded. The current reducer and
+provider do **not** yet synchronize Browse URL state or render canonical chips;
+implementation and Chrome coverage remain A13 work. Keep URL parsing and
+serialization in a tested boundary, reducers pure, and router/history side
+effects in the provider rather than presentational components.

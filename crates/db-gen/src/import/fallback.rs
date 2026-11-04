@@ -2,6 +2,7 @@ use super::{
     CedictIndex, HskImport, ImportError,
     diagnostics::{ImportDiagnosticKind as Kind, record},
     glosses::serialize_glosses,
+    senses::{SourceSense, source_glosses},
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -57,6 +58,16 @@ pub fn apply_cedict_fallback(
             );
             if let Some(english) = english {
                 word.english = Some(english);
+                for (index, (source_gloss_order, gloss)) in source_glosses(&candidate.glosses).into_iter().enumerate() {
+                    imported.senses.push(SourceSense {
+                        word_id: word.id,
+                        sense_order: (index + 1) as i32,
+                        gloss,
+                        source: "cc-cedict-fallback",
+                        source_ref: candidate.line as i32,
+                        source_gloss_order,
+                    });
+                }
                 summary.filled += 1;
                 record(
                     &mut imported.diagnostics,

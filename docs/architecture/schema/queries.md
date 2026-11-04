@@ -105,3 +105,32 @@ optional English FTS proposals. Ensure membership joins do not duplicate WordIds
 or change deterministic order; preserve approved Browse search semantics.
 Measure plans/browser latency/size before selecting more indexes. See
 [review brief](REVIEW.md) for official support and the pinned-WASM/read-only probe.
+
+## R12 normalized Browse search contract (2026-11-04)
+
+`crates/web/src/services/database/browse_queries.rs` introduces a typed, parameterized
+read-only search endpoint over the regenerated schema. Search uses the original
+`words` projection only for rendering and stable `ORDER BY w.id ASC`; individual
+English glosses are matched through `word_senses`. HSK, source PoS and AI-assigned
+category filters are applied with correlated `EXISTS` subqueries so multiple senses
+and labels cannot duplicate the same result. Filters are OR within a code list and
+AND across dimensions; paging is limited to 100 results per request.
+
+The method is not yet connected to the Browse page. It requires a regenerated
+`hanzi.duckdb` containing the normalized relations; the checked-in browser asset
+must not be assumed to contain them. Until that regeneration is validated, the
+existing practice query path remains unchanged.
+
+Text matching currently uses `contains(...)` (case-folded for pinyin/English),
+which is a substring scan rather than an indexed full-text search. It deliberately
+does not pretend that an index on an HSK column will speed up arbitrary substrings.
+Benchmark real generated data with `EXPLAIN ANALYZE` for exact hanzi, pinyin,
+English substring, HSK-only, category-only and combined filters using both sparse
+and common categories. Compare latency, plans and file size before approving
+new secondary indexes or FTS features in DuckDB-WASM.
+
+PoS filters use `word_pos_membership` (source reading-level PoS), while category
+filters use `sense_categories` (AI-derived sense-level labels). An entry with no
+AI classification does not match a category filter; an unfiltered search still
+returns it. Future sense-level PoS filtering can be added explicitly once the
+product rules for source vs AI classification are decided.

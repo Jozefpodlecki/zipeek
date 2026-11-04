@@ -3,6 +3,7 @@ mod part_of_speech;
 mod pinyin;
 pub mod practice;
 pub mod round;
+pub mod sentence_tiles;
 mod word;
 
 pub use hsk::{Hsk2Level, Hsk3Level, HskLevel, HskLevelError, HskSystem};

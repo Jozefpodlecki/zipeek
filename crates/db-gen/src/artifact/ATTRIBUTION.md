@@ -15,7 +15,7 @@ The fallback snapshot is the MDBG release published 2026-10-26T02:33:39Z;
 CC-CEDICT retains the original CEDICT copyright of Paul Andrew Denisowski
 (1997, 1998). The complete licence is in `notices/CC-BY-SA-4.0.txt`.
 
-Transformations: reject unknown PoS entries, expand/group exact readings, retain
+Transformations: retain entries with unmapped PoS (report unknown tags), expand/group exact readings, retain
 first-form transcriptions, merge memberships, canonicalize PoS, select primary
 glosses in order and replace embedded ASCII pipes with U+FF5C. Apply same-reading
 CC-CEDICT fallback only for empty primary glosses, excluding variant-of entries.

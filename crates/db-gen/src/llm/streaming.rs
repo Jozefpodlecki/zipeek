@@ -1,20 +1,14 @@
 use std::io::{self, Write};
 
 use aimux_core::error::AiMuxError;
-use aimux_core::generate::StreamTextResult;
-use aimux_core::result::StreamTextResultAggregated;
-use aimux_core::stream_part::StreamPart;
+use aimux_core::generate::{GenerateTextResult, StreamTextResult};
+use aimux_core::stream_part::TextStreamPart;
 use futures_util::StreamExt;
 
 use super::error::LlmError;
 
-pub async fn consume_silent(
-    stream_result: StreamTextResult,
-) -> Result<StreamTextResultAggregated, LlmError> {
-    stream_result
-        .consume()
-        .await
-        .map_err(LlmError::Provider)
+pub async fn consume_silent(stream_result: StreamTextResult) -> Result<GenerateTextResult, LlmError> {
+    stream_result.consume().await.map_err(classify)
 }
 
 pub fn classify(error: AiMuxError) -> LlmError {
@@ -27,21 +21,17 @@ pub fn classify(error: AiMuxError) -> LlmError {
 
 pub async fn consume_progress(
     mut stream_result: StreamTextResult,
-) -> Result<StreamTextResultAggregated, LlmError> {
-    stream_result.stream = Box::pin(
-        stream_result.stream.inspect(|event| {
-            if let Ok(StreamPart::TextDelta { delta, .. }) = event {
-                print!("{delta}");
-                let _ = io::stdout().flush();
-            }
-        }),
-    );
+) -> Result<GenerateTextResult, LlmError> {
+    stream_result.stream = Box::pin(stream_result.stream.inspect(|event| {
+        if let Ok(TextStreamPart::TextDelta { text, .. }) = event {
+            print!("{text}");
+            let _ = io::stdout().flush();
+        }
+    }));
 
     let result = stream_result.consume().await.map_err(classify)?;
-
-    if !result.text.is_empty() {
+    if !result.text().is_empty() {
         println!();
     }
-
     Ok(result)
 }

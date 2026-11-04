@@ -3,8 +3,8 @@ use std::{fs, path::Path};
 use duckdb_neo::{Parameters, connection::Connection};
 
 use crate::{
-    database::GeneratorDatabase, import::insert_words, import_primary, prepare,
-    schema::create_schema,
+    database::GeneratorDatabase, import::insert_dictionary, import_primary, prepare,
+    schema::create_schema, llm::classification::{apply_cache, read_cache},
 };
 
 use super::{
@@ -12,8 +12,12 @@ use super::{
 };
 
 pub fn generate(manifest: &Path, output: &Path) -> Result<ArtifactReport, ArtifactError> {
+    generate_with_cache(manifest, output, None)
+}
+
+pub fn generate_with_cache(manifest: &Path, output: &Path, cache: Option<&Path>) -> Result<ArtifactReport, ArtifactError> {
     let (stage, output) = files::staging(output)?;
-    let result = build(manifest, &stage).and_then(|report| {
+    let result = build(manifest, &stage, cache).and_then(|report| {
         if output.exists() {
             return Err(ArtifactError::ExistingOutput {
                 path: output.clone(),
@@ -29,9 +33,13 @@ pub fn generate(manifest: &Path, output: &Path) -> Result<ArtifactReport, Artifa
     result
 }
 
-fn build(manifest: &Path, directory: &Path) -> Result<ArtifactReport, ArtifactError> {
+fn build(manifest: &Path, directory: &Path, cache: Option<&Path>) -> Result<ArtifactReport, ArtifactError> {
     let prepared = prepare(manifest)?;
     let imported = import_primary(&prepared)?;
+    let cached = cache.map(read_cache).transpose()?;
+    if let Some(ref records) = cached {
+        apply_cache(prepared.database().connection(), &imported.senses, records)?;
+    }
     let expected = read_snapshot(prepared.database().connection())?;
     let file = directory.join("hanzi.duckdb");
     let connection = prepared.database().connection();
@@ -44,7 +52,10 @@ fn build(manifest: &Path, directory: &Path) -> Result<ArtifactReport, ArtifactEr
     )?;
     execute(connection, "USE artifact")?;
     create_schema(connection)?;
-    insert_words(connection, &imported.words)?;
+    insert_dictionary(connection, &imported.words, &imported.senses)?;
+    if let Some(ref records) = cached {
+        apply_cache(connection, &imported.senses, records)?;
+    }
     if read_snapshot(connection)? != expected {
         return Err(ArtifactError::LogicalMismatch { stage: "writing" });
     }

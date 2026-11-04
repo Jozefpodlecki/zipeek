@@ -116,3 +116,9 @@ Import rules that produce rows: import-rules.md.
 PoS token vocabulary: pos-mapping.md.
 
 Runtime queries that read the table: queries.md.
+
+### R89: Source-backed lexical relationships
+
+The generated `sense_relations` table attaches explicit `abbreviation_of` metadata to a `(word_id, sense_order)` from `word_senses`. Fields are `definition` (clean English meaning), `target_simplified` (dictionary lookup term), optional `target_traditional`, and optional source-provided `target_pinyin`. Raw gloss/provenance remain in the referenced `word_senses` row; no target WordId is assumed because a target reading may be absent from the HSK subset.
+
+This extraction is a conservative deterministic pass over explicit single-target source annotations, independent of the AI part-of-speech/category classifier and its existing checkpoints. Compound, ambiguous and non-Chinese references are retained as raw glosses without relationships. A regenerated DuckDB file is required for the new table; no migration or backward-compatibility layer exists during development.

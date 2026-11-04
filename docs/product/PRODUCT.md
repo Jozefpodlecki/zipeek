@@ -561,3 +561,11 @@ A61). Apply OR within each selected group and AND across category, PoS and the
 existing HSK filter. Category data depends on A56; existing practice PoS query
 support does not mean the setup picker already exists. See
 [future filter requirements](FUTURE.md#practice-setup-category-and-part-of-speech-filters).
+
+## Proposed learning review workflow (R61 discovery; not yet approved as product policy)
+
+A learner can save five HSK 6 verbs from Browse into a personal Word Set. The existing Word Set is a collection, not a mastery claim. A future My Vocabulary view should show collected words and their independent recognition, listening, recall, writing and usage evidence; saved words should remain visible even before any practice. A unified review queue may draw from multiple sets without duplicating learning history for the same word.
+
+Each successful or failed exercise could generate one or more *attributed observations*, with the exercise definition declaring which skill it actually tests. Recognition via MCQ must not be treated as writing; translation from visible tiles must not be treated as unassisted recall. The exercise instance and session retain gameplay authority, while the evidence ledger records learner performance across sessions.
+
+A proposed mastery policy would require repeat successful retrieval across different calendar days over a span of at least one to two weeks, rather than permitting mastery in a day. Exact day count, minimum interval, timezone semantics, treatment of assisted attempts, spaced-review scheduling and downgrade rules remain **open decisions**. R61 introduces only the unscored evidence domain type, without changing the browser's behaviour or persistence.

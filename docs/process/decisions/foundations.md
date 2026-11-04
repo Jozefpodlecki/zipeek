@@ -150,3 +150,24 @@ A word may be in both at different levels, or only one.
 
 D16 resolves conflicting within-system levels to the lowest value with a warning;
 identical repeated tags are deduplicated.
+## D47 — Exercise definitions, instances and shared sessions
+
+**Status:** Approved 2026-11-04.
+**Owner:** [ARCHITECTURE](../../architecture/ARCHITECTURE.md), [sentence exercises](../../architecture/modules/sentence-exercises.md).
+
+- Separate reusable, versioned `ExerciseDefinition` (description, learner-visible input contract, expected output contract, scoring authority) from an `ExerciseInstance` (a concrete visible exercise with its own ID). Do not require a central `ExerciseKind` enum: definitions are selected by stable IDs, allowing future exercise families without modifying exhaustive enum matches.
+- Put reusable session orchestration and exercise contracts in `zipeek-exercises`, a pure native/WASM crate depending only on `zipeek-core`. Existing Matching/MCQ reducers remain responsible for interactions while session transitions are incrementally bridged to the shared domain.
+- `zipeek-ai` consumes definition/instance prompts; it does not own exercise definitions or scoring. An AI learner only receives public data; no hidden solution, internal matching word IDs, or pass/fail oracle may be embedded in its input.
+- Keep normal E2E deterministic. An autonomous simulated learner is future opt-in work and may only propose answers; the test harness determines correctness.
+- No changes to canonical practice seed v1, classification v3 prompt/cache, DuckDB schema or live generator.
+
+## D48 — Visual theme domain and static-first background provider
+
+Approved 2026-11-04: Introduce a separate `zipeek-themes` crate for deterministic
+category/topic resolution and image asset provider contracts. Keep its domain
+independent of Yew, quiz sessions, dictionary access, image-generation SDKs and
+HTTP clients. Initially load the existing generic Chinese-inspired wallpaper
+through an asynchronous static provider, without blocking exercises. AI-image
+providers, actual category-specific artwork, caching and image retention are
+explicit future work, not dependencies of the first implementation. The web
+UI owns accessible rendering, fallback and transition behaviour.

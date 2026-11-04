@@ -12,10 +12,29 @@ description = "Validate pinned inputs and import in memory; write no database"
 command = "cargo"
 args = ["run", "-p", "db-gen", "--locked", "--", "check"]
 
+[tasks.db-browse-check]
+description = "Verify the installed dictionary has the normalized Browse tables"
+command = "node"
+args = ["scripts/db-workflow.cjs", "browse-check"]
+
 [tasks.db-generate]
 description = "Generate and validate a fresh candidate bundle; print its paths"
 command = "node"
 args = ["scripts/db-workflow.cjs", "generate"]
+
+[tasks.db-ai-smoke]
+description = "Test one live streamed LM Studio response and strict classification validation without database writes"
+command = "node"
+args = ["scripts/db-ai-workflow.cjs", "smoke"]
+
+[tasks.db-full]
+description = "Resume local AI sense classification, generate an enriched dictionary, validate and install atomically"
+command = "node"
+args = ["scripts/db-ai-workflow.cjs"]
+
+[tasks.db-full-dev]
+description = "Complete the full AI-enriched database workflow, then start Trunk"
+dependencies = ["db-full", "serve"]
 
 [tasks.db-install]
 description = "Install the latest verified full bundle with backup and rollback"
@@ -24,7 +43,7 @@ args = ["scripts/db-workflow.cjs", "install"]
 
 [tasks.serve]
 description = "Serve the current installed bundle at http://localhost:1420"
-cwd = "web"
+cwd = "crates/web"
 command = "trunk"
 args = ["serve"]
 

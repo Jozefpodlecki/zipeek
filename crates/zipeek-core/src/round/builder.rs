@@ -95,7 +95,11 @@ pub fn build_round(
         }
     };
     pool.validate(&query.exclusions)?;
-    pool.validate_filter(&context)?;
+    if let Some(selected) = &query.word_set {
+        pool.validate_set(selected)?;
+    } else {
+        pool.validate_filter(&context)?;
+    }
     if let Some(seed) = seed
         && pool
             .strict

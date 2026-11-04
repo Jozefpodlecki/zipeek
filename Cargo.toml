@@ -2,7 +2,17 @@
 members = [
     "crates/db-gen",
     "crates/zipeek-core",
-    "web",
-    "e2e"
+    "crates/zipeek-exercises",
+    "crates/zipeek-ai",
+    "crates/zipeek-themes",
+    "crates/web",
+    "crates/e2e"
 ]
 resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+repository = "https://github.com/Jozefpodlecki/zipeek"
+description = ""
+edition = "2021"
+license = "MIT"

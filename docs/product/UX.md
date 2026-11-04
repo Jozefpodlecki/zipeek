@@ -274,14 +274,33 @@ is persisted. This is summary-only scope, not general charting infrastructure.
 
 ### Search and filters (UX-BROWSE01)
 
-Browse is a paginated word list with a smart search box, removable filter chips
-and a settings modal. These are intended A13 requirements, not existing controls.
+Browse uses the **R79 compact-list amendment to D45**: a prominent
+search bar and compact filter controls above five-row dictionary lists, with a
+separate personal Word Set management panel. On wide screens, results and Word
+Set management sit side by side; on narrow screens, the management panel stacks
+below or opens from a clearly labelled disclosure. This replaces the previously
+required smart-combobox and desktop-table presentation, **not** the A37 URL,
+query, token, or pagination semantics documented below.
 
-The input is a combobox. A recognized token shows a filter suggestion first
-(e.g. "+ Filter by PoS: verb") and a text-search row (`Search for "verb"`).
-The text-search row is always present. Selecting a filter creates a chip and
-consumes that token; selecting text search retains the free-text query. Typing
-without choosing a filter row never implicitly applies a filter.
+The R79 implemented behaviour and the approved exercise-first setup are described in
+[Dictionary Browse v2](DICTIONARY_BROWSE_V2.md) and
+[Practice setup v2](PRACTICE_SETUP_V2.md). Older URL/chip and numbered-page
+requirements in this section are still future work, not implemented features.
+
+The main search input accepts free text. Filter controls can expose dropdowns
+or an add-filter affordance; choosing a supported filter creates a removable,
+visible chip. Typed text is a text query unless the user explicitly chooses to
+create a filter. Recognized tokens may be suggested to accelerate entry, but
+an autocomplete combobox is no longer a mandatory interaction. Each chip shows
+its canonical filter token and a keyboard-operable remove action. Removing a
+chip commits the changed filter set and immediately refreshes results.
+
+Word Set management is visually distinct from search results and exposes saved
+set creation, rename, deletion, and backup actions. Selecting a predefined or
+saved Word Set for browsing is a filter, not permission to broaden a failed or
+invalid saved-set query into unrestricted results. The right-hand panel may
+include quick selection and bulk-add actions when their behaviour and
+accessibility are implemented and tested.
 
 | Token | Filter |
 | --- | --- |
@@ -337,8 +356,8 @@ All Browse state belongs in the URL. The approved A37 contract is:
 
 Canonical filter tokens are `pos:<canonical-pos>`, `hsk2`, `hsk3`,
 `hsk2:<level-or-range>`, `hsk3:<level-or-range>`, `freq:<rank-or-range>`,
-`id:<id>`, `simp:<hanzi>`, `trad:<hanzi>` and `pinyin:<text>`. The input's bare
-PoS suggestion emits `pos:<token>` on the wire. HSK 3.0 advanced `7-9` single-tier
+`id:<id>`, `simp:<hanzi>`, `trad:<hanzi>` and `pinyin:<text>`. A bare PoS token selected through an optional suggestion or filter control
+emits `pos:<token>` on the wire. HSK 3.0 advanced `7-9` single-tier
 alias canonicalizes to `7`; ordinary inclusive ranges use their normalized bounds.
 
 Encode each complete filter token individually, join tokens with literal commas
@@ -360,13 +379,14 @@ URL. Typing alone does not update it. Chip changes, strategy changes and page
 navigation query and update immediately. All Browse state updates use
 `replaceState`, never `pushState`; Back returns to the page before Browse.
 
-Tab focuses the input/chips. Up/Down selects autocomplete rows. Enter chooses
-the focused row, or commits free text if none is focused. Escape closes the
-suggestions. Chip removal supports Enter/Space.
+Tab focuses the input, filter controls and chips in document order. Enter in
+the search input commits free text immediately. If optional suggestions are
+shown, Up/Down moves among them and Escape closes them. Chip removal supports
+Enter/Space and has an accessible name.
 
-### Browse fields (UX-BROWSE01, resolved A37)
+### Browse fields (UX-BROWSE01, resolved A37 and amended by D45)
 
-Use the same five fields in cards and desktop table columns, in this order:
+Use the same five fields on vocabulary cards, in this order:
 simplified hanzi, pinyin, English, HSK and PoS. English uses the first stored
 gloss. HSK shows every available system and its level/band; do not collapse
 HSK 2.0 and 3.0 into one inferred level. Missing metadata is not invented.
@@ -532,12 +552,13 @@ portrait, landscape, pointer, touch and keyboard everywhere.
 | sm | 40rem / 640px | Small layouts; drawer begins collapsing |
 | md | 48rem / 768px | Mobile/desktop line; desktop rail |
 | lg | 64rem / 1024px | Wider content and landing tiles |
-| xl | 80rem / 1280px | Browse table and large-desktop layout |
+| xl | 80rem / 1280px | Browse results and Word Set panel side by side |
 
 A35 implements the shell md boundary and lg tile layout with Tailwind defaults,
 and removes the old 60rem rule. The shell/content stretch to the viewport.
-Browse table/card and exercise layouts remain future feature work using the
-requirements above; this does not claim those views exist.
+Browse's hybrid result cards, filter chips, URL state, and responsive Word Set
+panel are the target layout. This requirement does not assert that all target
+interactions have been implemented.
 
 A49/D41 supersedes the earlier full-width exercise/stacked-column proposal.
 Matching uses two equal columns at all supported widths, preserving shuffled
@@ -559,8 +580,10 @@ Matched cards briefly flash green, then use a muted solid surface and green
 checkmark; preserve text contrast rather than fading the whole card/background.
 Reduced motion snaps to that final state. The persistent Next/Continue bar uses
 a full-width button on phones and a compact right-aligned button from sm.
-MCQ options remain stacked on narrow screens. Browse is a card list below xl
-and a table at xl and above, with the five approved fields in UX-BROWSE01.
+MCQ options remain stacked on narrow screens. Browse retains vocabulary cards at all breakpoints, with a separate Word Set
+management panel alongside the results on wide screens and stacked or disclosed
+below them on smaller screens. Cards show the five approved fields in
+UX-BROWSE01.
 
 ### Requested navigation and exercise help follow-ups
 
@@ -675,3 +698,7 @@ Searchable multi-select controls, active chips, Clear filters and pool count
 are proposed for implementation review; the precise layout is not yet chosen.
 See [requirements and dependencies](FUTURE.md#practice-setup-category-and-part-of-speech-filters).
 Current setup has no category or PoS picker; category data awaits A56.
+
+### Experimental Sentence Translation — R54 word-bank implementation
+
+The AI sentence author returns both Chinese text and an English tile bank with a model-authored solution multiset. The visible bank is shuffled independently by the browser; the learner assembles English in a START-to-END lane by clicking or dragging tiles, and may reorder/remove selected tiles. The START and END markers are visually distinct from both tile categories and cannot be moved. Only a complete tile selection enables submission; the existing AI evaluator then checks meaning rather than exact word order. This is experimental, not yet integrated with normal practice session accounting; model-authored solutions may be wrong. Keyboard click fallback exists; touch/drag accessibility and exercise-quality fixtures remain to be tested.

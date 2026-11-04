@@ -16,7 +16,7 @@ Intended data flow:
 
 1. A developer manually runs the native `crates/db-gen` binary against approved,
    licensed sources.
-2. The generator produces `web/static/hanzi.duckdb`, which is committed and
+2. The generator produces `crates/web/static/hanzi.duckdb`, which is committed and
    deployed with the static app.
 3. DuckDB-WASM opens that file read-only in the browser.
 4. Query results drive browse pagination, Word of the Day, and practice rounds.
@@ -55,7 +55,7 @@ reports v1.4.3 and reads the native v2.0.0 artifact with v1.4.0 storage. See
 ## Artifact publication (A05)
 
 The CLI defaults to in-memory checking; explicit `generate` optionally takes an
-output directory and defaults to `web/static/`. Existing output directories are
+output directory and defaults to `crates/web/static/`. Existing output directories are
 refused. Export builds a new sibling staging directory, attaches a database with
 explicit `STORAGE_VERSION v1.4.0`, creates the exact approved schema/indexes, and
 inserts imported words. It compares complete rows and schema metadata against
@@ -72,7 +72,7 @@ hashes, as allowed by D22.
 
 ## Pages serving
 
-Trunk copies `web/static/` contents to the distribution root via `copy-dir` with
+Trunk copies `crates/web/static/` contents to the distribution root via `copy-dir` with
 `data-target-path` set to a dot. The Pages artifact serves:
 
 - `/zipeek/hanzi.duckdb` — the database file.
@@ -88,7 +88,7 @@ browser-worker queries against this full artifact at `/` and `/zipeek/`.
 
 ## Assets and document base
 
-`web/index.html` copies `web/public/` assets and the generated static bundle.
+`crates/web/index.html` copies `crates/web/public/` assets and the generated static bundle.
 DuckDB-WASM worker/WASM/Arrow assets are packaged by the A06 pre-build hook into
 ignored `web/vendor/duckdb` and served from there. No CDN is used.
 
@@ -97,7 +97,7 @@ ignored `web/vendor/duckdb` and served from there. No CDN is used.
 
 ## Background image
 
-`web/public/background.webp` and the embedded bootstrap image are byte-identical
+`crates/web/public/background.webp` and the embedded bootstrap image are byte-identical
 to the original. Their SHA-256 is
 `64fc1cb7d2b34ff89ff03f5cef4bcfe3df64eae9f27c6ca073f72e8d2e201f93`.
 No raster file is generated or changed at build time. The HTML loads it directly

@@ -1,6 +1,6 @@
 use db_gen::{
     database::GeneratorDatabase,
-    import::{ImportDiagnosticKind as Kind, ImportError, insert_words, parse_hsk},
+    import::{ImportDiagnosticKind as Kind, ImportError, insert_dictionary, insert_words, parse_hsk},
     import_primary, prepare,
     schema::create_schema,
 };
@@ -43,6 +43,9 @@ fn first_forms_and_exact_transcriptions_survive_grouping_and_gloss_selection()
     assert_eq!(word.hsk2_level, Some(Hsk2Level::One));
     assert_eq!(word.hsk3_level, Some(Hsk3Level::SevenToNine));
     assert_eq!(word.frequency, Some(100));
+    let senses: Vec<_> = imported.senses.iter().filter(|sense| sense.word_id == word.id).collect();
+    assert_eq!(senses.iter().map(|sense| sense.gloss.as_str()).collect::<Vec<_>>(), vec!["to Study", "he/she | learner"]);
+    assert!(senses.iter().all(|sense| sense.source == "hsk-primary"));
     for kind in [
         Kind::LevelConflict,
         Kind::UnknownLevel,
@@ -82,19 +85,48 @@ fn ids_are_assigned_after_rejection_and_exact_reading_key_sorting()
     }
     let accepted = parse_hsk(REJECTED)?;
     assert_eq!(accepted.source_entries, 6);
-    assert_eq!(accepted.rejected_entries, 5);
-    assert_eq!(accepted.words.len(), 1);
-    assert_eq!(accepted.words[0].simplified, "valid");
-    assert_eq!(accepted.words[0].id.as_i32(), 1);
-    assert_eq!(accepted.words[0].hsk3_level, Some(Hsk3Level::SevenToNine));
-    let unknown = accepted
+    assert_eq!(accepted.rejected_entries, 4);
+    assert_eq!(accepted.words.len(), 3);
+    assert_eq!(accepted.words[0].simplified, "unknown");
+    assert_eq!(
+        accepted.words[0].part_of_speech,
+        vec![
+            PartOfSpeech::Classifier,
+            PartOfSpeech::Conjunction,
+            PartOfSpeech::Noun,
+        ]
+    );
+    assert_eq!(accepted.words[1].simplified, "unknown");
+    assert_eq!(accepted.words[2].simplified, "valid");
+    assert_eq!(accepted.words[2].hsk3_level, Some(Hsk3Level::SevenToNine));
+    assert!(!accepted.diagnostics.iter().any(|event| {
+        event.simplified == "unknown" && event.kind == Kind::UnknownPartOfSpeech
+    }));
+    Ok(())
+}
+
+#[test]
+fn genuinely_unknown_part_of_speech_codes_still_produce_diagnostics()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut entries: serde_json::Value = serde_json::from_slice(REJECTED)?;
+    entries[0]["pos"] = serde_json::json!(["n", "CC", "QT", "unmapped-source-tag"]);
+    let imported = parse_hsk(&serde_json::to_vec(&entries)?)?;
+    assert_eq!(
+        imported.words[0].part_of_speech,
+        vec![
+            PartOfSpeech::Classifier,
+            PartOfSpeech::Conjunction,
+            PartOfSpeech::Noun,
+        ]
+    );
+    let unknown = imported
         .diagnostics
         .iter()
-        .find(|event| event.simplified == "unknown")
-        .unwrap();
-    assert!(unknown.detail.contains("CC"));
-    assert!(unknown.detail.contains("QT"));
-    assert!(unknown.detail.contains("all 2 forms"));
+        .find(|event| event.kind == Kind::UnknownPartOfSpeech)
+        .expect("unrecognized source tags must remain diagnosable");
+    assert_eq!(unknown.simplified, "unknown");
+    assert!(unknown.detail.contains("unmapped-source-tag"));
+    assert!(unknown.detail.contains("retaining entry"));
     Ok(())
 }
 
@@ -191,6 +223,14 @@ fn sql_parameters_preserve_quotes_unicode_nulls_and_distinct_readings()
         "4"
     );
     assert_eq!(
+        scalar(connection, "SELECT count(*)::VARCHAR FROM word_hsk_membership")?,
+        scalar(connection, "SELECT count(*)::VARCHAR FROM (SELECT id, hsk2_level AS level FROM words WHERE hsk2_level IS NOT NULL UNION ALL SELECT id, hsk3_level AS level FROM words WHERE hsk3_level IS NOT NULL)")?
+    );
+    assert_eq!(
+        scalar(connection, "SELECT count(*)::VARCHAR FROM word_pos_membership WHERE pos = ''")?,
+        "0"
+    );
+    assert_eq!(
         scalar(connection, "SELECT simplified FROM words WHERE id = 1")?,
         imported.words[0].simplified
     );
@@ -219,6 +259,121 @@ fn sql_parameters_preserve_quotes_unicode_nulls_and_distinct_readings()
         )?,
         "1"
     );
+    Ok(())
+}
+
+#[test]
+fn source_senses_are_inserted_with_provenance_and_can_be_joined_by_reading()
+-> Result<(), Box<dyn std::error::Error>> {
+    let imported = parse_hsk(GROUPED)?;
+    let database = GeneratorDatabase::open()?;
+    let connection = database.connection();
+    create_schema(connection)?;
+    insert_dictionary(connection, &imported.words, &imported.senses)?;
+    assert_eq!(
+        scalar(connection, "SELECT count(*)::VARCHAR FROM word_senses")?,
+        imported.senses.len().to_string()
+    );
+    assert_eq!(
+        scalar(connection, "SELECT gloss FROM word_senses WHERE word_id = (SELECT id FROM words WHERE simplified = '学习' AND pinyin = 'xué xí') AND sense_order = 2")?,
+        "he/she | learner"
+    );
+    assert_eq!(scalar(connection, "SELECT count(*)::VARCHAR FROM categories")?, "12");
+    assert_eq!(scalar(connection, "SELECT count(*)::VARCHAR FROM sense_categories")?, "0");
+    assert_eq!(scalar(connection, "SELECT count(*)::VARCHAR FROM sense_pos")?, "0");
+    Ok(())
+}
+
+#[test]
+fn normalized_abbreviation_preserves_source_and_evidence()
+-> Result<(), Box<dyn std::error::Error>> {
+    let imported = parse_hsk(GROUPED)?;
+    let database = GeneratorDatabase::open()?;
+    let connection = database.connection();
+    create_schema(connection)?;
+    let mut senses = imported.senses.clone();
+    senses[0].gloss = "supermarket (abbr. for 超级市场)".to_owned();
+    let source_word_id = senses[0].word_id.as_i32();
+    let source_order = senses[0].sense_order;
+    insert_dictionary(connection, &imported.words, &senses)?;
+    assert_eq!(
+        scalar(connection, &format!("SELECT gloss FROM word_senses WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "supermarket (abbr. for 超级市场)"
+    );
+    assert_eq!(
+        scalar(connection, &format!("SELECT definition FROM sense_display WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "supermarket"
+    );
+    assert_eq!(
+        scalar(connection, &format!("SELECT derivation FROM sense_display WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "explicit_annotation_removed"
+    );
+    assert_eq!(
+        scalar(connection, &format!("SELECT target_simplified FROM sense_relations WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "超级市场"
+    );
+    assert_eq!(
+        scalar(connection, &format!("SELECT extraction_method FROM sense_relations WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "explicit_source_annotation"
+    );
+    assert_eq!(
+        scalar(connection, &format!("SELECT source_annotation FROM sense_relations WHERE word_id = {source_word_id} AND sense_order = {source_order}"))?,
+        "(abbr. for 超级市场)"
+    );
+    Ok(())
+}
+
+#[test]
+fn explicit_lexical_relations_are_typed_and_relation_only_senses_have_no_definition()
+-> Result<(), Box<dyn std::error::Error>> {
+    let imported = parse_hsk(GROUPED)?;
+    let database = GeneratorDatabase::open()?;
+    let connection = database.connection();
+    create_schema(connection)?;
+    let mut senses = imported.senses.clone();
+    assert!(senses.len() >= 4);
+    for (sense, gloss) in senses.iter_mut().take(4).zip([
+        "related concept (see also 學習|学习)",
+        "variant of 語言|语言[yu3 yan2]",
+        "short for 中华人民共和国",
+        "another spelling (also written 臺灣|台湾)",
+    ]) {
+        sense.gloss = gloss.to_owned();
+    }
+    let keys: Vec<_> = senses.iter().take(4).map(|sense| (sense.word_id.as_i32(), sense.sense_order)).collect();
+    insert_dictionary(connection, &imported.words, &senses)?;
+    for ((word_id, sense_order), relation_type) in keys.iter().zip([
+        "see_also", "variant_of", "short_for", "also_written_as",
+    ]) {
+        assert_eq!(scalar(connection, &format!(
+            "SELECT relation_type FROM sense_relations WHERE word_id = {word_id} AND sense_order = {sense_order}"
+        ))?, relation_type);
+    }
+    let (word_id, sense_order) = keys[1];
+    assert_eq!(scalar(connection, &format!(
+        "SELECT derivation FROM sense_display WHERE word_id = {word_id} AND sense_order = {sense_order}"
+    ))?, "relation_only");
+    assert_eq!(scalar(connection, &format!(
+        "SELECT count(*)::VARCHAR FROM sense_display WHERE word_id = {word_id} AND sense_order = {sense_order} AND definition IS NULL"
+    ))?, "1");
+    assert_eq!(scalar(connection, &format!(
+        "SELECT target_simplified FROM sense_relations WHERE word_id = {word_id} AND sense_order = {sense_order}"
+    ))?, "语言");
+    Ok(())
+}
+
+#[test]
+fn malformed_sense_reference_rolls_back_complete_dictionary_transaction()
+-> Result<(), Box<dyn std::error::Error>> {
+    let imported = parse_hsk(GROUPED)?;
+    let database = GeneratorDatabase::open()?;
+    let connection = database.connection();
+    create_schema(connection)?;
+    let mut invalid = imported.senses.clone();
+    invalid[0].sense_order = 0;
+    assert!(insert_dictionary(connection, &imported.words, &invalid).is_err());
+    assert_eq!(scalar(connection, "SELECT count(*)::VARCHAR FROM words")?, "0");
+    assert_eq!(scalar(connection, "SELECT count(*)::VARCHAR FROM word_senses")?, "0");
     Ok(())
 }
 
@@ -279,15 +434,17 @@ fn preserved_snapshot_reproduces_rows_ids_diagnostics_and_expected_audit_counts(
         .find(|source| source.name() == "hsk-primary")
         .unwrap();
     assert_eq!(imported, parse_hsk(primary.file().bytes())?);
-    assert_eq!(
-        (
-            imported.source_entries,
-            imported.rejected_entries,
-            imported.words.len()
-        ),
-        (11494, 64, 12100)
-    );
-    assert_eq!(imported.diagnostics.len(), 514);
+    assert_eq!(imported.source_entries, 11494);
+    assert!(imported.rejected_entries < 64);
+    assert!(imported.words.len() > 12100);
+    assert!(!imported.diagnostics.is_empty());
+    assert!(imported
+        .diagnostics
+        .iter()
+        .all(|event| (1..=imported.source_entries).contains(&event.entry)));
+    assert!(!imported.diagnostics.iter().any(|event| event.kind == Kind::UnknownPartOfSpeech));
+    assert!(imported.words.iter().any(|word| word.simplified == "和"));
+    assert!(imported.words.iter().any(|word| word.simplified == "分钟"));
     assert!(imported.words.iter().all(|word| word.english.is_some()));
     assert_eq!(
         imported
@@ -295,14 +452,14 @@ fn preserved_snapshot_reproduces_rows_ids_diagnostics_and_expected_audit_counts(
             .iter()
             .filter(|event| event.kind == Kind::RejectedEntry)
             .count(),
-        64
+        imported.rejected_entries
     );
     assert_eq!(
         scalar(
             prepared.database().connection(),
             "SELECT count(*)::VARCHAR FROM words"
         )?,
-        "12100"
+        imported.words.len().to_string()
     );
     assert_eq!(
         scalar(

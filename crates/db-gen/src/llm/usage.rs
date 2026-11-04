@@ -1,8 +1,7 @@
+use aimux_core::types::LanguageModelUsage;
 use serde::{Deserialize, Serialize};
 
-use aimux_core::types::{TokenUsage, Usage};
-
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TurnUsage {
     pub input_tokens: u64,
     pub output_tokens: u64,
@@ -11,33 +10,29 @@ pub struct TurnUsage {
 }
 
 impl TurnUsage {
-    pub fn from_usage(usage: &Usage) -> Self {
-        let input = &usage.input_tokens;
-        let output = &usage.output_tokens;
+    pub fn from_usage(usage: &LanguageModelUsage) -> Result<Self, serde_json::Error> {
+        let value = serde_json::to_value(usage)?;
+        Ok(Self::from_value(&value))
+    }
 
-        let cached = u64::from(input.cache_read.unwrap_or(0));
-
-        let reasoning = u64::from(output.reasoning.unwrap_or(0));
-
-        let output_total = output
-            .total
-            .or_else(|| {
-                let text = output.text.unwrap_or(0);
-                let reasoning = output.reasoning.unwrap_or(0);
-                if text == 0 && reasoning == 0 {
-                    None
-                } else {
-                    Some(text + reasoning)
-                }
-            })
-            .map(u64::from)
-            .unwrap_or(0);
-
+    fn from_value(value: &serde_json::Value) -> Self {
+        fn count(value: &serde_json::Value, keys: &[&str]) -> u64 {
+            keys.iter()
+                .find_map(|key| value.get(*key).and_then(serde_json::Value::as_u64))
+                .unwrap_or(0)
+        }
+        let input = value.get("inputTokens").or_else(|| value.get("input_tokens"));
+        let output = value.get("outputTokens").or_else(|| value.get("output_tokens"));
+        let input = input.unwrap_or(&serde_json::Value::Null);
+        let output = output.unwrap_or(&serde_json::Value::Null);
+        let output_total = output.as_u64().unwrap_or_else(|| count(output, &["total"]));
+        let reasoning = count(output, &["reasoning"]);
+        let text = count(output, &["text"]);
         Self {
-            input_tokens: u64::from(input.total.unwrap_or(0)),
-            output_tokens: output_total,
+            input_tokens: input.as_u64().unwrap_or_else(|| count(input, &["total"])),
+            output_tokens: if output_total == 0 { text + reasoning } else { output_total },
             reasoning_tokens: reasoning,
-            cached_input_tokens: cached,
+            cached_input_tokens: count(input, &["cacheRead", "cache_read"]),
         }
     }
 
@@ -59,71 +54,34 @@ impl TurnUsage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
-    fn usage(input: TokenUsage, output: TokenUsage) -> Usage {
-        Usage {
-            input_tokens: input,
-            output_tokens: output,
-            raw: None,
-        }
+    #[test]
+    fn reads_usage_snapshot() {
+        let usage = TurnUsage::from_value(&json!({
+            "inputTokens": {"total": 100, "cacheRead": 40},
+            "outputTokens": {"total": 25, "text": 20, "reasoning": 5}
+        }));
+        assert_eq!(usage.input_tokens, 100);
+        assert_eq!(usage.output_tokens, 25);
+        assert_eq!(usage.reasoning_tokens, 5);
+        assert_eq!(usage.cached_input_tokens, 40);
     }
 
     #[test]
-    fn from_usage_pulls_totals() {
-        let u = usage(
-            TokenUsage {
-                total: Some(100),
-                cache_read: Some(40),
-                ..Default::default()
-            },
-            TokenUsage {
-                total: Some(25),
-                text: Some(20),
-                reasoning: Some(5),
-                ..Default::default()
-            },
-        );
-        let t = TurnUsage::from_usage(&u);
-        assert_eq!(t.input_tokens, 100);
-        assert_eq!(t.output_tokens, 25);
-        assert_eq!(t.reasoning_tokens, 5);
-        assert_eq!(t.cached_input_tokens, 40);
-    }
-
-    #[test]
-    fn from_usage_computes_output_total_when_missing() {
-        let u = usage(
-            TokenUsage::default(),
-            TokenUsage {
-                text: Some(12),
-                reasoning: Some(3),
-                ..Default::default()
-            },
-        );
-        let t = TurnUsage::from_usage(&u);
-        assert_eq!(t.output_tokens, 15);
-        assert_eq!(t.reasoning_tokens, 3);
-    }
-
-    #[test]
-    fn from_usage_handles_missing_everything() {
-        let u = usage(TokenUsage::default(), TokenUsage::default());
-        assert!(TurnUsage::from_usage(&u).is_empty());
+    fn totals_missing_are_derived() {
+        let usage = TurnUsage::from_value(&json!({
+            "outputTokens": {"text": 12, "reasoning": 3}
+        }));
+        assert_eq!(usage.output_tokens, 15);
+        assert!(TurnUsage::from_value(&json!({})).is_empty());
     }
 
     #[test]
     fn add_accumulates() {
-        let mut a = TurnUsage {
-            input_tokens: 10,
-            output_tokens: 5,
-            ..Default::default()
-        };
-        a.add(&TurnUsage {
-            input_tokens: 3,
-            output_tokens: 2,
-            ..Default::default()
-        });
-        assert_eq!(a.input_tokens, 13);
-        assert_eq!(a.output_tokens, 7);
+        let mut usage = TurnUsage { input_tokens: 10, output_tokens: 5, ..Default::default() };
+        usage.add(&TurnUsage { input_tokens: 3, output_tokens: 2, ..Default::default() });
+        assert_eq!(usage.input_tokens, 13);
+        assert_eq!(usage.output_tokens, 7);
     }
 }

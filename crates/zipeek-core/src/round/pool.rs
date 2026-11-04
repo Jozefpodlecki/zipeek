@@ -68,6 +68,30 @@ impl CandidatePool {
         Ok(())
     }
 
+    pub(crate) fn validate_set(&self, selected: &BTreeSet<WordId>) -> Result<(), BuildError> {
+        for (view, words) in self.views() {
+            for word in words {
+                if !selected.contains(&word.id) {
+                    return Err(BuildError::InvalidPool {
+                        view,
+                        id: word.id,
+                        reason: "row is not in the selected Word Set snapshot",
+                    });
+                }
+            }
+            if words != self.strict.as_slice() {
+                if let Some(word) = words.first().or_else(|| self.strict.first()) {
+                    return Err(BuildError::InvalidPool {
+                        view,
+                        id: word.id,
+                        reason: "Word Set practice must not widen the candidate pool",
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn validate_filter(&self, filter: &PracticeFilter) -> Result<(), BuildError> {
         for (view, words) in self.views() {
             for word in words {
@@ -106,4 +130,44 @@ pub(crate) fn validate_order(words: &[Word], view: CandidateView) -> Result<(), 
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod word_set_tests {
+    use super::*;
+
+    fn word(id: i64) -> Word {
+        Word {
+            id: WordId::try_from(id).unwrap(),
+            simplified: format!("字{id}"),
+            traditional: None,
+            pinyin: "zì".to_owned(),
+            pinyin_numeric: None,
+            english: Some(format!("word {id}")),
+            part_of_speech: vec![],
+            hsk2_level: None,
+            hsk3_level: None,
+            frequency: None,
+        }
+    }
+
+    #[test]
+    fn word_sets_accept_mixed_levels_but_reject_extra_rows_and_widening() {
+        let selected = BTreeSet::from([WordId::try_from(1).unwrap(), WordId::try_from(2).unwrap()]);
+        let pool = CandidatePool {
+            strict: vec![word(1), word(2)],
+            hsk_widened: vec![word(1), word(2)],
+            hsk_widened_any_pos: vec![word(1), word(2)],
+        };
+        assert!(pool.validate(&BTreeSet::new()).is_ok());
+        assert!(pool.validate_set(&selected).is_ok());
+        assert!(pool.validate_set(&BTreeSet::from([WordId::try_from(1).unwrap()])).is_err());
+        let mut widened = pool;
+        widened.hsk_widened_any_pos.push(word(3));
+        assert!(widened.validate_set(&BTreeSet::from([
+            WordId::try_from(1).unwrap(),
+            WordId::try_from(2).unwrap(),
+            WordId::try_from(3).unwrap(),
+        ])).is_err());
+    }
 }

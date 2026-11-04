@@ -1,0 +1,90 @@
+@import "tailwindcss" source(none);
+@source "../src";
+
+@theme {
+    --animate-match-shake: match-shake 200ms ease-in-out;
+    --animate-match-dim: match-dim 350ms ease-out;
+    @keyframes match-shake {
+        0%, 100% { transform: translateX(0); }
+        25%, 75% { transform: translateX(-4px); }
+        50% { transform: translateX(4px); }
+    }
+    @keyframes match-dim {
+        0%, 50% { background-color: var(--match-success); }
+        100% { background-color: var(--match-rest); }
+    }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+    --color-canvas: var(--canvas);
+    --color-surface: var(--surface);
+    --color-raised: var(--raised);
+    --color-line: var(--border);
+    --color-ink: var(--text);
+    --color-muted: var(--muted);
+    --color-accent: var(--accent);
+    --color-accent-soft: var(--accent-soft);
+    --color-card-tint: var(--card-tint);
+    --font-roboto: "Roboto", sans-serif;
+    --font-oswald: "Oswald", sans-serif;
+}
+
+:root {
+    color-scheme: light;
+    --match-success: #d1fae5;
+    --match-rest: #f1f5f9;
+    --topbar-height: 3rem;
+    --canvas: #f8fafc;
+    --surface: rgba(255, 255, 255, .86);
+    --raised: rgba(241, 245, 249, .88);
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #475569;
+    --accent: #1d4ed8;
+    --accent-soft: rgba(219, 234, 254, .75);
+    --card-tint: rgba(239, 246, 255, .82);
+    --backdrop-shade: rgba(248, 250, 252, .38);
+    --main-bg-color: var(--canvas);
+    --main-text-color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+:root.dark {
+    color-scheme: dark;
+    --match-success: #064e3b;
+    --match-rest: #1e293b;
+    --canvas: #0b1120;
+    --surface: rgba(15, 23, 42, .86);
+    --raised: rgba(30, 41, 59, .9);
+    --border: #25324a;
+    --text: #f1f5f9;
+    --muted: #a0aec0;
+    --accent: #93c5fd;
+    --accent-soft: rgba(30, 58, 95, .72);
+    --card-tint: rgba(23, 43, 73, .82);
+    --backdrop-shade: rgba(7, 14, 26, .62);
+}
+
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--text);
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer; }
+@layer base {
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+}
+::selection { background: var(--accent-soft); color: var(--accent); }
+
+:root { --hanzi-font: system-ui, "Microsoft YaHei", "PingFang SC", sans-serif; }
+:root[data-hanzi-font="sans"] { --hanzi-font: "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", sans-serif; }
+:root[data-hanzi-font="serif"] { --hanzi-font: "Noto Serif CJK SC", "Songti SC", "SimSun", serif; }
+:root[data-hanzi-font="calligraphy"] { --hanzi-font: "Ma Shan Zheng", "KaiTi", cursive; }
+[lang^="zh"] { font-family: var(--hanzi-font); }

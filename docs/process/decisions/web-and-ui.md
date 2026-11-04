@@ -386,3 +386,90 @@ depends on A56's taxonomy/data/schema design; current PoS query support can be
 used by a separately scoped setup picker. No category URL encoding, schema,
 replay change, library or final UI layout is approved by this decision.
 See [future setup filters](../../product/FUTURE.md#practice-setup-category-and-part-of-speech-filters).
+
+---
+
+## D45 Hybrid Browse layout with URL-driven search
+
+**Status:** Approved 2026-11-04 by explicit user selection.
+**Owner:** [UX](../../product/UX.md#browse),
+[UI_ARCHITECTURE](../../architecture/UI_ARCHITECTURE.md),
+[TASKS](../TASKS.md).
+**Index row:** [D45](index.md#approved-decisions).
+
+The user selected the hybrid Browse direction: retain the modern mockup's
+search bar, vocabulary result cards, and separate personal Word Set management
+panel, while implementing URL-authoritative search and removable filter chips.
+The formerly mandated smart-combobox and desktop-table presentation in
+UX-BROWSE01 is superseded. The existing A37 filter tokens and two-layer URL
+codec, global search strategy, canonical `q`/`strategy`/`f`/`page`/`page_size`
+parameters, replace-state navigation, pagination semantics, and keyboard
+requirements remain binding unless separately revised.
+
+Result cards use the five previously approved fields. The sidebar is responsive
+and does not require an always-visible second column on small screens. Invalid
+saved-set selection never silently widens a query. No change to practice URL
+encoding or deterministic round replay is authorized by this decision.
+
+This decision changes the **target UX**; it does not claim URL synchronization
+or chips are implemented in the existing source. Implement and validate them
+under A13 before marking Browse complete. No new dependencies or DB schema
+changes are approved here.
+
+---
+
+## D49 Shared cross-route quiz session
+
+**Status:** Approved 2026-11-04 by direct user answer.
+**Owner:** [ARCHITECTURE](../../architecture/ARCHITECTURE.md), [PRODUCT](../../product/PRODUCT.md).
+
+Practice across Matching, Multiple Choice, Sentence Translation and future
+exercises belongs to **one shared session** with a unified final result, rather
+than separate cumulative sessions per route. Specialized exercise-specific
+reducers remain independent; only finalized results enter the shared session.
+Unscored capture does not imply speaking proficiency. R68 delivers app-scoped
+completed-result aggregation; unified sequencing and durable persistence remain
+future work, not claims of this release.
+
+---
+
+## D50 Abandon unfinished exercises on navigation
+
+**Status:** Approved 2026-11-04 by direct user answer.
+**Owner:** [ARCHITECTURE](../../architecture/ARCHITECTURE.md), [TASKS](../TASKS.md).
+
+Leaving an unfinished question, changing exercise type, or replacing the question
+abandons that instance. Returning to the exercise type creates a fresh question.
+Abandonment does not count as a wrong answer or provide proficiency evidence.
+The shared session records an abandoned identity as terminal; delayed AI responses
+and duplicate finalized submissions may not turn an abandoned instance into a
+completed one. Specialized exercise reducers retain their interaction state.
+R70 implements in-memory identity/tombstone safeguards; it does not implement a
+persistent session plan or an acknowledged submission protocol.
+
+---
+
+## D51 Exercise-first setup and dictionary curation
+
+**Status:** Approved 2026-11-04 by direct user instructions following the
+Practice and Dictionary mockups.
+**Owner:** [Practice setup v2](../../product/PRACTICE_SETUP_V2.md),
+[Dictionary Browse v2](../../product/DICTIONARY_BROWSE_V2.md).
+
+Practice setup starts with exercise-type multi-selection; selected definitions
+unlock relevant specialized configuration tabs. Vocabulary comes either from an
+explicit personal Word Set (no further HSK/category/PoS filtering) **or** from
+multi-select HSK levels and category/PoS filters, with searchable category
+suggestions and removable chips. Device-local saved configuration profiles are
+approved in principle but need a separate versioned storage contract and tests
+before implementation; they contain no answers, scores or recordings. The
+shared session rules from D49/D50 remain authoritative.
+
+Browse is an intentionally small search/curation surface: five-row pages,
+inline hanzi/pinyin, pronunciation playback via the existing Web Speech API,
+Add/Remove from a selected Word Set, and an explicit nonempty selected-set
+handoff to Practice. Remove ambiguous one-word Practice and “Translate selected
+vocabulary” shortcuts. Use Lucide icon controls for navigation and refresh.
+This **amends D45's card-first visual requirement** in favour of a compact list;
+its URL-state/advanced-chip plans remain separately unimplemented. R79
+implements the Browse slice and selected-set handoff, not the full setup builder.

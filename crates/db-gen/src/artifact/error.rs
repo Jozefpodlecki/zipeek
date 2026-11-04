@@ -5,6 +5,8 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum ArtifactError {
     #[error(transparent)]
+    Classification(#[from] crate::llm::classification::ClassificationError),
+    #[error(transparent)]
     Preparation(#[from] crate::GeneratorError),
     #[error(transparent)]
     Database(#[from] crate::database::DbError),

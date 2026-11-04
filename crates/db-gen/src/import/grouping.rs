@@ -7,6 +7,7 @@ use super::{
     diagnostics::{ImportDiagnosticKind as Kind, record},
     glosses::glosses,
     reading::Reading,
+    senses::{SourceSense, source_glosses},
     source,
     validation::{validate_entry, validated_transcriptions},
 };
@@ -14,6 +15,7 @@ use super::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HskImport {
     pub words: Vec<Word>,
+    pub senses: Vec<SourceSense>,
     pub diagnostics: Vec<ImportDiagnostic>,
     pub source_entries: usize,
     pub rejected_entries: usize,
@@ -48,6 +50,7 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
                 pinyin: pinyin.clone(),
                 numeric: numeric.clone(),
                 english,
+                source_glosses: source_glosses(&form.meanings),
                 pos: metadata.pos.clone(),
                 old: metadata.old,
                 new: metadata.new,
@@ -72,9 +75,18 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
             );
         }
     }
-    let words = finalize_readings(readings, &mut diagnostics)?;
+    let (words, senses) = finalize_readings(readings, &mut diagnostics)?;
+    let repeated_readings = diagnostics.iter()
+        .filter(|diagnostic| diagnostic.kind == Kind::RepeatedReading)
+        .count();
+    tracing::info!(
+        repeated_readings,
+        other_diagnostics = diagnostics.len() - repeated_readings,
+        "HSK import diagnostic summary"
+    );
     Ok(HskImport {
         words,
+        senses,
         diagnostics,
         source_entries,
         rejected_entries,
@@ -84,9 +96,10 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
 fn finalize_readings(
     readings: BTreeMap<(String, String), Reading>,
     diagnostics: &mut Vec<ImportDiagnostic>,
-) -> Result<Vec<Word>, ImportError> {
+) -> Result<(Vec<Word>, Vec<SourceSense>), ImportError> {
     let mut display_keys = BTreeMap::new();
     let mut words = Vec::with_capacity(readings.len());
+    let mut senses = Vec::new();
     for (index, reading) in readings.into_values().enumerate() {
         let key = (reading.simplified.clone(), reading.pinyin.clone());
         if let Some(first) = display_keys.insert(key, reading.original.clone()) {
@@ -116,6 +129,16 @@ fn finalize_readings(
             .ok()
             .and_then(|value| WordId::try_from(value).ok())
             .ok_or(ImportError::IdOverflow { row })?;
+        for (position, (source_gloss_order, gloss)) in reading.source_glosses.iter().enumerate() {
+            senses.push(SourceSense {
+                word_id: id,
+                sense_order: (position + 1) as i32,
+                gloss: gloss.clone(),
+                source: "hsk-primary",
+                source_ref: reading.entry as i32,
+                source_gloss_order: *source_gloss_order,
+            });
+        }
         words.push(Word {
             id,
             simplified: reading.simplified,
@@ -129,5 +152,5 @@ fn finalize_readings(
             frequency: reading.frequency,
         });
     }
-    Ok(words)
+    Ok((words, senses))
 }

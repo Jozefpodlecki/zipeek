@@ -16,6 +16,10 @@ parallel state log.
 
 | If you want to know… | Read |
 | --- | --- |
+| Practice and Dictionary visual reference mockups | [design/REFERENCE_MOCKUPS.md](design/REFERENCE_MOCKUPS.md) |
+| Approved four-step Practice builder (latest UX) | [product/PRACTICE_SESSION_BUILDER.md](product/PRACTICE_SESSION_BUILDER.md) |
+| Earlier Practice setup design and profiles | [product/PRACTICE_SETUP_V2.md](product/PRACTICE_SETUP_V2.md) |
+| Browse list, pronunciation and chosen-set handoff | [product/DICTIONARY_BROWSE_V2.md](product/DICTIONARY_BROWSE_V2.md) |
 | What v1 does and which routes exist | [product/PRODUCT.md](product/PRODUCT.md) |
 | What the user sees and open UX items | [product/UX.md](product/UX.md) |
 | Future AI tags, Settings, speaking/sentence exercises and ambiguous prompts | [product/FUTURE.md](product/FUTURE.md) |
@@ -23,6 +27,9 @@ parallel state log.
 | What code exists and how modules fit | [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | Which generator module owns what | [architecture/modules/db-gen.md](architecture/modules/db-gen.md) |
 | What shared types and pure logic live where | [architecture/modules/zipeek-core.md](architecture/modules/zipeek-core.md) |
+| Exercise definitions, sessions and evidence | [architecture/modules/sentence-exercises.md](architecture/modules/sentence-exercises.md) |
+| Theme resolution and background providers | [architecture/modules/zipeek-themes.md](architecture/modules/zipeek-themes.md) |
+| Speaking recorder design | [architecture/audio-recording.md](architecture/audio-recording.md) |
 | How the browser queries the database | [architecture/modules/browser-db.md](architecture/modules/browser-db.md) |
 | How the shell, loading, and backdrop work | [architecture/modules/web-shell.md](architecture/modules/web-shell.md) |
 | How data moves from source to browser | [architecture/modules/data-flow.md](architecture/modules/data-flow.md) |
@@ -39,7 +46,7 @@ parallel state log.
 | What "reproducible" means for artifacts | [architecture/schema/reproducibility.md](architecture/schema/reproducibility.md) |
 | What each generator stage actually does | [architecture/schema/artifacts.md](architecture/schema/artifacts.md) |
 | How to regenerate the dictionary | [architecture/schema/regeneration.md](architecture/schema/regeneration.md) |
-| Every approved decision D01–D40 | [process/decisions/index.md](process/decisions/index.md) |
+| Decisions index and current decision status | [process/decisions/index.md](process/decisions/index.md) |
 | Testing strategy and commands | [testing/TESTING.md](testing/TESTING.md) |
 | Chrome e2e and the A15 split | [testing/e2e.md](testing/e2e.md) |
 | Matching and mixed-session checks | [testing/matching.md](testing/matching.md) |
@@ -62,6 +69,7 @@ docs/
   architecture/
     ARCHITECTURE.md             overview and module map
     UI_ARCHITECTURE.md          scoped state and motion proposal
+    audio-recording.md          microphone and waveform design
     modules/                    per-module implementation notes
       db-gen.md
       zipeek-core.md
@@ -69,6 +77,9 @@ docs/
       web-shell.md
       data-flow.md
       target-architecture.md
+      sentence-exercises.md
+      zipeek-ai.md
+      zipeek-themes.md
     schema/                     database documentation
       DB.md                     index
       sources.md
@@ -142,3 +153,7 @@ CODING_STANDARDS.
 
 Do not rewrite history. Completed outcomes and archived entries are
 preserved verbatim; only relative link paths were adjusted when files moved.
+
+- [Sentence exercises and AI roles](architecture/modules/sentence-exercises.md) — word-bank JSON, translation simulation and future exercise contracts.
+
+- [R70 first web-run acceptance](testing/R70_WEB_ACCEPTANCE.md) — safe interruption, offline bundle and manual UI regression checklist.

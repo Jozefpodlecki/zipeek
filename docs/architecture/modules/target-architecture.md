@@ -5,55 +5,39 @@ proposal, and the runtime data-flow summary. Part of the
 [architecture overview](../ARCHITECTURE.md). Proposed extraction in
 [D30](../../process/decisions/process-and-infra.md#d30-extract-browser-database-adapter-proposed).
 
-## Workspace members
+## Implemented workspace and dependency direction (R69 audit)
 
-The intended workspace:
+The workspace currently contains the following packages:
 
-```text
-web
-crates/db-gen
-crates/zipeek-core
-e2e
-```
+| Package | Responsibility |
+| --- | --- |
+| `zipeek` (`crates/web`) | Yew presentation, browser services, local interaction and request lifecycle |
+| `db-gen` | Native dictionary importer, offline classification and artifact publication |
+| `zipeek-core` | Shared lexical types, deterministic rounds and pure tile operations |
+| `zipeek-ai` | Sentence-generation/evaluation contracts and versioned interactive prompts |
+| `zipeek-exercises` | Exercise definitions, learner-visible instances, sessions and evidence |
+| `zipeek-themes` | Domain-neutral theme resolution and asynchronous asset provider contract |
+| `e2e` | Browser acceptance harness and managed test infrastructure |
 
-web is the Yew CSR package zipeek.
+The intended direction is from application/adapters to domain crates, not the
+reverse. The core domain must not depend on Yew, DuckDB, the browser bridge or
+LM Studio. `zipeek-exercises` owns the cross-exercise contracts; `zipeek-ai`
+uses them for simulated-learner input without becoming the exercise-session
+owner. `zipeek-themes` is independent of the quiz engine and image-generation
+networking.
 
-crates/db-gen is the native generator (db-gen).
+Current application adapters include `web/services/translation_instance.rs`
+for browser-side tile randomisation and safe exercise-instance projection,
+`web/services/microphone.js` for permission-gated capture, and
+`web/components/audio_waveform.rs` for amplitude presentation. This boundary
+keeps source solutions out of AI learner-visible exercise data.
 
-crates/zipeek-core is the shared domain crate (D01).
+### Deferred browser database extraction
 
-e2e is the implemented browser harness package (A15, 2026-10-28), with owned
-Trunk/fixture servers, one managed Chrome session per integration binary and
-separate root/Pages builds. See [e2e](../../testing/e2e.md).
-
-Do not add nonexistent crates merely to match this map.
-
-Current crate graph
-text
-web ------------------> zipeek-core
-db-gen ---------------> zipeek-core
-db-gen -> native duckdb-neo
-web -> @duckdb/duckdb-wasm (npm)
-zipeek-core has no I/O and no wasm-only dependencies (D01).
-
-db-gen is a native-only binary and library; it never imports the browser
-runtime.
-
-web bundles DuckDB-WASM locally via the A06 pre-build hook; assets live under
-ignored vendor/duckdb.
-
-Proposed crate graph (A33 / D30)
-Proposal only, not approved or implemented:
-
-text
-web -> zipeek-db-wasm -> zipeek-core
-web ------------------> zipeek-core
-db-gen ---------------> zipeek-core
-db-gen -> native duckdb-neo
-Never make zipeek-core depend on the browser adapter or either DuckDB runtime.
-The generator keeps its native connection and engine/storage guards; it does not
-import the browser crate. Web continues to call A07 directly for deterministic
-round construction. No new framework-neutral domain crate is needed.
+A33 / D30 propose a future `zipeek-db-wasm` crate. **It is not present in the
+workspace or approved for implementation by R67.** The proposal remains below
+for dependency/feature approval before any relocation. It must preserve the
+pinned DuckDB-WASM browser version and existing JS asset packaging.
 
 ## Proposed browser database crate extraction (A33)
 
@@ -203,3 +187,27 @@ Shared crate: zipeek-core.md.
 Runtime data flow: data-flow.md.
 
 Architecture overview: ARCHITECTURE.md.
+
+## R69 boundary review: shared sessions and authoritative outcomes
+
+`zipeek-exercises` owns domain invariants for sessions and results; the
+app-level Yew provider should orchestrate delivery, not duplicate score
+validation. R69 adds an atomic completed-result operation to the domain crate.
+
+There are three distinct identities which must not be collapsed:
+
+- **Exercise definition**: versioned input/output contract independent of a question.
+- **Exercise instance**: one concrete visible question; may be repeated in later sessions.
+- **Submission event**: a unique finalized attempt at an instance within a session;
+  retries of the same event must not be counted again.
+
+The current shared provider generates a sequential instance ID at receipt time.
+That keeps recorded instance IDs unique, but does not prove event idempotency.
+A follow-up needs an explicit source event ID and a submission acknowledgement
+before navigation. Until then, the session is a completed-result ledger,
+not a durable planner, scheduler or exactly-once delivery queue.
+
+The aggregate `earned/possible` currently mixes Matching pair counts with MCQ
+question and Translation evaluation counts. Interpret these as **scored units**,
+not a proven cross-exercise proficiency percentage; authoritative per-skill
+evidence remains unwired. Browser recording is not a scored exercise.

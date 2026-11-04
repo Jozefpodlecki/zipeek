@@ -32,12 +32,12 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-rust-1.97.1-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'web/Trunk.toml', 'web/package-lock.json') }}
+          key: ${{ runner.os }}-rust-1.97.1-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'crates/web/Trunk.toml', 'crates/web/package-lock.json') }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: crates/web/package-lock.json
       - uses: jetli/trunk-action@v0.5.0
         with:
           version: latest
@@ -54,8 +54,10 @@ jobs:
           npm --version
           trunk --version
       - name: Install locked web assets
-        working-directory: web
+        working-directory: crates/web
         run: npm ci --ignore-scripts
+      - name: Verify database installer rollback
+        run: node --test scripts/db-workflow.test.cjs
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Lint workspace
@@ -65,7 +67,7 @@ jobs:
       - name: Check wasm target
         run: cargo check --target wasm32-unknown-unknown -p zipeek --locked
       - name: Build Pages base path
-        working-directory: web
+        working-directory: crates/web
         run: trunk build --public-url /zipeek/
 
   pages:

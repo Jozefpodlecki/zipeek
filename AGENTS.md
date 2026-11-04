@@ -52,19 +52,20 @@ COMPLETED history preservation, or the rule against hand-editing DuckDB files.
 
 | Path | Role / current status |
 | --- | --- |
-| `Cargo.toml` | Workspace manifest; includes `web`, `crates/db-gen`, `crates/zipeek-core`, and `e2e` |
-| `web/` | Yew crate, package `zipeek`; Trunk commands run here |
-| `web/src/` | App, components, contexts, models, pages, routes, services |
-| `web/index.html`, `web/Trunk.toml` | HTML entry point and build configuration |
-| `web/styles/`, `web/public/`, `web/icons/` | Current styles and static assets |
+| `Cargo.toml` | Workspace manifest; includes `crates/web`, `crates/db-gen`, `crates/zipeek-core`, `crates/zipeek-ai`, `crates/zipeek-exercises`, `crates/zipeek-themes`, and `crates/e2e` |
+| `crates/web/` | Yew crate, package `zipeek`; Trunk commands run here |
+| `crates/web/src/` | App, components, contexts, models, pages, routes, services |
+| `crates/web/index.html`, `crates/web/Trunk.toml` | HTML entry point and build configuration |
+| `crates/web/styles/`, `crates/web/public/`, `crates/web/icons/` | Current styles and static assets |
 | `crates/db-gen/` | Package `db-gen`; verified inputs, engine/storage guards, approved schema and HSK/fallback import, compatible artifact export, reports and native read-only verification |
-| `web/static/hanzi.duckdb` | Generated dictionary with reports/notices; A06 opens it read-only through pinned local browser workers |
-| `e2e/` | Workspace package `e2e`; modular owned Trunk/managed-Chrome lifecycle, root/Pages suites and headless executable |
+| `crates/web/static/hanzi.duckdb` | Generated dictionary with reports/notices; A06 opens it read-only through pinned local browser workers |
+| `crates/e2e/` | Workspace package `e2e`; modular owned Trunk/managed-Chrome lifecycle, root/Pages suites and headless executable |
 | `.github/workflows/` | PR/push/manual CI with five gates and owned Chrome; validated master calls reusable Pages release/deploy |
 | `docs/` | `product/`, `architecture/` (with `modules/` and `schema/`), `testing/`, `process/` (with `decisions/` and `completed/`) — see [docs/README.md](docs/README.md) for the index |
 
-The intended workspace includes the web app, generator, and e2e crate. Do not
-add nonexistent crates merely to match this map. The approved shared crate name
+The implemented workspace contains the seven packages listed above. Do not
+add crates merely to fill out a proposed architecture; keep boundaries driven
+by approved responsibilities. The approved shared crate name
 is `zipeek-core`; Word/WordId, HSK and canonical PoS types are implemented;
 practice URL state and the pure deterministic round builder are implemented;
 typed browser database queries, matching/MCQ gameplay and mixed-type sessions
@@ -165,15 +166,20 @@ cargo check --target wasm32-unknown-unknown -p zipeek --locked
 ```
 
 ```
-# From web/: Pages-ready build (dev server uses port 1420)
+# From crates/web/: Pages-ready build (dev server uses port 1420)
 npm ci --ignore-scripts
 trunk serve
 trunk build --public-url /zipeek/
 ```
 
+For a complete LM Studio enriched dictionary use `cargo make db-full`; use
+`cargo make db-full-dev` to launch Trunk afterwards. Classification results
+are cached under target/db-workflow, and the installed database remains intact
+if inference or validation fails. Ordinary db-generate and dev remain offline.
+
 From the repository root, the explicit local workflow is cargo make dev:
 generate a fresh verified bundle, install the entire bundle with a backup, then
-start Trunk in web/. Separate tasks are db-check, db-generate, db-install and
+start Trunk in crates/web/. Separate tasks are db-check, db-generate, db-install and
 serve. cargo make serve reuses the installed bundle. These tasks use installed
 cargo-make and Node; they add no dependency or automatic install step. Generation
 runs once when explicitly requested, never during Trunk rebuilds or Pages builds.
@@ -209,7 +215,7 @@ cargo test --workspace --locked
 
 cargo check --target wasm32-unknown-unknown -p zipeek --locked
 
-trunk build --public-url /zipeek/ (from web/)
+trunk build --public-url /zipeek/ (from crates/web/)
 
 For a full run, the wasm check does not replace the Pages build; run both.
 For a routine UI change, check a representative affected path in Chrome;
@@ -217,9 +223,9 @@ expand coverage when failures or risk justify it. Report the sample, checks
 not run and why. Missing prerequisites are blocked, never passed. Existing
 automated CI gates remain unchanged by this local workflow policy.
 
-A06 requires npm dependencies installed in web/ before Trunk. Its pre-build hook
+A06 requires npm dependencies installed in crates/web/ before Trunk. Its pre-build hook
 packages the exact pinned DuckDB-WASM worker/module assets and Arrow dependency
-locally under ignored web/vendor/; it never installs packages or generates a DB.
+locally under ignored crates/web/vendor/; it never installs packages or generates a DB.
 Retain the packaged library licenses/notices. Avoid CDN/latest substitutions.
 The additional summary pre-build hook requires the approved Chart.js/esbuild
 packages, bundles the summary ring locally and retains their licenses. npm ci
@@ -266,3 +272,5 @@ process/CURRENT.md	Active work, blockers, and next task; update every task
 process/handoff.md	Per-task continuation notes for the next session; reference only
 process/completed/	Append-only outcomes split by outcome date; never rewrite
 Keep process instructions here instead of duplicating them in a kickoff prompt.
+
+R60 adds the approved `crates/zipeek-exercises` pure domain crate for versioned exercise definitions, instances and quiz sessions. See D47 and `docs/architecture/ARCHITECTURE.md` for dependency boundaries.

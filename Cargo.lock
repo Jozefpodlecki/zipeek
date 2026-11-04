@@ -33,44 +33,56 @@ dependencies = [
 
 [[package]]
 name = "aimux-core"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2e8041dab77778ffdb8eedf3d47278c6f5aa15f84ffe1521a29ba359baafe30"
+checksum = "62181ff0ef2703bd257af4b46a8bfeb60e4f384d868507143492526c0647e070"
 dependencies = [
  "async-stream",
  "async-trait",
  "base64 0.22.1",
+ "chrono",
  "futures",
  "httpdate",
+ "indexmap",
  "jsonschema",
  "rand 0.8.8",
+ "regex",
+ "reqwest 0.12.28",
+ "schemars",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
  "tokio",
  "tokio-util",
  "tracing",
- "ts-rs",
+ "url",
 ]
 
 [[package]]
 name = "aimux-provider-utils"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "238d437b8a33ab92da89775fd8eeb42d38e5ed894957496acc4d5f6a19df86aa"
+checksum = "d0e856ca51cdc52a51942de37cd21a03ee934134745d2f3a642b96e058d8f74e"
 dependencies = [
  "aimux-core",
  "aimux-stream",
  "async-stream",
+ "async-trait",
  "base64 0.22.1",
  "bytes",
  "chrono",
  "futures",
+ "hex",
+ "hmac",
  "http 1.5.0",
+ "indexmap",
  "reqwest 0.12.28",
  "rustls",
+ "schemars",
  "serde",
  "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
  "tokio",
  "tokio-tungstenite",
  "tracing",
@@ -81,9 +93,9 @@ dependencies = [
 
 [[package]]
 name = "aimux-providers"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "850119d975b8c2aa9a782c34ba6113aa31d288e9f31a238ade00e5f1c59c6467"
+checksum = "6ed33b2556d68e0b911b5bcdae3a25f048642f8d9b6946cdabb594069a1d218e"
 dependencies = [
  "aimux-core",
  "aimux-provider-utils",
@@ -94,13 +106,14 @@ dependencies = [
  "bytes",
  "chrono",
  "futures",
- "hex",
- "hmac",
+ "indexmap",
  "percent-encoding",
+ "regex",
  "reqwest 0.12.28",
+ "ring",
+ "schemars",
  "serde",
  "serde_json",
- "sha2",
  "tokio",
  "tracing",
  "url",
@@ -108,17 +121,15 @@ dependencies = [
 
 [[package]]
 name = "aimux-stream"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed45fb2913e72cd751cf3c7905e434e85c01870b8f137a2a16b8d9821a88ca5e"
+checksum = "03059764853d911d17c278e10dbc1b8f1da546060d6ccc7b8e6aea37e6149db1"
 dependencies = [
  "bytes",
  "futures",
  "pin-project-lite",
- "serde",
- "serde_json",
+ "sse-stream",
  "thiserror 2.0.21",
- "tokio",
 ]
 
 [[package]]
@@ -705,6 +716,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror 2.0.21",
+ "tokio",
  "toml",
  "tracing",
  "tracing-subscriber",
@@ -783,6 +795,12 @@ name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
 name = "e2e"
@@ -1554,6 +1572,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -2628,6 +2648,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemars"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "687274d293b6cdc6e73e0fee520bf2049650090d7164f87672d212a3c530cf4a"
+dependencies = [
+ "dyn-clone",
+ "indexmap",
+ "ref-cast",
+ "schemars_derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d98c67716b46af2f0b8cf752abc930f6f9aecfbf671ecfb531db8a31dbe4e2ba"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde_derive_internals",
+ "syn 3.0.9",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2697,6 +2743,17 @@ name = "serde_derive"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+]
+
+[[package]]
+name = "serde_derive_internals"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f852137cce035d6a4df67ccce505ff6b3e9fd3a10e3e52b24dc71e650bb1a9bd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2842,6 +2899,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "sse-stream"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d385160fc0fba84f7b9cc8ef3263e410d0e3ca7ab4927f1356df33145ace69a4"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http-body",
+ "http-body-util",
+ "memchr",
+ "pin-project-lite",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2950,15 +3022,6 @@ dependencies = [
  "filetime",
  "libc",
  "xattr",
-]
-
-[[package]]
-name = "termcolor"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
-dependencies = [
- "winapi-util",
 ]
 
 [[package]]
@@ -3334,29 +3397,6 @@ name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
-
-[[package]]
-name = "ts-rs"
-version = "12.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "756050066659291d47a554a9f558125db17428b073c5ffce1daf5dcb0f7231d8"
-dependencies = [
- "serde_json",
- "thiserror 2.0.21",
- "ts-rs-macros",
-]
-
-[[package]]
-name = "ts-rs-macros"
-version = "12.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38d90eea51bc7988ef9e674bf80a85ba6804739e535e9cab48e4bb34a8b652aa"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
- "termcolor",
-]
 
 [[package]]
 name = "tungstenite"
@@ -4114,7 +4154,19 @@ dependencies = [
  "yew",
  "yew-router",
  "yew_icons",
+ "zipeek-ai",
  "zipeek-core",
+ "zipeek-exercises",
+ "zipeek-themes",
+]
+
+[[package]]
+name = "zipeek-ai"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "zipeek-exercises",
 ]
 
 [[package]]
@@ -4123,6 +4175,17 @@ version = "0.1.0"
 dependencies = [
  "rand 0.10.3",
 ]
+
+[[package]]
+name = "zipeek-exercises"
+version = "0.1.0"
+dependencies = [
+ "zipeek-core",
+]
+
+[[package]]
+name = "zipeek-themes"
+version = "0.1.0"
 
 [[package]]
 name = "zlib-rs"

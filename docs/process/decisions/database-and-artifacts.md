@@ -322,3 +322,18 @@ v1.4.0 storage is readable. Synthetic fixture evidence passed in Node 24.17.0
 before D23 was approved; A06 later validated the actual full dictionary in
 browser workers and the /zipeek/ build. Future regenerated artifacts must
 repeat compatibility checks.
+---
+
+## D46 One-command AI-enriched database publication
+
+**Status:** Approved 2026-11-04.
+**Owner:** [Regeneration](../../architecture/schema/regeneration.md),
+[README](../../../README.md), [CURRENT](../CURRENT.md).
+**Index row:** [D46](index.md#approved-decisions).
+
+Provide `cargo make db-full` as the explicit full local workflow. Reuse the
+existing native sense classifier, resumable model-specific cache, validated
+cache-backed generator, and atomic installation with rollback. Never publish an
+incomplete classification or replace an installed bundle when inference fails.
+Keep the routine offline generation and development commands available without
+implicit network inference. `db-full-dev` additionally starts Trunk.

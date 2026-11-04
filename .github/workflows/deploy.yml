@@ -25,7 +25,7 @@ jobs:
             ~/.cargo/git
             ~/.cargo/registry
             target
-          key: ${{ runner.os }}-rust-1.97.1-pages-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'web/Trunk.toml', 'web/package-lock.json') }}
+          key: ${{ runner.os }}-rust-1.97.1-pages-${{ hashFiles('Cargo.lock', 'Cargo.toml', '**/Cargo.toml', 'rust-toolchain.toml', 'crates/web/Trunk.toml', 'crates/web/package-lock.json') }}
       - name: Install matching wasm-bindgen CLI
         run: cargo install wasm-bindgen-cli --version 0.2.114 --locked
       - uses: jetli/trunk-action@v0.5.0
@@ -36,16 +36,16 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: crates/web/package-lock.json
       - name: Install locked web assets
-        working-directory: web
+        working-directory: crates/web
         run: npm ci --ignore-scripts
       - name: Build release for GitHub Pages
-        working-directory: web
+        working-directory: crates/web
         run: trunk build --release --public-url /zipeek/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist/
+          path: crates/web/dist/
 
   deploy:
     needs: build

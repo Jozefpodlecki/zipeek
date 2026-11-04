@@ -11,6 +11,7 @@ pub(super) struct Reading {
     pub pinyin: String,
     pub numeric: String,
     pub english: Option<String>,
+    pub source_glosses: Vec<(i32, String)>,
     pub pos: Vec<PartOfSpeech>,
     pub old: Option<Hsk2Level>,
     pub new: Option<Hsk3Level>,
@@ -53,6 +54,8 @@ impl Reading {
         }
         if self.english.is_none() {
             self.english = incoming.english;
+            self.source_glosses = incoming.source_glosses;
+            self.entry = incoming.entry;
         }
         self.pos.extend(incoming.pos);
         self.pos.sort_unstable_by_key(|value| value.as_str());

@@ -16,12 +16,17 @@ engine/storage in [D23](../../process/decisions/database-and-artifacts.md).
 | `row.rs` | Validated `Word` conversion |
 | `queries.rs` | Bound SQL, including A21 ordered batch ID lookup |
 | `error.rs` | Typed query/runtime errors |
+| `browse_queries.rs` | Parameterized free-text, HSK, PoS, sense-category, predefined and personal-set filters with bounded ID-ordered pages |
 
 `Database` exposes ID lookup, exact simplified/traditional and display/numeric-
 pinyin lookup, full HSK-union rows/count/ordered offset, HSK/PoS pagination and
 the three `CandidatePool` views. Widening clamps within the chosen system. Every
 word query uses `ORDER BY id ASC`; SQL removes bound exclusions before offsets.
 No user value becomes an identifier.
+
+## Normalized Browse readiness
+
+The bundled 2026-10-29 `hanzi.manifest.json` contains only the legacy `words` table. The R12+ Browse SQL is present in source but **cannot** be exercised against that installed database. `cargo make db-browse-check` validates the *manifest's table list* and tells the contributor to regenerate and install the normalized bundle. This is a preflight, not runtime SQL execution or a benchmark. Browse retrieves `limit + 1` rows and renders at most `limit`, so its Next control only appears when an additional row is known to exist. Full schema-backed Browser/Pages coverage is pending regeneration.
 
 ## Runtime facts
 
@@ -163,3 +168,8 @@ secondary traditional text and Listen. Missing display rows fail preparation.
 The exclusion-clean strict pool size drives the existing nominal-offset helper;
 seed contexts differing from the URL filter also fetch the next unseeded pool.
 Round labels, comparison keys and the core replay stream remain unchanged.
+
+
+## R16–R18 browser-local personal Word Sets
+
+`crates/web/src/services/word_sets.rs` stores name/ordered WordId lists in localStorage with strict JSON validation, a cap of 50 sets and 1,000 words per set, and explicit write failures. Browse supports adding/removing words, renaming/deleting sets, and manual export/validated merge-import. Imports write only after the entire merged collection validates; on errors the UI retains its prior in-memory state. This is separate from the read-only DuckDB adapter and does not change D12/D19 practice replay. IDs are dictionary-build-specific and are not yet fingerprinted or remapped.

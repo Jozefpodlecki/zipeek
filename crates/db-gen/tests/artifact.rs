@@ -79,7 +79,22 @@ fn independent_exports_have_identical_logical_content_schema_ids_and_diagnostics
         fs::read(fixture.directory("first/hanzi.diagnostics.json"))?,
         fs::read(fixture.directory("second/hanzi.diagnostics.json"))?
     );
-    assert_eq!(first.tables, ["words"]);
+    assert_eq!(
+        first.tables,
+        [
+            "categories",
+            "classification_runs",
+            "parts_of_speech",
+            "sense_categories",
+            "sense_display",
+            "sense_pos",
+            "sense_relations",
+            "word_hsk_membership",
+            "word_pos_membership",
+            "word_senses",
+            "words",
+        ]
+    );
     assert_eq!(first.columns.len(), 10);
     assert_eq!(first.indexes.len(), 2);
     assert_eq!(first.constraints.len(), 5);

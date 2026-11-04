@@ -102,3 +102,15 @@ start every variant through the UI and validate actual decoded query values,
 count/exclusion semantics and dictionary-backed Ready preparation. Unknown saved
 IDs do not enter Start, and initial validation never writes storage. Reset updates
 the next URL to omit exclude; shared practice URLs still ignore saved state.
+
+
+## R19–R21 personal Word Set snapshot checks
+
+Practice URLs optionally include `set_ids=1,2,...` (1–128 sorted positive IDs).
+Invalid or duplicate IDs reject the request rather than defaulting to the HSK pool.
+Verify normal HSK URLs remain identical, and Word Set URLs replay from the
+URL alone across browsers using the **same** database artifact, without reading
+localStorage. Matching and MCQ must never widen outside the selected IDs.
+Advance/Restart and mixed-type navigation must retain the sorted snapshot.
+Exclusions still apply, and a set unable to supply eligible cards must display
+insufficient-pool feedback. The v1 canonical seed string must remain unchanged.

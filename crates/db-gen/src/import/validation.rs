@@ -19,27 +19,25 @@ pub(super) fn validate_entry(
     diagnostics: &mut Vec<ImportDiagnostic>,
 ) -> Option<EntryMetadata> {
     let simplified = &source.simplified;
-    let pos = match PartOfSpeech::from_source_codes(source.pos.iter().map(String::as_str)) {
-        Ok(pos) => pos,
-        Err(_) => {
-            let unknown: Vec<_> = source
-                .pos
-                .iter()
-                .filter(|code| PartOfSpeech::from_source_code(code).is_err())
-                .collect();
-            record(
-                diagnostics,
-                Kind::RejectedEntry,
-                entry,
-                simplified,
-                format!(
-                    "unknown PoS codes {unknown:?}; rejecting all {} forms",
-                    source.forms.len()
-                ),
-            );
-            return None;
+    let mut pos = Vec::new();
+    let mut unknown = Vec::new();
+    for code in &source.pos {
+        match super::pos_mapping::normalize(code) {
+            Ok(value) => pos.push(value),
+            Err(_) => unknown.push(code.as_str()),
         }
-    };
+    }
+    pos.sort_unstable_by_key(|value| value.as_str());
+    pos.dedup();
+    if !unknown.is_empty() {
+        record(
+            diagnostics,
+            Kind::UnknownPartOfSpeech,
+            entry,
+            simplified,
+            format!("unknown PoS codes {unknown:?}; retaining entry and known codes"),
+        );
+    }
     let (old, new) = levels::memberships(&source.level, entry, simplified, diagnostics);
     let frequency = match source.frequency.map(i32::try_from).transpose() {
         Ok(value) => value,

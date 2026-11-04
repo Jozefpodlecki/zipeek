@@ -5,9 +5,12 @@ const {spawnSync} = require('node:child_process');
 
 const repository = path.resolve(__dirname, '..');
 const manifestName = 'hanzi.manifest.json';
-const required = ['hanzi.duckdb', 'hanzi.diagnostics.json', 'INPUTS.toml', 'ATTRIBUTION.md', 'notices/HSK-LICENSE.txt', 'notices/HSK-SOURCE-README.txt', 'notices/CC-BY-SA-4.0.txt'];
+const browseTables = ['words', 'word_hsk_membership', 'word_pos_membership', 'word_senses', 'sense_categories'];
+const required = ['hanzi.diagnostics.json', 'INPUTS.toml', 'ATTRIBUTION.md', 'notices/HSK-LICENSE.txt', 'notices/HSK-SOURCE-README.txt', 'notices/CC-BY-SA-4.0.txt'];
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const unique = () => `${Date.now()}-${crypto.randomUUID()}`;
+const databaseFile = name => /^hanzi(?:-\d{8}-\d{6})?\.duckdb$/.test(name);
+const timestampedDatabase = date => `hanzi-${date.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-')}.duckdb`;
 
 function inside(root, target) {
     const resolved = path.resolve(target);
@@ -53,9 +56,20 @@ function validateBundle(root, directory) {
         if (bytes.length !== file.size_bytes || hash(bytes) !== file.sha256) throw new Error(`Bundle checksum mismatch: ${file.path}`);
     }
     for (const file of required) if (!names.has(file)) throw new Error(`Required bundle file missing: ${file}`);
+    const databases = [...names].filter(databaseFile);
+    if (databases.length !== 1) throw new Error(`Bundle must include exactly one dictionary database (found ${databases.length})`);
     const input = report.files.find(file => file.path === 'INPUTS.toml');
     if (input.sha256 !== hash(fs.readFileSync(path.join(root, 'crates/db-gen/data/MANIFEST.toml')))) throw new Error('Bundle does not match the current pinned input manifest');
     return {bundle, report, files: [...names, manifestName]};
+}
+
+function checkBrowseSchema(report) {
+    const tables = Array.isArray(report.tables) ? report.tables : [];
+    const missing = browseTables.filter(table => !tables.includes(table));
+    if (missing.length) {
+        throw new Error(`Installed dictionary is missing normalized Browse tables: ${missing.join(', ')}. Run cargo make db-generate and cargo make db-install; do not edit hanzi.duckdb manually.`);
+    }
+    return tables;
 }
 
 function workflow(root) {
@@ -65,11 +79,12 @@ function workflow(root) {
     return directory;
 }
 
-function generate(root) {
+function generate(root, options = {}) {
     const directory = workflow(root);
     secureDirectory(root, path.join(directory, 'generated'));
     const output = inside(directory, path.join(directory, 'generated', unique()));
     const args = ['run', '-p', 'db-gen', '--locked', '--', 'generate', '--output', output];
+    if (options.classificationCache) args.push('--classification-cache', path.resolve(options.classificationCache));
     const result = spawnSync('cargo', args, {cwd: root, stdio: 'inherit'});
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`Generator failed (${result.status ?? result.signal}); installed bundle unchanged`);
@@ -85,7 +100,7 @@ function generate(root) {
 function installBundle(root, source) {
     const checked = validateBundle(root, source);
     const directory = workflow(root);
-    const destination = inside(root, path.join(root, 'web/static'));
+    const destination = inside(root, path.join(root, 'crates/web/static'));
     const stage = inside(directory, path.join(directory, 'staging', unique()));
     const backup = inside(directory, path.join(directory, 'backups', unique()));
     if (checked.bundle === destination) throw new Error('Candidate is already the installed bundle');
@@ -96,6 +111,15 @@ function installBundle(root, source) {
         const output = inside(stage, path.join(stage, name));
         fs.mkdirSync(path.dirname(output), {recursive: true});
         fs.copyFileSync(regular(checked.bundle, name), output, fs.constants.COPYFILE_EXCL);
+    }
+    const initial = validateBundle(root, stage);
+    const existingDatabase = initial.report.files.find(file => databaseFile(file.path)).path;
+    const stampedDatabase = timestampedDatabase(new Date());
+    if (existingDatabase !== stampedDatabase) {
+        fs.renameSync(path.join(stage, existingDatabase), path.join(stage, stampedDatabase));
+        const manifestPath = path.join(stage, manifestName);
+        initial.report.files.find(file => file.path === existingDatabase).path = stampedDatabase;
+        fs.writeFileSync(manifestPath, JSON.stringify(initial.report, null, 2) + '\n');
     }
     validateBundle(root, stage);
     secureDirectory(root, path.dirname(backup));
@@ -112,13 +136,19 @@ function installBundle(root, source) {
         }
         throw error;
     }
-    console.log(`Installed database: ${path.join(destination, 'hanzi.duckdb')}\nReadings: ${checked.report.rows}\nPrevious bundle: ${moved ? backup : 'none'}`);
+    console.log(`Installed database: ${path.join(destination, stampedDatabase)}\nReadings: ${checked.report.rows}\nPrevious bundle: ${moved ? backup : 'none'}`);
     return {destination, backup: moved ? backup : null};
 }
 
 function main() {
     const command = process.argv[2];
     if (command === 'generate') return generate(repository);
+    if (command === 'browse-check') {
+        const installed = validateBundle(repository, path.join(repository, 'crates/web/static'));
+        checkBrowseSchema(installed.report);
+        console.log('Installed dictionary has all normalized Browse tables');
+        return;
+    }
     if (command === 'install') {
         const directory = workflow(repository);
         const pointer = path.join(directory, 'latest.json');
@@ -126,11 +156,11 @@ function main() {
         const latest = JSON.parse(fs.readFileSync(pointer, 'utf8'));
         return installBundle(repository, inside(directory, path.resolve(repository, latest.directory)));
     }
-    throw new Error('Usage: node scripts/db-workflow.cjs <generate|install>');
+    throw new Error('Usage: node scripts/db-workflow.cjs <generate|install|browse-check>');
 }
 
 if (require.main === module) {
     try {main();} catch (error) {console.error(`Database workflow failed: ${error.message}`); process.exitCode = 1;}
 }
 
-module.exports = {validateBundle, installBundle};
+module.exports = {validateBundle, installBundle, checkBrowseSchema, generate};

@@ -2,6 +2,7 @@
 pub enum ImportDiagnosticKind {
     RejectedEntry,
     RejectedForm,
+    UnknownPartOfSpeech,
     UnknownLevel,
     LevelConflict,
     RepeatedReading,
@@ -30,11 +31,31 @@ pub(super) fn record(
     detail: impl Into<String>,
 ) {
     let detail = detail.into();
-    tracing::warn!(?kind, entry, simplified, detail, "HSK import diagnostic");
+    match kind {
+        ImportDiagnosticKind::RepeatedReading => {
+            tracing::debug!(?kind, entry, simplified, detail, "HSK import diagnostic");
+        }
+        _ => {
+            tracing::warn!(?kind, entry, simplified, detail, "HSK import diagnostic");
+        }
+    }
     diagnostics.push(ImportDiagnostic {
         kind,
         entry,
         simplified: simplified.to_owned(),
         detail,
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn repeated_reading_diagnostics_are_still_retained() {
+        let mut diagnostics = Vec::new();
+        record(&mut diagnostics, ImportDiagnosticKind::RepeatedReading, 5, "子", "duplicate");
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(diagnostics[0].detail, "duplicate");
+    }
 }

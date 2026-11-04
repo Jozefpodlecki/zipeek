@@ -5,8 +5,11 @@ mod fallback;
 mod glosses;
 mod grouping;
 mod levels;
+mod pos_mapping;
 mod reading;
+mod relations;
 mod source;
+mod senses;
 mod storage;
 mod validation;
 
@@ -15,4 +18,5 @@ pub use diagnostics::{ImportDiagnostic, ImportDiagnosticKind};
 pub use error::ImportError;
 pub use fallback::{FallbackSummary, apply_cedict_fallback};
 pub use grouping::{HskImport, parse_hsk};
-pub use storage::insert_words;
+pub use senses::SourceSense;
+pub use storage::{insert_dictionary, insert_words};

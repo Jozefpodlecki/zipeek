@@ -1,4 +1,10 @@
-mod client;
+pub mod classification;
+pub mod prompts;
+pub mod batch;
+mod recovery;
+mod cache_store;
+mod failure_report;
+pub(crate) mod client;
 mod error;
 mod streaming;
 mod usage;
