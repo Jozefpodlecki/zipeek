@@ -100,7 +100,8 @@ impl ParsedPracticeQuery {
 
 impl NormalizedPracticeQuery {
     pub fn canonical_seed_input(&self, variant: ExerciseVariant) -> String {
-        let legacy = canonical_seed_input(variant, &self.filter, self.offset, self.seed.original_id());
+        let legacy =
+            canonical_seed_input(variant, &self.filter, self.offset, self.seed.original_id());
         match &self.dictionary_source {
             Some(source) => format!("{legacy}|{source}"),
             None => legacy,
@@ -149,7 +150,13 @@ impl NormalizedPracticeQuery {
             pairs.push(("source".to_owned(), source.clone()));
         }
         if let Some(ids) = &self.word_set {
-            pairs.push(("set_ids".to_owned(), ids.iter().map(ToString::to_string).collect::<Vec<_>>().join(",")));
+            pairs.push((
+                "set_ids".to_owned(),
+                ids.iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(","),
+            ));
         }
         if self.seed == SeedDisposition::Unseeded {
             pairs.push(("offset".to_owned(), self.offset.to_string()));

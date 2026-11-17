@@ -1,0 +1,551 @@
+teaching_id	region	ordinal	label	example_zh	kind	parent_teaching_id	review_status
+g001-p01	1	1	Subject + predicate	我学习中文。	unclassified		pending_linguistic_review
+g001-p02	1	2	是 for identity	她是老师。	unclassified		pending_linguistic_review
+g001-p03	1	3	不 before a verb	我不喝茶。	unclassified		pending_linguistic_review
+g001-p04	1	4	吗 for yes/no questions	你喜欢咖啡吗？	unclassified		pending_linguistic_review
+g002-p01	2	1	Time before an action	我今天学习中文。	unclassified		pending_linguistic_review
+g002-p02	2	2	在 + place + verb	我在学校学习。	unclassified		pending_linguistic_review
+g002-p03	2	3	Time, then location	我今天在学校学习。	unclassified		pending_linguistic_review
+g002-p04	2	4	去 + destination	我明天去学校。	unclassified		pending_linguistic_review
+g002-p05	2	5	Ask where with 哪里	你在哪里学习？	unclassified		pending_linguistic_review
+g003-p01	3	1	有 for possession	我有一本书。	unclassified		pending_linguistic_review
+g003-p02	3	2	没有 for absence	我没有电脑。	unclassified		pending_linguistic_review
+g003-p03	3	3	Number + classifier + noun	我有三个苹果。	unclassified		pending_linguistic_review
+g003-p04	3	4	几 for smaller expected counts	你有几本书？	unclassified		pending_linguistic_review
+g003-p05	3	5	多少 for open-ended quantities	你有多少个苹果？	unclassified		pending_linguistic_review
+g004-p01	4	1	Adjectives as predicates	他很忙。	unclassified		pending_linguistic_review
+g004-p02	4	2	Degree with 很	这件衣服很漂亮。	unclassified		pending_linguistic_review
+g004-p03	4	3	Negate an adjective with 不	今天不冷。	unclassified		pending_linguistic_review
+g004-p04	4	4	Too ... with 太...了	这杯茶太热了。	unclassified		pending_linguistic_review
+g004-p05	4	5	Compare with 比	今天比昨天冷。	unclassified		pending_linguistic_review
+g005-p01	5	1	想 + verb for intentions	我想学中文。	unclassified		pending_linguistic_review
+g005-p02	5	2	要 + noun for wants	我要一杯水。	unclassified		pending_linguistic_review
+g005-p03	5	3	会 for learned skills	她会说中文。	unclassified		pending_linguistic_review
+g005-p04	5	4	能 for practical ability	我今天不能去。	unclassified		pending_linguistic_review
+g005-p05	5	5	可以 for permission	我可以坐这里吗？	unclassified		pending_linguistic_review
+g006-p01	6	1	了 after a verb	我买了一本书。	unclassified		pending_linguistic_review
+g006-p02	6	2	Sentence-final 了	下雨了。	unclassified		pending_linguistic_review
+g006-p03	6	3	没(有) with completed actions	我昨天没去学校。	unclassified		pending_linguistic_review
+g006-p04	6	4	了 with quantified objects	她喝了两杯水。	unclassified		pending_linguistic_review
+g006-p05	6	5	Already with 已经	我已经吃饭了。	unclassified		pending_linguistic_review
+g007-p01	7	1	过 for experience	我去过北京。	unclassified		pending_linguistic_review
+g007-p02	7	2	没(有) ... 过	我没有看过这部电影。	unclassified		pending_linguistic_review
+g007-p03	7	3	着 for a continuing state	门开着。	unclassified		pending_linguistic_review
+g007-p04	7	4	正在 for ongoing actions	他正在做饭。	unclassified		pending_linguistic_review
+g007-p05	7	5	一边 ... 一边 ...	她一边走路一边听音乐。	unclassified		pending_linguistic_review
+g008-p01	8	1	Duration after the verb	我学了两年中文。	unclassified		pending_linguistic_review
+g008-p02	8	2	Verb repetition with duration	他游泳游了一个小时。	unclassified		pending_linguistic_review
+g008-p03	8	3	每 ... 都 ...	我每天都读书。	unclassified		pending_linguistic_review
+g008-p04	8	4	又 versus 再	他昨天又迟到了。	unclassified		pending_linguistic_review
+g008-p05	8	5	才 versus 就 in time	她八点才到。	unclassified		pending_linguistic_review
+g009-p01	9	1	Place + 有 + noun	桌子上有一本书。	unclassified		pending_linguistic_review
+g009-p02	9	2	Place + 是 + noun	前面是图书馆。	unclassified		pending_linguistic_review
+g009-p03	9	3	Locative nouns	猫在桌子下面。	unclassified		pending_linguistic_review
+g009-p04	9	4	从 ... 到 ...	我从家走到学校。	unclassified		pending_linguistic_review
+g009-p05	9	5	离 for distance	我家离学校很近。	unclassified		pending_linguistic_review
+g010-p01	10	1	来 versus 去	请进来。	unclassified		pending_linguistic_review
+g010-p02	10	2	上来 and 上去	他跑上楼去了。	unclassified		pending_linguistic_review
+g010-p03	10	3	进来 and 进去	她走进教室来了。	unclassified		pending_linguistic_review
+g010-p04	10	4	回来 and 回去	你什么时候回来？	unclassified		pending_linguistic_review
+g010-p05	10	5	出来 and 出去	孩子们跑出去了。	unclassified		pending_linguistic_review
+g011-p01	11	1	Verb + 完	我看完这本书了。	unclassified		pending_linguistic_review
+g011-p02	11	2	Verb + 到	我找到钥匙了。	unclassified		pending_linguistic_review
+g011-p03	11	3	Verb + 懂	你听懂了吗？	unclassified		pending_linguistic_review
+g011-p04	11	4	Verb + 好	饭做好了。	unclassified		pending_linguistic_review
+g011-p05	11	5	Verb + 错	我写错了名字。	unclassified		pending_linguistic_review
+g012-p01	12	1	Verb + 得 + result	这个字我看得懂。	unclassified		pending_linguistic_review
+g012-p02	12	2	Verb + 不 + result	我听不懂这个问题。	unclassified		pending_linguistic_review
+g012-p03	12	3	做得完 and 做不完	今天做得完吗？	unclassified		pending_linguistic_review
+g012-p04	12	4	看得见 and 看不见	我看不见黑板。	unclassified		pending_linguistic_review
+g012-p05	12	5	进得去 and 进不去	门太小，车进不去。	unclassified		pending_linguistic_review
+g013-p01	13	1	Verb + 得 + adjective	他说得很清楚。	unclassified		pending_linguistic_review
+g013-p02	13	2	Verb-object with manner	她唱歌唱得很好。	unclassified		pending_linguistic_review
+g013-p03	13	3	Adjective + 极了	今天热极了。	unclassified		pending_linguistic_review
+g013-p04	13	4	得多 in comparisons	这个房间大得多。	unclassified		pending_linguistic_review
+g013-p05	13	5	一点儿 for small differences	今天比昨天冷一点儿。	unclassified		pending_linguistic_review
+g014-p01	14	1	Basic 把 sentence	请把门关上。	unclassified		pending_linguistic_review
+g014-p02	14	2	把 + object + 放在	我把书放在桌子上。	unclassified		pending_linguistic_review
+g014-p03	14	3	把 + object + 给	请把这个给老师。	unclassified		pending_linguistic_review
+g014-p04	14	4	Negative 把 with 没	我没把作业写完。	unclassified		pending_linguistic_review
+g014-p05	14	5	把 with result complement	他把房间打扫干净了。	unclassified		pending_linguistic_review
+g015-p01	15	1	被 + agent + verb	我的书被弟弟拿走了。	unclassified		pending_linguistic_review
+g015-p02	15	2	被 without an agent	门被打开了。	unclassified		pending_linguistic_review
+g015-p03	15	3	让 in passive contexts	他让雨淋湿了。	unclassified		pending_linguistic_review
+g015-p04	15	4	叫 in passive contexts	杯子叫孩子打破了。	unclassified		pending_linguistic_review
+g015-p05	15	5	Affected subject without 被	杯子打破了。	unclassified		pending_linguistic_review
+g016-p01	16	1	Adjective + 的 + noun	我喜欢红色的衣服。	unclassified		pending_linguistic_review
+g016-p02	16	2	Possessor + 的 + noun	这是老师的书。	unclassified		pending_linguistic_review
+g016-p03	16	3	Relative clause + 的 + noun	这是我昨天买的书。	unclassified		pending_linguistic_review
+g016-p04	16	4	Verb phrase as modifier	正在唱歌的人是我妹妹。	unclassified		pending_linguistic_review
+g016-p05	16	5	Nominalized 的	红色的是我的。	unclassified		pending_linguistic_review
+g017-p01	17	1	Topic followed by comment	这本书，我看过。	unclassified		pending_linguistic_review
+g017-p02	17	2	连 ... 都 ...	连小孩子都知道。	unclassified		pending_linguistic_review
+g017-p03	17	3	是 ... 的 for past details	我是坐火车来的。	unclassified		pending_linguistic_review
+g017-p04	17	4	只有 ... 才 ...	只有努力，才能进步。	unclassified		pending_linguistic_review
+g017-p05	17	5	不仅 ... 还 ...	他不仅会中文，还会日语。	unclassified		pending_linguistic_review
+g018-p01	18	1	因为 ... 所以 ...	因为下雨，所以我们没出去。	unclassified		pending_linguistic_review
+g018-p02	18	2	如果 ... 就 ...	如果明天下雨，我们就不去。	unclassified		pending_linguistic_review
+g018-p03	18	3	要是 ... 就 ...	要是你有时间，就来找我。	unclassified		pending_linguistic_review
+g018-p04	18	4	只要 ... 就 ...	只要坚持，就会进步。	unclassified		pending_linguistic_review
+g018-p05	18	5	既然 ... 就 ...	既然来了，就坐一会儿吧。	unclassified		pending_linguistic_review
+g019-p01	19	1	虽然 ... 但是 ...	虽然很累，但是她还在学习。	unclassified		pending_linguistic_review
+g019-p02	19	2	即使 ... 也 ...	即使下雨，我也要去。	unclassified		pending_linguistic_review
+g019-p03	19	3	尽管 ... 还是 ...	尽管很难，他还是做到了。	unclassified		pending_linguistic_review
+g019-p04	19	4	反而 for contrary outcomes	他没有生气，反而笑了。	unclassified		pending_linguistic_review
+g019-p05	19	5	而 as a contrastive linker	他喜欢茶，而我喜欢咖啡。	unclassified		pending_linguistic_review
+g020-p01	20	1	先 ... 再 ...	先洗手，再吃饭。	unclassified		pending_linguistic_review
+g020-p02	20	2	一 ... 就 ...	我一到家就给你打电话。	unclassified		pending_linguistic_review
+g020-p03	20	3	然后 for sequence	我吃了饭，然后去散步。	unclassified		pending_linguistic_review
+g020-p04	20	4	一边 ... 一边 ... in narration	他一边做饭一边聊天。	unclassified		pending_linguistic_review
+g020-p05	20	5	直到 ... 才 ...	直到晚上他才回来。	unclassified		pending_linguistic_review
+g021-p01	21	1	Verb + 去 + purpose	我去商店买水果。	unclassified		pending_linguistic_review
+g021-p02	21	2	Come and + verb	他来我家吃饭。	unclassified		pending_linguistic_review
+g021-p03	21	3	Verb + 来 + purpose	她过来帮我。	unclassified		pending_linguistic_review
+g021-p04	21	4	去 + place + verb	我们去公园散步。	unclassified		pending_linguistic_review
+g021-p05	21	5	Motion + action sequence	孩子跑出去玩了。	unclassified		pending_linguistic_review
+g021-p06	21	6	边 + motion + 边 + activity	他边走边打电话。	unclassified		pending_linguistic_review
+g022-p01	22	1	让 + person + verb	老师让我们读课文。	unclassified		pending_linguistic_review
+g022-p02	22	2	请 + person + verb	请你坐下。	unclassified		pending_linguistic_review
+g022-p03	22	3	叫 + person + verb	妈妈叫我回家。	unclassified		pending_linguistic_review
+g022-p04	22	4	使 + person + adjective	这个消息使我很高兴。	unclassified		pending_linguistic_review
+g022-p05	22	5	帮 + person + verb	他帮我搬箱子。	unclassified		pending_linguistic_review
+g022-p06	22	6	劝 + person + verb	朋友劝我早点休息。	unclassified		pending_linguistic_review
+g023-p01	23	1	拿 + 出来	请把书拿出来。	unclassified		pending_linguistic_review
+g023-p02	23	2	走 + 进去	他走进去了。	unclassified		pending_linguistic_review
+g023-p03	23	3	跑 + 过来	小狗跑过来了。	unclassified		pending_linguistic_review
+g023-p04	23	4	搬 + 上去	他们把桌子搬上去了。	unclassified		pending_linguistic_review
+g023-p05	23	5	拿 + 回来	你把钥匙拿回来。	unclassified		pending_linguistic_review
+g023-p06	23	6	拿 + 过去	请把文件拿过去。	unclassified		pending_linguistic_review
+g024-p01	24	1	听 + 清楚	我没听清楚你的名字。	unclassified		pending_linguistic_review
+g024-p02	24	2	看 + 出来	我看出来他累了。	unclassified		pending_linguistic_review
+g024-p03	24	3	想 + 起来	我想起来了。	unclassified		pending_linguistic_review
+g024-p04	24	4	记 + 住	我记住这个词了。	unclassified		pending_linguistic_review
+g024-p05	24	5	弄 + 丢	他把钱包弄丢了。	unclassified		pending_linguistic_review
+g024-p06	24	6	发现 + 了	我发现了一个错误。	unclassified		pending_linguistic_review
+g025-p01	25	1	吃 + 得 + 下	这么多饭我吃不下。	unclassified		pending_linguistic_review
+g025-p02	25	2	买 + 得 + 起	这辆车我买不起。	unclassified		pending_linguistic_review
+g025-p03	25	3	受 + 得 + 了	这种声音我受不了。	unclassified		pending_linguistic_review
+g025-p04	25	4	来 + 得 + 及	现在走还来得及。	unclassified		pending_linguistic_review
+g025-p05	25	5	走 + 得 + 开	我今天走不开。	unclassified		pending_linguistic_review
+g025-p06	25	6	等 + 得 + 起	我们等得起。	unclassified		pending_linguistic_review
+g026-p01	26	1	Verb + 一次	我去过一次上海。	unclassified		pending_linguistic_review
+g026-p02	26	2	Verb + 两遍	请把课文读两遍。	unclassified		pending_linguistic_review
+g026-p03	26	3	Verb + 一趟	他去了一趟银行。	unclassified		pending_linguistic_review
+g026-p04	26	4	Verb + 一下	你看一下这个。	unclassified		pending_linguistic_review
+g026-p05	26	5	Verb + 一阵子	我们聊了一阵子。	unclassified		pending_linguistic_review
+g026-p06	26	6	Verb + 好几次	他给我打了好几次电话。	unclassified		pending_linguistic_review
+g027-p01	27	1	看看	你看看这张照片。	unclassified		pending_linguistic_review
+g027-p02	27	2	试试	你试试这件衣服。	unclassified		pending_linguistic_review
+g027-p03	27	3	想一想	请再想一想。	unclassified		pending_linguistic_review
+g027-p04	27	4	走一走	晚饭后我们走一走。	unclassified		pending_linguistic_review
+g027-p05	27	5	聊聊天	我们坐下聊聊天吧。	unclassified		pending_linguistic_review
+g027-p06	27	6	问问	你先问问老师。	unclassified		pending_linguistic_review
+g028-p01	28	1	高高兴兴	孩子们高高兴兴地回家了。	unclassified		pending_linguistic_review
+g028-p02	28	2	慢慢	请慢慢说。	unclassified		pending_linguistic_review
+g028-p03	28	3	干干净净	房间打扫得干干净净。	unclassified		pending_linguistic_review
+g028-p04	28	4	清清楚楚	你说得清清楚楚。	unclassified		pending_linguistic_review
+g028-p05	28	5	热热闹闹	街上热热闹闹的。	unclassified		pending_linguistic_review
+g028-p06	28	6	认认真真	她认认真真地检查答案。	unclassified		pending_linguistic_review
+g029-p01	29	1	Place + Verb + 着 + noun	墙上挂着一幅画。	unclassified		pending_linguistic_review
+g029-p02	29	2	桌上放着	桌上放着两本书。	unclassified		pending_linguistic_review
+g029-p03	29	3	门口站着	门口站着一位老师。	unclassified		pending_linguistic_review
+g029-p04	29	4	院子里停着	院子里停着一辆车。	unclassified		pending_linguistic_review
+g029-p05	29	5	房间里坐着	房间里坐着几个人。	unclassified		pending_linguistic_review
+g029-p06	29	6	墙上贴着	墙上贴着一张地图。	unclassified		pending_linguistic_review
+g030-p01	30	1	Place + 有 + thing	楼下有一家咖啡馆。	unclassified		pending_linguistic_review
+g030-p02	30	2	有 + quantity + noun	这里有三把椅子。	unclassified		pending_linguistic_review
+g030-p03	30	3	有 + person + 在 + verb	有人在敲门。	unclassified		pending_linguistic_review
+g030-p04	30	4	没有 + noun	教室里没有学生。	unclassified		pending_linguistic_review
+g030-p05	30	5	有的是	时间有的是。	unclassified		pending_linguistic_review
+g030-p06	30	6	还有	桌上还有一杯茶。	unclassified		pending_linguistic_review
+g031-p01	31	1	A 没有 B 那么 + adjective	今天没有昨天那么冷。	unclassified		pending_linguistic_review
+g031-p02	31	2	不如	这个办法不如那个好。	unclassified		pending_linguistic_review
+g031-p03	31	3	没有 ... 这么	路没有这么远。	unclassified		pending_linguistic_review
+g031-p04	31	4	比不上	我的中文比不上她的。	unclassified		pending_linguistic_review
+g031-p05	31	5	不及	这条路不及那条方便。	unclassified		pending_linguistic_review
+g031-p06	31	6	远不如	这条路线远不如那条安全。	unclassified		pending_linguistic_review
+g032-p01	32	1	跟 ... 一样 + adjective	我跟你一样高。	unclassified		pending_linguistic_review
+g032-p02	32	2	跟 ... 不一样	我的想法跟他的不一样。	unclassified		pending_linguistic_review
+g032-p03	32	3	一样 + verb	他们一样喜欢音乐。	unclassified		pending_linguistic_review
+g032-p04	32	4	像 ... 一样	她像妈妈一样爱笑。	unclassified		pending_linguistic_review
+g032-p05	32	5	有 ... 一样 + adjective	他有你一样高吗？	unclassified		pending_linguistic_review
+g032-p06	32	6	同样 + adjective	这两个答案同样正确。	unclassified		pending_linguistic_review
+g033-p01	33	1	越来越 + adjective	天气越来越暖和。	unclassified		pending_linguistic_review
+g033-p02	33	2	越来越 + verb phrase	我越来越喜欢这里。	unclassified		pending_linguistic_review
+g033-p03	33	3	变得 + adjective	城市变得更安静了。	unclassified		pending_linguistic_review
+g033-p04	33	4	逐渐 + verb	他逐渐习惯了新工作。	unclassified		pending_linguistic_review
+g033-p05	33	5	一天比一天 + adjective	她的中文一天比一天好。	unclassified		pending_linguistic_review
+g033-p06	33	6	日益 + adjective	竞争日益激烈。	unclassified		pending_linguistic_review
+g034-p01	34	1	越 ... 越 ...	越练习越熟练。	unclassified		pending_linguistic_review
+g034-p02	34	2	越 ... 越 + adjective	天越晚越冷。	unclassified		pending_linguistic_review
+g034-p03	34	3	越 ... 越不 ...	越催他越不着急。	unclassified		pending_linguistic_review
+g034-p04	34	4	越是 ... 越 ...	越是困难越要坚持。	unclassified		pending_linguistic_review
+g034-p05	34	5	越 ... 就越 ...	书读得越多，就越有想法。	unclassified		pending_linguistic_review
+g034-p06	34	6	越看越	这本书越看越有意思。	unclassified		pending_linguistic_review
+g035-p01	35	1	比 ... 多 + number	我比他多买了两本书。	unclassified		pending_linguistic_review
+g035-p02	35	2	比 ... 少 + number	今天比昨天少了十个人。	unclassified		pending_linguistic_review
+g035-p03	35	3	多得多	这个班的人多得多。	unclassified		pending_linguistic_review
+g035-p04	35	4	差不多 + quantity	这两本书差不多一样厚。	unclassified		pending_linguistic_review
+g035-p05	35	5	是 ... 的两倍	今年的收入是去年的两倍。	unclassified		pending_linguistic_review
+g035-p06	35	6	相差 + quantity	两人的年龄相差三岁。	unclassified		pending_linguistic_review
+g036-p01	36	1	十来 + measure	教室里有十来个人。	unclassified		pending_linguistic_review
+g036-p02	36	2	三四 + measure	我等了三四分钟。	unclassified		pending_linguistic_review
+g036-p03	36	3	几十	这里有几十家商店。	unclassified		pending_linguistic_review
+g036-p04	36	4	一百多	会场有一百多人。	unclassified		pending_linguistic_review
+g036-p05	36	5	左右	路上要花半小时左右。	unclassified		pending_linguistic_review
+g036-p06	36	6	好几 + measure	我等了好几个小时。	unclassified		pending_linguistic_review
+g037-p01	37	1	二分之一	二分之一的学生已经到了。	unclassified		pending_linguistic_review
+g037-p02	37	2	百分之 + number	百分之八十的人同意。	unclassified		pending_linguistic_review
+g037-p03	37	3	三分之二	三分之二的学生通过了。	unclassified		pending_linguistic_review
+g037-p04	37	4	不到 + percentage	不到百分之十的人迟到了。	unclassified		pending_linguistic_review
+g037-p05	37	5	超过 + percentage	超过百分之五十的人赞成。	unclassified		pending_linguistic_review
+g037-p06	37	6	占 + percentage	学生占总人数的百分之六十。	unclassified		pending_linguistic_review
+g038-p01	38	1	两米长	这张桌子两米长。	unclassified		pending_linguistic_review
+g038-p02	38	2	三公斤重	这个包三公斤重。	unclassified		pending_linguistic_review
+g038-p03	38	3	多高	这座山有多高？	unclassified		pending_linguistic_review
+g038-p04	38	4	多大	这个房间有多大？	unclassified		pending_linguistic_review
+g038-p05	38	5	大约 + measurement	桥大约有一百米长。	unclassified		pending_linguistic_review
+g038-p06	38	6	宽 + measurement	这条路有五米宽。	unclassified		pending_linguistic_review
+g039-p01	39	1	一位 + person	来了一位客人。	unclassified		pending_linguistic_review
+g039-p02	39	2	一张 + flat object	请给我一张纸。	unclassified		pending_linguistic_review
+g039-p03	39	3	一条 + long object	她买了一条围巾。	unclassified		pending_linguistic_review
+g039-p04	39	4	一双 + paired item	我需要一双鞋。	unclassified		pending_linguistic_review
+g039-p05	39	5	一台 + machine	办公室有两台电脑。	unclassified		pending_linguistic_review
+g039-p06	39	6	一套 + set	我买了一套新家具。	unclassified		pending_linguistic_review
+g040-p01	40	1	看了一眼	他看了我一眼。	unclassified		pending_linguistic_review
+g040-p02	40	2	踢了一脚	他踢了球一脚。	unclassified		pending_linguistic_review
+g040-p03	40	3	说了一句	老师只说了一句。	unclassified		pending_linguistic_review
+g040-p04	40	4	打了一拳	他朝墙打了一拳。	unclassified		pending_linguistic_review
+g040-p05	40	5	走了一步	她往前走了一步。	unclassified		pending_linguistic_review
+g040-p06	40	6	听了一遍	我把录音听了一遍。	unclassified		pending_linguistic_review
+g041-p01	41	1	这 + measure + noun	这本书很有意思。	unclassified		pending_linguistic_review
+g041-p02	41	2	那 + measure + noun	那辆车是我的。	unclassified		pending_linguistic_review
+g041-p03	41	3	这些 versus 那些	这些是新的，那些是旧的。	unclassified		pending_linguistic_review
+g041-p04	41	4	这里 and 那里	这里很安静，那里很热闹。	unclassified		pending_linguistic_review
+g041-p05	41	5	这样的 + noun	我喜欢这样的音乐。	unclassified		pending_linguistic_review
+g041-p06	41	6	那个时候	那个时候我还在读书。	unclassified		pending_linguistic_review
+g042-p01	42	1	谁	谁在门口？	unclassified		pending_linguistic_review
+g042-p02	42	2	什么	你在找什么？	unclassified		pending_linguistic_review
+g042-p03	42	3	哪 + measure + noun	你要哪杯茶？	unclassified		pending_linguistic_review
+g042-p04	42	4	怎么	这个字怎么写？	unclassified		pending_linguistic_review
+g042-p05	42	5	为什么	你为什么迟到？	unclassified		pending_linguistic_review
+g042-p06	42	6	什么时候	会议什么时候开始？	unclassified		pending_linguistic_review
+g043-p01	43	1	谁都	谁都可以参加。	unclassified		pending_linguistic_review
+g043-p02	43	2	什么都	他什么都知道。	unclassified		pending_linguistic_review
+g043-p03	43	3	哪儿都	我哪儿都找过了。	unclassified		pending_linguistic_review
+g043-p04	43	4	有的人	有的人喜欢早起。	unclassified		pending_linguistic_review
+g043-p05	43	5	任何 + noun	任何问题都可以问。	unclassified		pending_linguistic_review
+g043-p06	43	6	怎么都	我怎么都想不起来。	unclassified		pending_linguistic_review
+g044-p01	44	1	自己	她自己做饭。	unclassified		pending_linguistic_review
+g044-p02	44	2	彼此	我们彼此了解。	unclassified		pending_linguistic_review
+g044-p03	44	3	互相 + verb	同学们互相帮助。	unclassified		pending_linguistic_review
+g044-p04	44	4	各自 + verb	大家各自回家了。	unclassified		pending_linguistic_review
+g044-p05	44	5	本人	请本人签字。	unclassified		pending_linguistic_review
+g044-p06	44	6	相互	两国相互尊重。	unclassified		pending_linguistic_review
+g045-p01	45	1	和 for noun coordination	我和姐姐都来了。	unclassified		pending_linguistic_review
+g045-p02	45	2	跟 for colloquial coordination	我跟朋友去看电影。	unclassified		pending_linguistic_review
+g045-p03	45	3	以及 for formal lists	会议讨论了时间、地点以及预算。	unclassified		pending_linguistic_review
+g045-p04	45	4	或者 between nouns	你可以选茶或者咖啡。	unclassified		pending_linguistic_review
+g045-p05	45	5	连同	请把文件连同照片一起寄来。	unclassified		pending_linguistic_review
+g045-p06	45	6	与 for formal coordination	本次会议由校长与老师主持。	unclassified		pending_linguistic_review
+g046-p01	46	1	对 + person + adjective	这份工作对我很重要。	unclassified		pending_linguistic_review
+g046-p02	46	2	关于 + topic	关于这个问题，我们再谈。	unclassified		pending_linguistic_review
+g046-p03	46	3	为了 + goal	为了考试，他每天复习。	unclassified		pending_linguistic_review
+g046-p04	46	4	通过 + means	我们通过练习提高水平。	unclassified		pending_linguistic_review
+g046-p05	46	5	按照 + standard	请按照说明操作。	unclassified		pending_linguistic_review
+g046-p06	46	6	凭 + evidence	凭这张票可以入场。	unclassified		pending_linguistic_review
+g047-p01	47	1	以前	吃饭以前要洗手。	unclassified		pending_linguistic_review
+g047-p02	47	2	以后	下课以后我们去图书馆。	unclassified		pending_linguistic_review
+g047-p03	47	3	同时	他同时学中文和英语。	unclassified		pending_linguistic_review
+g047-p04	47	4	接着	她关上门，接着走了。	unclassified		pending_linguistic_review
+g047-p05	47	5	随后	会议结束，随后大家离开。	unclassified		pending_linguistic_review
+g047-p06	47	6	自从 ... 以来	自从毕业以来，我一直住在这里。	unclassified		pending_linguistic_review
+g048-p01	48	1	在 + location + 里	钥匙在抽屉里。	unclassified		pending_linguistic_review
+g048-p02	48	2	往 + direction	请往左走。	unclassified		pending_linguistic_review
+g048-p03	48	3	朝 + direction	窗户朝南。	unclassified		pending_linguistic_review
+g048-p04	48	4	沿着 + path	沿着这条路一直走。	unclassified		pending_linguistic_review
+g048-p05	48	5	经过 + place	公交车经过学校。	unclassified		pending_linguistic_review
+g048-p06	48	6	离 + place + distance	车站离这里两公里。	unclassified		pending_linguistic_review
+g049-p01	49	1	前一天	考试的前一天我很紧张。	unclassified		pending_linguistic_review
+g049-p02	49	2	第二天	第二天他又来了。	unclassified		pending_linguistic_review
+g049-p03	49	3	不久以后	不久以后他们结婚了。	unclassified		pending_linguistic_review
+g049-p04	49	4	从那以后	从那以后他很少迟到。	unclassified		pending_linguistic_review
+g049-p05	49	5	到 ... 为止	到今天为止已经三天了。	unclassified		pending_linguistic_review
+g049-p06	49	6	截至 + time	截至昨天，报名已经结束。	unclassified		pending_linguistic_review
+g050-p01	50	1	一开始 ... 后来	一开始我不懂，后来明白了。	unclassified		pending_linguistic_review
+g050-p02	50	2	一直 ... 到	我们一直工作到晚上。	unclassified		pending_linguistic_review
+g050-p03	50	3	终于	我们终于到了山顶。	unclassified		pending_linguistic_review
+g050-p04	50	4	原来	原来你也住在这里。	unclassified		pending_linguistic_review
+g050-p05	50	5	结果	他出门太晚，结果迟到了。	unclassified		pending_linguistic_review
+g050-p06	50	6	与此同时	他在做饭，与此同时孩子在写作业。	unclassified		pending_linguistic_review
+g051-p01	51	1	Verb + 了 + duration + 了	我学中文学了两年了。	unclassified		pending_linguistic_review
+g051-p02	51	2	还 + 没 + verb	我还没吃早饭。	unclassified		pending_linguistic_review
+g051-p03	51	3	已经 ... 了	天已经黑了。	unclassified		pending_linguistic_review
+g051-p04	51	4	一直 + verb	他一直在等你。	unclassified		pending_linguistic_review
+g051-p05	51	5	刚 + verb	她刚到家。	unclassified		pending_linguistic_review
+g051-p06	51	6	将要	会议将要开始。	unclassified		pending_linguistic_review
+g052-p01	52	1	曾经 + verb + 过	我曾经在上海住过。	unclassified		pending_linguistic_review
+g052-p02	52	2	从来没 + verb + 过	我从来没坐过飞机。	unclassified		pending_linguistic_review
+g052-p03	52	3	以前 ... 现在	以前我怕狗，现在不怕了。	unclassified		pending_linguistic_review
+g052-p04	52	4	不再	他不再抽烟了。	unclassified		pending_linguistic_review
+g052-p05	52	5	再次	她再次获得了冠军。	unclassified		pending_linguistic_review
+g052-p06	52	6	不曾	我不曾听说过这件事。	unclassified		pending_linguistic_review
+g053-p01	53	1	既不 ... 也不	我既不喝茶，也不喝咖啡。	unclassified		pending_linguistic_review
+g053-p02	53	2	并不	这件事并不难。	unclassified		pending_linguistic_review
+g053-p03	53	3	未必	贵的未必好。	unclassified		pending_linguistic_review
+g053-p04	53	4	不是 ... 而是	我不是生气，而是担心。	unclassified		pending_linguistic_review
+g053-p05	53	5	无论 ... 都不	无论怎么说，他都不同意。	unclassified		pending_linguistic_review
+g053-p06	53	6	毫不	他毫不犹豫地答应了。	unclassified		pending_linguistic_review
+g054-p01	54	1	应该	你应该多休息。	unclassified		pending_linguistic_review
+g054-p02	54	2	必须	进入之前必须登记。	unclassified		pending_linguistic_review
+g054-p03	54	3	得 + verb	我得走了。	unclassified		pending_linguistic_review
+g054-p04	54	4	不得不	雨太大，我们不得不留下。	unclassified		pending_linguistic_review
+g054-p05	54	5	最好	你最好早点出发。	unclassified		pending_linguistic_review
+g054-p06	54	6	有必要	我们有必要重新检查。	unclassified		pending_linguistic_review
+g055-p01	55	1	可能	他可能在开会。	unclassified		pending_linguistic_review
+g055-p02	55	2	大概	他们大概八点到。	unclassified		pending_linguistic_review
+g055-p03	55	3	也许	也许明天会下雨。	unclassified		pending_linguistic_review
+g055-p04	55	4	恐怕	恐怕来不及了。	unclassified		pending_linguistic_review
+g055-p05	55	5	一定	她一定知道答案。	unclassified		pending_linguistic_review
+g055-p06	55	6	说不定	说不定他已经到了。	unclassified		pending_linguistic_review
+g056-p01	56	1	可以 versus 会	我会游泳，但今天不能下水。	unclassified		pending_linguistic_review
+g056-p02	56	2	能 versus 可以	这里可以拍照吗？	unclassified		pending_linguistic_review
+g056-p03	56	3	要 + verb	我明天要去北京。	unclassified		pending_linguistic_review
+g056-p04	56	4	想 + verb	我想学画画。	unclassified		pending_linguistic_review
+g056-p05	56	5	敢 + verb	他不敢一个人走夜路。	unclassified		pending_linguistic_review
+g056-p06	56	6	愿意	我愿意帮你。	unclassified		pending_linguistic_review
+g057-p01	57	1	还是 in a choice question	你喝茶还是咖啡？	unclassified		pending_linguistic_review
+g057-p02	57	2	或者 in a statement	我们坐车或者走路都行。	unclassified		pending_linguistic_review
+g057-p03	57	3	要么 ... 要么	要么今天做，要么明天做。	unclassified		pending_linguistic_review
+g057-p04	57	4	是 ... 还是 ...	这是你的还是他的？	unclassified		pending_linguistic_review
+g057-p05	57	5	不管 ... 还是	不管晴天还是雨天，他都跑步。	unclassified		pending_linguistic_review
+g057-p06	57	6	与其 ... 还是	与其担心，还是先行动吧。	unclassified		pending_linguistic_review
+g058-p01	58	1	难道 ... 吗	难道你不认识他吗？	unclassified		pending_linguistic_review
+g058-p02	58	2	不是 ... 吗	你不是说今天来吗？	unclassified		pending_linguistic_review
+g058-p03	58	3	谁不知道	谁不知道这件事？	unclassified		pending_linguistic_review
+g058-p04	58	4	何必	何必这么着急？	unclassified		pending_linguistic_review
+g058-p05	58	5	怎么会	他怎么会忘记呢？	unclassified		pending_linguistic_review
+g058-p06	58	6	岂不是	这样做岂不是更麻烦？	unclassified		pending_linguistic_review
+g059-p01	59	1	去不去	你明天去不去？	unclassified		pending_linguistic_review
+g059-p02	59	2	有没有	你有没有时间？	unclassified		pending_linguistic_review
+g059-p03	59	3	好不好	我们现在走，好不好？	unclassified		pending_linguistic_review
+g059-p04	59	4	会不会	明天会不会下雨？	unclassified		pending_linguistic_review
+g059-p05	59	5	是不是	他是不是老师？	unclassified		pending_linguistic_review
+g059-p06	59	6	累不累	你今天累不累？	unclassified		pending_linguistic_review
+g060-p01	60	1	不知道 + question	我不知道他在哪儿。	unclassified		pending_linguistic_review
+g060-p02	60	2	告诉 + person + question	请告诉我几点开始。	unclassified		pending_linguistic_review
+g060-p03	60	3	问 + whether	他问我是否同意。	unclassified		pending_linguistic_review
+g060-p04	60	4	想知道 + question	我想知道你为什么离开。	unclassified		pending_linguistic_review
+g060-p05	60	5	记得 + question	你记得我们在哪儿见面吗？	unclassified		pending_linguistic_review
+g060-p06	60	6	是否	请确认是否收到邮件。	unclassified		pending_linguistic_review
+g061-p01	61	1	请 + verb	请关上窗户。	unclassified		pending_linguistic_review
+g061-p02	61	2	不要 + verb	不要在这里抽烟。	unclassified		pending_linguistic_review
+g061-p03	61	3	别 + verb + 了	别说了。	unclassified		pending_linguistic_review
+g061-p04	61	4	千万别	千万别忘记带护照。	unclassified		pending_linguistic_review
+g061-p05	61	5	麻烦你 + verb	麻烦你帮我看一下。	unclassified		pending_linguistic_review
+g061-p06	61	6	务必	请务必按时到达。	unclassified		pending_linguistic_review
+g062-p01	62	1	我们 ... 吧	我们休息一下吧。	unclassified		pending_linguistic_review
+g062-p02	62	2	还是 ... 吧	我们还是早点出发吧。	unclassified		pending_linguistic_review
+g062-p03	62	3	要不要	要不要一起吃饭？	unclassified		pending_linguistic_review
+g062-p04	62	4	怎么样	周末去爬山怎么样？	unclassified		pending_linguistic_review
+g062-p05	62	5	何不	何不试试这个办法？	unclassified		pending_linguistic_review
+g062-p06	62	6	何妨	何妨先听听他的意见？	unclassified		pending_linguistic_review
+g063-p01	63	1	不太方便	我今天不太方便。	unclassified		pending_linguistic_review
+g063-p02	63	2	恐怕不能	恐怕我不能参加。	unclassified		pending_linguistic_review
+g063-p03	63	3	下次再	我们下次再约吧。	unclassified		pending_linguistic_review
+g063-p04	63	4	不好意思	不好意思，我已经有安排了。	unclassified		pending_linguistic_review
+g063-p05	63	5	可能不行	明天可能不行。	unclassified		pending_linguistic_review
+g063-p06	63	6	改天	我们改天再聊吧。	unclassified		pending_linguistic_review
+g064-p01	64	1	吧 for suggestion	你先走吧。	unclassified		pending_linguistic_review
+g064-p02	64	2	吧 for tentative inference	他已经走了吧？	unclassified		pending_linguistic_review
+g064-p03	64	3	呢 for ongoing situation	你在做什么呢？	unclassified		pending_linguistic_review
+g064-p04	64	4	呢 for return question	我很好，你呢？	unclassified		pending_linguistic_review
+g064-p05	64	5	呢 for contrast	我的书在这里，你的呢？	unclassified		pending_linguistic_review
+g064-p06	64	6	呢 with omitted predicate	你喝茶，我呢？	unclassified		pending_linguistic_review
+g065-p01	65	1	啊 for exclamation	这里真漂亮啊！	unclassified		pending_linguistic_review
+g065-p02	65	2	呀 after vowels	快来呀！	unclassified		pending_linguistic_review
+g065-p03	65	3	哇 for surprise	哇，这么大！	unclassified		pending_linguistic_review
+g065-p04	65	4	哦 for realization	哦，原来是这样。	unclassified		pending_linguistic_review
+g065-p05	65	5	嘛 for shared knowledge	这很正常嘛。	unclassified		pending_linguistic_review
+g065-p06	65	6	喂 as an attention call	喂，你听得见吗？	unclassified		pending_linguistic_review
+g066-p01	66	1	的 for assertion	他会来的。	unclassified		pending_linguistic_review
+g066-p02	66	2	可 + adjective + 了	今天可热了！	unclassified		pending_linguistic_review
+g066-p03	66	3	就是 for emphasis	这就是我要找的书。	unclassified		pending_linguistic_review
+g066-p04	66	4	倒 for a concession	他倒很有耐心。	unclassified		pending_linguistic_review
+g066-p05	66	5	偏偏 for contrary occurrence	我正要走，偏偏下雨了。	unclassified		pending_linguistic_review
+g066-p06	66	6	正是	这正是我们需要的。	unclassified		pending_linguistic_review
+g067-p01	67	1	快 ... 了	快下雨了。	unclassified		pending_linguistic_review
+g067-p02	67	2	就要 ... 了	火车就要开了。	unclassified		pending_linguistic_review
+g067-p03	67	3	不 ... 了	我不喝咖啡了。	unclassified		pending_linguistic_review
+g067-p04	67	4	太 ... 了	这个故事太有趣了！	unclassified		pending_linguistic_review
+g067-p05	67	5	开始 + verb + 了	孩子开始上学了。	unclassified		pending_linguistic_review
+g067-p06	67	6	马上就要 ... 了	比赛马上就要开始了。	unclassified		pending_linguistic_review
+g068-p01	68	1	是 for correction	他是医生，不是护士。	unclassified		pending_linguistic_review
+g068-p02	68	2	就是 for precision	这就是问题所在。	unclassified		pending_linguistic_review
+g068-p03	68	3	是不是 for confirmation	你是不是忘了？	unclassified		pending_linguistic_review
+g068-p04	68	4	是 ... 的 for focus	他是昨天到的。	unclassified		pending_linguistic_review
+g068-p05	68	5	并不是	这并不是我的意思。	unclassified		pending_linguistic_review
+g068-p06	68	6	到底是	到底是谁说的？	unclassified		pending_linguistic_review
+g069-p01	69	1	来了 + participant	门口来了一位客人。	unclassified		pending_linguistic_review
+g069-p02	69	2	出现了 + event	突然出现了一个问题。	unclassified		pending_linguistic_review
+g069-p03	69	3	发生了 + incident	昨晚发生了一场事故。	unclassified		pending_linguistic_review
+g069-p04	69	4	传来 + sound	外面传来一阵笑声。	unclassified		pending_linguistic_review
+g069-p05	69	5	走进来 + participant	走进来一个年轻人。	unclassified		pending_linguistic_review
+g069-p06	69	6	来了 + quantity + participant	来了三位新同学。	unclassified		pending_linguistic_review
+g070-p01	70	1	Topic + comment	这件事，我已经知道了。	unclassified		pending_linguistic_review
+g070-p02	70	2	Topic chain	这本书我买了，也看完了。	unclassified		pending_linguistic_review
+g070-p03	70	3	Topic + time + comment	那个问题，我们明天讨论。	unclassified		pending_linguistic_review
+g070-p04	70	4	Topic reprise with 它	这台电脑，它很旧了。	unclassified		pending_linguistic_review
+g070-p05	70	5	Speaking of + topic	说到旅行，我最喜欢坐火车。	unclassified		pending_linguistic_review
+g070-p06	70	6	至于 + topic	至于费用，我们下周再谈。	unclassified		pending_linguistic_review
+g071-p01	71	1	只有 ... 才	只有亲自试过，才知道难不难。	unclassified		pending_linguistic_review
+g071-p02	71	2	连 ... 也	连他也同意了。	unclassified		pending_linguistic_review
+g071-p03	71	3	正是 ... 才	正是你的帮助才让我成功。	unclassified		pending_linguistic_review
+g071-p04	71	4	偏偏是	偏偏是他发现了问题。	unclassified		pending_linguistic_review
+g071-p05	71	5	最重要的是	最重要的是大家都安全。	unclassified		pending_linguistic_review
+g071-p06	71	6	甚至	他甚至忘了我的名字。	unclassified		pending_linguistic_review
+g072-p01	72	1	是 ... 的 for manner	我们是坐飞机来的。	unclassified		pending_linguistic_review
+g072-p02	72	2	是 ... 的 for place	他是在北京出生的。	unclassified		pending_linguistic_review
+g072-p03	72	3	是 ... 的 for agent	这幅画是她画的。	unclassified		pending_linguistic_review
+g072-p04	72	4	是 ... 而不是 ...	我要的是结果，而不是借口。	unclassified		pending_linguistic_review
+g072-p05	72	5	所 + verb + 的	这就是我所需要的。	unclassified		pending_linguistic_review
+g073-p01	73	1	说 + quotation	他说：“明天见。”	unclassified		pending_linguistic_review
+g073-p02	73	2	告诉 + person + clause	她告诉我会议取消了。	unclassified		pending_linguistic_review
+g073-p03	73	3	听说 + clause	听说他搬家了。	unclassified		pending_linguistic_review
+g073-p04	73	4	据说 + clause	据说这座桥很古老。	unclassified		pending_linguistic_review
+g073-p05	73	5	问 + person + question	他问我几点出发。	unclassified		pending_linguistic_review
+g074-p01	74	1	据 + source	据报道，明天会下雪。	unclassified		pending_linguistic_review
+g074-p02	74	2	看来	看来他还不知道。	unclassified		pending_linguistic_review
+g074-p03	74	3	显然	显然这个办法行不通。	unclassified		pending_linguistic_review
+g074-p04	74	4	据我所知	据我所知，他已经回国了。	unclassified		pending_linguistic_review
+g074-p05	74	5	听起来	这个计划听起来不错。	unclassified		pending_linguistic_review
+g075-p01	75	1	为了 + outcome	为了健康，她每天跑步。	unclassified		pending_linguistic_review
+g075-p02	75	2	以便	请早点来，以便安排座位。	unclassified		pending_linguistic_review
+g075-p03	75	3	好 + verb	你把地址发给我，好让我找到你。	unclassified		pending_linguistic_review
+g075-p04	75	4	省得	带把伞，省得淋雨。	unclassified		pending_linguistic_review
+g075-p05	75	5	以免	请检查名字，以免出错。	unclassified		pending_linguistic_review
+g076-p01	76	1	因此	他准备充分，因此通过了考试。	unclassified		pending_linguistic_review
+g076-p02	76	2	所以	路很堵，所以我们迟到了。	unclassified		pending_linguistic_review
+g076-p03	76	3	以致	他太累了，以致睡过了头。	unclassified		pending_linguistic_review
+g076-p04	76	4	导致	大雨导致航班延误。	unclassified		pending_linguistic_review
+g076-p05	76	5	从而	他调整了方法，从而提高了效率。	unclassified		pending_linguistic_review
+g077-p01	77	1	使 + affected + adjective	这个消息使大家兴奋。	unclassified		pending_linguistic_review
+g077-p02	77	2	促使 + person + verb	这次经历促使她重新考虑计划。	unclassified		pending_linguistic_review
+g077-p03	77	3	叫 + person + action	经理叫他准备材料。	unclassified		pending_linguistic_review
+g077-p04	77	4	令 + person + adjective	这个决定令人失望。	unclassified		pending_linguistic_review
+g077-p05	77	5	被迫 + verb	他们被迫改变计划。	unclassified		pending_linguistic_review
+g078-p01	78	1	受 + event + 影响	交通受天气影响。	unclassified		pending_linguistic_review
+g078-p02	78	2	遭到 + negative event	房屋遭到严重破坏。	unclassified		pending_linguistic_review
+g078-p03	78	3	挨 + verb	他挨了一顿批评。	unclassified		pending_linguistic_review
+g078-p04	78	4	给 + person + verb	杯子给孩子打碎了。	unclassified		pending_linguistic_review
+g078-p05	78	5	由 + agent + verb	这本书由三位专家编写。	unclassified		pending_linguistic_review
+g079-p01	79	1	把 + object + verb + 完	把作业写完再玩。	unclassified		pending_linguistic_review
+g079-p02	79	2	把 + object + verb + 到	请把箱子搬到楼上。	unclassified		pending_linguistic_review
+g079-p03	79	3	把 + object + verb + 成	他把旧房子改成了书店。	unclassified		pending_linguistic_review
+g079-p04	79	4	把 + object + verb + 给	请把钥匙交给我。	unclassified		pending_linguistic_review
+g079-p05	79	5	把 + object + verb + 好	请把门关好。	unclassified		pending_linguistic_review
+g080-p01	80	1	给 + recipient + object	我给她一张票。	unclassified		pending_linguistic_review
+g080-p02	80	2	送给 + recipient	他把花送给妈妈。	unclassified		pending_linguistic_review
+g080-p03	80	3	递给 + recipient	请把纸递给我。	unclassified		pending_linguistic_review
+g080-p04	80	4	还给 + owner	我把书还给图书馆了。	unclassified		pending_linguistic_review
+g080-p05	80	5	借给 versus 向 ... 借	她向朋友借了一把伞。	unclassified		pending_linguistic_review
+g081-p01	81	1	为 + person + 准备 + noun	我们为客人准备了茶。	unclassified		pending_linguistic_review
+g081-p02	81	2	替 + person + verb	我替他值班。	unclassified		pending_linguistic_review
+g081-p03	81	3	为 + person + verb	大家为他鼓掌。	unclassified		pending_linguistic_review
+g081-p04	81	4	给 + person + 带来 + noun	这项服务给大家带来了方便。	unclassified		pending_linguistic_review
+g081-p05	81	5	为了 + person	为了孩子，他们搬了家。	unclassified		pending_linguistic_review
+g082-p01	82	1	跟 + person + verb	我跟同事一起吃午饭。	unclassified		pending_linguistic_review
+g082-p02	82	2	和 + person + 一起	她和朋友一起旅行。	unclassified		pending_linguistic_review
+g082-p03	82	3	用 + tool + verb	我用手机查地图。	unclassified		pending_linguistic_review
+g082-p04	82	4	拿 + tool + verb	他拿笔写字。	unclassified		pending_linguistic_review
+g082-p05	82	5	靠 + means	他们靠种菜生活。	unclassified		pending_linguistic_review
+g083-p01	83	1	与其 ... 不如	与其等车，不如走路。	unclassified		pending_linguistic_review
+g083-p02	83	2	宁可 ... 也不	我宁可晚点，也不想冒险。	unclassified		pending_linguistic_review
+g083-p03	83	3	不是 ... 就是	他不是在家，就是在学校。	unclassified		pending_linguistic_review
+g083-p04	83	4	或者 ... 或者	你或者写信，或者打电话。	unclassified		pending_linguistic_review
+g083-p05	83	5	比起 ... 更	比起咖啡，我更喜欢茶。	unclassified		pending_linguistic_review
+g084-p01	84	1	不但 ... 而且	他不但聪明，而且很勤奋。	unclassified		pending_linguistic_review
+g084-p02	84	2	既 ... 又	这里既安静又方便。	unclassified		pending_linguistic_review
+g084-p03	84	3	一方面 ... 另一方面	一方面要省钱，另一方面要保证质量。	unclassified		pending_linguistic_review
+g084-p04	84	4	既 ... 也 ...	这个任务既费时间，也费精力。	unclassified		pending_linguistic_review
+g084-p05	84	5	不论 ... 都	不论多忙，他都锻炼。	unclassified		pending_linguistic_review
+g085-p01	85	1	即使 ... 也	即使失败了，我们也会再试。	unclassified		pending_linguistic_review
+g085-p02	85	2	哪怕 ... 也	哪怕只剩一天，我也要完成。	unclassified		pending_linguistic_review
+g085-p03	85	3	尽管 ... 仍然	尽管很晚，他仍然在工作。	unclassified		pending_linguistic_review
+g085-p04	85	4	无论 ... 都	无论谁来，我都欢迎。	unclassified		pending_linguistic_review
+g085-p05	85	5	再 ... 也	再难我也要学会。	unclassified		pending_linguistic_review
+g086-p01	86	1	要是当时 ... 就	要是当时早点走，就不会迟到了。	unclassified		pending_linguistic_review
+g086-p02	86	2	早知道 ... 就	早知道下雨，我就带伞了。	unclassified		pending_linguistic_review
+g086-p03	86	3	如果没有 ... 就	如果没有你的帮助，我就做不到。	unclassified		pending_linguistic_review
+g086-p04	86	4	本来 ... 却	我本来想去，却生病了。	unclassified		pending_linguistic_review
+g086-p05	86	5	差点儿	我差点儿错过火车。	unclassified		pending_linguistic_review
+g087-p01	87	1	假如 ... 那么	假如你有机会，那么你会去吗？	unclassified		pending_linguistic_review
+g087-p02	87	2	设想 + situation	设想没有网络，我们怎么办？	unclassified		pending_linguistic_review
+g087-p03	87	3	否则	现在出发，否则赶不上车。	unclassified		pending_linguistic_review
+g087-p04	87	4	除非 ... 否则	除非下雨，否则我们照常去。	unclassified		pending_linguistic_review
+g087-p05	87	5	万一	万一下雨，我们就在室内见。	unclassified		pending_linguistic_review
+g088-p01	88	1	既然 ... 就	既然大家同意，就开始吧。	unclassified		pending_linguistic_review
+g088-p02	88	2	从 ... 可以推断	从这些数据可以推断，需求在增长。	unclassified		pending_linguistic_review
+g088-p03	88	3	由此可见	由此可见，方法很有效。	unclassified		pending_linguistic_review
+g088-p04	88	4	可见	他每天练习，可见很认真。	unclassified		pending_linguistic_review
+g088-p05	88	5	意味着	价格上涨意味着成本增加。	unclassified		pending_linguistic_review
+g089-p01	89	1	然而	计划很好，然而时间不够。	unclassified		pending_linguistic_review
+g089-p02	89	2	此外	此外，我们还需要更多人员。	unclassified		pending_linguistic_review
+g089-p03	89	3	况且	今天太晚了，况且外面下雨。	unclassified		pending_linguistic_review
+g089-p04	89	4	尤其是	我喜欢运动，尤其是游泳。	unclassified		pending_linguistic_review
+g089-p05	89	5	总而言之	总而言之，这个办法值得一试。	unclassified		pending_linguistic_review
+g090-p01	90	1	所谓 + noun	所谓成功，不只是赚钱。	unclassified		pending_linguistic_review
+g090-p02	90	2	对于 + abstract topic	对于这个决定，我有不同看法。	unclassified		pending_linguistic_review
+g090-p03	90	3	有关 + topic + 的	有关教育的问题很复杂。	unclassified		pending_linguistic_review
+g090-p04	90	4	具有 + quality	这种材料具有弹性。	unclassified		pending_linguistic_review
+g090-p05	90	5	作为 + role	作为老师，她很有耐心。	unclassified		pending_linguistic_review
+g091-p01	91	1	Verb + 的 + noun	我昨天买的书到了。	unclassified		pending_linguistic_review
+g091-p02	91	2	拥有 + noun + 的 + noun	拥有丰富经验的人更适合这份工作。	unclassified		pending_linguistic_review
+g091-p03	91	3	值得 + verb	这个问题值得讨论。	unclassified		pending_linguistic_review
+g091-p04	91	4	值得 + noun + verb	这本书值得一读。	unclassified		pending_linguistic_review
+g091-p05	91	5	对于 ... 来说	对于初学者来说，这很难。	unclassified		pending_linguistic_review
+g092-p01	92	1	的 after modifier	这件太贵了，我要便宜的。	unclassified		pending_linguistic_review
+g092-p02	92	2	方法 + noun	这种学习方法很有效。	unclassified		pending_linguistic_review
+g092-p03	92	3	动词 + 法	这种做法很有效。	unclassified		pending_linguistic_review
+g092-p04	92	4	Verb + 性	这个计划缺乏可行性。	unclassified		pending_linguistic_review
+g092-p05	92	5	对 ... 的 + noun	我对语言的兴趣很大。	unclassified		pending_linguistic_review
+g093-p01	93	1	Omit repeated subject	我买了票，然后进去了。	unclassified		pending_linguistic_review
+g093-p02	93	2	Omit repeated object	这本书我已经看过，不想再看。	unclassified		pending_linguistic_review
+g093-p03	93	3	Short answer + verb	你去吗？去。	unclassified		pending_linguistic_review
+g093-p04	93	4	Zero pronoun in discourse	小王来了，坐下就开始吃饭。	unclassified		pending_linguistic_review
+g093-p05	93	5	省略 是 in informal answers	谁的书？我的。	unclassified		pending_linguistic_review
+g094-p01	94	1	这个 for anaphora	这个我已经解释过了。	unclassified		pending_linguistic_review
+g094-p02	94	2	那 for earlier discourse	那我就放心了。	unclassified		pending_linguistic_review
+g094-p03	94	3	因此 for a prior cause	因此我们改变了计划。	unclassified		pending_linguistic_review
+g094-p04	94	4	其中 for a subset	来了十个人，其中三个是学生。	unclassified		pending_linguistic_review
+g094-p05	94	5	上述 for prior written content	上述问题需要解决。	unclassified		pending_linguistic_review
+g095-p01	95	1	首先	首先，我们检查数据。	unclassified		pending_linguistic_review
+g095-p02	95	2	其次	其次，我们需要考虑成本。	unclassified		pending_linguistic_review
+g095-p03	95	3	最后	最后，我想感谢大家。	unclassified		pending_linguistic_review
+g095-p04	95	4	接下来	接下来，我们讨论预算。	unclassified		pending_linguistic_review
+g095-p05	95	5	重点是	重点是如何解决问题。	unclassified		pending_linguistic_review
+g096-p01	96	1	麻烦 + person	麻烦你再说一遍。	unclassified		pending_linguistic_review
+g096-p02	96	2	劳驾	劳驾，请问车站在哪儿？	unclassified		pending_linguistic_review
+g096-p03	96	3	恳请	恳请您考虑这个建议。	unclassified		pending_linguistic_review
+g096-p04	96	4	不妨	你不妨试试。	unclassified		pending_linguistic_review
+g096-p05	96	5	恕我直言	恕我直言，这个计划不现实。	unclassified		pending_linguistic_review
+g097-p01	97	1	倒是	这个主意倒是不错。	unclassified		pending_linguistic_review
+g097-p02	97	2	可不是	可不是，今天真冷。	unclassified		pending_linguistic_review
+g097-p03	97	3	偏偏	偏偏今天停电了。	unclassified		pending_linguistic_review
+g097-p04	97	4	竟然	他竟然忘了自己的生日。	unclassified		pending_linguistic_review
+g097-p05	97	5	难怪	难怪你这么高兴。	unclassified		pending_linguistic_review
+g098-p01	98	1	书面语 乃	此乃重要问题。	unclassified		pending_linguistic_review
+g098-p02	98	2	口语 挺 ... 的	这家店挺不错的。	unclassified		pending_linguistic_review
+g098-p03	98	3	书面语 由于	由于天气原因，活动取消。	unclassified		pending_linguistic_review
+g098-p04	98	4	口语 可	你可别忘了。	unclassified		pending_linguistic_review
+g098-p05	98	5	书面语 此外	此外，还需进一步研究。	unclassified		pending_linguistic_review
+g099-p01	99	1	当时 ... 后来	当时我很紧张，后来好多了。	unclassified		pending_linguistic_review
+g099-p02	99	2	没想到	没想到他已经知道了。	unclassified		pending_linguistic_review
+g099-p03	99	3	过了一会儿	过了一会儿，门开了。	unclassified		pending_linguistic_review
+g099-p04	99	4	就在这时	就在这时，电话响了。	unclassified		pending_linguistic_review
+g099-p05	99	5	最终	最终大家达成了协议。	unclassified		pending_linguistic_review
+g100-p01	100	1	就 ... 而言	就成本而言，这个方案更好。	unclassified		pending_linguistic_review
+g100-p02	100	2	尽管 ... 还是	尽管证据有限，我们还是继续研究。	unclassified		pending_linguistic_review
+g100-p03	100	3	如果 ... 就	如果需求增加，我们就扩大生产。	unclassified		pending_linguistic_review
+g100-p04	100	4	不仅 ... 还	这个办法不仅省钱，还节省时间。	unclassified		pending_linguistic_review
+g100-p05	100	5	综上所述	综上所述，我们支持这项计划。	unclassified		pending_linguistic_review

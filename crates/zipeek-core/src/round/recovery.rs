@@ -74,7 +74,7 @@ mod tests {
             let mut attempts = Vec::new();
             let result = recover(
                 &words,
-                ExerciseVariant::EngPinyin,
+                ExerciseVariant::MatchingEnglishPinyin,
                 &mut actual,
                 &mut attempts,
             );
@@ -94,7 +94,7 @@ mod tests {
         assert!(
             recover(
                 &[],
-                ExerciseVariant::EngPinyin,
+                ExerciseVariant::MatchingEnglishPinyin,
                 &mut actual,
                 &mut Vec::new()
             )
@@ -117,7 +117,7 @@ mod tests {
         let mut attempts = Vec::new();
         let (word, fallback) = recover(
             &words,
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             &mut actual,
             &mut attempts,
         )

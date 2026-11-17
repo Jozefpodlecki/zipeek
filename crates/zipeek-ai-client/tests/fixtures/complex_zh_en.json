@@ -1,0 +1,55 @@
+{
+  "id": "complex_zh_en",
+  "direction": "zh-en",
+  "source": "尽管委员会已经批准了这项提案，但如果预算在年底前仍未落实，项目就不得不推迟到明年。",
+  "plain": "Although the committee has approved the proposal, the project will have to be postponed until next year if the budget is not secured by year-end.",
+  "analysis": {
+    "translation": "Although the committee has approved the proposal, the project will have to be postponed until next year if the budget is not secured by year-end.",
+    "alternatives": [
+      "Despite the committee’s approval of the proposal, the project must be delayed until next year unless the budget is finalized before year-end."
+    ],
+    "features": [
+      "Concession",
+      "Conditional",
+      "Formal register"
+    ],
+    "nuance": [
+      "尽管...但 expresses concession; 如果...就 introduces the condition and consequence."
+    ],
+    "difficulty": "advanced",
+    "estimated_hsk": 6,
+    "rationale": "A compound sentence with a concessive subordinate clause, a budget condition, and an obligation expressed by 不得不.",
+    "vocabulary": [
+      {
+        "hanzi": "尽管",
+        "meaning": "although",
+        "pinyin": "jin3 guan3"
+      },
+      {
+        "hanzi": "预算",
+        "meaning": "budget",
+        "pinyin": "yu4 suan4"
+      },
+      {
+        "hanzi": "推迟",
+        "meaning": "postpone",
+        "pinyin": "tui1 chi2"
+      }
+    ],
+    "grammar": [
+      {
+        "pattern": "尽管...但...",
+        "explanation": "Concessive structure contrasting approval with a remaining condition.",
+        "example_fragment": "尽管委员会已经批准了这项提案，但"
+      },
+      {
+        "pattern": "如果...就...",
+        "explanation": "Conditional consequence of delayed funding.",
+        "example_fragment": "如果预算在年底前仍未落实"
+      }
+    ],
+    "notes": [
+      "不得不 signals necessity rather than preference."
+    ]
+  }
+}

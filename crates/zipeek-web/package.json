@@ -1,0 +1,31 @@
+{
+  "name": "zipeek",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A statically indexed Chinese lexicon using client-side lookup and precomputed sharding.",
+  "homepage": "https://github.com/Jozefpodlecki/zipeek#readme",
+  "bugs": {
+    "url": "https://github.com/Jozefpodlecki/zipeek/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jozefpodlecki/zipeek.git"
+  },
+  "license": "MIT",
+  "author": "Jozef Podlecki",
+  "type": "commonjs",
+  "scripts": {},
+  "dependencies": {
+    "@duckdb/duckdb-wasm": "1.33.1-dev114.0",
+    "@tailwindcss/cli": "4.3.4",
+    "chart.js": "4.6.1",
+    "tailwindcss": "4.3.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.2": true
+  }
+}

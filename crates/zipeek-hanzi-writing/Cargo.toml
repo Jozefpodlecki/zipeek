@@ -1,0 +1,46 @@
+[package]
+name = "zipeek-hanzi-writing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+
+[dependencies.web-sys]
+workspace = true
+features = [
+    "console",
+    "Document",
+    "Navigator",
+    "Clipboard",
+    "ClipboardEvent",
+    "HtmlElement",
+    "HtmlInputElement",
+    "HtmlTextAreaElement",
+    "HtmlSelectElement",
+    "MouseEvent",
+    "DragEvent",
+    "DataTransfer",
+    "DomRect",
+    "Element",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "PointerEvent",
+    "DomTokenList",
+    "SpeechSynthesis",
+    "SpeechSynthesisUtterance",
+    "SpeechSynthesisVoice",
+    "PromiseRejectionEvent",
+    "DomStringMap",
+    "Window", "MediaDevices", "MediaStream", "MediaStreamConstraints",
+    "MediaStreamTrack", "MediaRecorder", "RecordingState", "Blob", "BlobEvent",
+    "Event", "EventTarget",
+    "BlobPropertyBag", "Url", "AudioContext", "BaseAudioContext", "AudioNode", "AnalyserNode",
+    "MediaStreamAudioSourceNode"
+]

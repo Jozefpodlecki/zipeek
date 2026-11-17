@@ -1,0 +1,54 @@
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--text);
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer; }
+
+:root { --hanzi-font: system-ui, "Microsoft YaHei", "PingFang SC", sans-serif; }
+:root[data-hanzi-font="sans"] { --hanzi-font: "Noto Sans CJK SC", "Microsoft YaHei", "PingFang SC", sans-serif; }
+:root[data-hanzi-font="serif"] { --hanzi-font: "Noto Serif CJK SC", "Songti SC", "SimSun", serif; }
+:root[data-hanzi-font="calligraphy"] { --hanzi-font: "Ma Shan Zheng", "KaiTi", cursive; }
+[lang^="zh"] { font-family: var(--hanzi-font); }
+[data-font-preview="system"] { font-family: system-ui, "Microsoft YaHei", sans-serif; }
+[data-font-preview="sans"] { font-family: "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; }
+[data-font-preview="serif"] { font-family: "Noto Serif CJK SC", "SimSun", serif; }
+[data-font-preview="calligraphy"] { font-family: "Ma Shan Zheng", "KaiTi", cursive; }
+
+
+:root[data-hanzi-font="lxgw-wenkai"] { --hanzi-font: "LXGW WenKai", "KaiTi", serif; }
+:root[data-hanzi-font="ma-shan-zheng"] { --hanzi-font: "Ma Shan Zheng", "KaiTi", cursive; }
+:root[data-hanzi-font="zcool-xiaowei"] { --hanzi-font: "ZCOOL XiaoWei", "Noto Serif CJK SC", serif; }
+:root[data-hanzi-font="long-cang"] { --hanzi-font: "Long Cang", "KaiTi", cursive; }
+:root[data-hanzi-font="noto-serif-sc"] { --hanzi-font: "Noto Serif SC", "Noto Serif CJK SC", serif; }
+:root[data-hanzi-font="zcool-kuaile"] { --hanzi-font: "ZCOOL KuaiLe", "Microsoft YaHei", sans-serif; }
+[data-font-preview="lxgw-wenkai"] { font-family: "LXGW WenKai", "KaiTi", serif; }
+[data-font-preview="ma-shan-zheng"] { font-family: "Ma Shan Zheng", "KaiTi", cursive; }
+[data-font-preview="zcool-xiaowei"] { font-family: "ZCOOL XiaoWei", "Noto Serif CJK SC", serif; }
+[data-font-preview="long-cang"] { font-family: "Long Cang", "KaiTi", cursive; }
+[data-font-preview="noto-serif-sc"] { font-family: "Noto Serif SC", "Noto Serif CJK SC", serif; }
+[data-font-preview="zcool-kuaile"] { font-family: "ZCOOL KuaiLe", "Microsoft YaHei", sans-serif; }
+
+.character-builder-hanzi { font-family: var(--hanzi-font); font-size: 2.75rem; line-height: 1.2; }
+.character-builder-reading { font-family: system-ui, sans-serif; font-size: .875rem; line-height: 1.4; font-weight: 500; }
+:root[data-character-size="large"] .character-builder-hanzi { font-size: 2.75rem; }
+:root[data-character-size="extra-large"] .character-builder-hanzi { font-size: 3.25rem; }
+
+@keyframes practice-round-arrive {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.practice-round { animation: practice-round-arrive 220ms ease-out both; }
+.practice-round-leaving {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 180ms ease-in, transform 180ms ease-in;
+    animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .practice-round { animation: none; }
+    .practice-round-leaving { transition: none; transform: none; }
+}

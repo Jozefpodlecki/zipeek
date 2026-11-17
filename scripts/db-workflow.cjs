@@ -1,11 +1,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const {spawnSync} = require('node:child_process');
 
 const repository = path.resolve(__dirname, '..');
 const manifestName = 'hanzi.manifest.json';
 const browseTables = ['words', 'word_hsk_membership', 'word_pos_membership', 'word_senses', 'sense_categories'];
+const enrichmentTables = ['word_senses', 'sense_pos', 'sense_categories', 'classification_runs', 'parts_of_speech', 'categories'];
 const required = ['hanzi.diagnostics.json', 'INPUTS.toml', 'ATTRIBUTION.md', 'notices/HSK-LICENSE.txt', 'notices/HSK-SOURCE-README.txt', 'notices/CC-BY-SA-4.0.txt'];
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const unique = () => `${Date.now()}-${crypto.randomUUID()}`;
@@ -46,7 +48,7 @@ function validateBundle(root, directory) {
     const bundle = inside(root, directory);
     if (fs.lstatSync(bundle).isSymbolicLink() || fs.realpathSync(bundle) !== bundle) throw new Error(`Bundle must use its real path: ${bundle}`);
     const report = JSON.parse(fs.readFileSync(regular(bundle, manifestName), 'utf8'));
-    if (report.engine !== 'v2.0.0' || report.storage_compatibility !== 'v1.4.0' || report.wasm_package !== '@duckdb/duckdb-wasm@1.32.0') throw new Error('Bundle engine/storage/WASM policy mismatch');
+    if (report.engine !== 'v2.0.0' || report.storage_compatibility !== 'v1.4.0' || report.wasm_package !== '@duckdb/duckdb-wasm@1.33.1-dev114.0') throw new Error('Bundle engine/storage/WASM policy mismatch');
     if (!Number.isSafeInteger(report.rows) || report.rows < 0 || !Array.isArray(report.files)) throw new Error('Malformed bundle report');
     const names = new Set();
     for (const file of report.files) {
@@ -59,7 +61,7 @@ function validateBundle(root, directory) {
     const databases = [...names].filter(databaseFile);
     if (databases.length !== 1) throw new Error(`Bundle must include exactly one dictionary database (found ${databases.length})`);
     const input = report.files.find(file => file.path === 'INPUTS.toml');
-    if (input.sha256 !== hash(fs.readFileSync(path.join(root, 'crates/db-gen/data/MANIFEST.toml')))) throw new Error('Bundle does not match the current pinned input manifest');
+    if (input.sha256 !== hash(fs.readFileSync(path.join(root, 'crates/zipeek-db-gen/data/MANIFEST.toml')))) throw new Error('Bundle does not match the current pinned input manifest');
     return {bundle, report, files: [...names, manifestName]};
 }
 
@@ -72,6 +74,12 @@ function checkBrowseSchema(report) {
     return tables;
 }
 
+function checkEnrichmentSchema(report) {
+    const tables = Array.isArray(report.tables) ? report.tables : [];
+    const missing = enrichmentTables.filter(name => !tables.includes(name));
+    if (missing.length) throw new Error(`Generated dictionary is missing AI enrichment tables: ${missing.join(', ')}`);
+}
+
 function workflow(root) {
     const directory = inside(root, path.join(root, 'target/db-workflow'));
     secureDirectory(root, directory);
@@ -79,11 +87,56 @@ function workflow(root) {
     return directory;
 }
 
+function selectedClassificationCache(root) {
+    const work = workflow(root);
+    const pointer = path.join(work, 'selected-classification.json');
+    if (!fs.existsSync(pointer) || fs.lstatSync(pointer).isSymbolicLink()) {
+        throw new Error('No validated classification selection. Run cargo make db-classify-cache first.');
+    }
+    const selection = JSON.parse(fs.readFileSync(pointer, 'utf8'));
+    if (selection.version !== 1 || typeof selection.cache !== 'string') {
+        throw new Error('Invalid classification selection metadata');
+    }
+    if (path.isAbsolute(selection.cache) || selection.cache.includes('\\') || selection.cache.split('/').some(part => !part || part === '.' || part === '..')) {
+        throw new Error('Classification selection contains an invalid relative cache path');
+    }
+    const cache = regular(work, selection.cache);
+    return cache;
+}
+
+function compressBundle(root, source) {
+    const checked = validateBundle(root, source);
+    const database = checked.report.files.find(file => databaseFile(file.path));
+    const filename = `${database.path}.gz`;
+    const compressed = zlib.gzipSync(fs.readFileSync(regular(checked.bundle, database.path)), {level: 9, mtime: 0});
+
+    const target = path.join(checked.bundle, filename);
+    fs.writeFileSync(`${target}.part`, compressed);
+    fs.renameSync(`${target}.part`, target);
+    checked.report.files = checked.report.files.filter(file => file.path !== filename);
+    checked.report.files.push({path: filename, size_bytes: compressed.length, sha256: hash(compressed)});
+    const temporary = path.join(checked.bundle, `${manifestName}.part`);
+    fs.writeFileSync(temporary, JSON.stringify(checked.report, null, 2) + '\n');
+    fs.renameSync(temporary, path.join(checked.bundle, manifestName));
+    validateBundle(root, checked.bundle);
+    console.log(`Compressed database: ${filename} (${(compressed.length / 1048576).toFixed(2)} MiB from ${(database.size_bytes / 1048576).toFixed(2)} MiB)`);
+    return target;
+}
+
+function compressLatest(root) {
+    const directory = workflow(root);
+    const pointer = path.join(directory, 'latest.json');
+    if (!fs.existsSync(pointer)) throw new Error('No candidate. Run cargo make db-generate first.');
+    const latest = JSON.parse(fs.readFileSync(pointer, 'utf8'));
+    const candidate = inside(directory, path.resolve(root, latest.directory));
+    return compressBundle(root, candidate);
+}
+
 function generate(root, options = {}) {
     const directory = workflow(root);
     secureDirectory(root, path.join(directory, 'generated'));
     const output = inside(directory, path.join(directory, 'generated', unique()));
-    const args = ['run', '-p', 'db-gen', '--locked', '--', 'generate', '--output', output];
+    const args = ['run', '-p', 'zipeek-db-gen', '--locked', '--', 'generate', '--output', output];
     if (options.classificationCache) args.push('--classification-cache', path.resolve(options.classificationCache));
     const result = spawnSync('cargo', args, {cwd: root, stdio: 'inherit'});
     if (result.error) throw result.error;
@@ -100,7 +153,7 @@ function generate(root, options = {}) {
 function installBundle(root, source) {
     const checked = validateBundle(root, source);
     const directory = workflow(root);
-    const destination = inside(root, path.join(root, 'crates/web/static'));
+    const destination = inside(root, path.join(root, 'crates/zipeek-web/static'));
     const stage = inside(directory, path.join(directory, 'staging', unique()));
     const backup = inside(directory, path.join(directory, 'backups', unique()));
     if (checked.bundle === destination) throw new Error('Candidate is already the installed bundle');
@@ -120,6 +173,14 @@ function installBundle(root, source) {
         const manifestPath = path.join(stage, manifestName);
         initial.report.files.find(file => file.path === existingDatabase).path = stampedDatabase;
         fs.writeFileSync(manifestPath, JSON.stringify(initial.report, null, 2) + '\n');
+    }
+
+    const previousGzip = `${existingDatabase}.gz`;
+    const renamedGzip = `${stampedDatabase}.gz`;
+    if (previousGzip !== renamedGzip && initial.report.files.some(file => file.path === previousGzip)) {
+        fs.renameSync(path.join(stage, previousGzip), path.join(stage, renamedGzip));
+        initial.report.files.find(file => file.path === previousGzip).path = renamedGzip;
+        fs.writeFileSync(path.join(stage, manifestName), JSON.stringify(initial.report, null, 2) + '\n');
     }
     validateBundle(root, stage);
     secureDirectory(root, path.dirname(backup));
@@ -142,19 +203,41 @@ function installBundle(root, source) {
 
 function main() {
     const command = process.argv[2];
-    if (command === 'generate') return generate(repository);
+    if (command === 'generate') {
+        if (process.argv.length === 3) return generate(repository);
+        if (process.argv.length === 4 && process.argv[3] === '--selected-classification-cache') {
+            return generate(repository, {classificationCache: selectedClassificationCache(repository)});
+        }
+        if (process.argv.length === 5 && process.argv[3] === '--classification-cache') {
+            if (!process.argv[4]) throw new Error('Classification cache path is required');
+            return generate(repository, {classificationCache: process.argv[4]});
+        }
+        throw new Error('Usage: db-workflow.cjs generate [--classification-cache FILE | --selected-classification-cache]');
+    }
+    if (command === 'compress') {
+        if (process.argv.length !== 3) throw new Error('Usage: db-workflow.cjs compress');
+        return compressLatest(repository);
+    }
     if (command === 'browse-check') {
-        const installed = validateBundle(repository, path.join(repository, 'crates/web/static'));
+        const installed = validateBundle(repository, path.join(repository, 'crates/zipeek-web/static'));
         checkBrowseSchema(installed.report);
         console.log('Installed dictionary has all normalized Browse tables');
         return;
     }
     if (command === 'install') {
+        const requireEnrichment = process.argv.length === 4 && process.argv[3] === '--require-enrichment';
+        if (process.argv.length > (requireEnrichment ? 4 : 3)) throw new Error('Usage: db-workflow.cjs install [--require-enrichment]');
         const directory = workflow(repository);
         const pointer = path.join(directory, 'latest.json');
         if (!fs.existsSync(pointer)) throw new Error('No generated candidate. Run cargo make db-generate first.');
         const latest = JSON.parse(fs.readFileSync(pointer, 'utf8'));
-        return installBundle(repository, inside(directory, path.resolve(repository, latest.directory)));
+        const candidate = inside(directory, path.resolve(repository, latest.directory));
+        if (requireEnrichment) {
+            const validated = validateBundle(repository, candidate);
+            checkBrowseSchema(validated.report);
+            checkEnrichmentSchema(validated.report);
+        }
+        return installBundle(repository, candidate);
     }
     throw new Error('Usage: node scripts/db-workflow.cjs <generate|install|browse-check>');
 }
@@ -163,4 +246,4 @@ if (require.main === module) {
     try {main();} catch (error) {console.error(`Database workflow failed: ${error.message}`); process.exitCode = 1;}
 }
 
-module.exports = {validateBundle, installBundle, checkBrowseSchema, generate};
+module.exports = {validateBundle, installBundle, checkBrowseSchema, checkEnrichmentSchema, selectedClassificationCache, generate, compressBundle, compressLatest};

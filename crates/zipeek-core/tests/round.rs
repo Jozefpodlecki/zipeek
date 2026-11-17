@@ -128,7 +128,7 @@ fn first_clean_window_is_selected_and_wrap_never_splits_it() {
         word.english = Some("same".to_owned());
     }
     let pool = support::pool(&words);
-    let round = build(&pool, ExerciseVariant::HanziEng, "0").unwrap();
+    let round = build(&pool, ExerciseVariant::MatchingHanziMeaning, "0").unwrap();
     assert_eq!(round.effective_offset, 3);
     assert_eq!(
         round.trace.views[0]
@@ -140,7 +140,7 @@ fn first_clean_window_is_selected_and_wrap_never_splits_it() {
     );
     let pool = support::pool(&support::words());
     assert_eq!(
-        build(&pool, ExerciseVariant::HanziEng, "19")
+        build(&pool, ExerciseVariant::MatchingHanziMeaning, "19")
             .unwrap()
             .effective_offset,
         0
@@ -153,12 +153,12 @@ fn malformed_and_excluded_pools_fail_without_silently_reordering() {
     let mut pool = support::pool(&words);
     pool.strict.swap(0, 1);
     assert!(matches!(
-        build(&pool, ExerciseVariant::HanziEng, "0"),
+        build(&pool, ExerciseVariant::MatchingHanziMeaning, "0"),
         Err(BuildError::InvalidPool { .. })
     ));
     let pool = support::pool(&words);
     let query = ParsedPracticeQuery::from_pairs([("exclude", "1")])
-        .normalize(ExerciseVariant::HanziEng, |id| {
+        .normalize(ExerciseVariant::MatchingHanziMeaning, |id| {
             words.iter().find(|word| word.id == id)
         });
     assert!(matches!(
@@ -169,7 +169,7 @@ fn malformed_and_excluded_pools_fail_without_silently_reordering() {
                 recovery: &[],
                 recovered_views: &[]
             },
-            ExerciseVariant::HanziEng,
+            ExerciseVariant::MatchingHanziMeaning,
             &query
         ),
         Err(BuildError::InvalidPool { .. })
@@ -186,7 +186,7 @@ fn empty_and_duplicate_only_views_exhaust_safely() {
         support::pool(&words)
     }] {
         let Err(BuildError::InsufficientPool { attempts, .. }) =
-            build(&pool, ExerciseVariant::HanziEng, "0")
+            build(&pool, ExerciseVariant::MatchingHanziMeaning, "0")
         else {
             panic!("expected insufficient pool");
         };
@@ -203,7 +203,7 @@ fn empty_and_duplicate_only_views_exhaust_safely() {
 fn widening_starts_at_zero_and_reports_the_chosen_view() {
     let mut pool = support::pool(&support::words());
     pool.strict.clear();
-    let round = build(&pool, ExerciseVariant::PinyinHanzi, "10").unwrap();
+    let round = build(&pool, ExerciseVariant::MatchingPinyinHanzi, "10").unwrap();
     assert_eq!(round.selected_view, CandidateView::HskWidened);
     assert_eq!(round.effective_offset, 0);
     assert!(round.canonical_input.ends_with("|10|none"));
@@ -214,13 +214,13 @@ fn normalization_uses_only_the_visible_answer_label() {
     let original = support::words();
     for (variant, alter) in [
         (
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             (|word: &mut Word| word.pinyin = "YI1".to_owned()) as fn(&mut Word),
         ),
-        (ExerciseVariant::PinyinHanzi, |word: &mut Word| {
+        (ExerciseVariant::MatchingPinyinHanzi, |word: &mut Word| {
             word.simplified = "一".to_owned()
         }),
-        (ExerciseVariant::HanziEng, |word: &mut Word| {
+        (ExerciseVariant::MatchingHanziMeaning, |word: &mut Word| {
             word.english = Some("  ONE  ".to_owned())
         }),
     ] {
@@ -233,9 +233,13 @@ fn normalization_uses_only_the_visible_answer_label() {
     words[0].english = Some("to eat".to_owned());
     words[1].english = Some("eat".to_owned());
     assert_eq!(
-        build(&support::pool(&words), ExerciseVariant::HanziEng, "0")
-            .unwrap()
-            .effective_offset,
+        build(
+            &support::pool(&words),
+            ExerciseVariant::MatchingHanziMeaning,
+            "0"
+        )
+        .unwrap()
+        .effective_offset,
         0
     );
 }
@@ -247,7 +251,7 @@ fn recovery_fails_safely_without_an_eligible_candidate_or_context_views() {
     bad.hsk3_level = None;
     let pool = support::pool(&words);
     let query = ParsedPracticeQuery::from_pairs([("seed", "1")])
-        .normalize(ExerciseVariant::EngPinyin, |_| Some(&bad));
+        .normalize(ExerciseVariant::MatchingEnglishPinyin, |_| Some(&bad));
     for recovery in [vec![], vec![bad.clone()]] {
         let error = build_round(
             RoundCandidates {
@@ -256,7 +260,7 @@ fn recovery_fails_safely_without_an_eligible_candidate_or_context_views() {
                 recovery: &recovery,
                 recovered_views: &[],
             },
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             &query,
         )
         .unwrap_err();
@@ -273,7 +277,7 @@ fn recovery_fails_safely_without_an_eligible_candidate_or_context_views() {
                 recovery: &words,
                 recovered_views: &[]
             },
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             &query
         ),
         Err(BuildError::MissingRecoveryViews { .. })
@@ -285,14 +289,18 @@ fn supplied_views_cannot_cross_hsk_systems_or_change_rows() {
     let mut pool = support::pool(&support::words());
     pool.strict[0].english = Some("changed".to_owned());
     assert!(matches!(
-        build(&pool, ExerciseVariant::HanziEng, "0"),
+        build(&pool, ExerciseVariant::MatchingHanziMeaning, "0"),
         Err(BuildError::InvalidPool { .. })
     ));
     let mut words = support::words();
     words[0].hsk3_level = None;
     words[0].hsk2_level = Some(zipeek_core::Hsk2Level::One);
     assert!(matches!(
-        build(&support::pool(&words), ExerciseVariant::HanziEng, "0"),
+        build(
+            &support::pool(&words),
+            ExerciseVariant::MatchingHanziMeaning,
+            "0"
+        ),
         Err(BuildError::InvalidPool { .. })
     ));
 }
@@ -324,7 +332,7 @@ fn exclusions_are_applied_before_offsets_and_equivalent_seed_urls_replay() {
     let words = support::words();
     let filtered = support::pool(&words[1..]);
     let query = ParsedPracticeQuery::from_pairs([("exclude", "1"), ("offset", "4")])
-        .normalize(ExerciseVariant::PinyinHanzi, |id| {
+        .normalize(ExerciseVariant::MatchingPinyinHanzi, |id| {
             words.iter().find(|word| word.id == id)
         });
     let round = build_round(
@@ -334,7 +342,7 @@ fn exclusions_are_applied_before_offsets_and_equivalent_seed_urls_replay() {
             recovery: &[],
             recovered_views: &[],
         },
-        ExerciseVariant::PinyinHanzi,
+        ExerciseVariant::MatchingPinyinHanzi,
         &query,
     )
     .unwrap();
@@ -343,7 +351,7 @@ fn exclusions_are_applied_before_offsets_and_equivalent_seed_urls_replay() {
     let mut rounds = Vec::new();
     for offset in ["0", "999"] {
         let query = ParsedPracticeQuery::from_pairs([("seed", "1"), ("offset", offset)])
-            .normalize(ExerciseVariant::EngPinyin, |_| Some(&words[0]));
+            .normalize(ExerciseVariant::MatchingEnglishPinyin, |_| Some(&words[0]));
         rounds.push(
             build_round(
                 RoundCandidates {
@@ -352,7 +360,7 @@ fn exclusions_are_applied_before_offsets_and_equivalent_seed_urls_replay() {
                     recovery: &[],
                     recovered_views: &[],
                 },
-                ExerciseVariant::EngPinyin,
+                ExerciseVariant::MatchingEnglishPinyin,
                 &query,
             )
             .unwrap(),
@@ -375,7 +383,7 @@ fn dropping_pos_is_the_last_fallback() {
     pool.strict.truncate(7);
     pool.hsk_widened.truncate(7);
     let query = ParsedPracticeQuery::from_pairs([("pos", "noun")])
-        .normalize(ExerciseVariant::PinyinHanzi, |_| None);
+        .normalize(ExerciseVariant::MatchingPinyinHanzi, |_| None);
     let round = build_round(
         RoundCandidates {
             initial: &pool,
@@ -383,7 +391,7 @@ fn dropping_pos_is_the_last_fallback() {
             recovery: &[],
             recovered_views: &[],
         },
-        ExerciseVariant::PinyinHanzi,
+        ExerciseVariant::MatchingPinyinHanzi,
         &query,
     )
     .unwrap();
@@ -398,22 +406,34 @@ fn left_label_duplicates_are_allowed_and_missing_english_is_variant_specific() {
         word.english = Some("same".to_owned());
     }
     assert_eq!(
-        build(&support::pool(&words), ExerciseVariant::EngPinyin, "0")
-            .unwrap()
-            .effective_offset,
+        build(
+            &support::pool(&words),
+            ExerciseVariant::MatchingEnglishPinyin,
+            "0"
+        )
+        .unwrap()
+        .effective_offset,
         0
     );
     words[0].english = None;
     assert_eq!(
-        build(&support::pool(&words), ExerciseVariant::PinyinHanzi, "0")
-            .unwrap()
-            .effective_offset,
+        build(
+            &support::pool(&words),
+            ExerciseVariant::MatchingPinyinHanzi,
+            "0"
+        )
+        .unwrap()
+        .effective_offset,
         0
     );
     assert_eq!(
-        build(&support::pool(&words), ExerciseVariant::EngPinyin, "0")
-            .unwrap()
-            .effective_offset,
+        build(
+            &support::pool(&words),
+            ExerciseVariant::MatchingEnglishPinyin,
+            "0"
+        )
+        .unwrap()
+        .effective_offset,
         1
     );
 }
@@ -426,7 +446,7 @@ fn seeded_partner_requests_remove_even_rejected_rows() {
     }
     let pool = support::pool(&words);
     let query = ParsedPracticeQuery::from_pairs([("seed", "1")])
-        .normalize(ExerciseVariant::EngPinyin, |_| Some(&words[0]));
+        .normalize(ExerciseVariant::MatchingEnglishPinyin, |_| Some(&words[0]));
     let round = build_round(
         RoundCandidates {
             initial: &pool,
@@ -434,7 +454,7 @@ fn seeded_partner_requests_remove_even_rejected_rows() {
             recovery: &[],
             recovered_views: &[],
         },
-        ExerciseVariant::EngPinyin,
+        ExerciseVariant::MatchingEnglishPinyin,
         &query,
     )
     .unwrap();
@@ -454,12 +474,12 @@ fn english_cards_and_uniqueness_use_only_the_first_stored_gloss() {
     words[1].english = Some(" ONE |different".to_owned());
     let pool = support::pool(&words);
     assert_eq!(
-        build(&pool, ExerciseVariant::HanziEng, "0")
+        build(&pool, ExerciseVariant::MatchingHanziMeaning, "0")
             .unwrap()
             .effective_offset,
         1
     );
-    let round = build(&pool, ExerciseVariant::EngPinyin, "0").unwrap();
+    let round = build(&pool, ExerciseVariant::MatchingEnglishPinyin, "0").unwrap();
     let RoundContent::Matching { left, .. } = round.content else {
         panic!("expected matching");
     };

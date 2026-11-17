@@ -1,276 +1,88 @@
-# Agent guide
+# Zipeek agent guide
 
-Zipeek is a client-side Chinese hanzi query and practice app, built with Rust,
-Yew CSR, WebAssembly, and Tailwind. The target database is a pregenerated,
-read-only DuckDB file. Hosting is GitHub Pages at
-`https://Jozefpodlecki.github.io/zipeek/`; the base path must remain `/zipeek/`.
+This is the **only root-level agent instruction file**. Do not introduce a second agent prompt or competing policy file. Read relevant linked documents when the task touches their area; do not treat historical decisions or release notes as current implementation evidence.
 
-This file is the source of truth for contributor process. Product details,
-implementation notes, and open decisions live in [docs/](docs/README.md).
+## 1. Project and precedence
 
-## 1. Before editing
+Zipeek is a Chinese Hanzi dictionary and practice application using Rust 2024, Yew CSR, WASM, Tailwind and a pregenerated read-only DuckDB dictionary. Its hosted base path is **`/zipeek/`**. Browser-local personal learning data is distinct from packaged dictionary data; do not move it to a server or disclose it to optional AI/image services without an approved design.
 
-0. Read [docs/DIGEST.md](docs/DIGEST.md) first. It holds the user's pending
-   design answers, is not a permanent reference, and must be consumed and wiped
-   by the session that reads it.
-1. Read this guide, [CURRENT](docs/process/CURRENT.md),
-   [TASKS](docs/process/TASKS.md),
-   [ARCHITECTURE](docs/architecture/ARCHITECTURE.md), and
-   [PRODUCT](docs/product/PRODUCT.md). Use [docs/README.md](docs/README.md) to
-   locate the reference document for a specific task.
-2. Read the relevant documents below, including open decisions affecting the task.
-3. Follow the user's explicit task. Select the first ready task from TASKS
-   only when asked to choose work.
-4. Present a plan stating the task, files to change, validation, and any decisions
-   or dependency changes requiring approval. **Wait for approval before editing.**
-   Approval covers the stated scope; ask again if it materially changes.
-5. If an unresolved decision blocks the task, ask the user. Proposed defaults
-   are not approved decisions. Continue only independent work already approved.
+- **Authority:** Explicit current user decisions and approved project policies govern intended behavior. Source code, manifests and tests establish *what is implemented*, not what is approved or verified. If sources disagree, explain the discrepancy and request approval before changing controlled requirements.
+- **Approved decisions:** Read affected entries under [decisions](docs/project-management/decisions/index.md), but do not treat historical compatibility commitments as active requirements.
+- **Current task status:** [CURRENT](docs/project-management/current.md), [TASKS](docs/project-management/tasks.md), and dated [COMPLETED](docs/archive-history/completed/) are the task-state authorities. Unresolved architecture proposals belong in TASKS; recorded decisions live under [decisions](docs/project-management/decisions/index.md).
+- **Documentation index:** [docs/README.md](docs/README.md) identifies the maintained owner of each specification. The root README is for first-clone setup, not checkpoint history.
 
-An approved task does not need a second approval for routine steps within its scope.
-Keep changes focused and preserve existing user changes, including staged changes.
+## 2. Before work and approval
 
-## 2. Development phase
+1. Read this guide, CURRENT, TASKS, and the architecture/product or specialist documents relevant to the request. For read-only reviews, do not mutate task or decision records.
+2. Inspect relevant current source, manifests, tests, and changed files before claiming behavior or proposing technical changes. Record uncertainties; do not extrapolate completion from docs or prior snapshots.
+3. Follow the user's specified task. Select the next ready TASKS entry only if asked to choose work.
+4. Propose the task, affected paths, behavior and data impacts, validation, dependencies, and decisions requiring approval. **Wait for approval before editing.** Approval covers the agreed scope, not unrelated refactoring or additional dependencies.
+5. During approved implementation, preserve user modifications, including staged changes. Ask again only for a material change of scope, destructive consequence not covered by the plan, dependency change, or unresolved decision. Routine steps need no second approval.
+6. Apply approved decisions to the owning documents and record their outcomes in the relevant decision and task history. Keep unresolved questions in TASKS until decided; do not delete unresolved work.
 
-The app is in active development. Breaking changes to application code, data, and
-generated artifacts are acceptable within approved work. Regenerate affected
-artifacts instead of maintaining backward compatibility or migrations for old
-outputs. There is no application/database versioning policy at this stage.
+## 3. Development-phase policy: zero backward compatibility
 
-D12's explicitly versioned round-seed encoding is a narrow exception: preserve
-replay-format compatibility as documented in
-[ROUND_GENERATION](docs/product/ROUND_GENERATION.md). Under D19, v1 is the only
-format version. A future v2 requires both a canonical prefix bump and a URL
-parameter selecting it, plus a documented compatibility path. That is a breaking
-change to shared URLs requiring explicit approval; no v2 format,
-version-selection parameter, or compatibility parser exists today.
+**Zipeek is in active development. No backward compatibility is required, with no exceptions.** This includes old application interfaces, database schemas, stored browser data, generated files, URLs, seed formats, serialized data and replay encodings (including earlier D12/D19 formats). Do **not** introduce migrations, dual readers/writers, legacy parsers, old-format fallbacks, compatibility shims, or version-selection mechanisms solely to support older representations.
 
-This does not relax dependency pins, approval requirements, source licensing,
-COMPLETED history preservation, or the rule against hand-editing DuckDB files.
+Choose one clean current representation within *approved scope*. Changes that may invalidate links or discard locally stored data must be disclosed and approved in advance; recovery or regeneration steps must be documented. Zero backward compatibility does **not** waive deterministic current behavior, data integrity, validation of untrusted inputs, source licensing, security, dependency pins or testing.
 
-## 3. Repository map
+## 4. Protected project contracts
 
-| Path | Role / current status |
+- **Dependency change control:** Do not add, upgrade, move or replace dependencies without explicit approval. Use the root `Cargo.lock` and `--locked`; do not create a crate-local lockfile. Report conflicts with approved decisions instead of silently changing dependencies.
+- **Toolchain and dependency versions:** Inspect `rust-toolchain.toml`, the relevant `Cargo.toml` manifests, the root `Cargo.lock`, and frontend package manifests and lockfiles for actual configured versions. Do not duplicate version numbers in this guide. Consult [decisions](docs/project-management/decisions/index.md) for approved constraints and rationale; if these disagree with the manifests, report the discrepancy rather than assuming either is current approval to change versions.
+- **Browser database:** Do not hand-edit `*.duckdb` or generated vendor binaries. Generate, verify and install through approved commands, never as an incidental Trunk rebuild. Preserve third-party licenses and notices. See [DB](docs/dictionary-data/schema/db.md) and [web assets](docs/architecture/modules/web-assets.md).
+- **Deployment:** Keep GitHub Pages builds, assets and navigation under `/zipeek/`; root `/` is used deliberately by development E2E tests. Check both when routing, assets or startup change.
+- **Determinism:** Current round generation uses a single seeded `ChaCha12Rng` stream and approved 64-bit FNV-1a reproducible hashes. Maintain deterministic current-format tests; any change to draw order, seed semantics or fallback is a deliberate approved behavior change, **not** a reason to support old formats. See [round generation](docs/games/round-generation.md).
+- **Trust boundaries:** Validate URL parameters, imports, browser storage and external responses before converting to domain values. Do not put credentials or user-private data in web assets, fixtures or release archives.
+
+## 5. Engineering rules
+
+Use [CODING_STANDARDS](docs/engineering/coding-standards.md) as the detailed implementation contract. For relevant work, apply the following principles:
+
+- Prefer readable idiomatic Rust/Yew, coherent domain boundaries, testable business rules and minimal justified abstractions. Do not split by arbitrary file length or add crates to match a speculative architecture.
+- Keep coupled workflow state and transitions coherent; assess `use_reducer` where invariants span fields, and Yew contexts only where genuinely shared. Distinguish required providers from intentionally optional contexts after verifying the root provider tree.
+- Define named callbacks outside `html!` element attributes; favor typed identifiers/actions over round-tripping values through DOM `data-*`. Keep Yew markup reviewable and use `yew_icons` for application chrome rather than emoji.
+- Maintain the existing Tailwind design system, responsive presentation, accessible semantic controls, focus and keyboard behavior, and explicit loading/empty/error/retry/completion states. Do not perform unrelated broad redesigns.
+- Keep async ownership, cancellation, listener cleanup and stale-response protection explicit. Do not mistake deferral of synchronous CPU work for nonblocking execution.
+- Follow the no-code-comments policy without exceptions. Clarify implementation through naming, types, and module structure; keep rationale in documentation. Avoid em dashes and long dash typography in code, UI text, documentation and replies.
+- Test modifications at the correct level and preserve meaningful E2E assertions. See [testing](docs/testing-quality/acceptance/testing.md) and [E2E architecture](docs/testing-quality/e2e/e2e-architecture.md).
+
+## 6. Verification and honest evidence
+
+- Assess available tools before planning checks. Static review, authored tests, commands actually run, supplied user logs and browser observation are different evidence types. Never invent results, source inspection, test passes, screenshots, benchmarks or timestamps.
+- Choose focused checks proportional to risk. For routine changes run affected checks and representative behavior; for major work or release readiness use the comprehensive gate in [TESTING](docs/testing-quality/acceptance/testing.md). A native Rust check is not a WASM build; neither is a browser acceptance test.
+- Browser changes require appropriate Chrome/user-flow review when available; routes/Pages changes require `/` and `/zipeek/` coverage. Missing tools mean **not run/blocked**, not passed. Provide exact local commands for remaining checks.
+- Record what was modified, checks that ran and results, checks not run, known pre-existing failures and next actions. Do not call unverified work accepted or production-ready.
+
+## 7. Documentation and task-state updates
+
+For tracked, approved implementation, keep `CURRENT.md` restricted to the active task, immediate state, blockers, verification and next steps; never accumulate prior release notes or completed checkpoint chronicles there. Preserve historical work in release history, release notes and dated completed records. Update TASKS, append completed outcomes to the correct dated COMPLETED file before removing completed TASKS entries, and update the relevant owning product, architecture, testing or decision documents. Completed date files are append-only; historical archive records are frozen. Do not recreate `STATUS.md`.
+
+For read-only audit and proposals, do not mutate task or decision state. For documentation-only edits, validate Markdown, links and factual consistency; Rust/e2e execution is unnecessary unless code or generated outputs changed. Keep release history in [RELEASE_HISTORY](docs/archive-history/RELEASE_HISTORY.md), not the root README. Maintain one root `RELEASE_NOTES.md` for handoff notes; do not create additional `R<number>-RELEASE-NOTES.md` snapshots. Historical release summaries belong in `docs/archive-history/RELEASE_HISTORY.md`.
+
+## 8. Release and source handoffs
+
+- Numbered source releases and WIP handoffs must follow the current [release naming and acceptance contract](docs/build-deployment/release-naming.md). The native `cargo make pack` snapshot format is separate.
+- The approved **20 substantive Rust-file minimum applies only to explicitly requested numbered major-release handoffs**. Never pad or expand routine work to satisfy it. Before expanding an approved major release, propose additional justified work and receive approval. Validate against the actual final diff.
+- Preserve the source archive root layout, verify the actual unpack contract, and distinguish completed acceptance from an unverified source candidate. Do not infer a release number or timestamp.
+- **ChatGPT session archive hygiene:** When working in a ChatGPT session with filesystem access, inspect ZIPs created in that session and delete superseded **agent-generated project/release ZIPs** after the replacement handoff has been built and integrity-checked. Retain the current delivery and any required comparison inputs until validation finishes. Never delete user-uploaded archives, external Downloads, repository backups, evidence bundles, or unknown files; if ownership or replacement is uncertain, leave the ZIP intact. When operating via Codex, follow the same non-destructive ownership boundary, but do not assume ChatGPT session files are accessible or perform cleanup outside the working scope.
+
+### Delivery format for requested changes
+
+- **Deliver complete, ready-to-use files, not patches.** When modifying the repository, the default deliverable is a complete updated project source ZIP with the approved changes already applied and the expected archive root layout preserved.
+- Do not provide patch-only ZIPs, unified diffs, isolated replacement snippets, or instructions requiring the user to manually copy edits into existing files as the primary deliverable. Provide these only if the user explicitly requests them.
+- For a request limited to one standalone document, provide the complete updated document. A full project archive may also be provided when the request concerns repository integration or the user asks for it.
+- **Release handoff is not a single artifact:** When a numbered release or WIP handoff is requested, provide the installable full-source ZIP **and** the complete separately accessible changed primary file(s), plus the canonical root `RELEASE_NOTES.md` describing the scope, archive identity and verification status. A standalone document by itself is not a release handoff. Do not mislabel documentation-only WIP work as an accepted major release.
+- Keep untouched project content intact, verify ZIP integrity and relevant paths, and state what changed and what was actually validated. Do not claim a build passed merely because a modified archive was packaged successfully.
+
+## 9. Task-specific references
+
+| Task type | Read before acting |
 | --- | --- |
-| `Cargo.toml` | Workspace manifest; includes `crates/web`, `crates/db-gen`, `crates/zipeek-core`, `crates/zipeek-ai`, `crates/zipeek-exercises`, `crates/zipeek-themes`, and `crates/e2e` |
-| `crates/web/` | Yew crate, package `zipeek`; Trunk commands run here |
-| `crates/web/src/` | App, components, contexts, models, pages, routes, services |
-| `crates/web/index.html`, `crates/web/Trunk.toml` | HTML entry point and build configuration |
-| `crates/web/styles/`, `crates/web/public/`, `crates/web/icons/` | Current styles and static assets |
-| `crates/db-gen/` | Package `db-gen`; verified inputs, engine/storage guards, approved schema and HSK/fallback import, compatible artifact export, reports and native read-only verification |
-| `crates/web/static/hanzi.duckdb` | Generated dictionary with reports/notices; A06 opens it read-only through pinned local browser workers |
-| `crates/e2e/` | Workspace package `e2e`; modular owned Trunk/managed-Chrome lifecycle, root/Pages suites and headless executable |
-| `.github/workflows/` | PR/push/manual CI with five gates and owned Chrome; validated master calls reusable Pages release/deploy |
-| `docs/` | `product/`, `architecture/` (with `modules/` and `schema/`), `testing/`, `process/` (with `decisions/` and `completed/`) — see [docs/README.md](docs/README.md) for the index |
-
-The implemented workspace contains the seven packages listed above. Do not
-add crates merely to fill out a proposed architecture; keep boundaries driven
-by approved responsibilities. The approved shared crate name
-is `zipeek-core`; Word/WordId, HSK and canonical PoS types are implemented;
-practice URL state and the pure deterministic round builder are implemented;
-typed browser database queries, matching/MCQ gameplay and mixed-type sessions
-are implemented in Endless/Fixed modes (D01/D39/D40).
-
-## 4. Version and dependency policy
-
-Preserve the following approved targets. Do not add, move, or upgrade dependencies,
-or change these versions, without explicit approval. A task plan must identify
-such changes specifically; general task approval does not implicitly approve them.
-
-| Component | Target |
-| --- | --- |
-| Rust | `1.97.1`, edition `2024` |
-| Yew | `0.23`, CSR |
-| yew-router | `0.20` |
-| yew_icons | `0.10`, `lucide` and `simple_icons` |
-| Tailwind | `4.3.3` |
-| wasm-bindgen | `0.2.114` |
-| DuckDB-WASM | Exact npm pin `@duckdb/duckdb-wasm@1.32.0` (D08) |
-| Native generator | User-restored `duckdb-neo` at Git revision `4acbea84794582c4cd962ee971a3d7a5dcb72e39`; query/log and require native `v2.0.0`; require `v1.4.0` storage compatibility before output creation (D23). |
-| e2e | `thirtyfour` `0.38.1` + installed Chrome; managed ChromeDriver (D09) |
-| Build | Trunk; no exact version selected yet |
-| Round RNG | `rand` `0.10.3` with approved `chacha` feature; use `rand::rngs::ChaCha12Rng` (D17), no separate rand_chacha |
-| Animato | User-added `1.7.3` with `path`, `physics`, `color`; additional integration features still require approval |
-| Chart.js | Exact npm pin `chart.js@4.6.1`; Fixed-summary ring only, tree-shaken DoughnutController/ArcElement (D35) |
-| Summary asset build | Exact dev-only npm pin `esbuild@0.28.2`; local summary bundle, no runtime bundler (D35) |
-| Generator CLI | Exact `clap =4.6.7`, default features plus `derive`; native db-gen only (D37) |
-
-These are policy targets, not a claim that all manifests and workflows agree.
-Cargo version requirements are not necessarily exact pins. Record discrepancies
-in CURRENT/TASKS and obtain approval before changing them.
-
-Under D27, track the single workspace Cargo.lock at the repository root. Do not
-restore a web-local lockfile. Use --locked for Cargo validation and preserve the
-resolved graph unless an approved dependency change requires updating it.
-Trunk builds enforce locked resolution through web/Trunk.toml.
-
-## 5. Hard rules
-
-- Follow [CODING_STANDARDS](docs/process/CODING_STANDARDS.md), including its
-  no-comments rule and sole lint-suppression rationale exception.
-- Never hand-edit `*.duckdb`. Regenerate with the approved native generator;
-  generation is manual, never an automatic application build step. Commit the
-  generated database with an approved data change.
-- Obtain explicit approval for DB schema changes and open-decision resolutions.
-  Document source licensing before implementing the generator.
-- Preserve `/zipeek/` in Pages builds, asset URLs, and routing. E2e development
-  serving uses `/` without `--public-url`; see
-  [testing/e2e.md](docs/testing/e2e.md) for the deliberate distinction.
-- TASKS, CURRENT, and COMPLETED are the only live task-state sources. Keep TASKS
-  open-only and ordered by prerequisites; record active work/blockers in CURRENT;
-  append outcomes to COMPLETED before removing finished tasks from TASKS. The
-  COMPLETED log is split by outcome date under `docs/process/completed/`; append
-  new outcomes to the file for the outcome date, and never rewrite historical
-  date files. `docs/process/completed/archive.md` and
-  `docs/process/completed/validation-log.md` are frozen historical records.
-  STATUS.md is retired; do not recreate or append to it. Its one-time history
-  migration is preserved in `archive.md`.
-- Treat [docs/DIGEST.md](docs/DIGEST.md) as a consumed scratchpad. Read it at
-  the start of every session, apply its answers to the owning documents, record
-  the result in `docs/process/completed/` for the consumption date, then wipe
-  consumed entries (see the file for the wipe rule). Do not link to it from
-  other documents, and do not treat it as a permanent reference.
-- Do not claim intended routes, tools, tests, or database integration already exist.
-- Use the approved 64-bit FNV-1a for Word of the Day and reproducible hashes
-  (D14). `DefaultHasher` is for ephemeral in-session use only, never Word of the
-  Day or reproducible values. Do not persist hash state. Word exclusions store
-  WordIds, not hash outputs.
-- Use exactly one `ChaCha12Rng` per `build_round`, seeded once from
-  `fnv1a64(canonical_seed_input)`. Seed recovery consumes draws from this
-  same stream; generation continues from the resulting state. No reset, no
-  second RNG, no re-seed. Recovery-failure fallback (first eligible word by
-  `id`) consumes no RNG. Changing recovery attempt count, draw order, or
-  sampler is a hard replay break — bump the canonical seed prefix.
-  D19 keeps v1; any future break also requires the URL-selection and explicit
-  approval steps in section 2. This bullet is the authoritative single-stream
-  contract if ROUND_GENERATION conflicts with it.
-
-## 6. Commands and completion
-
-D08 pins `@duckdb/duckdb-wasm@1.32.0` exactly. Do not substitute `latest`, `next`,
-or development builds. If integration exposes a genuine wasm toolchain
-compatibility blocker, stop and report commands, versions, and error evidence.
-See [architecture/schema/DB.md](docs/architecture/schema/DB.md) and
-[architecture/schema/runtime.md](docs/architecture/schema/runtime.md) for the pin
-rationale and remaining integration work.
-
-Use the working directories and prerequisites in
-[testing/TESTING.md](docs/testing/TESTING.md). Common commands:
-
-```powershell
-# Repository root: code quality gates
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-cargo test --workspace --locked
-cargo check --target wasm32-unknown-unknown -p zipeek --locked
-```
-
-```
-# From crates/web/: Pages-ready build (dev server uses port 1420)
-npm ci --ignore-scripts
-trunk serve
-trunk build --public-url /zipeek/
-```
-
-For a complete LM Studio enriched dictionary use `cargo make db-full`; use
-`cargo make db-full-dev` to launch Trunk afterwards. Classification results
-are cached under target/db-workflow, and the installed database remains intact
-if inference or validation fails. Ordinary db-generate and dev remain offline.
-
-From the repository root, the explicit local workflow is cargo make dev:
-generate a fresh verified bundle, install the entire bundle with a backup, then
-start Trunk in crates/web/. Separate tasks are db-check, db-generate, db-install and
-serve. cargo make serve reuses the installed bundle. These tasks use installed
-cargo-make and Node; they add no dependency or automatic install step. Generation
-runs once when explicitly requested, never during Trunk rebuilds or Pages builds.
-
-```
-# Repository root: owned harness, root and Pages suites
-cargo test -p e2e --locked -- --test-threads=1
-```
-
-A15 implements package `e2e`, one managed Chrome session per integration-test
-binary and shared owned server/readiness/cleanup. Both the executable and tests
-run headless. D09 uses WebDriver::managed(DesiredCapabilities::chrome()); do not
-install or spawn ChromeDriver separately. Root tests own a Trunk development
-server at a dynamic port and serve at `/`; Pages tests build and serve under
-`/zipeek/` in an isolated directory. Neither requires an external server on 1420.
-See [testing/e2e.md](docs/testing/e2e.md) for commands, prerequisites, layout and
-failure-isolation evidence, and [D09/D28](docs/process/decisions/process-and-infra.md)
-for the binding decisions.
-
-Choose local validation proportionate to the change. Routine fixes and small
-iterations need focused checks and an obvious representative sample of affected
-behavior, not full regression every time. Reuse successful evidence for unchanged
-code. After a fix, rerun affected checks instead of restarting the entire suite.
-
-Reserve full regression for very major work: substantial feature completion,
-broad architecture/runtime/data changes, or release readiness. The full set is:
-
-cargo fmt --all -- --check
-
-cargo clippy --workspace --all-targets --locked -- -D warnings
-
-cargo test --workspace --locked
-
-cargo check --target wasm32-unknown-unknown -p zipeek --locked
-
-trunk build --public-url /zipeek/ (from crates/web/)
-
-For a full run, the wasm check does not replace the Pages build; run both.
-For a routine UI change, check a representative affected path in Chrome;
-expand coverage when failures or risk justify it. Report the sample, checks
-not run and why. Missing prerequisites are blocked, never passed. Existing
-automated CI gates remain unchanged by this local workflow policy.
-
-A06 requires npm dependencies installed in crates/web/ before Trunk. Its pre-build hook
-packages the exact pinned DuckDB-WASM worker/module assets and Arrow dependency
-locally under ignored crates/web/vendor/; it never installs packages or generates a DB.
-Retain the packaged library licenses/notices. Avoid CDN/latest substitutions.
-The additional summary pre-build hook requires the approved Chart.js/esbuild
-packages, bundles the summary ring locally and retains their licenses. npm ci
---ignore-scripts installs both runtime and build dependencies from the lockfile;
-the hooks perform no install or database generation.
-
-For documentation-only changes, check Markdown structure, relative links, command
-accuracy, and consistency with repository facts. Rust builds and e2e are not required.
-
-Before declaring completion:
-
-Run applicable focused checks or the major-work regression set in TESTING,
-including a representative Chrome sample for UI changes.
-Report failures or unavailable prerequisites
-honestly; never mark an unavailable gate as passed.
-
-Update CURRENT and TASKS for every task; append finished outcomes to COMPLETED.
-Update the matching documents when product,
-architecture, DB, testing, or decision details change.
-
-Report what changed, which checks passed or were blocked, and the next TODO.
-Keep the report concise; include relevant failure output rather than full successful logs.
-
-If preparing a PR, describe the concrete change and its validation.
-
-7. Documentation ownership
-Document	Contents / update trigger
-product/PRODUCT.md	v1 behaviour and routes; product changes
-product/UX.md	User-facing spec and explicit unresolved UX items
-product/ROUND_GENERATION.md	Pure builder, candidate views, deterministic replay, RNG, label uniqueness
-architecture/ARCHITECTURE.md	Module map, routing, state, data flow; structural changes
-architecture/UI_ARCHITECTURE.md	Proposed scoped state/providers, reducers, Animato adapter and page-transition lifecycle
-architecture/modules/	Per-module implementation notes (db-gen, zipeek-core, browser-db, web-shell, data-flow, target-architecture)
-architecture/schema/DB.md	Database overview and section index
-architecture/schema/	Sources, schema, import rules, PoS mapping, queries, runtime pin, generator deps, reproducibility, artifacts, regeneration
-testing/TESTING.md	Commands, unit/wasm/e2e strategy, PR checks, evidence convention
-testing/	Per-area test plans (e2e, browser-db, word-of-the-day, practice-url, round-builder, mcq, startup, shell, provenance, ci-targets, evidence)
-process/BASELINE.md	A00 diagnostic evidence (historical)
-process/CI.md	Workflow structure, gates, caching, deployment; CI changes
-process/CODING_STANDARDS.md	Rust/Yew conventions and no-comments policy; coding convention changes
-process/decisions/index.md	Index of D01–D40; each decision has one home file grouped by family
-process/TASKS.md	Ordered open backlog, prerequisites, and ready markers
-process/CURRENT.md	Active work, blockers, and next task; update every task
-process/handoff.md	Per-task continuation notes for the next session; reference only
-process/completed/	Append-only outcomes split by outcome date; never rewrite
-Keep process instructions here instead of duplicating them in a kickoff prompt.
-
-R60 adds the approved `crates/zipeek-exercises` pure domain crate for versioned exercise definitions, instances and quiz sessions. See D47 and `docs/architecture/ARCHITECTURE.md` for dependency boundaries.
+| Product and UX | [PRODUCT](docs/product-ux/product.md), [UX](docs/product-ux/ux.md) and relevant feature spec |
+| Crate boundaries, data flow, providers | [ARCHITECTURE](docs/architecture/architecture.md), [UI architecture](docs/architecture/ui-architecture.md) |
+| Rust, Yew, Tailwind, hooks, E2E code style | [CODING_STANDARDS](docs/engineering/coding-standards.md) |
+| DuckDB, regeneration, personal storage | [DB](docs/dictionary-data/schema/db.md), [personal data](docs/dictionary-data/personal/personal-data-storage.md) |
+| Browser/e2e/CI validation | [TESTING](docs/testing-quality/acceptance/testing.md), [E2E](docs/testing-quality/e2e/e2e-architecture.md), [CI](docs/build-deployment/ci.md) |
+| Release and source archive | [RELEASE_NAMING](docs/build-deployment/release-naming.md), [release history](docs/archive-history/RELEASE_HISTORY.md) |
+| Current tasks, decisions, evidence | [CURRENT](docs/project-management/current.md), [TASKS](docs/project-management/tasks.md), [decisions](docs/project-management/decisions/index.md) |

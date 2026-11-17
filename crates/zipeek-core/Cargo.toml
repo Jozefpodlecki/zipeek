@@ -1,9 +1,10 @@
 [package]
 name = "zipeek-core"
-version = "0.1.0"
-edition = "2024"
-repository = "https://github.com/Jozefpodlecki/zipeek"
-rust-version = "1.97.1"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 rand = { version = "0.10.3", features = ["chacha"] }

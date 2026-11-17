@@ -1,0 +1,830 @@
+{
+  "source_sha256": "fc474be223d2196b13bfc7c13e10054f1793c2f840eb1287dfc9620fa0d507d2",
+  "regions": 100,
+  "source_records": 11494,
+  "unique_spellings": 11470,
+  "entry_assignment_method": {
+    "gloss": 5596,
+    "unclassified": 185,
+    "pos-fallback": 5609,
+    "gloss-fallback": 104
+  },
+  "distinct_hsk_readings": 12188,
+  "region_sizes": [
+    {
+      "id": 1,
+      "domain": "Daily life",
+      "title": "Everyday actions",
+      "spellings": 48,
+      "readings": 51,
+      "source_records": 48
+    },
+    {
+      "id": 2,
+      "domain": "People and relationships",
+      "title": "Family and kinship",
+      "spellings": 82,
+      "readings": 88,
+      "source_records": 82
+    },
+    {
+      "id": 3,
+      "domain": "Time and scheduling",
+      "title": "Time and dates",
+      "spellings": 128,
+      "readings": 135,
+      "source_records": 128
+    },
+    {
+      "id": 4,
+      "domain": "Places and transport",
+      "title": "Places and travel",
+      "spellings": 76,
+      "readings": 80,
+      "source_records": 76
+    },
+    {
+      "id": 5,
+      "domain": "Vocabulary by word class",
+      "title": "General activities and verbs",
+      "spellings": 2162,
+      "readings": 2200,
+      "source_records": 2164
+    },
+    {
+      "id": 6,
+      "domain": "People and relationships",
+      "title": "Personal identity",
+      "spellings": 234,
+      "readings": 442,
+      "source_records": 236
+    },
+    {
+      "id": 7,
+      "domain": "People and relationships",
+      "title": "Social roles",
+      "spellings": 42,
+      "readings": 42,
+      "source_records": 43
+    },
+    {
+      "id": 8,
+      "domain": "People and relationships",
+      "title": "Relationships and marriage",
+      "spellings": 32,
+      "readings": 35,
+      "source_records": 32
+    },
+    {
+      "id": 9,
+      "domain": "Communication",
+      "title": "Speaking and listening",
+      "spellings": 106,
+      "readings": 114,
+      "source_records": 106
+    },
+    {
+      "id": 10,
+      "domain": "Communication",
+      "title": "Questions and answers",
+      "spellings": 59,
+      "readings": 69,
+      "source_records": 59
+    },
+    {
+      "id": 11,
+      "domain": "Communication",
+      "title": "Reading and writing",
+      "spellings": 79,
+      "readings": 82,
+      "source_records": 81
+    },
+    {
+      "id": 12,
+      "domain": "Communication",
+      "title": "Language and translation",
+      "spellings": 87,
+      "readings": 101,
+      "source_records": 87
+    },
+    {
+      "id": 13,
+      "domain": "Communication",
+      "title": "Messages and media",
+      "spellings": 58,
+      "readings": 60,
+      "source_records": 58
+    },
+    {
+      "id": 14,
+      "domain": "Education",
+      "title": "Schools and classrooms",
+      "spellings": 79,
+      "readings": 80,
+      "source_records": 79
+    },
+    {
+      "id": 15,
+      "domain": "Education",
+      "title": "Study and knowledge",
+      "spellings": 45,
+      "readings": 47,
+      "source_records": 45
+    },
+    {
+      "id": 16,
+      "domain": "Education",
+      "title": "Tests and achievement",
+      "spellings": 52,
+      "readings": 54,
+      "source_records": 52
+    },
+    {
+      "id": 17,
+      "domain": "Education",
+      "title": "Research and discovery",
+      "spellings": 33,
+      "readings": 36,
+      "source_records": 33
+    },
+    {
+      "id": 18,
+      "domain": "Education",
+      "title": "Teaching and explanation",
+      "spellings": 42,
+      "readings": 43,
+      "source_records": 42
+    },
+    {
+      "id": 19,
+      "domain": "Home and objects",
+      "title": "Rooms and buildings",
+      "spellings": 94,
+      "readings": 98,
+      "source_records": 94
+    },
+    {
+      "id": 20,
+      "domain": "Home and objects",
+      "title": "Furniture and furnishings",
+      "spellings": 35,
+      "readings": 37,
+      "source_records": 36
+    },
+    {
+      "id": 21,
+      "domain": "Vocabulary by word class",
+      "title": "Objects and general nouns",
+      "spellings": 2024,
+      "readings": 2048,
+      "source_records": 2025
+    },
+    {
+      "id": 22,
+      "domain": "Home and objects",
+      "title": "Cleaning and repairs",
+      "spellings": 41,
+      "readings": 44,
+      "source_records": 41
+    },
+    {
+      "id": 23,
+      "domain": "Vocabulary by word class",
+      "title": "Abstract concepts and states",
+      "spellings": 106,
+      "readings": 108,
+      "source_records": 106
+    },
+    {
+      "id": 24,
+      "domain": "Food and drink",
+      "title": "Meals and dining",
+      "spellings": 31,
+      "readings": 31,
+      "source_records": 31
+    },
+    {
+      "id": 25,
+      "domain": "Food and drink",
+      "title": "Fruits and vegetables",
+      "spellings": 21,
+      "readings": 24,
+      "source_records": 21
+    },
+    {
+      "id": 26,
+      "domain": "Food and drink",
+      "title": "Grains and staple foods",
+      "spellings": 24,
+      "readings": 25,
+      "source_records": 24
+    },
+    {
+      "id": 27,
+      "domain": "Food and drink",
+      "title": "Meat and seafood",
+      "spellings": 16,
+      "readings": 18,
+      "source_records": 16
+    },
+    {
+      "id": 28,
+      "domain": "Food and drink",
+      "title": "Cooking and flavors",
+      "spellings": 41,
+      "readings": 45,
+      "source_records": 41
+    },
+    {
+      "id": 29,
+      "domain": "Health and body",
+      "title": "Body parts",
+      "spellings": 175,
+      "readings": 185,
+      "source_records": 177
+    },
+    {
+      "id": 30,
+      "domain": "Health and body",
+      "title": "Illness and symptoms",
+      "spellings": 50,
+      "readings": 55,
+      "source_records": 50
+    },
+    {
+      "id": 31,
+      "domain": "Health and body",
+      "title": "Medical care",
+      "spellings": 54,
+      "readings": 56,
+      "source_records": 54
+    },
+    {
+      "id": 32,
+      "domain": "Health and body",
+      "title": "Fitness and exercise",
+      "spellings": 51,
+      "readings": 56,
+      "source_records": 51
+    },
+    {
+      "id": 33,
+      "domain": "Health and body",
+      "title": "Hygiene and wellbeing",
+      "spellings": 28,
+      "readings": 31,
+      "source_records": 28
+    },
+    {
+      "id": 34,
+      "domain": "Clothing and appearance",
+      "title": "Garments",
+      "spellings": 39,
+      "readings": 45,
+      "source_records": 39
+    },
+    {
+      "id": 35,
+      "domain": "Clothing and appearance",
+      "title": "Shoes and accessories",
+      "spellings": 35,
+      "readings": 38,
+      "source_records": 35
+    },
+    {
+      "id": 36,
+      "domain": "Clothing and appearance",
+      "title": "Colors and patterns",
+      "spellings": 58,
+      "readings": 65,
+      "source_records": 58
+    },
+    {
+      "id": 37,
+      "domain": "Clothing and appearance",
+      "title": "Beauty and grooming",
+      "spellings": 41,
+      "readings": 44,
+      "source_records": 41
+    },
+    {
+      "id": 38,
+      "domain": "Clothing and appearance",
+      "title": "Materials and fabrics",
+      "spellings": 33,
+      "readings": 35,
+      "source_records": 33
+    },
+    {
+      "id": 39,
+      "domain": "Transport and movement",
+      "title": "Vehicles and roads",
+      "spellings": 83,
+      "readings": 91,
+      "source_records": 83
+    },
+    {
+      "id": 40,
+      "domain": "Transport and movement",
+      "title": "Public transport",
+      "spellings": 12,
+      "readings": 12,
+      "source_records": 12
+    },
+    {
+      "id": 41,
+      "domain": "Transport and movement",
+      "title": "Navigation and direction",
+      "spellings": 96,
+      "readings": 112,
+      "source_records": 96
+    },
+    {
+      "id": 42,
+      "domain": "Transport and movement",
+      "title": "Travel services",
+      "spellings": 123,
+      "readings": 126,
+      "source_records": 124
+    },
+    {
+      "id": 43,
+      "domain": "Vocabulary by word class",
+      "title": "Movement and general actions",
+      "spellings": 265,
+      "readings": 291,
+      "source_records": 266
+    },
+    {
+      "id": 44,
+      "domain": "Places and geography",
+      "title": "Countries and cities",
+      "spellings": 95,
+      "readings": 130,
+      "source_records": 96
+    },
+    {
+      "id": 45,
+      "domain": "Places and geography",
+      "title": "Public places",
+      "spellings": 59,
+      "readings": 61,
+      "source_records": 59
+    },
+    {
+      "id": 46,
+      "domain": "Places and geography",
+      "title": "Landforms and terrain",
+      "spellings": 32,
+      "readings": 34,
+      "source_records": 32
+    },
+    {
+      "id": 47,
+      "domain": "Places and geography",
+      "title": "Water and waterways",
+      "spellings": 37,
+      "readings": 39,
+      "source_records": 37
+    },
+    {
+      "id": 48,
+      "domain": "Places and geography",
+      "title": "Infrastructure and facilities",
+      "spellings": 10,
+      "readings": 11,
+      "source_records": 10
+    },
+    {
+      "id": 49,
+      "domain": "Nature and animals",
+      "title": "Wild animals",
+      "spellings": 38,
+      "readings": 41,
+      "source_records": 38
+    },
+    {
+      "id": 50,
+      "domain": "Nature and animals",
+      "title": "Birds and insects",
+      "spellings": 17,
+      "readings": 18,
+      "source_records": 17
+    },
+    {
+      "id": 51,
+      "domain": "Nature and animals",
+      "title": "Plants and flowers",
+      "spellings": 50,
+      "readings": 54,
+      "source_records": 51
+    },
+    {
+      "id": 52,
+      "domain": "Nature and animals",
+      "title": "Weather and seasons",
+      "spellings": 48,
+      "readings": 53,
+      "source_records": 48
+    },
+    {
+      "id": 53,
+      "domain": "Nature and animals",
+      "title": "Environment and ecology",
+      "spellings": 22,
+      "readings": 24,
+      "source_records": 22
+    },
+    {
+      "id": 54,
+      "domain": "Time and quantity",
+      "title": "Numbers and counting",
+      "spellings": 357,
+      "readings": 398,
+      "source_records": 358
+    },
+    {
+      "id": 55,
+      "domain": "Time and quantity",
+      "title": "Measurement and size",
+      "spellings": 99,
+      "readings": 107,
+      "source_records": 99
+    },
+    {
+      "id": 56,
+      "domain": "Time and quantity",
+      "title": "Frequency and duration",
+      "spellings": 86,
+      "readings": 90,
+      "source_records": 86
+    },
+    {
+      "id": 57,
+      "domain": "Time and quantity",
+      "title": "Sequence and order",
+      "spellings": 214,
+      "readings": 236,
+      "source_records": 216
+    },
+    {
+      "id": 58,
+      "domain": "Time and quantity",
+      "title": "Amount and proportion",
+      "spellings": 60,
+      "readings": 64,
+      "source_records": 60
+    },
+    {
+      "id": 59,
+      "domain": "Money and trade",
+      "title": "Money and payments",
+      "spellings": 111,
+      "readings": 114,
+      "source_records": 111
+    },
+    {
+      "id": 60,
+      "domain": "Money and trade",
+      "title": "Shopping and retail",
+      "spellings": 26,
+      "readings": 27,
+      "source_records": 26
+    },
+    {
+      "id": 61,
+      "domain": "Money and trade",
+      "title": "Banking and finance",
+      "spellings": 37,
+      "readings": 37,
+      "source_records": 37
+    },
+    {
+      "id": 62,
+      "domain": "Money and trade",
+      "title": "Business and markets",
+      "spellings": 58,
+      "readings": 65,
+      "source_records": 58
+    },
+    {
+      "id": 63,
+      "domain": "Money and trade",
+      "title": "Contracts and ownership",
+      "spellings": 59,
+      "readings": 64,
+      "source_records": 59
+    },
+    {
+      "id": 64,
+      "domain": "Work and professions",
+      "title": "Jobs and occupations",
+      "spellings": 82,
+      "readings": 87,
+      "source_records": 83
+    },
+    {
+      "id": 65,
+      "domain": "Work and professions",
+      "title": "Offices and administration",
+      "spellings": 43,
+      "readings": 45,
+      "source_records": 43
+    },
+    {
+      "id": 66,
+      "domain": "Work and professions",
+      "title": "Industry and production",
+      "spellings": 34,
+      "readings": 34,
+      "source_records": 34
+    },
+    {
+      "id": 67,
+      "domain": "Work and professions",
+      "title": "Farming and agriculture",
+      "spellings": 29,
+      "readings": 31,
+      "source_records": 29
+    },
+    {
+      "id": 68,
+      "domain": "Work and professions",
+      "title": "Services and hospitality",
+      "spellings": 31,
+      "readings": 31,
+      "source_records": 31
+    },
+    {
+      "id": 69,
+      "domain": "Technology and science",
+      "title": "Computers and software",
+      "spellings": 46,
+      "readings": 50,
+      "source_records": 46
+    },
+    {
+      "id": 70,
+      "domain": "Technology and science",
+      "title": "Phones and electronics",
+      "spellings": 21,
+      "readings": 21,
+      "source_records": 21
+    },
+    {
+      "id": 71,
+      "domain": "Technology and science",
+      "title": "Engineering and mechanics",
+      "spellings": 15,
+      "readings": 15,
+      "source_records": 15
+    },
+    {
+      "id": 72,
+      "domain": "Technology and science",
+      "title": "Physics and chemistry",
+      "spellings": 55,
+      "readings": 57,
+      "source_records": 55
+    },
+    {
+      "id": 73,
+      "domain": "Technology and science",
+      "title": "Mathematics and data",
+      "spellings": 44,
+      "readings": 45,
+      "source_records": 44
+    },
+    {
+      "id": 74,
+      "domain": "Society and governance",
+      "title": "Government and politics",
+      "spellings": 39,
+      "readings": 42,
+      "source_records": 39
+    },
+    {
+      "id": 75,
+      "domain": "Society and governance",
+      "title": "Law and justice",
+      "spellings": 52,
+      "readings": 57,
+      "source_records": 52
+    },
+    {
+      "id": 76,
+      "domain": "Society and governance",
+      "title": "Community and public life",
+      "spellings": 36,
+      "readings": 37,
+      "source_records": 36
+    },
+    {
+      "id": 77,
+      "domain": "Vocabulary by word class",
+      "title": "Institutions and organizations",
+      "spellings": 22,
+      "readings": 24,
+      "source_records": 22
+    },
+    {
+      "id": 78,
+      "domain": "Society and governance",
+      "title": "History and heritage",
+      "spellings": 30,
+      "readings": 33,
+      "source_records": 30
+    },
+    {
+      "id": 79,
+      "domain": "Arts and culture",
+      "title": "Music and performance",
+      "spellings": 48,
+      "readings": 51,
+      "source_records": 48
+    },
+    {
+      "id": 80,
+      "domain": "Arts and culture",
+      "title": "Film and television",
+      "spellings": 36,
+      "readings": 40,
+      "source_records": 36
+    },
+    {
+      "id": 81,
+      "domain": "Arts and culture",
+      "title": "Visual arts and design",
+      "spellings": 52,
+      "readings": 54,
+      "source_records": 52
+    },
+    {
+      "id": 82,
+      "domain": "Arts and culture",
+      "title": "Literature and stories",
+      "spellings": 22,
+      "readings": 24,
+      "source_records": 22
+    },
+    {
+      "id": 83,
+      "domain": "Arts and culture",
+      "title": "Festivals and customs",
+      "spellings": 27,
+      "readings": 29,
+      "source_records": 27
+    },
+    {
+      "id": 84,
+      "domain": "Emotions and character",
+      "title": "Happiness and enjoyment",
+      "spellings": 39,
+      "readings": 39,
+      "source_records": 39
+    },
+    {
+      "id": 85,
+      "domain": "Emotions and character",
+      "title": "Fear and worry",
+      "spellings": 27,
+      "readings": 30,
+      "source_records": 27
+    },
+    {
+      "id": 86,
+      "domain": "Emotions and character",
+      "title": "Anger and conflict",
+      "spellings": 28,
+      "readings": 28,
+      "source_records": 28
+    },
+    {
+      "id": 87,
+      "domain": "Emotions and character",
+      "title": "Love and care",
+      "spellings": 57,
+      "readings": 59,
+      "source_records": 57
+    },
+    {
+      "id": 88,
+      "domain": "Emotions and character",
+      "title": "Personality and attitude",
+      "spellings": 14,
+      "readings": 14,
+      "source_records": 14
+    },
+    {
+      "id": 89,
+      "domain": "Thinking and reasoning",
+      "title": "Beliefs and opinions",
+      "spellings": 60,
+      "readings": 62,
+      "source_records": 60
+    },
+    {
+      "id": 90,
+      "domain": "Thinking and reasoning",
+      "title": "Decisions and plans",
+      "spellings": 38,
+      "readings": 40,
+      "source_records": 38
+    },
+    {
+      "id": 91,
+      "domain": "Thinking and reasoning",
+      "title": "Causes and results",
+      "spellings": 66,
+      "readings": 66,
+      "source_records": 66
+    },
+    {
+      "id": 92,
+      "domain": "Thinking and reasoning",
+      "title": "Truth and evidence",
+      "spellings": 50,
+      "readings": 54,
+      "source_records": 50
+    },
+    {
+      "id": 93,
+      "domain": "Thinking and reasoning",
+      "title": "Possibility and necessity",
+      "spellings": 36,
+      "readings": 38,
+      "source_records": 36
+    },
+    {
+      "id": 94,
+      "domain": "Language structures",
+      "title": "Pronouns and reference",
+      "spellings": 143,
+      "readings": 148,
+      "source_records": 144
+    },
+    {
+      "id": 95,
+      "domain": "Language structures",
+      "title": "Connectors and conjunctions",
+      "spellings": 47,
+      "readings": 47,
+      "source_records": 47
+    },
+    {
+      "id": 96,
+      "domain": "Language structures",
+      "title": "Negation and modality",
+      "spellings": 24,
+      "readings": 26,
+      "source_records": 24
+    },
+    {
+      "id": 97,
+      "domain": "Language structures",
+      "title": "Prepositions and particles",
+      "spellings": 41,
+      "readings": 54,
+      "source_records": 42
+    },
+    {
+      "id": 98,
+      "domain": "Vocabulary by word class",
+      "title": "Qualities and adjectives",
+      "spellings": 872,
+      "readings": 887,
+      "source_records": 872
+    },
+    {
+      "id": 99,
+      "domain": "Language structures",
+      "title": "Requests and politeness",
+      "spellings": 29,
+      "readings": 31,
+      "source_records": 29
+    },
+    {
+      "id": 100,
+      "domain": "Language structures",
+      "title": "Emphasis and discourse",
+      "spellings": 600,
+      "readings": 612,
+      "source_records": 603
+    }
+  ],
+  "hsk_bands": {
+    "new-1": 511,
+    "new-2": 755,
+    "new-3": 959,
+    "new-4": 972,
+    "new-5": 1061,
+    "new-6": 1126,
+    "new-7+": 5609,
+    "old-1": 1,
+    "old-2": 4,
+    "old-3": 11,
+    "old-4": 8,
+    "old-5": 50,
+    "old-6": 427
+  }
+}

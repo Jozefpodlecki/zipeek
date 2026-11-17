@@ -96,7 +96,11 @@ impl QuizSession {
         if self.abandoned.iter().any(|id| id == &instance.id) {
             return Err(SessionError::AbandonedInstance);
         }
-        if self.entries.iter().any(|entry| entry.instance.id == instance.id) {
+        if self
+            .entries
+            .iter()
+            .any(|entry| entry.instance.id == instance.id)
+        {
             return Err(SessionError::DuplicateInstance);
         }
         self.entries.push(SessionEntry {
@@ -113,9 +117,17 @@ impl QuizSession {
         if result.earned > result.possible || result.possible == 0 {
             return Err(SessionError::InvalidScore);
         }
-        let entry = self.entries.last_mut().ok_or(SessionError::NoPendingExercise)?;
+        let entry = self
+            .entries
+            .last_mut()
+            .ok_or(SessionError::NoPendingExercise)?;
         if entry.result.is_some() {
             return Err(SessionError::NoPendingExercise);
+        }
+        if definition(entry.instance.definition_id)
+            .is_some_and(|definition| !definition.accepts_scored_results())
+        {
+            return Err(SessionError::InvalidScore);
         }
         entry.result = Some(result);
         Ok(())
@@ -129,7 +141,11 @@ impl QuizSession {
         if self.status != SessionStatus::Active {
             return Err(SessionError::AlreadyCompleted);
         }
-        if result.possible == 0 || result.earned > result.possible {
+        if result.possible == 0
+            || result.earned > result.possible
+            || definition(instance.definition_id)
+                .is_some_and(|definition| !definition.accepts_scored_results())
+        {
             return Err(SessionError::InvalidScore);
         }
         if self.entries.iter().any(|entry| entry.result.is_none()) {
@@ -138,7 +154,11 @@ impl QuizSession {
         if self.abandoned.iter().any(|id| id == &instance.id) {
             return Err(SessionError::AbandonedInstance);
         }
-        if self.entries.iter().any(|entry| entry.instance.id == instance.id) {
+        if self
+            .entries
+            .iter()
+            .any(|entry| entry.instance.id == instance.id)
+        {
             return Err(SessionError::DuplicateInstance);
         }
         self.entries.push(SessionEntry {
@@ -166,7 +186,11 @@ impl QuizSession {
         if self.abandoned.iter().any(|id| id == instance_id) {
             return Ok(());
         }
-        if self.entries.iter().any(|entry| entry.instance.id == instance_id) {
+        if self
+            .entries
+            .iter()
+            .any(|entry| entry.instance.id == instance_id)
+        {
             return Err(SessionError::DuplicateInstance);
         }
         self.abandoned.push(instance_id.to_owned());
@@ -174,16 +198,18 @@ impl QuizSession {
     }
 
     pub fn totals(&self) -> ExerciseResult {
-        self.entries
-            .iter()
-            .filter_map(|entry| entry.result)
-            .fold(ExerciseResult { earned: 0, possible: 0, mistakes: 0 }, |sum, result| {
-                ExerciseResult {
-                    earned: sum.earned.saturating_add(result.earned),
-                    possible: sum.possible.saturating_add(result.possible),
-                    mistakes: sum.mistakes.saturating_add(result.mistakes),
-                }
-            })
+        self.entries.iter().filter_map(|entry| entry.result).fold(
+            ExerciseResult {
+                earned: 0,
+                possible: 0,
+                mistakes: 0,
+            },
+            |sum, result| ExerciseResult {
+                earned: sum.earned.saturating_add(result.earned),
+                possible: sum.possible.saturating_add(result.possible),
+                mistakes: sum.mistakes.saturating_add(result.mistakes),
+            },
+        )
     }
 }
 
@@ -199,54 +225,151 @@ mod tests {
     fn mixed_session_tracks_instances_without_a_kind_enum() {
         let mut session = QuizSession::new("practice-1");
         session.push(instance("1", "matching")).unwrap();
-        assert_eq!(session.push(instance("2", "multiple-choice")), Err(SessionError::PendingExercise));
-        session.record(ExerciseResult { earned: 3, possible: 4, mistakes: 1 }).unwrap();
+        assert_eq!(
+            session.push(instance("2", "multiple-choice")),
+            Err(SessionError::PendingExercise)
+        );
+        session
+            .record(ExerciseResult {
+                earned: 3,
+                possible: 4,
+                mistakes: 1,
+            })
+            .unwrap();
         session.push(instance("2", "multiple-choice")).unwrap();
-        session.record(ExerciseResult { earned: 1, possible: 1, mistakes: 0 }).unwrap();
+        session
+            .record(ExerciseResult {
+                earned: 1,
+                possible: 1,
+                mistakes: 0,
+            })
+            .unwrap();
         session.complete().unwrap();
-        assert_eq!(session.totals(), ExerciseResult { earned: 4, possible: 5, mistakes: 1 });
+        assert_eq!(
+            session.totals(),
+            ExerciseResult {
+                earned: 4,
+                possible: 5,
+                mistakes: 1
+            }
+        );
         assert_eq!(session.status, SessionStatus::Completed);
-        assert_eq!(session.push(instance("3", "sentence-translation")), Err(SessionError::AlreadyCompleted));
+        assert_eq!(
+            session.push(instance("3", "sentence-translation")),
+            Err(SessionError::AlreadyCompleted)
+        );
     }
 
     #[test]
     fn invalid_state_changes_are_rejected() {
-        assert_eq!(ExerciseInstance::new("", "matching", ""), Err(SessionError::EmptyInstanceId));
-        assert_eq!(ExerciseInstance::new("x", "missing", ""), Err(SessionError::UnknownDefinition));
+        assert_eq!(
+            ExerciseInstance::new("", "matching", ""),
+            Err(SessionError::EmptyInstanceId)
+        );
+        assert_eq!(
+            ExerciseInstance::new("x", "missing", ""),
+            Err(SessionError::UnknownDefinition)
+        );
         let mut session = QuizSession::new("x");
         assert_eq!(session.complete(), Err(SessionError::PendingExercise));
         session.push(instance("1", "sentence-translation")).unwrap();
-        assert_eq!(session.record(ExerciseResult { earned: 2, possible: 1, mistakes: 0 }), Err(SessionError::InvalidScore));
-        session.record(ExerciseResult { earned: 1, possible: 1, mistakes: 0 }).unwrap();
-        assert_eq!(session.record(ExerciseResult { earned: 1, possible: 1, mistakes: 0 }), Err(SessionError::NoPendingExercise));
-        assert_eq!(session.push(instance("1", "matching")), Err(SessionError::DuplicateInstance));
+        assert_eq!(
+            session.record(ExerciseResult {
+                earned: 2,
+                possible: 1,
+                mistakes: 0
+            }),
+            Err(SessionError::InvalidScore)
+        );
+        session
+            .record(ExerciseResult {
+                earned: 1,
+                possible: 1,
+                mistakes: 0,
+            })
+            .unwrap();
+        assert_eq!(
+            session.record(ExerciseResult {
+                earned: 1,
+                possible: 1,
+                mistakes: 0
+            }),
+            Err(SessionError::NoPendingExercise)
+        );
+        assert_eq!(
+            session.push(instance("1", "matching")),
+            Err(SessionError::DuplicateInstance)
+        );
     }
 
     #[test]
     fn translation_session_records_evaluation_once_and_preserves_prior_outcomes() {
         let mut session = QuizSession::new("translation-local");
-        session.push(instance("translation-0", "sentence-translation")).unwrap();
-        assert_eq!(session.push(instance("translation-1", "sentence-translation")), Err(SessionError::PendingExercise));
-        session.record(ExerciseResult { earned: 0, possible: 1, mistakes: 1 }).unwrap();
-        assert_eq!(session.record(ExerciseResult { earned: 1, possible: 1, mistakes: 0 }), Err(SessionError::NoPendingExercise));
-        session.push(instance("translation-1", "sentence-translation")).unwrap();
-        session.record(ExerciseResult { earned: 1, possible: 1, mistakes: 0 }).unwrap();
-        assert_eq!(session.totals(), ExerciseResult { earned: 1, possible: 2, mistakes: 1 });
+        session
+            .push(instance("translation-0", "sentence-translation"))
+            .unwrap();
+        assert_eq!(
+            session.push(instance("translation-1", "sentence-translation")),
+            Err(SessionError::PendingExercise)
+        );
+        session
+            .record(ExerciseResult {
+                earned: 0,
+                possible: 1,
+                mistakes: 1,
+            })
+            .unwrap();
+        assert_eq!(
+            session.record(ExerciseResult {
+                earned: 1,
+                possible: 1,
+                mistakes: 0
+            }),
+            Err(SessionError::NoPendingExercise)
+        );
+        session
+            .push(instance("translation-1", "sentence-translation"))
+            .unwrap();
+        session
+            .record(ExerciseResult {
+                earned: 1,
+                possible: 1,
+                mistakes: 0,
+            })
+            .unwrap();
+        assert_eq!(
+            session.totals(),
+            ExerciseResult {
+                earned: 1,
+                possible: 2,
+                mistakes: 1
+            }
+        );
         assert_eq!(session.entries.len(), 2);
     }
 
     #[test]
     fn completed_result_submission_is_atomic_on_validation_failure() {
         let mut session = QuizSession::new("shared");
-        let bad_score = ExerciseResult { earned: 2, possible: 1, mistakes: 0 };
+        let bad_score = ExerciseResult {
+            earned: 2,
+            possible: 1,
+            mistakes: 0,
+        };
         assert_eq!(
             session.record_completed(instance("one", "matching"), bad_score),
             Err(SessionError::InvalidScore)
         );
         assert!(session.entries.is_empty());
 
-        let success = ExerciseResult { earned: 1, possible: 1, mistakes: 0 };
-        session.record_completed(instance("one", "matching"), success).unwrap();
+        let success = ExerciseResult {
+            earned: 1,
+            possible: 1,
+            mistakes: 0,
+        };
+        session
+            .record_completed(instance("one", "matching"), success)
+            .unwrap();
         let snapshot = session.clone();
         assert_eq!(
             session.record_completed(instance("one", "matching"), success),
@@ -268,14 +391,39 @@ mod tests {
         session.abandon("unfinished").unwrap();
         session.abandon("unfinished").unwrap();
         assert_eq!(session.abandoned, vec!["unfinished"]);
-        assert_eq!(session.record_completed(instance("unfinished", "matching"), ExerciseResult {
-            earned: 1, possible: 1, mistakes: 0
-        }), Err(SessionError::AbandonedInstance));
-        assert_eq!(session.totals(), ExerciseResult { earned: 0, possible: 0, mistakes: 0 });
-        session.record_completed(instance("replacement", "multiple-choice"), ExerciseResult {
-            earned: 1, possible: 1, mistakes: 0
-        }).unwrap();
-        assert_eq!(session.abandon("replacement"), Err(SessionError::DuplicateInstance));
+        assert_eq!(
+            session.record_completed(
+                instance("unfinished", "matching"),
+                ExerciseResult {
+                    earned: 1,
+                    possible: 1,
+                    mistakes: 0
+                }
+            ),
+            Err(SessionError::AbandonedInstance)
+        );
+        assert_eq!(
+            session.totals(),
+            ExerciseResult {
+                earned: 0,
+                possible: 0,
+                mistakes: 0
+            }
+        );
+        session
+            .record_completed(
+                instance("replacement", "multiple-choice"),
+                ExerciseResult {
+                    earned: 1,
+                    possible: 1,
+                    mistakes: 0,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            session.abandon("replacement"),
+            Err(SessionError::DuplicateInstance)
+        );
         assert_eq!(session.entries.len(), 1);
     }
 
@@ -292,7 +440,11 @@ mod tests {
         assert_eq!(
             session.record_completed(
                 instance("second", "multiple-choice"),
-                ExerciseResult { earned: 1, possible: 1, mistakes: 0 }
+                ExerciseResult {
+                    earned: 1,
+                    possible: 1,
+                    mistakes: 0
+                }
             ),
             Err(SessionError::PendingExercise)
         );
@@ -306,5 +458,22 @@ mod tests {
         assert!(text.contains("ordered array"));
         assert!(text.contains("visible prompt"));
         assert!(!text.contains("correct_id"));
+    }
+    #[test]
+    fn practice_only_definition_never_accepts_scored_result() {
+        let mut session = QuizSession::new("unscored");
+        let result = ExerciseResult {
+            earned: 1,
+            possible: 1,
+            mistakes: 0,
+        };
+        assert_eq!(
+            session.record_completed(instance("practice-1", "speaking"), result),
+            Err(SessionError::InvalidScore)
+        );
+        assert!(session.entries.is_empty());
+        session.push(instance("practice-1", "speaking")).unwrap();
+        assert_eq!(session.record(result), Err(SessionError::InvalidScore));
+        assert!(session.entries[0].result.is_none());
     }
 }

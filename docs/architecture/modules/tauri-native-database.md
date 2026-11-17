@@ -1,0 +1,11 @@
+# Native DuckDB for Tauri
+
+The Yew dictionary service chooses its backend before any browser DuckDB module, Worker, or dictionary download is started. Browser builds use DuckDB/WASM; Tauri uses `database_open` and `database_query` via a Rust-owned IPC bridge. Shared web query methods continue to deserialize into existing typed vocabulary models.
+
+The app registers `NativeDatabase` with `.manage()` during setup. A dedicated worker thread owns two separate DuckDB connections. The dictionary connection attaches only the packaged dictionary in read-only mode and handles the generic dictionary-query IPC command. The personal connection attaches only the writable desktop Practice-history file and is accessible solely through the dedicated history commands. No dictionary IPC SQL can query personal tables because those tables are not attached to its connection. The worker serializes requests and never passes connection handles across threads. It uses `ZIPEEK_NATIVE_DICTIONARY` when set, a packaged resource `dictionary/hanzi.duckdb` for installers, and the generated web-static dictionary while developing.
+
+Before `cargo make desktop-build`, generate and install the dictionary with `cargo make db-full`. The sidecar staging task validates its presence and fails before Tauri packaging. Tauri bundles its native database bytes and the pinned DuckDB runtime DLL in `bundle.resources`; the desktop frontend must not load the browser WASM database engine.
+
+## Scope and outstanding work
+
+Dictionary lookup and Practice learning-history commit/read/erase now route through native IPC. The native Practice evidence file is in Tauri's application-local data directory, and duplicate session IDs are checked against existing evidence. **Other storage remains browser-based**: word sets, exclusions, backups, recognition history, and personal-data snapshots still need a native data adapter. Debug's browser OPFS compatibility probe is skipped in Tauri. Do not interpret dictionary and Practice history IPC as complete desktop storage integration. Browser and desktop data are independent; no migration or fallback is implemented. Native read-only SQL must not be exposed to untrusted web content beyond the locally bundled frontend; the guard is defense in depth, not a SQL sandbox.

@@ -1,0 +1,410 @@
+use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::{
+    fs,
+    io::Read,
+    path::{Component, Path, PathBuf},
+};
+
+use crate::archive::Result;
+
+const MANIFEST: &str = "hanzi.manifest.json";
+const REQUIRED: &[&str] = &[
+    "hanzi.diagnostics.json",
+    "INPUTS.toml",
+    "ATTRIBUTION.md",
+    "notices/HSK-LICENSE.txt",
+    "notices/HSK-SOURCE-README.txt",
+    "notices/CC-BY-SA-4.0.txt",
+];
+const BROWSE: &[&str] = &[
+    "words",
+    "character_readings",
+    "word_hsk_membership",
+    "word_pos_membership",
+    "word_senses",
+    "sense_categories",
+];
+const ENRICHMENT: &[&str] = &[
+    "word_senses",
+    "sense_pos",
+    "sense_categories",
+    "classification_runs",
+    "parts_of_speech",
+    "categories",
+];
+
+fn checked_file(root: &Path, name: &str) -> Result<PathBuf> {
+    if name.is_empty()
+        || name.contains('\\')
+        || name.contains(':')
+        || name
+            .split('/')
+            .any(|part| part.is_empty() || part == "." || part == "..")
+    {
+        return Err(format!("Invalid database artifact path: {name}").into());
+    }
+    let relative = Path::new(name);
+    if relative
+        .components()
+        .any(|part| !matches!(part, Component::Normal(_)))
+    {
+        return Err(format!("Unsafe database artifact path: {name}").into());
+    }
+    let mut cursor = root.to_path_buf();
+    for part in relative.components() {
+        cursor.push(part.as_os_str());
+        if fs::symlink_metadata(&cursor)?.file_type().is_symlink() {
+            return Err(format!("Artifact symlink refused: {}", cursor.display()).into());
+        }
+    }
+    if !cursor.is_file() {
+        return Err(format!("Artifact is not a file: {}", cursor.display()).into());
+    }
+    Ok(cursor)
+}
+
+fn hash_file(path: &Path) -> Result<(u64, String)> {
+    let mut file = fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut size = 0u64;
+    let mut buffer = [0u8; 65536];
+    loop {
+        let read = file.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+        size += read as u64;
+    }
+    let digest: String = hasher
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    Ok((size, digest))
+}
+
+fn dictionary_name(path: &str) -> bool {
+    if path == "hanzi.duckdb" {
+        return true;
+    }
+    let Some(stamp) = path
+        .strip_prefix("hanzi-")
+        .and_then(|name| name.strip_suffix(".duckdb"))
+    else {
+        return false;
+    };
+    stamp.len() == 15
+        && stamp.as_bytes()[8] == b'-'
+        && stamp
+            .bytes()
+            .enumerate()
+            .all(|(i, byte)| i == 8 || byte.is_ascii_digit())
+}
+
+fn validate(
+    root: &Path,
+    bundle: &Path,
+    enriched: bool,
+) -> Result<(Value, String, Option<String>, Vec<String>)> {
+    if fs::symlink_metadata(bundle)?.file_type().is_symlink() || !bundle.is_dir() {
+        return Err("Invalid dictionary bundle directory".into());
+    }
+    let report: Value = serde_json::from_reader(fs::File::open(checked_file(bundle, MANIFEST)?)?)?;
+    if report["engine"] != "v2.0.0"
+        || report["storage_compatibility"] != "v2.0.0"
+        || report["wasm_package"] != "@duckdb/duckdb-wasm@1.33.1-dev114.0"
+    {
+        return Err("Dictionary engine/storage/WASM compatibility mismatch".into());
+    }
+    if report["rows"].as_u64().is_none() {
+        return Err("Invalid dictionary row count".into());
+    }
+    let files = report["files"]
+        .as_array()
+        .ok_or("Missing dictionary files")?;
+    let mut seen = std::collections::HashSet::new();
+    let mut databases = Vec::new();
+    let mut compressed = None;
+    for entry in files {
+        let name = entry["path"].as_str().ok_or("Missing artifact path")?;
+        if name == MANIFEST || !seen.insert(name.to_owned()) {
+            return Err(format!("Duplicate dictionary artifact: {name}").into());
+        }
+        let path = checked_file(bundle, name)?;
+        let (size, digest) = hash_file(&path)?;
+        if entry["size_bytes"].as_u64() != Some(size) || entry["sha256"].as_str() != Some(&digest) {
+            return Err(format!("Dictionary checksum mismatch: {name}").into());
+        }
+        if dictionary_name(name) {
+            databases.push(name.to_owned());
+        }
+    }
+    if databases.len() != 1 {
+        return Err("Dictionary manifest must include exactly one database".into());
+    }
+    for required in REQUIRED {
+        if !seen.contains(*required) {
+            return Err(format!("Missing required artifact: {required}").into());
+        }
+    }
+    let (_, inputs_digest) = hash_file(&checked_file(
+        root,
+        "crates/zipeek-db-gen/data/MANIFEST.toml",
+    )?)?;
+    if files
+        .iter()
+        .find(|file| file["path"] == "INPUTS.toml")
+        .and_then(|file| file["sha256"].as_str())
+        != Some(inputs_digest.as_str())
+    {
+        return Err("Bundle does not match pinned generator inputs".into());
+    }
+    let table_names = report["tables"]
+        .as_array()
+        .ok_or("Missing schema table list")?;
+    for table in BROWSE.iter().chain(if enriched {
+        ENRICHMENT.iter()
+    } else {
+        [].iter()
+    }) {
+        if !table_names.iter().any(|name| name.as_str() == Some(*table)) {
+            return Err(format!("Dictionary is missing table {table}").into());
+        }
+    }
+    let database = databases.remove(0);
+    if seen.contains(&format!("{database}.gz")) {
+        compressed = Some(format!("{database}.gz"));
+    }
+    Ok((report, database, compressed, seen.into_iter().collect()))
+}
+
+pub fn compress_latest(root: &Path) -> Result<()> {
+    let workflow = root.join("target/db-workflow").canonicalize()?;
+    let pointer = workflow.join("latest.json");
+    if fs::symlink_metadata(&pointer)?.file_type().is_symlink() {
+        return Err("Dictionary latest pointer must not be a symlink".into());
+    }
+    let selection: Value = serde_json::from_reader(fs::File::open(pointer)?)?;
+    let relative = selection["directory"]
+        .as_str()
+        .ok_or("Dictionary latest pointer has no directory")?;
+    let candidate = root.join(relative).canonicalize()?;
+    if !candidate.starts_with(workflow.join("generated")) || !candidate.is_dir() {
+        return Err("Dictionary candidate must be inside target/db-workflow/generated".into());
+    }
+    compress_candidate(root, &candidate)
+}
+
+fn compress_candidate(root: &Path, candidate: &Path) -> Result<()> {
+    let (mut manifest, database, _, _) = validate(root, candidate, false)?;
+    let source = checked_file(candidate, &database)?;
+    let compressed_name = format!("{database}.gz");
+    let compressed = candidate.join(&compressed_name);
+    if compressed.exists() && fs::symlink_metadata(&compressed)?.file_type().is_symlink() {
+        return Err("Compressed dictionary output must not be a symlink".into());
+    }
+    let temporary = candidate.join(format!("{compressed_name}.part"));
+    let manifest_path = candidate.join(MANIFEST);
+    let temporary_manifest = candidate.join(format!("{MANIFEST}.part"));
+    if temporary.exists() || temporary_manifest.exists() {
+        return Err(
+            "Previous compression temporary file exists; resolve it before retrying".into(),
+        );
+    }
+    let result = (|| -> Result<()> {
+        let mut reader = fs::File::open(&source)?;
+        let writer = fs::File::create(&temporary)?;
+        let mut encoder = flate2::write::GzEncoder::new(writer, flate2::Compression::best());
+        std::io::copy(&mut reader, &mut encoder)?;
+        encoder.finish()?.sync_all()?;
+        let (size, sha256) = hash_file(&temporary)?;
+        let files = manifest["files"]
+            .as_array_mut()
+            .ok_or("Missing artifact entries")?;
+        files.retain(|entry| entry["path"].as_str() != Some(compressed_name.as_str()));
+        files.push(serde_json::json!({
+            "path": compressed_name,
+            "size_bytes": size,
+            "sha256": sha256
+        }));
+        fs::write(
+            &temporary_manifest,
+            format!("{}\n", serde_json::to_string_pretty(&manifest)?),
+        )?;
+        fs::rename(&temporary, &compressed)?;
+        fs::rename(&temporary_manifest, &manifest_path)?;
+        validate(root, candidate, false)?;
+        println!(
+            "Compressed dictionary: {} ({} bytes)",
+            compressed.display(),
+            size
+        );
+        Ok(())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&temporary);
+        let _ = fs::remove_file(&temporary_manifest);
+    }
+    result
+}
+
+pub fn validate_candidate(root: &Path, bundle: &Path) -> Result<()> {
+    validate(root, bundle, false).map(|_| ())
+}
+
+fn update_html(html: &str, dictionary_asset: &str) -> Result<String> {
+    if !html.contains("href=\"hanzi.manifest.json\"") {
+        return Err("Manifest preload element missing in index.html".into());
+    }
+    let marker = "href=\"hanzi-";
+    let start = html
+        .find(marker)
+        .ok_or("Dictionary preload element missing in index.html")?;
+    let tag_start = html[..start]
+        .rfind("<link")
+        .ok_or("Dictionary preload element is not a link")?;
+    if !html[tag_start..start].contains("rel=\"preload\"")
+        || !html[tag_start..start].contains("as=\"fetch\"")
+    {
+        return Err("Dictionary asset link must be a fetch preload".into());
+    }
+    let rest = &html[start + marker.len()..];
+    let end = start
+        + marker.len()
+        + rest
+            .find('"')
+            .ok_or("Unterminated dictionary preload URL")?
+        + 1;
+    let mut updated = html.to_owned();
+    updated.replace_range(start..end, &format!("href=\"{dictionary_asset}\""));
+    Ok(updated)
+}
+
+pub fn install(root: &Path, require_enrichment: bool) -> Result<()> {
+    let work = root.join("target/db-workflow");
+    let pointer: Value = serde_json::from_reader(fs::File::open(work.join("latest.json"))?)?;
+    let relative = pointer["directory"]
+        .as_str()
+        .ok_or("Invalid latest dictionary pointer")?;
+    let candidate = root.join(relative).canonicalize()?;
+    let work_root = work.canonicalize()?;
+    if !candidate.starts_with(work_root.join("generated")) {
+        return Err("Dictionary candidate must be inside target/db-workflow/generated".into());
+    }
+    let (report, database, compressed, files) = validate(root, &candidate, require_enrichment)?;
+    if compressed.is_none() {
+        return Err("Dictionary bundle has no verified .duckdb.gz; run cargo make db-compress before installation".into());
+    }
+    let stamp = chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string();
+    let stamped = format!("hanzi-{stamp}.duckdb");
+    let selected = compressed
+        .as_ref()
+        .map(|_| format!("{stamped}.gz"))
+        .unwrap_or_else(|| stamped.clone());
+    let html_path = root.join("crates/zipeek-web/index.html");
+    let previous_html = fs::read_to_string(&html_path)?;
+    let next_html = update_html(&previous_html, &selected)?;
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_nanos();
+    let unique = format!("{}-{}-{nonce}", stamp, std::process::id());
+    let stage = work.join("staging").join(&unique);
+    let backup = work.join("backups").join(&unique);
+    fs::create_dir_all(&stage)?;
+    for name in &files {
+        let source = checked_file(&candidate, name)?;
+        let destination = stage.join(name);
+        fs::create_dir_all(destination.parent().ok_or("Missing destination parent")?)?;
+        fs::copy(source, destination)?;
+    }
+    fs::copy(checked_file(&candidate, MANIFEST)?, stage.join(MANIFEST))?;
+    if database != stamped {
+        fs::rename(stage.join(&database), stage.join(&stamped))?;
+    }
+    if let Some(gzip) = &compressed {
+        if gzip != &selected {
+            fs::rename(stage.join(gzip), stage.join(&selected))?;
+        }
+    }
+    let mut report = report;
+    for item in report["files"]
+        .as_array_mut()
+        .ok_or("Malformed artifact entries")?
+    {
+        if item["path"].as_str() == Some(database.as_str()) {
+            item["path"] = Value::String(stamped.clone());
+        }
+        if compressed
+            .as_ref()
+            .is_some_and(|gzip| item["path"].as_str() == Some(gzip.as_str()))
+        {
+            item["path"] = Value::String(selected.clone());
+        }
+    }
+    fs::write(
+        stage.join(MANIFEST),
+        format!("{}\n", serde_json::to_string_pretty(&report)?),
+    )?;
+    validate(root, &stage, require_enrichment)?;
+    let dest = root.join("crates/zipeek-web/static");
+    if dest.is_symlink() || html_path.is_symlink() {
+        return Err("Refusing symlinked installation target".into());
+    }
+    fs::create_dir_all(backup.parent().ok_or("Invalid backup destination")?)?;
+    let had_previous = dest.exists();
+    if had_previous {
+        fs::rename(&dest, &backup)?;
+    }
+    if let Err(error) = fs::rename(&stage, &dest) {
+        if had_previous {
+            fs::rename(&backup, &dest)?;
+        }
+        return Err(error.into());
+    }
+    let temp_html = html_path.with_extension("html.part");
+    let saved_html = backup.with_extension("index.html");
+    let publish_html = (|| -> Result<()> {
+        fs::write(&temp_html, next_html)?;
+        fs::rename(&html_path, &saved_html)?;
+        if let Err(error) = fs::rename(&temp_html, &html_path) {
+            fs::rename(&saved_html, &html_path)?;
+            return Err(error.into());
+        }
+        Ok(())
+    })();
+    if let Err(error) = publish_html {
+        let _ = fs::remove_file(&temp_html);
+        fs::remove_dir_all(&dest)?;
+        if had_previous {
+            fs::rename(&backup, &dest)?;
+        }
+        return Err(error);
+    }
+    println!("Installed dictionary: {}", dest.join(&stamped).display());
+    println!("HTML preload: {selected}");
+    if had_previous {
+        println!("Previous dictionary backup: {}", backup.display());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn preload_update_preserves_manifest_hint() {
+        let html = "<link rel=\"preload\" as=\"fetch\" crossorigin=\"anonymous\" href=\"hanzi.manifest.json\">\n<link rel=\"preload\" as=\"fetch\" crossorigin=\"anonymous\" href=\"hanzi-20261106-111200.duckdb.gz\">";
+        let updated = update_html(html, "hanzi-20261107-120000.duckdb.gz").unwrap();
+        assert!(updated.contains("href=\"hanzi.manifest.json\""));
+        assert!(updated.contains("href=\"hanzi-20261107-120000.duckdb.gz\""));
+        assert!(!updated.contains("hanzi-20261106-111200.duckdb.gz"));
+    }
+    #[test]
+    fn dictionary_filename_requires_correct_timestamp() {
+        assert!(dictionary_name("hanzi.duckdb"));
+        assert!(dictionary_name("hanzi-20261106-111200.duckdb"));
+        assert!(!dictionary_name("hanzi-foo.duckdb"));
+    }
+}

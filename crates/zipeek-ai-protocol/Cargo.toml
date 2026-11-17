@@ -1,0 +1,12 @@
+[package]
+name = "zipeek-ai-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+zipeek-exercises = { path = "../zipeek-exercises" }

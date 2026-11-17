@@ -37,7 +37,9 @@ pub struct SessionPlan {
 
 impl SessionPlan {
     pub fn from_draft(draft: &PracticeDraft) -> Result<Self, PlanError> {
-        draft.validate_for_scored_session().map_err(PlanError::Draft)?;
+        draft
+            .validate_for_scored_session()
+            .map_err(PlanError::Draft)?;
         let count = match draft.length {
             SessionLength::Fixed(count) => count,
             SessionLength::Endless => return Err(PlanError::EndlessRequiresIncrementalScheduling),
@@ -117,6 +119,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn mixed_listening_never_enters_the_legacy_scored_plan() {
+        let mut draft = PracticeDraft::default();
+        draft.toggle_exercise("listening-choice").unwrap();
+        assert!(draft.supports_local_vocabulary_session());
+        assert_eq!(
+            SessionPlan::from_draft(&draft),
+            Err(PlanError::Draft(DraftError::UnsupportedAssessment(
+                "listening-choice".to_owned()
+            )))
+        );
+    }
+
+    #[test]
     fn fixed_plan_uses_registry_order_and_stable_instances() {
         let mut draft = PracticeDraft::default();
         draft.toggle_exercise("matching").unwrap();
@@ -124,8 +139,20 @@ mod tests {
         let first = SessionPlan::from_draft(&draft).unwrap();
         let second = SessionPlan::from_draft(&draft).unwrap();
         assert_eq!(first, second);
-        assert_eq!(first.steps.iter().map(|step| step.definition_id).collect::<Vec<_>>(),
-            ["matching", "multiple-choice", "matching", "multiple-choice", "matching"]);
+        assert_eq!(
+            first
+                .steps
+                .iter()
+                .map(|step| step.definition_id)
+                .collect::<Vec<_>>(),
+            [
+                "matching",
+                "multiple-choice",
+                "matching",
+                "multiple-choice",
+                "matching"
+            ]
+        );
     }
 
     #[test]
@@ -133,10 +160,24 @@ mod tests {
         let draft = PracticeDraft::default();
         let mut plan = SessionPlan::from_draft(&draft).unwrap();
         let id = plan.current().unwrap().instance_id.clone();
-        let score = ExerciseResult { earned: 1, possible: 1, mistakes: 0 };
+        let score = ExerciseResult {
+            earned: 1,
+            possible: 1,
+            mistakes: 0,
+        };
         assert_eq!(plan.acknowledge(&id), Err(PlanError::NotSubmitted));
         assert_eq!(plan.submit("wrong", score), Err(PlanError::WrongInstance));
-        assert_eq!(plan.submit(&id, ExerciseResult { earned: 2, possible: 1, mistakes: 0 }), Err(PlanError::InvalidResult));
+        assert_eq!(
+            plan.submit(
+                &id,
+                ExerciseResult {
+                    earned: 2,
+                    possible: 1,
+                    mistakes: 0
+                }
+            ),
+            Err(PlanError::InvalidResult)
+        );
         plan.submit(&id, score).unwrap();
         assert_eq!(plan.cursor, 0);
         assert_eq!(plan.submit(&id, score), Err(PlanError::AlreadySubmitted));
@@ -154,7 +195,15 @@ mod tests {
         draft.length = SessionLength::Fixed(1);
         let mut plan = SessionPlan::from_draft(&draft).unwrap();
         let id = plan.current().unwrap().instance_id.clone();
-        plan.submit(&id, ExerciseResult { earned: 0, possible: 1, mistakes: 1 }).unwrap();
+        plan.submit(
+            &id,
+            ExerciseResult {
+                earned: 0,
+                possible: 1,
+                mistakes: 1,
+            },
+        )
+        .unwrap();
         assert_eq!(plan.acknowledge(&id), Ok(true));
         assert_eq!(plan.status, PlanStatus::Completed);
         assert!(plan.current().is_none());
@@ -164,9 +213,17 @@ mod tests {
     fn rejects_unsupported_or_endless_configuration() {
         let mut draft = PracticeDraft::default();
         draft.length = SessionLength::Endless;
-        assert_eq!(SessionPlan::from_draft(&draft), Err(PlanError::EndlessRequiresIncrementalScheduling));
+        assert_eq!(
+            SessionPlan::from_draft(&draft),
+            Err(PlanError::EndlessRequiresIncrementalScheduling)
+        );
         draft.length = SessionLength::Fixed(2);
         draft.toggle_exercise("speaking").unwrap();
-        assert_eq!(SessionPlan::from_draft(&draft), Err(PlanError::Draft(DraftError::UnsupportedAssessment("speaking".into()))));
+        assert_eq!(
+            SessionPlan::from_draft(&draft),
+            Err(PlanError::Draft(DraftError::UnsupportedAssessment(
+                "speaking".into()
+            )))
+        );
     }
 }

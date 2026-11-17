@@ -1,11 +1,13 @@
 # Target architecture
 
+**Proposal archive, not the actual module map.** This document retains an older extraction plan with former package paths and pin assumptions. The implemented package map is [Architecture](../architecture.md), the current browser adapter is [browser-db](browser-db.md), and current dependency drift is in [source reconciliation](../../archive-history/audits/SOURCE_RECONCILIATION.md).
+
 Current and proposed workspace/crate structure, the A33 crate extraction
 proposal, and the runtime data-flow summary. Part of the
-[architecture overview](../ARCHITECTURE.md). Proposed extraction in
-[D30](../../process/decisions/process-and-infra.md#d30-extract-browser-database-adapter-proposed).
+[architecture overview](../architecture.md). Proposed extraction in
+[D30](../../project-management/decisions/process-and-infra.md#d30-extract-browser-database-adapter-proposed).
 
-## Implemented workspace and dependency direction (R69 audit)
+## Implemented workspace and dependency direction
 
 The workspace currently contains the following packages:
 
@@ -28,14 +30,14 @@ networking.
 
 Current application adapters include `web/services/translation_instance.rs`
 for browser-side tile randomisation and safe exercise-instance projection,
-`web/services/microphone.js` for permission-gated capture, and
+`zipeek-browser/src/microphone/` for permission-gated capture, and
 `web/components/audio_waveform.rs` for amplitude presentation. This boundary
 keeps source solutions out of AI learner-visible exercise data.
 
 ### Deferred browser database extraction
 
 A33 / D30 propose a future `zipeek-db-wasm` crate. **It is not present in the
-workspace or approved for implementation by R67.** The proposal remains below
+workspace or independently approved for implementation.** The proposal remains below
 for dependency/feature approval before any relocation. It must preserve the
 pinned DuckDB-WASM browser version and existing JS asset packaging.
 
@@ -188,11 +190,11 @@ Runtime data flow: data-flow.md.
 
 Architecture overview: ARCHITECTURE.md.
 
-## R69 boundary review: shared sessions and authoritative outcomes
+## boundary review: shared sessions and authoritative outcomes
 
 `zipeek-exercises` owns domain invariants for sessions and results; the
 app-level Yew provider should orchestrate delivery, not duplicate score
-validation. R69 adds an atomic completed-result operation to the domain crate.
+validation. adds an atomic completed-result operation to the domain crate.
 
 There are three distinct identities which must not be collapsed:
 
@@ -211,3 +213,7 @@ The aggregate `earned/possible` currently mixes Matching pair counts with MCQ
 question and Translation evaluation counts. Interpret these as **scored units**,
 not a proven cross-exercise proficiency percentage; authoritative per-skill
 evidence remains unwired. Browser recording is not a scored exercise.
+
+## Source provenance
+
+A full pre-reconciliation copy is retained in [historical source evidence](../../archive-history/audits/maintained-source-snapshots/architecture-modules-target-architecture.md). Dated implementation claims in that snapshot are not current build or browser verification.

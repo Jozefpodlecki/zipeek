@@ -1,0 +1,55 @@
+{
+  "id": "complex_en_zh",
+  "direction": "en-zh",
+  "source": "Although the prototype passed every safety test, the engineers warned that deploying it before the independent review was finished could create risks that would be difficult to reverse.",
+  "plain": "尽管原型通过了所有安全测试，工程师仍警告说，在独立审查完成之前部署它，可能会带来难以挽回的风险。",
+  "analysis": {
+    "translation": "尽管原型通过了所有安全测试，工程师仍警告说，在独立审查完成之前部署它，可能会带来难以挽回的风险。",
+    "alternatives": [
+      "虽然原型通过了全部安全测试，但工程师警告，在独立审查结束前部署仍可能造成难以逆转的风险。"
+    ],
+    "features": [
+      "Concession",
+      "Reported speech",
+      "Modal uncertainty"
+    ],
+    "nuance": [
+      "仍 indicates that the warning stands despite the successful safety tests."
+    ],
+    "difficulty": "advanced",
+    "estimated_hsk": null,
+    "rationale": "The English source nests reported speech, temporal subordination, and a modal risk assessment.",
+    "vocabulary": [
+      {
+        "hanzi": "原型",
+        "meaning": "prototype",
+        "pinyin": "yuan2 xing2"
+      },
+      {
+        "hanzi": "审查",
+        "meaning": "review",
+        "pinyin": "shen3 cha2"
+      },
+      {
+        "hanzi": "风险",
+        "meaning": "risk",
+        "pinyin": "feng1 xian3"
+      }
+    ],
+    "grammar": [
+      {
+        "pattern": "尽管...仍...",
+        "explanation": "Concession followed by a continuing warning.",
+        "example_fragment": "尽管原型通过了所有安全测试"
+      },
+      {
+        "pattern": "在...之前",
+        "explanation": "Locates deployment before the completion of a review.",
+        "example_fragment": "在独立审查完成之前"
+      }
+    ],
+    "notes": [
+      "可能 signals possibility rather than certainty."
+    ]
+  }
+}

@@ -13,7 +13,7 @@ pub struct StaticBackgroundProvider;
 impl StaticBackgroundProvider {
     pub async fn load(&self, theme: ThemeId) -> BackgroundAsset {
         BackgroundAsset {
-            path: "public/background.webp",
+            path: "public/backgrounds/lavender.webp",
             attribution: None,
             theme,
         }
@@ -25,11 +25,13 @@ mod tests {
     use super::*;
     use std::future::Future;
     use std::pin::pin;
-    use std::task::{Context, Poll, Wake, Waker};
     use std::sync::Arc;
+    use std::task::{Context, Poll, Wake, Waker};
 
     struct Noop;
-    impl Wake for Noop { fn wake(self: Arc<Self>) {} }
+    impl Wake for Noop {
+        fn wake(self: Arc<Self>) {}
+    }
 
     #[test]
     fn static_provider_does_not_require_a_remote_service() {
@@ -40,7 +42,7 @@ mod tests {
             Poll::Ready(asset) => asset,
             Poll::Pending => panic!("static provider must be ready"),
         };
-        assert_eq!(asset.path, "public/background.webp");
+        assert_eq!(asset.path, "public/backgrounds/lavender.webp");
         assert_eq!(asset.theme, ThemeId::Travel);
     }
 }

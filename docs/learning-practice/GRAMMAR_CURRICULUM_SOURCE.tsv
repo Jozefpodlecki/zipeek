@@ -1,0 +1,452 @@
+region	label	explanation	example_zh	translation_en
+21	Verb + 去 + purpose	Link movement to its intended action.	我去商店买水果。	I am going to the shop to buy fruit.
+21	Come and + verb	Link coming somewhere with the activity there.	他来我家吃饭。	He is coming to my home to eat.
+21	Verb + 来 + purpose	Describe an action performed on arrival.	她过来帮我。	She is coming over to help me.
+21	去 + place + verb	Put the destination before the planned activity.	我们去公园散步。	We are going to the park for a walk.
+21	Motion + action sequence	Express connected verbs without a conjunction.	孩子跑出去玩了。	The child ran outside to play.
+21	边 + motion + 边 + activity	Express simultaneous motion and another action.	他边走边打电话。	He talks on the phone while walking.
+22	让 + person + verb	Ask or cause someone to do something.	老师让我们读课文。	The teacher asked us to read the text.
+22	请 + person + verb	Politely invite or request an action.	请你坐下。	Please sit down.
+22	叫 + person + verb	State who was told to act.	妈妈叫我回家。	Mum told me to come home.
+22	使 + person + adjective	State what makes someone feel a way.	这个消息使我很高兴。	This news made me happy.
+22	帮 + person + verb	Do an activity to assist someone.	他帮我搬箱子。	He helped me move the box.
+22	劝 + person + verb	Report persuading someone to take an action.	朋友劝我早点休息。	My friend urged me to rest earlier.
+23	拿 + 出来	Bring an item outward toward the speaker.	请把书拿出来。	Please take out the book.
+23	走 + 进去	Enter a place away from the reference point.	他走进去了。	He walked inside.
+23	跑 + 过来	Move across toward the reference point.	小狗跑过来了。	The puppy ran over here.
+23	搬 + 上去	Carry something upward and away.	他们把桌子搬上去了。	They carried the table upstairs.
+23	拿 + 回来	Bring an item back to the reference point.	你把钥匙拿回来。	Bring the key back.
+23	拿 + 过去	Carry an object away toward another location.	请把文件拿过去。	Please take the documents over there.
+24	听 + 清楚	Achieve clarity in hearing.	我没听清楚你的名字。	I did not hear your name clearly.
+24	看 + 出来	Recognize something from signs or appearance.	我看出来他累了。	I could tell that he was tired.
+24	想 + 起来	Recall something after forgetting it.	我想起来了。	I remember now.
+24	记 + 住	Succeed in retaining information.	我记住这个词了。	I remembered this word.
+24	弄 + 丢	Express an unintended result of losing something.	他把钱包弄丢了。	He lost his wallet.
+24	发现 + 了	Indicate successful discovery of a previously unknown fact.	我发现了一个错误。	I discovered a mistake.
+25	吃 + 得 + 下	Have the capacity to eat a quantity.	这么多饭我吃不下。	I cannot eat this much food.
+25	买 + 得 + 起	Be able to afford something.	这辆车我买不起。	I cannot afford this car.
+25	受 + 得 + 了	Be able to endure a situation.	这种声音我受不了。	I cannot stand this noise.
+25	来 + 得 + 及	Have enough time to do something.	现在走还来得及。	There is still time if we leave now.
+25	走 + 得 + 开	Be able to get away or leave.	我今天走不开。	I cannot get away today.
+25	等 + 得 + 起	Be able to afford to wait for something.	我们等得起。	We can afford to wait.
+26	Verb + 一次	Count a single occurrence.	我去过一次上海。	I have been to Shanghai once.
+26	Verb + 两遍	Count full repetitions.	请把课文读两遍。	Please read the passage twice.
+26	Verb + 一趟	Count a trip or errand.	他去了一趟银行。	He made a trip to the bank.
+26	Verb + 一下	Briefly perform an action.	你看一下这个。	Have a quick look at this.
+26	Verb + 一阵子	Describe an activity lasting a short period.	我们聊了一阵子。	We chatted for a while.
+26	Verb + 好几次	Express an action repeated several times.	他给我打了好几次电话。	He called me several times.
+27	看看	Soften a request with verb reduplication.	你看看这张照片。	Take a look at this photo.
+27	试试	Suggest giving something a try.	你试试这件衣服。	Try on this item of clothing.
+27	想一想	Ask someone to think briefly.	请再想一想。	Please think about it again.
+27	走一走	Describe a short or relaxed activity.	晚饭后我们走一走。	We take a short walk after dinner.
+27	聊聊天	Repeat a separable verb-object construction naturally.	我们坐下聊聊天吧。	Let us sit down and chat.
+27	问问	Turn a question into a brief exploratory inquiry.	你先问问老师。	Ask the teacher first.
+28	高高兴兴	Intensify manner using an aabb adjective.	孩子们高高兴兴地回家了。	The children went home happily.
+28	慢慢	Express gradual or gentle manner with an aa form.	请慢慢说。	Please speak slowly.
+28	干干净净	Emphasize a thorough descriptive state.	房间打扫得干干净净。	The room was cleaned spotless.
+28	清清楚楚	Emphasize clarity or precision.	你说得清清楚楚。	You explained it very clearly.
+28	热热闹闹	Describe a bustling lively scene.	街上热热闹闹的。	The street is bustling.
+28	认认真真	Emphasize a careful way of doing something.	她认认真真地检查答案。	She checked the answers carefully.
+29	Place + Verb + 着 + noun	Introduce an object in a continuing position.	墙上挂着一幅画。	A painting hangs on the wall.
+29	桌上放着	Present a placed object as a state.	桌上放着两本书。	Two books are on the table.
+29	门口站着	Introduce a person standing somewhere.	门口站着一位老师。	A teacher is standing at the entrance.
+29	院子里停着	Describe vehicles left stationary at a place.	院子里停着一辆车。	A car is parked in the courtyard.
+29	房间里坐着	Introduce a seated participant by location.	房间里坐着几个人。	Several people are seated in the room.
+29	墙上贴着	Introduce an object affixed to a surface.	墙上贴着一张地图。	There is a map posted on the wall.
+30	Place + 有 + thing	Introduce the existence of something.	楼下有一家咖啡馆。	There is a café downstairs.
+30	有 + quantity + noun	Introduce new entities with a count.	这里有三把椅子。	There are three chairs here.
+30	有 + person + 在 + verb	Indicate someone engaged in an activity.	有人在敲门。	Someone is knocking at the door.
+30	没有 + noun	Deny the presence of an entity.	教室里没有学生。	There are no students in the classroom.
+30	有的是	Say that there is plenty of something.	时间有的是。	There is plenty of time.
+30	还有	Add another existing item or participant.	桌上还有一杯茶。	There is also a cup of tea on the table.
+31	A 没有 B 那么 + adjective	Compare one item as less than another.	今天没有昨天那么冷。	Today is not as cold as yesterday.
+31	不如	Compare two options and prefer the second.	这个办法不如那个好。	This method is not as good as that one.
+31	没有 ... 这么	Deny reaching a reference degree.	路没有这么远。	The road is not this far.
+31	比不上	Say one thing cannot measure up to another.	我的中文比不上她的。	My Chinese is not as good as hers.
+31	不及	Make a formal comparison of inferiority.	这条路不及那条方便。	This road is not as convenient as that one.
+31	远不如	State a pronounced inferiority in a comparison.	这条路线远不如那条安全。	This route is far less safe than that one.
+32	跟 ... 一样 + adjective	Express equality in a property.	我跟你一样高。	I am as tall as you.
+32	跟 ... 不一样	State that two things are different.	我的想法跟他的不一样。	My idea is different from his.
+32	一样 + verb	Describe identical ways of doing something.	他们一样喜欢音乐。	They like music equally.
+32	像 ... 一样	Compare appearance or manner.	她像妈妈一样爱笑。	She smiles as much as her mother.
+32	有 ... 一样 + adjective	Compare equal degree by using 有.	他有你一样高吗？	Is he as tall as you?
+32	同样 + adjective	Attribute the same quality to two situations.	这两个答案同样正确。	These two answers are equally correct.
+33	越来越 + adjective	Describe a gradual change in degree.	天气越来越暖和。	The weather is getting warmer.
+33	越来越 + verb phrase	Show an increasing tendency.	我越来越喜欢这里。	I like this place more and more.
+33	变得 + adjective	Express a resulting change in state.	城市变得更安静了。	The city has become quieter.
+33	逐渐 + verb	Present a development as gradual.	他逐渐习惯了新工作。	He gradually got used to the new job.
+33	一天比一天 + adjective	Compare a trend day by day.	她的中文一天比一天好。	Her Chinese improves day by day.
+33	日益 + adjective	Express steadily increasing degree in formal writing.	竞争日益激烈。	Competition is becoming increasingly intense.
+34	越 ... 越 ...	Couple an increasing cause with a result.	越练习越熟练。	The more you practise, the more skilled you become.
+34	越 ... 越 + adjective	Describe a steadily intensifying state.	天越晚越冷。	The later it gets, the colder it becomes.
+34	越 ... 越不 ...	Show a negative response increasing.	越催他越不着急。	The more you hurry him, the less concerned he becomes.
+34	越是 ... 越 ...	Emphasize the tendency in a condition.	越是困难越要坚持。	The harder it gets, the more we must persist.
+34	越 ... 就越 ...	Make a rising dependency explicit.	书读得越多，就越有想法。	The more you read, the more ideas you have.
+34	越看越	Describe changing feeling as experience accumulates.	这本书越看越有意思。	The more I read this book, the more interesting it gets.
+35	比 ... 多 + number	Compare quantities with a difference.	我比他多买了两本书。	I bought two more books than he did.
+35	比 ... 少 + number	Compare quantities by a shortfall.	今天比昨天少了十个人。	There are ten fewer people today than yesterday.
+35	多得多	Mark a large quantitative difference.	这个班的人多得多。	This class has many more people.
+35	差不多 + quantity	Show approximate equality in quantity.	这两本书差不多一样厚。	These two books are about equally thick.
+35	是 ... 的两倍	Express a multiplicative comparison.	今年的收入是去年的两倍。	This year's income is twice last year's.
+35	相差 + quantity	State the numerical difference directly.	两人的年龄相差三岁。	They are three years apart in age.
+36	十来 + measure	Give an approximate small range.	教室里有十来个人。	There are around ten people in the classroom.
+36	三四 + measure	Give an approximate count using adjacent numbers.	我等了三四分钟。	I waited three or four minutes.
+36	几十	Express a quantity in the tens.	这里有几十家商店。	There are dozens of shops here.
+36	一百多	Indicate a little more than one hundred.	会场有一百多人。	There are over a hundred people at the venue.
+36	左右	Place an approximation after a quantity.	路上要花半小时左右。	The journey takes about half an hour.
+36	好几 + measure	Express an indefinite quantity of several.	我等了好几个小时。	I waited several hours.
+37	二分之一	Express one half with a written denominator-first fraction	二分之一的学生已经到了。	Half of the students have arrived.
+37	百分之 + number	Express a percentage numerically.	百分之八十的人同意。	Eighty percent of people agree.
+37	三分之二	State two thirds with denominator first.	三分之二的学生通过了。	Two thirds of students passed.
+37	不到 + percentage	State a quantity below a given share.	不到百分之十的人迟到了。	Fewer than ten percent were late.
+37	超过 + percentage	State a quantity above a given share.	超过百分之五十的人赞成。	More than fifty percent support it.
+37	占 + percentage	State the proportion that a part occupies.	学生占总人数的百分之六十。	Students account for sixty percent of the total.
+38	两米长	Put a measurement after a noun or property.	这张桌子两米长。	This table is two metres long.
+38	三公斤重	Express weight with a quantity phrase.	这个包三公斤重。	This bag weighs three kilograms.
+38	多高	Ask for a measurement using 多.	这座山有多高？	How tall is this mountain?
+38	多大	Ask about extent, size or age contextually.	这个房间有多大？	How big is this room?
+38	大约 + measurement	Mark an approximate physical size.	桥大约有一百米长。	The bridge is approximately 100 metres long.
+38	宽 + measurement	Specify the width of an object.	这条路有五米宽。	This road is five metres wide.
+39	一位 + person	Use a polite classifier for people.	来了一位客人。	A guest has arrived.
+39	一张 + flat object	Count a sheet or flat object.	请给我一张纸。	Please give me a sheet of paper.
+39	一条 + long object	Count a long flexible object.	她买了一条围巾。	She bought a scarf.
+39	一双 + paired item	Count a natural pair.	我需要一双鞋。	I need a pair of shoes.
+39	一台 + machine	Count a machine or appliance.	办公室有两台电脑。	There are two computers in the office.
+39	一套 + set	Count a complete matched collection.	我买了一套新家具。	I bought a new set of furniture.
+40	看了一眼	Count a glance using 眼.	他看了我一眼。	He glanced at me.
+40	踢了一脚	Count a kick with 脚.	他踢了球一脚。	He kicked the ball once.
+40	说了一句	Count one utterance or sentence.	老师只说了一句。	The teacher said just one sentence.
+40	打了一拳	Count a punch with 拳.	他朝墙打了一拳。	He punched the wall once.
+40	走了一步	Count a step of movement.	她往前走了一步。	She took one step forward.
+40	听了一遍	Count a complete listening pass.	我把录音听了一遍。	I listened to the recording once through.
+41	这 + measure + noun	Specify something near the speaker.	这本书很有意思。	This book is interesting.
+41	那 + measure + noun	Specify something farther away or previously mentioned.	那辆车是我的。	That car is mine.
+41	这些 versus 那些	Contrast near and far plural referents.	这些是新的，那些是旧的。	These are new; those are old.
+41	这里 and 那里	Distinguish locations by deixis.	这里很安静，那里很热闹。	It is quiet here but lively there.
+41	这样的 + noun	Refer to an item of this kind.	我喜欢这样的音乐。	I like this kind of music.
+41	那个时候	Point back to a specific time in context.	那个时候我还在读书。	At that time I was still studying.
+42	谁	Ask about a person.	谁在门口？	Who is at the door?
+42	什么	Ask about a thing or category.	你在找什么？	What are you looking for?
+42	哪 + measure + noun	Ask which one among options.	你要哪杯茶？	Which cup of tea do you want?
+42	怎么	Ask about manner or method.	这个字怎么写？	How do you write this character?
+42	为什么	Ask for a reason.	你为什么迟到？	Why are you late?
+42	什么时候	Ask for a point in time.	会议什么时候开始？	When does the meeting start?
+43	谁都	Express an inclusive indefinite person.	谁都可以参加。	Anyone can join.
+43	什么都	Include every possible object.	他什么都知道。	He knows everything.
+43	哪儿都	Include every place.	我哪儿都找过了。	I have looked everywhere.
+43	有的人	Refer to an unspecified subset.	有的人喜欢早起。	Some people like getting up early.
+43	任何 + noun	Express any member of a category.	任何问题都可以问。	You can ask any question.
+43	怎么都	Emphasize a negative result despite repeated attempts.	我怎么都想不起来。	I cannot remember no matter what I try.
+44	自己	Mark the subject as its own agent or object.	她自己做饭。	She cooks for herself.
+44	彼此	Express mutuality between people.	我们彼此了解。	We understand each other.
+44	互相 + verb	Express reciprocal action.	同学们互相帮助。	Classmates help each other.
+44	各自 + verb	Distribute action to each individual.	大家各自回家了。	Everyone went home separately.
+44	本人	Refer formally to oneself in official contexts.	请本人签字。	Please sign in person.
+44	相互	Use a formal reciprocal modifier.	两国相互尊重。	The two countries respect each other.
+45	和 for noun coordination	Join two noun phrases.	我和姐姐都来了。	My sister and I both came.
+45	跟 for colloquial coordination	Join participants conversationally.	我跟朋友去看电影。	I am going to the cinema with a friend.
+45	以及 for formal lists	Add final items in formal coordination.	会议讨论了时间、地点以及预算。	The meeting discussed the time, location and budget.
+45	或者 between nouns	Offer an alternative outside a direct question.	你可以选茶或者咖啡。	You can choose tea or coffee.
+45	连同	Include an associated participant or item.	请把文件连同照片一起寄来。	Please send the documents together with the photos.
+45	与 for formal coordination	Join participants in formal language.	本次会议由校长与老师主持。	The meeting is chaired by the principal and teachers.
+46	对 + person + adjective	Identify who a judgment concerns.	这份工作对我很重要。	This job is important to me.
+46	关于 + topic	Introduce a subject for discussion.	关于这个问题，我们再谈。	We will discuss this issue later.
+46	为了 + goal	Introduce an intended purpose.	为了考试，他每天复习。	He reviews every day for the exam.
+46	通过 + means	Describe the means by which something is achieved.	我们通过练习提高水平。	We improve through practice.
+46	按照 + standard	Indicate the rule or plan being followed.	请按照说明操作。	Please follow the instructions.
+46	凭 + evidence	Describe the basis on which a claim is made.	凭这张票可以入场。	You can enter with this ticket.
+47	以前	Locate something before a reference time.	吃饭以前要洗手。	Wash your hands before eating.
+47	以后	Locate something after a reference time.	下课以后我们去图书馆。	We will go to the library after class.
+47	同时	Express events occurring at the same time.	他同时学中文和英语。	He studies Chinese and English at the same time.
+47	接着	Move from one event directly into another.	她关上门，接着走了。	She shut the door and then left.
+47	随后	Introduce a later event in a sequence.	会议结束，随后大家离开。	The meeting ended, and everyone left afterwards.
+47	自从 ... 以来	Specify a starting point continuing to the present.	自从毕业以来，我一直住在这里。	I have lived here ever since graduation.
+48	在 + location + 里	Place something within an enclosure.	钥匙在抽屉里。	The key is in the drawer.
+48	往 + direction	Describe the direction of movement.	请往左走。	Please go left.
+48	朝 + direction	Indicate the direction faced or approached.	窗户朝南。	The window faces south.
+48	沿着 + path	Follow a route or boundary.	沿着这条路一直走。	Keep going along this road.
+48	经过 + place	Express passing a point on a route.	公交车经过学校。	The bus passes the school.
+48	离 + place + distance	Describe position relative to a reference point.	车站离这里两公里。	The station is two kilometres from here.
+49	前一天	Refer to the day before a reference event.	考试的前一天我很紧张。	I was nervous the day before the exam.
+49	第二天	Refer to the following day in a story.	第二天他又来了。	He returned the following day.
+49	不久以后	Introduce a subsequent event after a short interval.	不久以后他们结婚了。	They married not long afterwards.
+49	从那以后	Link a continuing situation to a past turning point.	从那以后他很少迟到。	Since then he has rarely been late.
+49	到 ... 为止	Specify an endpoint of time.	到今天为止已经三天了。	It has been three days up to today.
+49	截至 + time	Give a reporting cutoff point.	截至昨天，报名已经结束。	Registration had closed as of yesterday.
+50	一开始 ... 后来	Contrast an initial state with a later one.	一开始我不懂，后来明白了。	At first I did not understand; later I did.
+50	一直 ... 到	Express continuous duration up to an endpoint.	我们一直工作到晚上。	We worked continuously until evening.
+50	终于	Present an awaited culmination.	我们终于到了山顶。	We finally reached the summit.
+50	原来	Introduce a newly realized fact.	原来你也住在这里。	So you live here too.
+50	结果	Introduce the actual outcome.	他出门太晚，结果迟到了。	He left too late and was late as a result.
+50	与此同时	Connect parallel events in a narrative.	他在做饭，与此同时孩子在写作业。	He was cooking while the child did homework.
+51	Verb + 了 + duration + 了	Express an action continuing for a period up to now.	我学中文学了两年了。	I have been studying Chinese for two years.
+51	还 + 没 + verb	Show an expected event has not occurred yet.	我还没吃早饭。	I have not eaten breakfast yet.
+51	已经 ... 了	Mark an established change in a continuing story.	天已经黑了。	It is already dark.
+51	一直 + verb	Emphasize uninterrupted activity.	他一直在等你。	He has been waiting for you all along.
+51	刚 + verb	Locate a recent completed action.	她刚到家。	She just got home.
+51	将要	Express a future event in formal language.	会议将要开始。	The meeting is about to begin.
+52	曾经 + verb + 过	Reinforce past experience.	我曾经在上海住过。	I once lived in Shanghai.
+52	从来没 + verb + 过	Deny any experience up to now.	我从来没坐过飞机。	I have never flown on a plane.
+52	以前 ... 现在	Contrast previous and current states.	以前我怕狗，现在不怕了。	I used to fear dogs, but now I do not.
+52	不再	Show that a former activity has ceased.	他不再抽烟了。	He no longer smokes.
+52	再次	Mark a repeat event in formal language.	她再次获得了冠军。	She won the championship again.
+52	不曾	Deny experience in a more formal register.	我不曾听说过这件事。	I have never heard of this matter.
+53	既不 ... 也不	Negate two alternatives together.	我既不喝茶，也不喝咖啡。	I drink neither tea nor coffee.
+53	并不	Emphasize contradiction of an expectation.	这件事并不难。	This is not difficult at all.
+53	未必	Express that an inference is not necessarily true.	贵的未必好。	Expensive things are not necessarily good.
+53	不是 ... 而是	Correct a contrast by rejecting the first option.	我不是生气，而是担心。	I am not angry; I am worried.
+53	无论 ... 都不	State a negative outcome across all conditions.	无论怎么说，他都不同意。	Whatever we say, he does not agree.
+53	毫不	Strengthen an emphatic negative degree.	他毫不犹豫地答应了。	He agreed without hesitation.
+54	应该	Express advice or a moderate obligation.	你应该多休息。	You should rest more.
+54	必须	Express strict necessity.	进入之前必须登记。	You must register before entering.
+54	得 + verb	Express colloquial necessity.	我得走了。	I have to go.
+54	不得不	Express an obligation imposed by circumstances.	雨太大，我们不得不留下。	The rain was so heavy we had to stay.
+54	最好	Give a recommendation rather than a command.	你最好早点出发。	You had better leave early.
+54	有必要	Express a necessity as an impersonal judgment.	我们有必要重新检查。	We need to check again.
+55	可能	Express possibility.	他可能在开会。	He may be in a meeting.
+55	大概	Estimate with some uncertainty.	他们大概八点到。	They will probably arrive at eight.
+55	也许	Offer a tentative possibility.	也许明天会下雨。	Perhaps it will rain tomorrow.
+55	恐怕	Offer a worried or polite prediction.	恐怕来不及了。	I am afraid it is too late.
+55	一定	Express strong conviction about a proposition.	她一定知道答案。	She must know the answer.
+55	说不定	Suggest a colloquial uncertain possibility.	说不定他已经到了。	Maybe he has already arrived.
+56	可以 versus 会	Distinguish permission from learned ability.	我会游泳，但今天不能下水。	I know how to swim, but cannot enter the water today.
+56	能 versus 可以	Contrast capability and permission.	这里可以拍照吗？	May we take photos here?
+56	要 + verb	Express intention or obligation depending on context.	我明天要去北京。	I am going to Beijing tomorrow.
+56	想 + verb	Express a desire or inclination.	我想学画画。	I want to learn painting.
+56	敢 + verb	Express having the courage to act.	他不敢一个人走夜路。	He does not dare walk alone at night.
+56	愿意	Express willingness to do something.	我愿意帮你。	I am willing to help you.
+57	还是 in a choice question	Ask the listener to choose an alternative.	你喝茶还是咖啡？	Would you like tea or coffee?
+57	或者 in a statement	Offer choices in a non-question.	我们坐车或者走路都行。	We can ride or walk.
+57	要么 ... 要么	Present mutually exclusive alternatives.	要么今天做，要么明天做。	Either do it today or tomorrow.
+57	是 ... 还是 ...	Compare explicitly stated options.	这是你的还是他的？	Is this yours or his?
+57	不管 ... 还是	Treat alternatives as equally valid conditions.	不管晴天还是雨天，他都跑步。	He runs whether it is sunny or rainy.
+57	与其 ... 还是	Offer a comparison favoring an alternative.	与其担心，还是先行动吧。	Rather than worry, let us act first.
+58	难道 ... 吗	Ask a rhetorical question with strong expectation.	难道你不认识他吗？	Surely you know him?
+58	不是 ... 吗	Invoke a fact the listener should recognize.	你不是说今天来吗？	Did you not say you were coming today?
+58	谁不知道	Use an interrogative to assert broad knowledge.	谁不知道这件事？	Who does not know about this?
+58	何必	Question the necessity of an action.	何必这么着急？	Why be in such a hurry?
+58	怎么会	Express surprise or disbelief.	他怎么会忘记呢？	How could he forget?
+58	岂不是	Make a rhetorical inference.	这样做岂不是更麻烦？	Would that not make things more troublesome?
+59	去不去	Ask a yes/no question by repeating the verb with 不.	你明天去不去？	Are you going tomorrow or not?
+59	有没有	Ask whether something is possessed or exists.	你有没有时间？	Do you have time?
+59	好不好	Request agreement using adjective-negation repetition.	我们现在走，好不好？	Shall we leave now?
+59	会不会	Ask about likelihood or ability with a modal.	明天会不会下雨？	Will it rain tomorrow?
+59	是不是	Seek confirmation by repeating 是 with negation.	他是不是老师？	Is he a teacher?
+59	累不累	Ask about a state with adjective-negation repetition.	你今天累不累？	Are you tired today?
+60	不知道 + question	Embed an information question as an object.	我不知道他在哪儿。	I do not know where he is.
+60	告诉 + person + question	Report an embedded question without 吗.	请告诉我几点开始。	Please tell me what time it starts.
+60	问 + whether	Report a yes/no question with 是否.	他问我是否同意。	He asked whether I agreed.
+60	想知道 + question	Express curiosity about an embedded interrogative.	我想知道你为什么离开。	I want to know why you left.
+60	记得 + question	Refer to a remembered fact asked as a question.	你记得我们在哪儿见面吗？	Do you remember where we met?
+60	是否	Embed a formal yes/no question without 吗.	请确认是否收到邮件。	Please confirm whether you received the email.
+61	请 + verb	Make a polite direct request.	请关上窗户。	Please close the window.
+61	不要 + verb	Express a prohibition.	不要在这里抽烟。	Do not smoke here.
+61	别 + verb + 了	Ask someone to stop an activity.	别说了。	Stop talking.
+61	千万别	Give an emphatic warning.	千万别忘记带护照。	Be sure not to forget your passport.
+61	麻烦你 + verb	Soften a request by acknowledging inconvenience.	麻烦你帮我看一下。	Could you please take a look for me?
+61	务必	Express a firm formal instruction.	请务必按时到达。	Please make sure you arrive on time.
+62	我们 ... 吧	Suggest joint action.	我们休息一下吧。	Let us take a break.
+62	还是 ... 吧	Suggest a preferred course of action after considering alternatives	我们还是早点出发吧。	We had better leave earlier.
+62	要不要	Invite a yes/no choice informally.	要不要一起吃饭？	Would you like to eat together?
+62	怎么样	Request an opinion on a proposal.	周末去爬山怎么样？	How about hiking this weekend?
+62	何不	Make a somewhat literary suggestion.	何不试试这个办法？	Why not try this method?
+62	何妨	Offer a literary or polite suggestion.	何妨先听听他的意见？	Why not first hear his opinion?
+63	不太方便	Decline indirectly by describing a difficulty.	我今天不太方便。	Today is not very convenient for me.
+63	恐怕不能	Refuse politely with a regretful prediction.	恐怕我不能参加。	I am afraid I cannot attend.
+63	下次再	Defer a proposal courteously.	我们下次再约吧。	Let us meet up another time.
+63	不好意思	Precede an apology or gentle refusal.	不好意思，我已经有安排了。	Sorry, I already have plans.
+63	可能不行	Express an uncertain gentle refusal.	明天可能不行。	Tomorrow may not work.
+63	改天	Suggest postponing an interaction to another day.	我们改天再聊吧。	Let us chat another day.
+64	吧 for suggestion	Soften a recommendation or proposal.	你先走吧。	You go ahead.
+64	吧 for tentative inference	Mark a guess awaiting agreement.	他已经走了吧？	He has probably left, right?
+64	呢 for ongoing situation	Ask about what is happening.	你在做什么呢？	What are you doing?
+64	呢 for return question	Ask about a previously mentioned topic.	我很好，你呢？	I am fine, and you?
+64	呢 for contrast	Keep a contrastive question in view.	我的书在这里，你的呢？	My book is here; where is yours?
+64	呢 with omitted predicate	Ask a follow-up about a parallel topic.	你喝茶，我呢？	You drink tea; what about me?
+65	啊 for exclamation	Add emotional emphasis to a statement.	这里真漂亮啊！	It is so beautiful here!
+65	呀 after vowels	Use a conversational variant of 啊.	快来呀！	Come quickly!
+65	哇 for surprise	Express an excited reaction.	哇，这么大！	Wow, it is so big!
+65	哦 for realization	Signal sudden understanding.	哦，原来是这样。	Oh, so that is how it is.
+65	嘛 for shared knowledge	Mark something presented as obvious.	这很正常嘛。	That is quite normal, you know.
+65	喂 as an attention call	Get someone's attention in informal speech.	喂，你听得见吗？	Hello, can you hear me?
+66	的 for assertion	Emphasize certainty in a statement.	他会来的。	He will come, I am sure.
+66	可 + adjective + 了	Intensify an exclamation.	今天可热了！	It is really hot today!
+66	就是 for emphasis	Identify an exact entity.	这就是我要找的书。	This is exactly the book I was looking for.
+66	倒 for a concession	Mark a mild unexpected contrast.	他倒很有耐心。	He is actually quite patient.
+66	偏偏 for contrary occurrence	Highlight something that happens against expectations.	我正要走，偏偏下雨了。	Just as I was leaving, it started raining.
+66	正是	Emphasize exact identification in formal contexts.	这正是我们需要的。	This is precisely what we need.
+67	快 ... 了	Express an approaching change.	快下雨了。	It is about to rain.
+67	就要 ... 了	Express imminent occurrence.	火车就要开了。	The train is about to leave.
+67	不 ... 了	Express a new decision or changed state.	我不喝咖啡了。	I no longer drink coffee.
+67	太 ... 了	Express a strongly evaluated degree.	这个故事太有趣了！	This story is so interesting!
+67	开始 + verb + 了	Present the beginning of a new ongoing activity	孩子开始上学了。	The child has started school.
+67	马上就要 ... 了	Highlight a very near forthcoming change.	比赛马上就要开始了。	The match is just about to start.
+68	是 for correction	Affirm an identity against an alternative.	他是医生，不是护士。	He is a doctor, not a nurse.
+68	就是 for precision	Identify exactly what is intended.	这就是问题所在。	This is exactly where the problem lies.
+68	是不是 for confirmation	Ask whether an assertion holds.	你是不是忘了？	Did you forget?
+68	是 ... 的 for focus	Emphasize details of an established event.	他是昨天到的。	He arrived yesterday.
+68	并不是	Strongly deny a proposed identification.	这并不是我的意思。	This is not what I meant at all.
+68	到底是	Insist on a precise explanation or identification.	到底是谁说的？	Who exactly said it?
+69	来了 + participant	Present a new arrival.	门口来了一位客人。	A guest arrived at the door.
+69	出现了 + event	Introduce an event that has emerged.	突然出现了一个问题。	A problem suddenly arose.
+69	发生了 + incident	Present the occurrence of an incident.	昨晚发生了一场事故。	An accident occurred last night.
+69	传来 + sound	Present something heard from elsewhere.	外面传来一阵笑声。	Laughter came from outside.
+69	走进来 + participant	Introduce a person entering the scene.	走进来一个年轻人。	A young man walked in.
+69	来了 + quantity + participant	Introduce newly arrived participants.	来了三位新同学。	Three new classmates have arrived.
+70	Topic + comment	Name the topic before evaluating it.	这件事，我已经知道了。	This matter, I already know about it.
+70	Topic chain	Keep the same topic across clauses.	这本书我买了，也看完了。	I bought this book and finished reading it.
+70	Topic + time + comment	Place a temporal frame within a topic construction.	那个问题，我们明天讨论。	We will discuss that issue tomorrow.
+70	Topic reprise with 它	Resume a topic with a pronoun when useful.	这台电脑，它很旧了。	This computer, it is quite old.
+70	Speaking of + topic	Introduce an explicit new topic with 说到.	说到旅行，我最喜欢坐火车。	Speaking of travel, I like trains best.
+70	至于 + topic	Introduce a related but distinct topic.	至于费用，我们下周再谈。	As for the cost, we will discuss it next week.
+71	只有 ... 才	Focus a necessary condition.	只有亲自试过，才知道难不难。	Only by trying it yourself will you know if it is hard.
+71	连 ... 也	Highlight an unexpected inclusive case.	连他也同意了。	Even he agreed.
+71	正是 ... 才	Identify the specific reason for a result.	正是你的帮助才让我成功。	It was your help that enabled me to succeed.
+71	偏偏是	Focus an unexpectedly specific person or circumstance.	偏偏是他发现了问题。	It was unexpectedly he who found the problem.
+71	最重要的是	Introduce the focal point of an argument.	最重要的是大家都安全。	Most importantly, everyone is safe.
+71	甚至	Mark an especially surprising or extreme point.	他甚至忘了我的名字。	He even forgot my name.
+72	是 ... 的 for manner	Focus how a completed event occurred.	我们是坐飞机来的。	We came by plane.
+72	是 ... 的 for place	Focus where a known event happened.	他是在北京出生的。	He was born in Beijing.
+72	是 ... 的 for agent	Highlight who performed an event.	这幅画是她画的。	She painted this picture.
+72	是 ... 而不是 ...	Affirm one interpretation while explicitly excluding another	我要的是结果，而不是借口。	What I want is results, not excuses.
+72	所 + verb + 的	Use a formal nominalized relative expression.	这就是我所需要的。	This is what I need.
+73	说 + quotation	Introduce reported direct speech.	他说：“明天见。”	He said, “See you tomorrow.”
+73	告诉 + person + clause	Report information to someone.	她告诉我会议取消了。	She told me the meeting was cancelled.
+73	听说 + clause	Introduce information learned indirectly.	听说他搬家了。	I heard that he moved house.
+73	据说 + clause	Mark information as reportedly true.	据说这座桥很古老。	This bridge is reportedly very old.
+73	问 + person + question	Report an inquiry with a question clause.	他问我几点出发。	He asked what time I was leaving.
+74	据 + source	Attribute a claim to a source.	据报道，明天会下雪。	According to reports, it may snow tomorrow.
+74	看来	State an inference based on evidence.	看来他还不知道。	It seems he still does not know.
+74	显然	Present a conclusion as evident.	显然这个办法行不通。	Clearly this method will not work.
+74	据我所知	Qualify a claim by the speaker's knowledge.	据我所知，他已经回国了。	As far as I know, he has returned to his country.
+74	听起来	Describe an impression derived from sound.	这个计划听起来不错。	This plan sounds good.
+75	为了 + outcome	State the intended goal of an action.	为了健康，她每天跑步。	She runs daily for her health.
+75	以便	Introduce a desired practical consequence.	请早点来，以便安排座位。	Please arrive early so we can arrange seats.
+75	好 + verb	Give an intended purpose in conversation.	你把地址发给我，好让我找到你。	Send me the address so I can find you.
+75	省得	Introduce an inconvenience an action prevents.	带把伞，省得淋雨。	Take an umbrella so you do not get soaked.
+75	以免	Formally introduce a risk to avoid.	请检查名字，以免出错。	Please check the name to avoid mistakes.
+76	因此	Connect a reason with its consequence.	他准备充分，因此通过了考试。	He prepared thoroughly and therefore passed.
+76	所以	Mark a direct consequence.	路很堵，所以我们迟到了。	The traffic was heavy, so we were late.
+76	以致	Introduce an often undesirable outcome.	他太累了，以致睡过了头。	He was so tired that he overslept.
+76	导致	State that a cause produces an outcome.	大雨导致航班延误。	Heavy rain caused flight delays.
+76	从而	Mark an intended or logical resulting effect.	他调整了方法，从而提高了效率。	He changed his method and thereby improved efficiency.
+77	使 + affected + adjective	Express a cause changing a person's state.	这个消息使大家兴奋。	The news made everyone excited.
+77	促使 + person + verb	Describe a circumstance prompting someone to act	这次经历促使她重新考虑计划。	This experience prompted her to reconsider the plan.
+77	叫 + person + action	Have someone perform an action.	经理叫他准备材料。	The manager told him to prepare materials.
+77	令 + person + adjective	Express an effect in written language.	这个决定令人失望。	This decision is disappointing.
+77	被迫 + verb	Express an action forced by circumstances.	他们被迫改变计划。	They were forced to change the plan.
+78	受 + event + 影响	Describe being affected without a 被 phrase.	交通受天气影响。	Traffic is affected by the weather.
+78	遭到 + negative event	Express suffering an adverse action.	房屋遭到严重破坏。	The house suffered serious damage.
+78	挨 + verb	Mark an unpleasant treatment.	他挨了一顿批评。	He received a scolding.
+78	给 + person + verb	Use a colloquial affectedness construction.	杯子给孩子打碎了。	The child broke the cup.
+78	由 + agent + verb	Name the responsible agent in a formal passive-style description.	这本书由三位专家编写。	This book was written by three experts.
+79	把 + object + verb + 完	Show disposal of an affected object to completion.	把作业写完再玩。	Finish your homework before playing.
+79	把 + object + verb + 到	State the destination reached by an object.	请把箱子搬到楼上。	Please carry the box upstairs.
+79	把 + object + verb + 成	Express transformation of an object.	他把旧房子改成了书店。	He turned the old house into a bookshop.
+79	把 + object + verb + 给	Specify transfer to a recipient.	请把钥匙交给我。	Please hand the key to me.
+79	把 + object + verb + 好	Emphasize the result of completing an object task.	请把门关好。	Please close the door properly.
+80	给 + recipient + object	Introduce the receiver before what is transferred.	我给她一张票。	I gave her a ticket.
+80	送给 + recipient	State the recipient of a gift.	他把花送给妈妈。	He gave the flowers to his mother.
+80	递给 + recipient	Present handing something over.	请把纸递给我。	Please pass me the paper.
+80	还给 + owner	Return property to its owner.	我把书还给图书馆了。	I returned the book to the library.
+80	借给 versus 向 ... 借	Contrast lending and borrowing directions.	她向朋友借了一把伞。	She borrowed an umbrella from a friend.
+81	为 + person + 准备 + noun	Describe preparing something for a beneficiary	我们为客人准备了茶。	We prepared tea for the guests.
+81	替 + person + verb	Act in someone's place.	我替他值班。	I am covering his shift.
+81	为 + person + verb	Express action benefiting someone.	大家为他鼓掌。	Everyone applauded him.
+81	给 + person + 带来 + noun	Describe an action that brings someone a benefit	这项服务给大家带来了方便。	This service has made things more convenient for everyone.
+81	为了 + person	Express a motive for someone's benefit.	为了孩子，他们搬了家。	They moved for the sake of their children.
+82	跟 + person + verb	Identify a companion in an action.	我跟同事一起吃午饭。	I eat lunch with my colleague.
+82	和 + person + 一起	Explicitly express a joint action.	她和朋友一起旅行。	She travels with friends.
+82	用 + tool + verb	Identify the instrument used.	我用手机查地图。	I use my phone to check the map.
+82	拿 + tool + verb	Describe performing an action with a tool in hand.	他拿笔写字。	He writes with a pen.
+82	靠 + means	Express reliance on a means or resource.	他们靠种菜生活。	They make a living by growing vegetables.
+83	与其 ... 不如	Prefer a better option over another.	与其等车，不如走路。	Rather than wait for the bus, we should walk.
+83	宁可 ... 也不	Prefer one outcome rather than accept another.	我宁可晚点，也不想冒险。	I would rather be late than take a risk.
+83	不是 ... 就是	Present a restricted pair of alternatives.	他不是在家，就是在学校。	He is either at home or at school.
+83	或者 ... 或者	Present two possible actions within one choice	你或者写信，或者打电话。	You can write a letter or make a phone call.
+83	比起 ... 更	Prefer one alternative in comparison.	比起咖啡，我更喜欢茶。	I prefer tea to coffee.
+84	不但 ... 而且	Add a stronger or further positive claim.	他不但聪明，而且很勤奋。	He is not only clever but also hardworking.
+84	既 ... 又	Combine simultaneous properties.	这里既安静又方便。	This place is quiet and convenient.
+84	一方面 ... 另一方面	Balance two aspects of an argument.	一方面要省钱，另一方面要保证质量。	We must save money on one hand and ensure quality on the other.
+84	既 ... 也 ...	Accumulate two parallel qualities or costs	这个任务既费时间，也费精力。	This task requires both time and energy.
+84	不论 ... 都	Express a result holding across conditions.	不论多忙，他都锻炼。	No matter how busy he is, he exercises.
+85	即使 ... 也	Express a hypothetical concession.	即使失败了，我们也会再试。	Even if we fail, we will try again.
+85	哪怕 ... 也	Introduce an extreme hypothetical condition.	哪怕只剩一天，我也要完成。	Even if only one day remains, I will finish.
+85	尽管 ... 仍然	Contrast an admitted fact with a continuing outcome.	尽管很晚，他仍然在工作。	Although it was late, he was still working.
+85	无论 ... 都	Apply a conclusion across all possibilities.	无论谁来，我都欢迎。	Whoever comes, I will welcome them.
+85	再 ... 也	Express concession even at a greater degree.	再难我也要学会。	However hard it is, I will learn it.
+86	要是当时 ... 就	Imagine an alternative past condition.	要是当时早点走，就不会迟到了。	If we had left earlier then, we would not have been late.
+86	早知道 ... 就	Express regret based on hindsight.	早知道下雨，我就带伞了。	If I had known it would rain, I would have brought an umbrella.
+86	如果没有 ... 就	Imagine a situation without a past cause.	如果没有你的帮助，我就做不到。	Without your help I could not have done it.
+86	本来 ... 却	Contrast an original intention with an actual outcome.	我本来想去，却生病了。	I had intended to go, but got sick.
+86	差点儿	Describe a near event that did not happen.	我差点儿错过火车。	I nearly missed the train.
+87	假如 ... 那么	State a hypothetical premise and consequence.	假如你有机会，那么你会去吗？	If you had the chance, would you go?
+87	设想 + situation	Ask the listener to imagine a condition.	设想没有网络，我们怎么办？	Imagine there were no internet; what would we do?
+87	否则	Introduce a consequence if an action is not taken.	现在出发，否则赶不上车。	Leave now, or we will miss the bus.
+87	除非 ... 否则	Mark the only exception that avoids a result.	除非下雨，否则我们照常去。	Unless it rains, we will go as planned.
+87	万一	Introduce a low-probability possibility to prepare for.	万一下雨，我们就在室内见。	If it happens to rain, we will meet indoors.
+88	既然 ... 就	Draw a consequence from an accepted premise.	既然大家同意，就开始吧。	Since everyone agrees, let us begin.
+88	从 ... 可以推断	Introduce a conclusion inferred from evidence	从这些数据可以推断，需求在增长。	These figures suggest that demand is growing.
+88	由此可见	Explicitly state an inference from evidence.	由此可见，方法很有效。	This shows that the method is effective.
+88	可见	Draw a concise inference.	他每天练习，可见很认真。	He practises every day, so he is clearly serious.
+88	意味着	State what a fact implies.	价格上涨意味着成本增加。	Higher prices mean increased costs.
+89	然而	Introduce a formal contrast.	计划很好，然而时间不够。	The plan is good; however, there is not enough time.
+89	此外	Add another argument or fact.	此外，我们还需要更多人员。	In addition, we need more staff.
+89	况且	Add a supporting consideration to an argument	今天太晚了，况且外面下雨。	It is too late, and besides, it is raining.
+89	尤其是	Highlight one representative or important case.	我喜欢运动，尤其是游泳。	I like sports, especially swimming.
+89	总而言之	Summarize the overall argument.	总而言之，这个办法值得一试。	In short, this approach is worth trying.
+90	所谓 + noun	Introduce a term or nominal concept.	所谓成功，不只是赚钱。	So-called success is not just earning money.
+90	对于 + abstract topic	Frame an opinion about an abstract issue.	对于这个决定，我有不同看法。	I have a different view of this decision.
+90	有关 + topic + 的	Modify a noun by linking it to a topic.	有关教育的问题很复杂。	Issues concerning education are complex.
+90	具有 + quality	Formally attribute a property.	这种材料具有弹性。	This material has elasticity.
+90	作为 + role	Identify the capacity in which someone acts.	作为老师，她很有耐心。	As a teacher, she is very patient.
+91	Verb + 的 + noun	Use a relative clause before a noun.	我昨天买的书到了。	The book I bought yesterday arrived.
+91	拥有 + noun + 的 + noun	Form a relative noun phrase describing possession of a quality	拥有丰富经验的人更适合这份工作。	People with extensive experience are better suited to this job.
+91	值得 + verb	Describe an action as worthwhile.	这个问题值得讨论。	This question is worth discussing.
+91	值得 + noun + verb	Specify an activity meriting attention.	这本书值得一读。	This book is worth reading.
+91	对于 ... 来说	Set the perspective for a judgment.	对于初学者来说，这很难。	For beginners, this is difficult.
+92	的 after modifier	Omit a repeated noun after a clear modifier.	这件太贵了，我要便宜的。	This is too expensive; I want a cheaper one.
+92	方法 + noun	Make a noun phrase referring to a method	这种学习方法很有效。	This learning method is effective.
+92	动词 + 法	Create an abstract noun for a method.	这种做法很有效。	This approach is effective.
+92	Verb + 性	Express a property using a nominal suffix.	这个计划缺乏可行性。	This plan lacks feasibility.
+92	对 ... 的 + noun	Nominalize an attitude toward a topic.	我对语言的兴趣很大。	I have a strong interest in languages.
+93	Omit repeated subject	Leave understood subjects unspoken in sequence.	我买了票，然后进去了。	I bought a ticket and went in.
+93	Omit repeated object	Leave a referent implicit when already clear.	这本书我已经看过，不想再看。	I have read this book and do not want to read it again.
+93	Short answer + verb	Reply without repeating the entire question.	你去吗？去。	Are you going? Yes.
+93	Zero pronoun in discourse	Track an understood person without repeating their name.	小王来了，坐下就开始吃饭。	Xiao Wang arrived, sat down and started eating.
+93	省略 是 in informal answers	Give a concise identity response where context permits.	谁的书？我的。	Whose book? Mine.
+94	这个 for anaphora	Refer back to a mentioned object or issue.	这个我已经解释过了。	I have already explained this.
+94	那 for earlier discourse	Refer to an earlier proposition.	那我就放心了。	Then I can relax.
+94	因此 for a prior cause	Refer back to a reason already given.	因此我们改变了计划。	That is why we changed the plan.
+94	其中 for a subset	Pick out members of a previously named group.	来了十个人，其中三个是学生。	Ten people came, three of whom were students.
+94	上述 for prior written content	Reference earlier text in formal writing.	上述问题需要解决。	The aforementioned issues need resolving.
+95	首先	Begin an ordered explanation.	首先，我们检查数据。	First, we check the data.
+95	其次	Add a second supporting point.	其次，我们需要考虑成本。	Second, we need to consider cost.
+95	最后	Introduce the final point in a sequence.	最后，我想感谢大家。	Finally, I would like to thank everyone.
+95	接下来	Move to the next part of a structured presentation	接下来，我们讨论预算。	Next, we will discuss the budget.
+95	重点是	Introduce the main point of a presentation.	重点是如何解决问题。	The main point is how to solve the problem.
+96	麻烦 + person	Soften a request by recognizing an inconvenience.	麻烦你再说一遍。	Could you please repeat that?
+96	劳驾	Ask for help with a polite address.	劳驾，请问车站在哪儿？	Excuse me, where is the station?
+96	恳请	Make a respectful formal request	恳请您考虑这个建议。	I respectfully ask you to consider this suggestion.
+96	不妨	Gently recommend a course of action.	你不妨试试。	You might as well try it.
+96	恕我直言	Signal a candid but polite disagreement.	恕我直言，这个计划不现实。	Frankly, with respect, this plan is unrealistic.
+97	倒是	Mark an unexpected or corrective emphasis.	这个主意倒是不错。	This idea is actually quite good.
+97	可不是	Express emphatic agreement.	可不是，今天真冷。	Exactly, it is really cold today.
+97	偏偏	Stress an unwelcome coincidence.	偏偏今天停电了。	Of all days, the power went out today.
+97	竟然	Express surprise at an unexpected outcome.	他竟然忘了自己的生日。	He actually forgot his own birthday.
+97	难怪	Show that a surprising fact now makes sense.	难怪你这么高兴。	No wonder you are so happy.
+98	书面语 乃	Use a formal copular expression.	此乃重要问题。	This is an important issue.
+98	口语 挺 ... 的	Give a colloquial degree evaluation.	这家店挺不错的。	This shop is pretty good.
+98	书面语 由于	Introduce a formal cause.	由于天气原因，活动取消。	The event was cancelled due to the weather.
+98	口语 可	Add colloquial emphasis.	你可别忘了。	Do not forget, okay?
+98	书面语 此外	Add a formal supplementary point.	此外，还需进一步研究。	Furthermore, more research is needed.
+99	当时 ... 后来	Organize earlier and later narrative stages.	当时我很紧张，后来好多了。	I was nervous then but felt much better later.
+99	没想到	Present an unexpected twist.	没想到他已经知道了。	Unexpectedly, he already knew.
+99	过了一会儿	Move a narrative forward by a short interval.	过了一会儿，门开了。	After a while, the door opened.
+99	就在这时	Introduce an important moment in a narrative.	就在这时，电话响了。	Just then, the phone rang.
+99	最终	Present the final result of an extended process.	最终大家达成了协议。	Eventually, everyone reached an agreement.
+100	就 ... 而言	Set a specific criterion for an evaluation	就成本而言，这个方案更好。	In terms of cost, this plan is better.
+100	尽管 ... 还是	Integrate a concessive argument.	尽管证据有限，我们还是继续研究。	Although evidence is limited, we continue the study.
+100	如果 ... 就	Express a reasoned conditional recommendation.	如果需求增加，我们就扩大生产。	If demand increases, we will expand production.
+100	不仅 ... 还	Integrate additive evidence into an argument.	这个办法不仅省钱，还节省时间。	This method saves both money and time.
+100	综上所述	Draw an overall conclusion in formal writing.	综上所述，我们支持这项计划。	In conclusion, we support this plan.

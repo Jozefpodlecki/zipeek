@@ -1,0 +1,187 @@
+html, body {
+    height: 100%
+}
+
+body {
+    background: var(--canvas, #0b1120);
+    color: var(--text, #f1f5f9);
+    margin: 0;
+}
+
+#root { position: relative; z-index: 1; min-height: 100dvh; }
+.app-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; }
+:root[data-appearance-ready="true"] .app-backdrop { animation: appearance-reveal 420ms ease-out both; }
+@keyframes appearance-reveal { from { opacity: 0; } to { opacity: 1; } }
+.background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.backdrop-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--backdrop-start, rgba(250, 248, 247, .72)), var(--backdrop-end, rgba(250, 248, 247, .56)));
+}
+:root.dark .backdrop-shade {
+    background: linear-gradient(135deg, var(--backdrop-start, rgba(10, 13, 24, .74)), var(--backdrop-end, rgba(10, 13, 24, .67)));
+}
+
+.loading-screen { display: grid; place-items: center; min-height: 100dvh; padding: 1.5rem; box-sizing: border-box; }
+.loading-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.75rem 2.25rem; border: 1px solid var(--border, #cbd5e1); border-radius: 1rem; background: var(--surface, rgba(255, 255, 255, .86)); color: var(--text, #0f172a); backdrop-filter: blur(12px); box-shadow: 0 8px 32px #00000014; font-family: ui-sans-serif, system-ui, sans-serif; }
+:root.dark .loading-panel { background: var(--surface, rgba(15, 23, 42, .86)); color: var(--text, #f1f5f9); }
+.loading-panel p { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.5; }
+.loading-panel .loading-detail { max-width: 19rem; text-align: center; font-size: .875rem; font-weight: 400; opacity: .8; }
+.loading-spinner { display: block; width: 3rem; height: 3rem; border: 2px solid var(--border, #cbd5e1); border-top-color: var(--accent, #2563eb); border-radius: 50%; animation: loading-turn .8s linear infinite; }
+.loading-screen-inline { min-height: min(24rem, 60dvh); }
+@keyframes loading-turn { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner { animation: none; }
+    :root[data-appearance-ready="true"] .app-backdrop { animation: none; opacity: 1; }
+}
+
+#error {
+    text-align: center;
+}
+
+#error p {
+    margin: 0;
+    color: #ccc;
+    font-size: 16px;
+}
+
+#error button {
+    font-size: 20px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #ffffff22;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#error button:hover {
+    background: #ffffff33;
+}
+
+#error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    
+    color: var(--muted, #a0aec0);
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.error-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    background: #000000AA;
+    padding: 50px;
+}
+
+.error-icon {
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.icon-bg {
+    fill: rgba(255, 255, 255, 0.08);
+}
+
+.icon-line {
+    stroke: #ffffffcc;
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
+}
+
+
+.icon-dot {
+    fill: #ffffffcc;
+}
+
+#error[hidden] { display: none; }
+.startup-error { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1.5rem; background: var(--canvas, #0b1120); }
+.startup-noscript { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 2rem; background: #0b1120; color: #f1f5f9; font-family: system-ui, sans-serif; text-align: center; }
+
+@keyframes practice-creature-arrive {
+  from { opacity: 0; transform: translateY(16px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes practice-creature-awaken {
+  from { opacity: .65; filter: saturate(.9); }
+  to { opacity: 1; filter: saturate(1); }
+}
+
+@keyframes practice-creature-complete {
+  0% { filter: brightness(1.25) drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 55%, transparent)); }
+  100% { filter: brightness(1) drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 22%, transparent)); }
+}
+
+.practice-creature-frame {
+  isolation: isolate;
+  animation: practice-creature-arrive 700ms cubic-bezier(.2,.7,.2,1) both;
+}
+
+.practice-creature-underlay {
+  opacity: .35;
+  filter: grayscale(1) saturate(.3) brightness(.9);
+}
+
+.practice-creature-reveal {
+  --creature-front: var(--creature-progress, -6%);
+  --creature-direction: to top;
+  -webkit-mask-image: linear-gradient(var(--creature-direction),
+    #000 0%,
+    #000 calc(var(--creature-front, -6%) - 5%),
+    rgba(0, 0, 0, .94) calc(var(--creature-front, -6%) - 2.5%),
+    rgba(0, 0, 0, .55) var(--creature-front, -6%),
+    rgba(0, 0, 0, .12) calc(var(--creature-front, -6%) + 2.5%),
+    transparent calc(var(--creature-front, -6%) + 5%));
+  mask-image: linear-gradient(var(--creature-direction),
+    #000 0%,
+    #000 calc(var(--creature-front, -6%) - 5%),
+    rgba(0, 0, 0, .94) calc(var(--creature-front, -6%) - 2.5%),
+    rgba(0, 0, 0, .55) var(--creature-front, -6%),
+    rgba(0, 0, 0, .12) calc(var(--creature-front, -6%) + 2.5%),
+    transparent calc(var(--creature-front, -6%) + 5%));
+}
+
+[data-creature-orientation="horizontal"] .practice-creature-reveal {
+  --creature-direction: to right;
+}
+
+[data-creature-orientation="horizontal"] .practice-creature-frame {
+  max-height: 100%;
+}
+
+[data-creature-orientation="horizontal"] .practice-creature-underlay {
+  opacity: .38;
+}
+
+.practice-creature-illuminated {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 22%, transparent));
+  animation: practice-creature-awaken 800ms ease-out both;
+}
+
+.practice-creature-reveal[data-illumination-complete] .practice-creature-illuminated {
+  animation: practice-creature-complete 1150ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-creature-frame, .practice-creature-illuminated,
+  .practice-creature-reveal[data-illumination-complete] .practice-creature-illuminated { animation: none; }
+  .practice-creature-reveal { --creature-front: var(--creature-target, -6%); }
+}
+

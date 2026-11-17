@@ -1,0 +1,448 @@
+[
+  {
+    "id": "11",
+    "parent_id": null,
+    "hanzi": "北京市",
+    "pinyin": "Běijīng Shì",
+    "english": "Beijing",
+    "capital_hanzi": "北京市",
+    "capital_pinyin": "Běijīng Shì",
+    "kind": "municipality",
+    "source_names": [
+      "Beijing"
+    ]
+  },
+  {
+    "id": "12",
+    "parent_id": null,
+    "hanzi": "天津市",
+    "pinyin": "Tiānjīn Shì",
+    "english": "Tianjin",
+    "capital_hanzi": "天津市",
+    "capital_pinyin": "Tiānjīn Shì",
+    "kind": "municipality",
+    "source_names": [
+      "Tianjin"
+    ]
+  },
+  {
+    "id": "13",
+    "parent_id": null,
+    "hanzi": "河北省",
+    "pinyin": "Héběi Shěng",
+    "english": "Hebei",
+    "capital_hanzi": "石家庄市",
+    "capital_pinyin": "Shíjiāzhuāng Shì",
+    "kind": "province",
+    "source_names": [
+      "Hebei"
+    ]
+  },
+  {
+    "id": "14",
+    "parent_id": null,
+    "hanzi": "山西省",
+    "pinyin": "Shānxī Shěng",
+    "english": "Shanxi",
+    "capital_hanzi": "太原市",
+    "capital_pinyin": "Tàiyuán Shì",
+    "kind": "province",
+    "source_names": [
+      "Shanxi"
+    ]
+  },
+  {
+    "id": "15",
+    "parent_id": null,
+    "hanzi": "内蒙古自治区",
+    "pinyin": "Nèi Měnggǔ Zìzhìqū",
+    "english": "Inner Mongolia",
+    "capital_hanzi": "呼和浩特市",
+    "capital_pinyin": "Hūhéhàotè Shì",
+    "kind": "autonomous_region",
+    "source_names": [
+      "Inner Mongolia",
+      "Nei Mongol"
+    ]
+  },
+  {
+    "id": "21",
+    "parent_id": null,
+    "hanzi": "辽宁省",
+    "pinyin": "Liáoníng Shěng",
+    "english": "Liaoning",
+    "capital_hanzi": "沈阳市",
+    "capital_pinyin": "Shěnyáng Shì",
+    "kind": "province",
+    "source_names": [
+      "Liaoning"
+    ]
+  },
+  {
+    "id": "22",
+    "parent_id": null,
+    "hanzi": "吉林省",
+    "pinyin": "Jílín Shěng",
+    "english": "Jilin",
+    "capital_hanzi": "长春市",
+    "capital_pinyin": "Chángchūn Shì",
+    "kind": "province",
+    "source_names": [
+      "Jilin"
+    ]
+  },
+  {
+    "id": "23",
+    "parent_id": null,
+    "hanzi": "黑龙江省",
+    "pinyin": "Hēilóngjiāng Shěng",
+    "english": "Heilongjiang",
+    "capital_hanzi": "哈尔滨市",
+    "capital_pinyin": "Hā’ěrbīn Shì",
+    "kind": "province",
+    "source_names": [
+      "Heilongjiang"
+    ]
+  },
+  {
+    "id": "31",
+    "parent_id": null,
+    "hanzi": "上海市",
+    "pinyin": "Shànghǎi Shì",
+    "english": "Shanghai",
+    "capital_hanzi": "上海市",
+    "capital_pinyin": "Shànghǎi Shì",
+    "kind": "municipality",
+    "source_names": [
+      "Shanghai"
+    ]
+  },
+  {
+    "id": "32",
+    "parent_id": null,
+    "hanzi": "江苏省",
+    "pinyin": "Jiāngsū Shěng",
+    "english": "Jiangsu",
+    "capital_hanzi": "南京市",
+    "capital_pinyin": "Nánjīng Shì",
+    "kind": "province",
+    "source_names": [
+      "Jiangsu"
+    ]
+  },
+  {
+    "id": "33",
+    "parent_id": null,
+    "hanzi": "浙江省",
+    "pinyin": "Zhèjiāng Shěng",
+    "english": "Zhejiang",
+    "capital_hanzi": "杭州市",
+    "capital_pinyin": "Hángzhōu Shì",
+    "kind": "province",
+    "source_names": [
+      "Zhejiang"
+    ]
+  },
+  {
+    "id": "34",
+    "parent_id": null,
+    "hanzi": "安徽省",
+    "pinyin": "Ānhuī Shěng",
+    "english": "Anhui",
+    "capital_hanzi": "合肥市",
+    "capital_pinyin": "Héféi Shì",
+    "kind": "province",
+    "source_names": [
+      "Anhui"
+    ]
+  },
+  {
+    "id": "35",
+    "parent_id": null,
+    "hanzi": "福建省",
+    "pinyin": "Fújiàn Shěng",
+    "english": "Fujian",
+    "capital_hanzi": "福州市",
+    "capital_pinyin": "Fúzhōu Shì",
+    "kind": "province",
+    "source_names": [
+      "Fujian"
+    ]
+  },
+  {
+    "id": "36",
+    "parent_id": null,
+    "hanzi": "江西省",
+    "pinyin": "Jiāngxī Shěng",
+    "english": "Jiangxi",
+    "capital_hanzi": "南昌市",
+    "capital_pinyin": "Nánchāng Shì",
+    "kind": "province",
+    "source_names": [
+      "Jiangxi"
+    ]
+  },
+  {
+    "id": "37",
+    "parent_id": null,
+    "hanzi": "山东省",
+    "pinyin": "Shāndōng Shěng",
+    "english": "Shandong",
+    "capital_hanzi": "济南市",
+    "capital_pinyin": "Jǐnán Shì",
+    "kind": "province",
+    "source_names": [
+      "Shandong"
+    ]
+  },
+  {
+    "id": "41",
+    "parent_id": null,
+    "hanzi": "河南省",
+    "pinyin": "Hénán Shěng",
+    "english": "Henan",
+    "capital_hanzi": "郑州市",
+    "capital_pinyin": "Zhèngzhōu Shì",
+    "kind": "province",
+    "source_names": [
+      "Henan"
+    ]
+  },
+  {
+    "id": "42",
+    "parent_id": null,
+    "hanzi": "湖北省",
+    "pinyin": "Húběi Shěng",
+    "english": "Hubei",
+    "capital_hanzi": "武汉市",
+    "capital_pinyin": "Wǔhàn Shì",
+    "kind": "province",
+    "source_names": [
+      "Hubei"
+    ]
+  },
+  {
+    "id": "43",
+    "parent_id": null,
+    "hanzi": "湖南省",
+    "pinyin": "Húnán Shěng",
+    "english": "Hunan",
+    "capital_hanzi": "长沙市",
+    "capital_pinyin": "Chángshā Shì",
+    "kind": "province",
+    "source_names": [
+      "Hunan"
+    ]
+  },
+  {
+    "id": "44",
+    "parent_id": null,
+    "hanzi": "广东省",
+    "pinyin": "Guǎngdōng Shěng",
+    "english": "Guangdong",
+    "capital_hanzi": "广州市",
+    "capital_pinyin": "Guǎngzhōu Shì",
+    "kind": "province",
+    "source_names": [
+      "Guangdong"
+    ]
+  },
+  {
+    "id": "45",
+    "parent_id": null,
+    "hanzi": "广西壮族自治区",
+    "pinyin": "Guǎngxī Zhuàngzú Zìzhìqū",
+    "english": "Guangxi",
+    "capital_hanzi": "南宁市",
+    "capital_pinyin": "Nánníng Shì",
+    "kind": "autonomous_region",
+    "source_names": [
+      "Guangxi"
+    ]
+  },
+  {
+    "id": "46",
+    "parent_id": null,
+    "hanzi": "海南省",
+    "pinyin": "Hǎinán Shěng",
+    "english": "Hainan",
+    "capital_hanzi": "海口市",
+    "capital_pinyin": "Hǎikǒu Shì",
+    "kind": "province",
+    "source_names": [
+      "Hainan"
+    ]
+  },
+  {
+    "id": "50",
+    "parent_id": null,
+    "hanzi": "重庆市",
+    "pinyin": "Chóngqìng Shì",
+    "english": "Chongqing",
+    "capital_hanzi": "重庆市",
+    "capital_pinyin": "Chóngqìng Shì",
+    "kind": "municipality",
+    "source_names": [
+      "Chongqing"
+    ]
+  },
+  {
+    "id": "51",
+    "parent_id": null,
+    "hanzi": "四川省",
+    "pinyin": "Sìchuān Shěng",
+    "english": "Sichuan",
+    "capital_hanzi": "成都市",
+    "capital_pinyin": "Chéngdū Shì",
+    "kind": "province",
+    "source_names": [
+      "Sichuan"
+    ]
+  },
+  {
+    "id": "52",
+    "parent_id": null,
+    "hanzi": "贵州省",
+    "pinyin": "Guìzhōu Shěng",
+    "english": "Guizhou",
+    "capital_hanzi": "贵阳市",
+    "capital_pinyin": "Guìyáng Shì",
+    "kind": "province",
+    "source_names": [
+      "Guizhou"
+    ]
+  },
+  {
+    "id": "53",
+    "parent_id": null,
+    "hanzi": "云南省",
+    "pinyin": "Yúnnán Shěng",
+    "english": "Yunnan",
+    "capital_hanzi": "昆明市",
+    "capital_pinyin": "Kūnmíng Shì",
+    "kind": "province",
+    "source_names": [
+      "Yunnan"
+    ]
+  },
+  {
+    "id": "54",
+    "parent_id": null,
+    "hanzi": "西藏自治区",
+    "pinyin": "Xīzàng Zìzhìqū",
+    "english": "Tibet",
+    "capital_hanzi": "拉萨市",
+    "capital_pinyin": "Lāsà Shì",
+    "kind": "autonomous_region",
+    "source_names": [
+      "Tibet",
+      "Xizang"
+    ]
+  },
+  {
+    "id": "61",
+    "parent_id": null,
+    "hanzi": "陕西省",
+    "pinyin": "Shǎnxī Shěng",
+    "english": "Shaanxi",
+    "capital_hanzi": "西安市",
+    "capital_pinyin": "Xī’ān Shì",
+    "kind": "province",
+    "source_names": [
+      "Shaanxi"
+    ]
+  },
+  {
+    "id": "62",
+    "parent_id": null,
+    "hanzi": "甘肃省",
+    "pinyin": "Gānsù Shěng",
+    "english": "Gansu",
+    "capital_hanzi": "兰州市",
+    "capital_pinyin": "Lánzhōu Shì",
+    "kind": "province",
+    "source_names": [
+      "Gansu"
+    ]
+  },
+  {
+    "id": "63",
+    "parent_id": null,
+    "hanzi": "青海省",
+    "pinyin": "Qīnghǎi Shěng",
+    "english": "Qinghai",
+    "capital_hanzi": "西宁市",
+    "capital_pinyin": "Xīníng Shì",
+    "kind": "province",
+    "source_names": [
+      "Qinghai"
+    ]
+  },
+  {
+    "id": "64",
+    "parent_id": null,
+    "hanzi": "宁夏回族自治区",
+    "pinyin": "Níngxià Huízú Zìzhìqū",
+    "english": "Ningxia",
+    "capital_hanzi": "银川市",
+    "capital_pinyin": "Yínchuān Shì",
+    "kind": "autonomous_region",
+    "source_names": [
+      "Ningxia"
+    ]
+  },
+  {
+    "id": "65",
+    "parent_id": null,
+    "hanzi": "新疆维吾尔自治区",
+    "pinyin": "Xīnjiāng Wéiwú’ěr Zìzhìqū",
+    "english": "Xinjiang",
+    "capital_hanzi": "乌鲁木齐市",
+    "capital_pinyin": "Wūlǔmùqí Shì",
+    "kind": "autonomous_region",
+    "source_names": [
+      "Xinjiang"
+    ]
+  },
+  {
+    "id": "71",
+    "parent_id": null,
+    "hanzi": "台湾省",
+    "pinyin": "Táiwān Shěng",
+    "english": "Taiwan",
+    "capital_hanzi": "台北市",
+    "capital_pinyin": "Táiběi Shì",
+    "kind": "province",
+    "source_names": [
+      "Taiwan"
+    ]
+  },
+  {
+    "id": "81",
+    "parent_id": null,
+    "hanzi": "香港特别行政区",
+    "pinyin": "Xiānggǎng Tèbié Xíngzhèngqū",
+    "english": "Hong Kong",
+    "capital_hanzi": null,
+    "capital_pinyin": null,
+    "kind": "special_administrative_region",
+    "source_names": [
+      "Hong Kong",
+      "Hongkong"
+    ]
+  },
+  {
+    "id": "82",
+    "parent_id": null,
+    "hanzi": "澳门特别行政区",
+    "pinyin": "Àomén Tèbié Xíngzhèngqū",
+    "english": "Macau",
+    "capital_hanzi": null,
+    "capital_pinyin": null,
+    "kind": "special_administrative_region",
+    "source_names": [
+      "Macau",
+      "Macao"
+    ]
+  }
+]

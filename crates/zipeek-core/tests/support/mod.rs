@@ -37,12 +37,12 @@ pub fn vectors() -> Vec<(String, Round)> {
     let words = words();
     let pool = pool(&words);
     let variants = [
-        ExerciseVariant::EngPinyin,
-        ExerciseVariant::PinyinHanzi,
-        ExerciseVariant::HanziEng,
-        ExerciseVariant::HanziToMeaning,
-        ExerciseVariant::MeaningToHanzi,
-        ExerciseVariant::MeaningToPinyin,
+        ExerciseVariant::MatchingEnglishPinyin,
+        ExerciseVariant::MatchingPinyinHanzi,
+        ExerciseVariant::MatchingHanziMeaning,
+        ExerciseVariant::MultipleChoiceHanziMeaning,
+        ExerciseVariant::MultipleChoiceMeaningHanzi,
+        ExerciseVariant::MultipleChoiceMeaningPinyin,
     ];
     let mut vectors = Vec::new();
     for variant in variants {
@@ -78,7 +78,7 @@ pub fn vectors() -> Vec<(String, Round)> {
         ("pos", "verb"),
         ("offset", "999"),
     ])
-    .normalize(ExerciseVariant::EngPinyin, |_| Some(&bad));
+    .normalize(ExerciseVariant::MatchingEnglishPinyin, |_| Some(&bad));
     let contexts = [ContextPool {
         filter: PracticeFilter::default(),
         pool: pool.clone(),
@@ -95,7 +95,7 @@ pub fn vectors() -> Vec<(String, Round)> {
         };
         vectors.push((
             name.to_owned(),
-            build_round(candidates, ExerciseVariant::EngPinyin, &query).unwrap(),
+            build_round(candidates, ExerciseVariant::MatchingEnglishPinyin, &query).unwrap(),
         ));
     }
     let mut recovery = sparse_recovery(&words);
@@ -116,7 +116,7 @@ pub fn vectors() -> Vec<(String, Round)> {
                 recovery: &recovery,
                 recovered_views: &tenth_contexts,
             },
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             &query,
         )
         .unwrap(),
@@ -127,7 +127,9 @@ pub fn vectors() -> Vec<(String, Round)> {
     missing_english.english = None;
     let english_query =
         ParsedPracticeQuery::from_pairs([("seed", "999"), ("level", "3"), ("pos", "verb")])
-            .normalize(ExerciseVariant::EngPinyin, |_| Some(&missing_english));
+            .normalize(ExerciseVariant::MatchingEnglishPinyin, |_| {
+                Some(&missing_english)
+            });
     vectors.push((
         "recovery-missing-english".to_owned(),
         build_round(
@@ -137,7 +139,7 @@ pub fn vectors() -> Vec<(String, Round)> {
                 recovery: &words,
                 recovered_views: &contexts,
             },
-            ExerciseVariant::EngPinyin,
+            ExerciseVariant::MatchingEnglishPinyin,
             &english_query,
         )
         .unwrap(),
@@ -154,7 +156,7 @@ pub fn vectors() -> Vec<(String, Round)> {
         word.english = Some("same".to_owned());
     }
     let query = ParsedPracticeQuery::from_pairs([("offset", "19")])
-        .normalize(ExerciseVariant::HanziEng, |_| None);
+        .normalize(ExerciseVariant::MatchingHanziMeaning, |_| None);
     vectors.push((
         "sliding-fallback".to_owned(),
         build_round(
@@ -164,7 +166,7 @@ pub fn vectors() -> Vec<(String, Round)> {
                 recovery: &[],
                 recovered_views: &[],
             },
-            ExerciseVariant::HanziEng,
+            ExerciseVariant::MatchingHanziMeaning,
             &query,
         )
         .unwrap(),
@@ -175,7 +177,8 @@ pub fn vectors() -> Vec<(String, Round)> {
     }
     let mut draw_pool = self::pool(&draw_words);
     draw_pool.strict.truncate(12);
-    let draw_query = ParsedPracticeQuery::default().normalize(ExerciseVariant::HanziEng, |_| None);
+    let draw_query =
+        ParsedPracticeQuery::default().normalize(ExerciseVariant::MatchingHanziMeaning, |_| None);
     vectors.push((
         "distractor-fallback".to_owned(),
         build_round(
@@ -185,7 +188,7 @@ pub fn vectors() -> Vec<(String, Round)> {
                 recovery: &[],
                 recovered_views: &[],
             },
-            ExerciseVariant::HanziEng,
+            ExerciseVariant::MatchingHanziMeaning,
             &draw_query,
         )
         .unwrap(),

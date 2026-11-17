@@ -7,46 +7,355 @@ description = "List the explicit database and development tasks"
 command = "cargo"
 args = ["make", "--list-all-steps"]
 
+[tasks.duckdb-env]
+description = "Resolve the pinned Windows DuckDB import library and runtime DLL for native generator tasks"
+condition = { platforms = ["windows"] }
+script_runner = "@duckscript"
+script = '''
+root = get_env CARGO_MAKE_WORKING_DIRECTORY
+configured = get_env DUCKDB_LIB_DIR
+if is_empty ${configured}
+    directory = set "${root}/target/duckdb-download/x86_64-pc-windows-msvc/v2.0.0"
+else
+    directory = set "${configured}"
+end
+import_library = set "${directory}/duckdb.lib"
+runtime_library = set "${directory}/duckdb.dll"
+import_exists = is_path_exists ${import_library}
+dll_exists = is_path_exists ${runtime_library}
+if not ${import_exists}
+    echo "Missing DuckDB v2.0.0 import library: ${import_library}"
+    exit 1
+end
+if not ${dll_exists}
+    echo "Missing DuckDB v2.0.0 runtime library: ${runtime_library}"
+    exit 1
+end
+set_env DUCKDB_LIB_DIR "${directory}"
+old_path = get_env PATH
+set_env PATH "${directory};${old_path}"
+'''
+
 [tasks.db-check]
+dependencies = ["duckdb-env"]
 description = "Validate pinned inputs and import in memory; write no database"
 command = "cargo"
-args = ["run", "-p", "db-gen", "--locked", "--", "check"]
+args = ["run", "--quiet", "--release", "-p", "zipeek-db-gen", "--locked", "--", "check"]
 
 [tasks.db-browse-check]
 description = "Verify the installed dictionary has the normalized Browse tables"
 command = "node"
 args = ["scripts/db-workflow.cjs", "browse-check"]
 
+[tasks.db-generator-build]
+dependencies = ["duckdb-env"]
+description = "Build native dictionary generator before CLI orchestration"
+command = "cargo"
+args = ["build", "--quiet", "--release", "--locked", "-p", "zipeek-db-gen"]
+
 [tasks.db-generate]
-description = "Generate and validate a fresh candidate bundle; print its paths"
-command = "node"
-args = ["scripts/db-workflow.cjs", "generate"]
+description = "Generate and validate a fresh dictionary candidate using native Rust"
+dependencies = ["db-generator-build"]
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "db-generate"]
 
 [tasks.db-ai-smoke]
-description = "Test one live streamed LM Studio response and strict classification validation without database writes"
-command = "node"
-args = ["scripts/db-ai-workflow.cjs", "smoke"]
+dependencies = ["duckdb-env"]
+description = "Test a single sense and 100 real imported senses in one LM Studio batch without database/cache writes"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-db-gen", "--locked", "--", "ai-workflow", "--smoke"]
+
+[tasks.db-classify-cache]
+dependencies = ["duckdb-env"]
+description = "Prepare/validate a classification cache and exit, releasing DuckDB before the next Cargo build"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-db-gen", "--locked", "--", "ai-workflow", "--classify-only"]
+
+[tasks.db-generate-enriched]
+description = "Generate a classified candidate from the validated cache using Rust"
+dependencies = ["db-generator-build"]
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "db-generate", "--selected-classification-cache"]
+
+[tasks.db-classify]
+description = "Prepare classifications, then generate an enriched candidate in a separate process; never install"
+dependencies = ["db-classify-cache", "db-generate-enriched"]
+
+[tasks.db-install-enriched]
+description = "Install only an enriched candidate after verifying the bundle"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "db-install", "--require-enrichment"]
 
 [tasks.db-full]
-description = "Resume local AI sense classification, generate an enriched dictionary, validate and install atomically"
-command = "node"
-args = ["scripts/db-ai-workflow.cjs"]
+description = "Offline classification, enriched generation and verified atomic installation without nested Cargo builds"
+dependencies = ["db-classify", "db-compress", "db-install-enriched"]
 
 [tasks.db-full-dev]
-description = "Complete the full AI-enriched database workflow, then start Trunk"
+description = "Generate and install the offline-classified database, then start Trunk"
 dependencies = ["db-full", "serve"]
 
 [tasks.db-install]
-description = "Install the latest verified full bundle with backup and rollback"
+description = "Install the latest verified full bundle using native zipeek-cli"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "db-install"]
+
+[tasks.web-install]
+description = "Install locked npm dependencies explicitly, never during a Trunk build"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "install"]
+
+[tasks.prepare-duckdb]
+description = "Prepare DuckDB and Arrow vendor assets using Rust"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "prepare-duckdb"]
+
+[tasks.prepare-summary]
+description = "Prepare summary vendor bundle only when its inputs change"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "prepare-summary"]
+
+[tasks.prepare-assets]
+description = "Prepare or reuse the DuckDB and summary vendor bundles"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "prepare"]
+
+[tasks.prepare-hanzi]
+description = "Prepare licensed Hanzi reference assets using Rust; sparse-clones the upstream data/ and ARPHICPL.TXT on first run"
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "hanzi", "prepare"]
+
+[tasks.setup-all]
+description = "Set up web assets, backgrounds and Hanzi references (Rust downloads only licensed upstream data and notice)"
+dependencies = ["setup", "prepare-backgrounds", "prepare-hanzi", "docs"]
+
+[tasks.verify-assets]
+description = "Fail fast if web vendor assets are absent or stale"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "verify"]
+
+[tasks.setup]
+description = "Explicit first-time npm install and vendor preparation"
+dependencies = ["web-install", "prepare-assets"]
+
+[tasks.docs]
+description = "Generate the Docs search index; Trunk copies the source docs tree directly"
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "build", "docs"]
+
+[tasks.docs-validate]
+description = "Validate generated Docs index, local links and screenshot references"
 command = "node"
-args = ["scripts/db-workflow.cjs", "install"]
+args = ["scripts/docs-validate.cjs"]
 
 [tasks.serve]
-description = "Serve the current installed bundle at http://localhost:1420"
-cwd = "crates/web"
+description = "Verify prepared vendor assets and serve at http://localhost:1420"
+dependencies = ["verify-assets"]
+cwd = "crates/zipeek-web"
 command = "trunk"
 args = ["serve"]
 
 [tasks.dev]
 description = "Generate, install the complete bundle, then start Trunk"
-dependencies = ["db-generate", "db-install", "serve"]
+dependencies = ["db-generate", "db-compress", "db-install", "serve"]
+
+[tasks.desktop-servers-build]
+description = "Compile debug AI and image server executables"
+command = "cargo"
+args = ["build", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server"]
+
+[tasks.desktop-sidecars]
+description = "Build and stage both debug Rust servers as Tauri sidecars"
+dependencies = ["desktop-servers-build"]
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "desktop-sidecars"]
+
+[tasks.desktop-servers-build-release]
+description = "Compile release AI and image server executables"
+command = "cargo"
+args = ["build", "--release", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server"]
+
+[tasks.desktop-sidecars-release]
+description = "Build and stage release Rust servers as Tauri sidecars"
+dependencies = ["desktop-servers-build-release"]
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "desktop-sidecars", "--release"]
+
+[tasks.desktop-dev]
+description = "Build debug sidecars and launch Tauri desktop development"
+dependencies = ["duckdb-env", "desktop-sidecars", "docs", "verify-assets"]
+cwd = "crates/zipeek-app"
+command = "cargo"
+args = ["tauri", "dev"]
+
+[tasks.desktop-build]
+description = "Build release sidecars and package the Tauri desktop installer"
+dependencies = ["duckdb-env", "desktop-sidecars-release", "docs", "verify-assets"]
+cwd = "crates/zipeek-app"
+command = "cargo"
+args = ["tauri", "build"]
+
+[tasks.image-server]
+description = "Run the loopback-only image service (placeholder backend by default)"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-image-server", "--"]
+
+[tasks.image-server-sdxl]
+description = "Run local CUDA SDXL Base inference using files in ZIPEEK_IMAGE_MODEL_DIR (default workspace models/sdxl)"
+env = { ZIPEEK_IMAGE_BACKEND = "sdxl" }
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-image-server", "--"]
+
+[tasks.image-server-test]
+description = "Run image-server unit tests"
+command = "cargo"
+args = ["test", "-p", "zipeek-image-server"]
+
+[tasks.pack]
+description = "Package clean source archive with native zipeek-cli"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "pack"]
+
+[tasks.e2e-evidence-audit-tests]
+description = "Run offline E2E evidence integrity tests without Rust or a browser"
+command = "node"
+args = ["--test", "scripts/tests/e2e-evidence-audit.test.cjs"]
+
+[tasks.pack-e2e]
+description = "Package all E2E suites from the latest clean invocation for upload"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "pack-e2e", "--all"]
+
+[tasks.unpack]
+description = "Restore latest numbered Zipeek release or WIP checkpoint from Downloads with managed source backups"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "unpack"]
+
+[tasks.db-compress]
+description = "Gzip the latest verified dictionary candidate and update its manifest using native Rust"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "db-compress"]
+
+# R235: one local release gate, matching the mandatory CI quality checks.
+# Run before creating or publishing a numbered source archive.
+[tasks.pedagogy-worker]
+description = "Build pinned isolated Rust/WASM pedagogy Worker bindings via zipeek-cli"
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "build", "pedagogy-worker"]
+
+[tasks.asset-integrity-source]
+description = "Check source manifest hashes and identify generated assets still required for deployment"
+command = "node"
+args = ["scripts/asset-integrity-audit.cjs", "--source"]
+
+[tasks.asset-integrity-deploy]
+description = "Reject missing or mismatched dictionary, worker and geography assets before deployment"
+command = "node"
+args = ["scripts/asset-integrity-audit.cjs", "--deploy"]
+
+[tasks.asset-integrity-tests]
+description = "Run offline generated-asset integrity audit regression tests"
+command = "node"
+args = ["--test", "scripts/tests/asset-integrity-audit.test.cjs"]
+
+[tasks.preflight-source]
+dependencies = ["asset-integrity-source"]
+description = "Verify complete Docs publication, Courses artwork, and worker bootstrap (bindings optional)"
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "build", "verify-assets"]
+
+[tasks.preflight-deploy]
+dependencies = ["asset-integrity-deploy"]
+description = "Verify Docs, Courses artwork and generated Rust/WASM worker assets before Trunk"
+command = "cargo"
+args = ["run", "--locked", "-p", "zipeek-cli", "--", "build", "verify-assets", "--require-worker"]
+
+[tasks.release-format]
+command = "cargo"
+args = ["fmt", "--all", "--", "--check"]
+
+[tasks.release-native]
+command = "cargo"
+args = ["check", "--workspace", "--locked"]
+
+[tasks.release-wasm]
+command = "cargo"
+args = ["check", "-p", "zipeek-web", "--target", "wasm32-unknown-unknown", "--locked"]
+
+[tasks.release-clippy]
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"]
+
+[tasks.release-check]
+description = "Required Rust formatting, native/WASM compilation, and Clippy checks before packaging"
+dependencies = ["release-format", "release-native", "release-wasm", "release-clippy"]
+
+[tasks.prepare-backgrounds]
+description = "Validate bundled WebP backgrounds and embed the Lavender first-paint image using the Rust CLI"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "prepare-backgrounds"]
+
+[tasks.install]
+description = "Prepare reproducible web assets including optimized theme backgrounds"
+dependencies = ["prepare-assets"]
+
+[tasks.e2e-wasm]
+description = "Validate the browser WASM application before E2E compilation"
+command = "cargo"
+args = ["check", "--locked", "--target", "wasm32-unknown-unknown", "-p", "zipeek-web"]
+
+[tasks.e2e-compile]
+description = "Compile all E2E targets after checking the browser WASM application"
+dependencies = ["e2e-wasm"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--tests", "--no-run"]
+
+[tasks.e2e-clean]
+description = "Remove old E2E evidence before starting a full managed test invocation"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "e2e-clean"]
+
+[tasks.e2e-full]
+description = "Run all managed Chrome E2E suites, including root and Pages routes, accessibility and interactive journeys"
+dependencies = ["e2e-compile", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--tests", "--", "--test-threads=1", "--nocapture"]
+
+[tasks.e2e-games-and-services]
+description = "Run extended browser E2E journeys for Time Weaver, Icon Pairs and web/native Settings isolation"
+dependencies = ["e2e-compile", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "time_weaver_options", "--test", "icon_pairs_journey", "--test", "browser_native_services", "--", "--test-threads=1", "--nocapture"]
+
+[tasks.e2e-full-standard]
+description = "Explicit opt-in standard learner journey; captures screenshots and fails until scoring and AI exercise finish gates exist"
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "full_run_standard", "--", "--ignored", "--nocapture"]
+
+[tasks.e2e-full-pedagogical]
+description = "Explicit opt-in pedagogical endurance journey; blocked until verified evidence and Golden Dragon are implemented"
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "full_run_pedagogical", "--", "--ignored", "--nocapture"]
+
+[tasks.e2e-learning-header-tabs]
+description = "Check learning dragon, Practice shell, and duplicate browser tab presence"
+dependencies = ["e2e-wasm", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "learning_header_tabs", "--", "--test-threads=1", "--nocapture"]
+
+[tasks.e2e-exercise-types-and-courses]
+description = "Check all Practice exercise selection/configuration, authored exercise input/feedback, and all six Pinyin lessons"
+dependencies = ["e2e-wasm", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "exercise_type_journeys", "--test", "course_interactions", "--test", "exercise_interactions", "--test", "practice_answer_options", "--", "--test-threads=1", "--nocapture"]
+
+[tasks.e2e-ai-games-and-exercise-completion]
+description = "Complete deterministic AI mini-games and verify authored Practice grading, review and continuation"
+dependencies = ["e2e-wasm", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "ai_game_journeys", "--test", "exercise_type_journeys", "--", "--test-threads=1", "--nocapture"]
+
+[tasks.e2e-authored-session-completion]
+description = "Complete every authored Practice format with accepted answers, check final summary and reload persistence"
+dependencies = ["e2e-compile", "e2e-clean"]
+command = "cargo"
+args = ["test", "--release", "--locked", "-p", "zipeek-e2e", "--test", "authored_session_completion", "--", "--test-threads=1", "--nocapture"]

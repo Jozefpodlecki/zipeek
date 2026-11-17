@@ -1,0 +1,140 @@
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    process::Command,
+};
+
+const SERVERS: [&str; 2] = ["zipeek-ai-server", "zipeek-image-server"];
+
+fn host_triple(output: &str) -> io::Result<&str> {
+    output
+        .lines()
+        .find_map(|line| line.strip_prefix("host: ").map(str::trim))
+        .filter(|triple| {
+            !triple.is_empty()
+                && triple
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+        })
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "rustc -vV did not report a valid host triple",
+            )
+        })
+}
+
+fn stage_paths(root: &Path, release: bool, triple: &str) -> [(PathBuf, PathBuf); 2] {
+    let profile = if release { "release" } else { "debug" };
+    let exe = std::env::consts::EXE_SUFFIX;
+    let source_dir = root.join("target").join(profile);
+    let destination_dir = root.join("crates/zipeek-app/binaries");
+    SERVERS.map(|server| {
+        (
+            source_dir.join(format!("{server}{exe}")),
+            destination_dir.join(format!("{server}-{triple}{exe}")),
+        )
+    })
+}
+
+pub fn stage(root: &Path, release: bool) -> io::Result<()> {
+    let rustc = Command::new("rustc").arg("-vV").output()?;
+    if !rustc.status.success() {
+        return Err(io::Error::other(format!(
+            "rustc -vV failed: {}",
+            String::from_utf8_lossy(&rustc.stderr)
+        )));
+    }
+    let output = String::from_utf8(rustc.stdout)
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
+    let triple = host_triple(&output)?;
+    let paths = stage_paths(root, release, triple);
+    let dictionary = root.join("crates/zipeek-web/static/hanzi.duckdb");
+    if !dictionary.is_file() || fs::metadata(&dictionary)?.len() == 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(
+                "Native desktop dictionary missing: {}. Generate and install it with cargo make db-full before desktop packaging.",
+                dictionary.display()
+            ),
+        ));
+    }
+    for (source, _) in &paths {
+        let metadata = fs::metadata(source).map_err(|error| {
+            io::Error::new(
+                error.kind(),
+                format!(
+                    "{}: {error}. Run cargo make desktop-sidecars first.",
+                    source.display()
+                ),
+            )
+        })?;
+        if !metadata.is_file() || metadata.len() == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Sidecar binary is missing or empty: {}", source.display()),
+            ));
+        }
+    }
+    fs::create_dir_all(root.join("crates/zipeek-app/binaries"))?;
+    for (source, destination) in paths {
+        fs::copy(&source, &destination)?;
+        println!("Staged {} -> {}", source.display(), destination.display());
+    }
+    if cfg!(windows) {
+        let dll_dir = std::env::var_os("DUCKDB_LIB_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                root.join("target/duckdb-download")
+                    .join(triple)
+                    .join("v2.0.0")
+            });
+        let dll = dll_dir.join("duckdb.dll");
+        if !dll.is_file() || fs::metadata(&dll)?.len() == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                format!(
+                    "Native DuckDB runtime DLL missing: {}. Run the duckdb-env setup before desktop packaging.",
+                    dll.display()
+                ),
+            ));
+        }
+        let output = root.join("crates/zipeek-app/binaries/duckdb.dll");
+        fs::copy(&dll, &output)?;
+        println!("Staged {} -> {}", dll.display(), output.display());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reads_host_triple() {
+        assert_eq!(
+            host_triple("rustc 1.90.0\nhost: x86_64-pc-windows-msvc\n").unwrap(),
+            "x86_64-pc-windows-msvc"
+        );
+        assert!(host_triple("rustc 1.90.0\n").is_err());
+        assert!(host_triple("host: wrong/path\n").is_err());
+    }
+
+    #[test]
+    fn stages_expected_names_for_release() {
+        let paths = stage_paths(Path::new("workspace"), true, "x86_64-pc-windows-msvc");
+        assert!(paths[0].0.to_string_lossy().contains("target"));
+        assert!(
+            paths[0]
+                .1
+                .to_string_lossy()
+                .contains("zipeek-ai-server-x86_64-pc-windows-msvc")
+        );
+        assert!(
+            paths[1]
+                .1
+                .to_string_lossy()
+                .contains("zipeek-image-server-x86_64-pc-windows-msvc")
+        );
+    }
+}

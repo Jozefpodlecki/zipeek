@@ -1,0 +1,33 @@
+[build]
+target = "./index.html"
+locked = true
+
+[serve]
+port = 1420
+open = false
+
+[tools]
+wasm_bindgen = "0.2.130"
+tailwindcss = "4.3.4"
+
+[watch]
+watch = [
+    ".",
+    "../zipeek-core",
+    "../zipeek-db",
+    "../zipeek-ui",
+    "../zipeek-browser",
+    "../zipeek-hanzi-writing",
+    "../zipeek-ai-protocol",
+    "../zipeek-exercises",
+    "../zipeek-themes",
+    "../../Cargo.toml",
+    "../../Cargo.lock",
+    "../../rust-toolchain.toml"
+]
+ignore = [
+    "dist/**",
+    "target/**",
+    "node_modules/**",
+    "vendor/**"
+]

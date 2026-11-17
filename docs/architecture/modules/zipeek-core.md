@@ -2,8 +2,8 @@
 
 Shared domain types and pure logic: Word/WordId, HSK and PoS enums, comparison-only
 pinyin normalization, practice URL state, and the deterministic round builder.
-Part of the [architecture overview](../ARCHITECTURE.md). Approved shared-crate
-decision in [D01](../../process/decisions/foundations.md#d01-shared-crate).
+Part of the [architecture overview](../architecture.md). Approved shared-crate
+decision in [D01](../../project-management/decisions/foundations.md#d01-shared-crate).
 
 ## Constraints
 
@@ -18,7 +18,7 @@ during development (D10). The only dependency is approved `rand` 0.10.3 with
 
 `hsk.rs` holds distinct `Hsk2Level` and `Hsk3Level` enums, `HskSystem` and a
 tagged `HskLevel`. Checked integer conversions reject invalid levels; `SevenToNine`
-stores 7. `word.rs` holds the ten-field `Word` representation and `WordId`, checked
+stores 7. `HskSystem::label()` and `levels()` are the canonical standard names and supported typed level catalogs; `HskLevel::label()` and `badge_label()` preserve the combined HSK 3.0 7-9 display. `HskLevel::try_from((system, number))` validates source selections without accepting out-of-system levels. Browse, Practice and translation must not copy the supported-level arrays. `word.rs` holds the ten-field `Word` representation and `WordId`, checked
 against positive SQL INTEGER row-number bounds. Optional metadata stays optional;
 empty PoS vectors represent SQL NULL. `Word` is a transport record; the A03 importer
 enforces nonblank labels, at least one membership, grouping and conflict policies

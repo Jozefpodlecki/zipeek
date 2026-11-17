@@ -1,0 +1,37 @@
+
+@import "tailwindcss" source(none);
+@import "./tokens.css";
+@import "./base.css";
+@import "./accessibility.css";
+@import "./layout.css";
+
+@source "../src";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@custom-variant writing-desktop {
+  @media (min-width: 1024px) and (min-height: 600px) { @slot; }
+}
+@custom-variant compact-matching {
+  @media (min-width: 768px) and (max-height: 760px) { @slot; }
+}
+
+@keyframes hanzi-direction-travel {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes hanzi-replay-reveal {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes crossword-reject {
+  0%, 100% { background: var(--surface); }
+  30%, 70% { background: #ad323e; border-color: #ec6877; }
+}
+
+@keyframes crossword-crossing-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-action) 65%, transparent); }
+  55% { box-shadow: 0 0 0 7px transparent; border-color: var(--brand-action); }
+  100% { box-shadow: none; }
+}

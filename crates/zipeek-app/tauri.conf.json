@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "zipeek",
+  "version": "0.1.0",
+  "identifier": "com.jozef.zipeek",
+  "build": {
+    "beforeDevCommand": {
+      "script": "trunk serve --port 1421",
+      "cwd": "../zipeek-web",
+      "wait": false
+    },
+    "beforeBuildCommand": {
+      "script": "trunk build --release",
+      "cwd": "../zipeek-web"
+    },
+    "devUrl": "http://localhost:1421/",
+    "frontendDist": "../zipeek-web/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "zipeek",
+        "width": 1000,
+        "height": 700,
+        "maximized": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "resources": {
+      "../zipeek-web/static/hanzi.duckdb": "dictionary/hanzi.duckdb",
+      "binaries/duckdb.dll": "duckdb.dll"
+    },
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/zipeek-ai-server",
+      "binaries/zipeek-image-server"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+[package]
+name = "zipeek-tts-stt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+axum = { workspace = true, features = ["json"] }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
+whisper-rs = "0.16.0"

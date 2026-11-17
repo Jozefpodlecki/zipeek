@@ -3,12 +3,18 @@ dist/
 target/
 /e2e/target/
 /app/target
-/web/dist
+/crates/zipeek-web/dist
 /styles/output.css
-crates/web/vendor/
+crates/zipeek-web/vendor/
 pack.ps1
 unpack.ps1
 /.unpack-backups/
-/crates/web/vendor/
-/crates/web/node_modules/
-/crates/web/dist/
+/crates/zipeek-web/vendor/
+/crates/zipeek-web/node_modules/
+/crates/zipeek-web/dist/
+
+# Third-party Hanzi Writer sparse checkout; generated locally by Rust CLI.
+/external/hanzi-writer-data/
+models/
+# Built desktop sidecars (Tauri externalBin staging).
+/crates/zipeek-app/binaries/

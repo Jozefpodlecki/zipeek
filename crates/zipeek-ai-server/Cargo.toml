@@ -1,0 +1,16 @@
+[package]
+name = "zipeek-ai-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+axum = { workspace = true, features = ["json"] }
+tokio = { workspace = true }
+llama-cpp-2 = { version = "0.1.161" }
+zipeek-ai-core = { path = "../zipeek-ai-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures-util = { workspace = true }

@@ -1,0 +1,31 @@
+
+::selection { background: var(--accent-soft); color: var(--accent); }
+
+
+:root {
+    --scrollbar-track: color-mix(in srgb, var(--canvas) 86%, var(--raised));
+    --scrollbar-thumb: color-mix(in srgb, var(--accent) 46%, var(--border));
+    --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 72%, var(--border));
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+}
+* { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 999px; }
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 2px solid var(--scrollbar-track);
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+::-webkit-scrollbar-corner { background: var(--scrollbar-track); }
+
+:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 52%, transparent) !important;
+}
+
+.write-hanzi-combobox:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}

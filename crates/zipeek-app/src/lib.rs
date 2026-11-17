@@ -1,0 +1,24 @@
+#![allow(dead_code)]
+#![allow(unused)]
+#![allow(private_interfaces)]
+
+mod commands;
+mod database;
+mod services;
+mod setup;
+
+pub fn run() {
+    tauri::Builder::default()
+        .setup(setup::setup)
+        .invoke_handler(commands::generate_handlers())
+        .build(tauri::generate_context!())
+        .expect("error while building zipeek")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                use tauri::Manager;
+                app.state::<std::sync::Arc<services::NativeServices>>()
+                    .shutdown();
+            }
+        })
+        .expect("error while running zipeek");
+}

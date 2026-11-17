@@ -1,0 +1,12 @@
+{
+  "preset": "lavender",
+  "density": "grid",
+  "dark": true,
+  "font": "system",
+  "character_size": "normal",
+  "matching_autoplay": false,
+  "image_server_url": null,
+  "ai_url": "http://127.0.0.1:1234/v1/",
+  "ai_model": "",
+  "learning_history_enabled": false
+}

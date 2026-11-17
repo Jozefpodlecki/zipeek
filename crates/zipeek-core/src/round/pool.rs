@@ -161,13 +161,20 @@ mod word_set_tests {
         };
         assert!(pool.validate(&BTreeSet::new()).is_ok());
         assert!(pool.validate_set(&selected).is_ok());
-        assert!(pool.validate_set(&BTreeSet::from([WordId::try_from(1).unwrap()])).is_err());
+        assert!(
+            pool.validate_set(&BTreeSet::from([WordId::try_from(1).unwrap()]))
+                .is_err()
+        );
         let mut widened = pool;
         widened.hsk_widened_any_pos.push(word(3));
-        assert!(widened.validate_set(&BTreeSet::from([
-            WordId::try_from(1).unwrap(),
-            WordId::try_from(2).unwrap(),
-            WordId::try_from(3).unwrap(),
-        ])).is_err());
+        assert!(
+            widened
+                .validate_set(&BTreeSet::from([
+                    WordId::try_from(1).unwrap(),
+                    WordId::try_from(2).unwrap(),
+                    WordId::try_from(3).unwrap(),
+                ]))
+                .is_err()
+        );
     }
 }

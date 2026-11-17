@@ -1,0 +1,13 @@
+{
+  "source": "CC-CEDICT",
+  "source_file": "cc-cedict-2026-10-26.u8",
+  "source_sha256": "3d8967fe566bc23a74f8ba008d38ac83269a8c7550bd7dc48218fc9bdf284885",
+  "license": "CC BY-SA 4.0",
+  "taxonomy_version": 2,
+  "classification_method": "deterministic_gloss_rules_v1; not AI-reviewed",
+  "entries": 125320,
+  "senses": 199699,
+  "nonempty_labels": 75210,
+  "needs_review": 151802,
+  "export_sha256": "c934f3b7b11fd42e13b890d0c21da46a082111e7ac30df3d7dab59a8b0030847"
+}

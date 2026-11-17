@@ -19,9 +19,15 @@ pub enum SpeakingTargetError {
 
 impl SpeakingTarget {
     pub fn validate(&self) -> Result<(), SpeakingTargetError> {
-        if [self.id, self.sentence, self.pinyin, self.translation, self.focus_reading]
-            .iter()
-            .any(|value| value.trim().is_empty())
+        if [
+            self.id,
+            self.sentence,
+            self.pinyin,
+            self.translation,
+            self.focus_reading,
+        ]
+        .iter()
+        .any(|value| value.trim().is_empty())
         {
             return Err(SpeakingTargetError::MissingContext);
         }
@@ -40,7 +46,9 @@ impl SpeakingTarget {
     }
 
     pub fn instance(&self) -> Result<ExerciseInstance, SpeakingInstanceError> {
-        let input = self.visible_input().map_err(SpeakingInstanceError::InvalidTarget)?;
+        let input = self
+            .visible_input()
+            .map_err(SpeakingInstanceError::InvalidTarget)?;
         ExerciseInstance::new(self.id, SPEAKING.id, input)
             .map_err(SpeakingInstanceError::InvalidInstance)
     }
@@ -102,13 +110,21 @@ mod tests {
         assert_eq!(target.validate(), Err(SpeakingTargetError::MissingContext));
         target = PREVIEW_TARGETS[0];
         target.focus_word = "不在句子里";
-        assert_eq!(target.validate(), Err(SpeakingTargetError::MissingFocusWord));
+        assert_eq!(
+            target.validate(),
+            Err(SpeakingTargetError::MissingFocusWord)
+        );
     }
 
     #[test]
     fn polyphonic_readings_are_specific_to_sentence_context() {
         assert_eq!(PREVIEW_TARGETS[1].focus_reading, "yínháng");
         assert_eq!(PREVIEW_TARGETS[2].focus_reading, "yīnyuè");
-        assert!(!PREVIEW_TARGETS[1].visible_input().unwrap().contains("correct_answer"));
+        assert!(
+            !PREVIEW_TARGETS[1]
+                .visible_input()
+                .unwrap()
+                .contains("correct_answer")
+        );
     }
 }

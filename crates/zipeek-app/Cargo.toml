@@ -1,0 +1,31 @@
+[package]
+name = "zipeek-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lib]
+name = "zipeek_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+chrono = { workspace = true }
+rand = "0.10.3"
+rfd = { version = "=0.16.0", default-features = false, features = ["xdg-portal", "tokio", "wayland"] }
+rust_decimal = "1.42.1"
+serde_json = "1.0.154"
+serde = { workspace = true, features = ["derive"] }
+tauri = { version = "2.12.5", features = [] }
+
+zipeek-db = { path = "../zipeek-db", features = ["native"] }
+duckdb-neo = { git = "https://github.com/duckdb/duckdb-rs.git", rev = "4acbea84794582c4cd962ee971a3d7a5dcb72e39", features = ["chrono", "r2d2", "uuid"] }
+
+zipeek-image-server = { path = "../zipeek-image-server" }
+zipeek-static-server = { path = "../zipeek-static-server" }
+zipeek-ai-server = { path = "../zipeek-ai-server" }
+zipeek-pedagogy = { path = "../zipeek-pedagogy" }

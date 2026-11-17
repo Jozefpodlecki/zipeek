@@ -1,0 +1,14 @@
+[package]
+name = "zipeek-geo-assets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+reqwest = { version = "=0.13.5", default-features = false, features = ["json", "rustls"] }
+sha2 = { workspace = true }

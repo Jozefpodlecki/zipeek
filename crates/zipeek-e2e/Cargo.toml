@@ -1,0 +1,23 @@
+[package]
+name = "zipeek-e2e"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords = ["wasm", "web", "yew"]
+categories = ["wasm", "web-programming"]
+
+[dependencies]
+thirtyfour = { version = "0.38.1", features = ["cdp-events"] }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+base64 = "=0.23.1"
+futures-util = { workspace = true }
+
+zipeek-image-server = { path = "../zipeek-image-server" }
+zipeek-static-server = { path = "../zipeek-static-server" }
+zipeek-ai-server = { path = "../zipeek-ai-server" }
+zipeek-tts-stt = { path = "../zipeek-tts-stt" }
+zipeek-pedagogy = { path = "../zipeek-pedagogy" }

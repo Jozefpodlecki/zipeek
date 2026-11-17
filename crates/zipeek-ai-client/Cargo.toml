@@ -1,0 +1,17 @@
+[package]
+name = "zipeek-ai-client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+futures-util = { workspace = true }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "__rustls", "stream"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+zipeek-ai-protocol = { path = "../zipeek-ai-protocol" }

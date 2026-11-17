@@ -1,4 +1,4 @@
-# `zipeek-themes` — visual context and background providers
+# `zipeek-themes` - visual context and background providers
 
 The approved `zipeek-themes` crate is a dependency-free domain boundary for
 resolving category/topic hints to a visual theme and loading background asset

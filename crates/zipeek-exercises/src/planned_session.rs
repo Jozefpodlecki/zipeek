@@ -19,9 +19,15 @@ pub struct PlannedSession {
 }
 
 impl PlannedSession {
-    pub fn new(draft: &PracticeDraft, session_id: impl Into<String>) -> Result<Self, PlannedSessionError> {
+    pub fn new(
+        draft: &PracticeDraft,
+        session_id: impl Into<String>,
+    ) -> Result<Self, PlannedSessionError> {
         let plan = SessionPlan::from_draft(draft).map_err(PlannedSessionError::Plan)?;
-        Ok(Self { plan, ledger: QuizSession::new(session_id) })
+        Ok(Self {
+            plan,
+            ledger: QuizSession::new(session_id),
+        })
     }
 
     pub fn current(&self) -> Option<&PlannedExercise> {
@@ -37,8 +43,7 @@ impl PlannedSession {
     }
 
     pub fn is_completed(&self) -> bool {
-        self.plan.status == PlanStatus::Completed
-            && self.ledger.status == SessionStatus::Completed
+        self.plan.status == PlanStatus::Completed && self.ledger.status == SessionStatus::Completed
     }
 
     pub fn publish(
@@ -48,7 +53,9 @@ impl PlannedSession {
         visible_input: impl Into<String>,
         result: ExerciseResult,
     ) -> Result<(), PlannedSessionError> {
-        let step = self.current().ok_or(PlannedSessionError::AlreadyCompleted)?;
+        let step = self
+            .current()
+            .ok_or(PlannedSessionError::AlreadyCompleted)?;
         if step.instance_id != instance_id {
             return Err(PlannedSessionError::WrongInstance);
         }
@@ -56,10 +63,14 @@ impl PlannedSession {
             return Err(PlannedSessionError::WrongDefinition);
         }
         let mut next = self.clone();
-        next.plan.submit(instance_id, result).map_err(PlannedSessionError::Plan)?;
+        next.plan
+            .submit(instance_id, result)
+            .map_err(PlannedSessionError::Plan)?;
         let instance = ExerciseInstance::new(instance_id, definition_id, visible_input)
             .map_err(PlannedSessionError::Ledger)?;
-        next.ledger.record_completed(instance, result).map_err(PlannedSessionError::Ledger)?;
+        next.ledger
+            .record_completed(instance, result)
+            .map_err(PlannedSessionError::Ledger)?;
         *self = next;
         Ok(())
     }
@@ -69,9 +80,14 @@ impl PlannedSession {
             return Err(PlannedSessionError::NotAwaitingAcknowledgement);
         }
         let mut next = self.clone();
-        let completed = next.plan.acknowledge(instance_id).map_err(PlannedSessionError::Plan)?;
+        let completed = next
+            .plan
+            .acknowledge(instance_id)
+            .map_err(PlannedSessionError::Plan)?;
         if completed {
-            next.ledger.complete().map_err(PlannedSessionError::Ledger)?;
+            next.ledger
+                .complete()
+                .map_err(PlannedSessionError::Ledger)?;
         }
         *self = next;
         Ok(completed)
@@ -91,7 +107,11 @@ mod tests {
     }
 
     fn score(earned: u64, possible: u64) -> ExerciseResult {
-        ExerciseResult { earned, possible, mistakes: possible - earned }
+        ExerciseResult {
+            earned,
+            possible,
+            mistakes: possible - earned,
+        }
     }
 
     #[test]
@@ -99,12 +119,30 @@ mod tests {
         let mut session = PlannedSession::new(&mixed_draft(), "fixed-1").unwrap();
         let first = session.current().unwrap().clone();
         assert_eq!(first.definition_id, "matching");
-        assert_eq!(session.acknowledge(&first.instance_id), Err(PlannedSessionError::NotAwaitingAcknowledgement));
-        session.publish(&first.instance_id, first.definition_id, "prompt", score(3, 4)).unwrap();
+        assert_eq!(
+            session.acknowledge(&first.instance_id),
+            Err(PlannedSessionError::NotAwaitingAcknowledgement)
+        );
+        session
+            .publish(
+                &first.instance_id,
+                first.definition_id,
+                "prompt",
+                score(3, 4),
+            )
+            .unwrap();
         assert_eq!(session.current(), Some(&first));
         assert_eq!(session.plan().status, PlanStatus::AwaitingAcknowledgement);
         assert_eq!(session.ledger().entries.len(), 1);
-        assert_eq!(session.publish(&first.instance_id, first.definition_id, "prompt", score(3, 4)), Err(PlannedSessionError::Plan(PlanError::AlreadySubmitted)));
+        assert_eq!(
+            session.publish(
+                &first.instance_id,
+                first.definition_id,
+                "prompt",
+                score(3, 4)
+            ),
+            Err(PlannedSessionError::Plan(PlanError::AlreadySubmitted))
+        );
         assert_eq!(session.acknowledge(&first.instance_id), Ok(false));
         assert_eq!(session.current().unwrap().definition_id, "multiple-choice");
         assert_eq!(session.ledger().totals(), score(3, 4));
@@ -115,13 +153,36 @@ mod tests {
         let mut session = PlannedSession::new(&mixed_draft(), "fixed-2").unwrap();
         let first = session.current().unwrap().clone();
         let before = session.clone();
-        assert_eq!(session.publish("other", first.definition_id, "", score(1, 1)), Err(PlannedSessionError::WrongInstance));
-        assert_eq!(session.publish(&first.instance_id, "multiple-choice", "", score(1, 1)), Err(PlannedSessionError::WrongDefinition));
-        assert_eq!(session.publish(&first.instance_id, first.definition_id, "", ExerciseResult { earned: 2, possible: 1, mistakes: 0 }), Err(PlannedSessionError::Plan(PlanError::InvalidResult)));
+        assert_eq!(
+            session.publish("other", first.definition_id, "", score(1, 1)),
+            Err(PlannedSessionError::WrongInstance)
+        );
+        assert_eq!(
+            session.publish(&first.instance_id, "multiple-choice", "", score(1, 1)),
+            Err(PlannedSessionError::WrongDefinition)
+        );
+        assert_eq!(
+            session.publish(
+                &first.instance_id,
+                first.definition_id,
+                "",
+                ExerciseResult {
+                    earned: 2,
+                    possible: 1,
+                    mistakes: 0
+                }
+            ),
+            Err(PlannedSessionError::Plan(PlanError::InvalidResult))
+        );
         assert_eq!(session, before);
-        session.publish(&first.instance_id, first.definition_id, "", score(1, 1)).unwrap();
+        session
+            .publish(&first.instance_id, first.definition_id, "", score(1, 1))
+            .unwrap();
         let pending = session.clone();
-        assert_eq!(session.acknowledge("wrong"), Err(PlannedSessionError::Plan(PlanError::WrongInstance)));
+        assert_eq!(
+            session.acknowledge("wrong"),
+            Err(PlannedSessionError::Plan(PlanError::WrongInstance))
+        );
         assert_eq!(session, pending);
     }
 
@@ -132,21 +193,39 @@ mod tests {
         let mut session = PlannedSession::new(&draft, "fixed-3").unwrap();
         for ordinal in 0..2 {
             let step = session.current().unwrap().clone();
-            session.publish(&step.instance_id, step.definition_id, "question", score(1, 1)).unwrap();
+            session
+                .publish(
+                    &step.instance_id,
+                    step.definition_id,
+                    "question",
+                    score(1, 1),
+                )
+                .unwrap();
             assert_eq!(session.acknowledge(&step.instance_id), Ok(ordinal == 1));
         }
         assert!(session.is_completed());
         assert!(session.current().is_none());
         assert_eq!(session.ledger().entries.len(), 2);
         assert_eq!(session.ledger().totals().earned, 2);
-        assert_eq!(session.acknowledge("unused"), Err(PlannedSessionError::NotAwaitingAcknowledgement));
-        assert_eq!(session.publish("unused", "multiple-choice", "", score(1, 1)), Err(PlannedSessionError::AlreadyCompleted));
+        assert_eq!(
+            session.acknowledge("unused"),
+            Err(PlannedSessionError::NotAwaitingAcknowledgement)
+        );
+        assert_eq!(
+            session.publish("unused", "multiple-choice", "", score(1, 1)),
+            Err(PlannedSessionError::AlreadyCompleted)
+        );
     }
 
     #[test]
     fn unsupported_draft_never_starts() {
         let mut draft = PracticeDraft::default();
         draft.length = SessionLength::Endless;
-        assert_eq!(PlannedSession::new(&draft, "invalid"), Err(PlannedSessionError::Plan(PlanError::EndlessRequiresIncrementalScheduling)));
+        assert_eq!(
+            PlannedSession::new(&draft, "invalid"),
+            Err(PlannedSessionError::Plan(
+                PlanError::EndlessRequiresIncrementalScheduling
+            ))
+        );
     }
 }

@@ -1,9 +1,11 @@
 [package]
 name = "zipeek-exercises"
-version = "0.1.0"
-edition = "2024"
-repository = "https://github.com/Jozefpodlecki/zipeek"
-rust-version = "1.97.1"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
+serde = { workspace = true }
 zipeek-core = { path = "../zipeek-core" }

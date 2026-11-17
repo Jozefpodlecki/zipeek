@@ -1,8 +1,13 @@
+#![allow(dead_code)]
+#![allow(unused)]
+#![allow(private_interfaces)]
+
 mod hsk;
 mod part_of_speech;
 mod pinyin;
 pub mod practice;
 pub mod round;
+pub mod seeded_random;
 pub mod sentence_tiles;
 mod word;
 

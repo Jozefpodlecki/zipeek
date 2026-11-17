@@ -1,0 +1,25 @@
+mod arrow;
+mod browser_api;
+mod bundle;
+mod deadline;
+mod duckdb;
+pub mod duckdb_api;
+mod error;
+mod evidence_summary;
+mod manifest;
+mod personal_history;
+mod prepared;
+mod probe;
+mod recognition_history;
+mod rows;
+mod session;
+mod transport;
+
+pub use arrow::Arrow;
+pub use bundle::{BaseBundle, BaseBundleError, BaseBundleInner};
+pub use duckdb::{DuckDb, DuckDbInfo};
+pub use error::{DbError, DuckDbError};
+pub use evidence_summary::PracticeOutcomeSummary;
+pub use personal_history::PersonalLearningHistory;
+pub use probe::{PersonalDbProbe, ProbeReport};
+pub use recognition_history::{PersonalRecognitionHistory, RecognitionRecord};

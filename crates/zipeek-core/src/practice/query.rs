@@ -88,31 +88,55 @@ impl ParsedPracticeQuery {
         }
         if let Some(raw) = fields.get("set_ids") {
             let tokens = raw.split(',').collect::<Vec<_>>();
-            let ids = tokens.iter().map(|token| word_id(token)).collect::<Option<Vec<_>>>();
-            if tokens.is_empty() || tokens.len() > 128 || ids.as_ref().is_none_or(|ids| ids.is_empty()) {
-                query.warnings.push(QueryWarning { field: "set_ids", value: "Invalid word set snapshot (1–128 positive IDs required)".to_owned() });
+            let ids = tokens
+                .iter()
+                .map(|token| word_id(token))
+                .collect::<Option<Vec<_>>>();
+            if tokens.is_empty()
+                || tokens.len() > 128
+                || ids.as_ref().is_none_or(|ids| ids.is_empty())
+            {
+                query.warnings.push(QueryWarning {
+                    field: "set_ids",
+                    value: "Invalid word set snapshot (1–128 positive IDs required)".to_owned(),
+                });
             } else if let Some(ids) = ids {
                 let unique = ids.into_iter().collect::<BTreeSet<_>>();
                 if unique.len() != tokens.len() {
-                    query.warnings.push(QueryWarning { field: "set_ids", value: "Duplicate word IDs".to_owned() });
+                    query.warnings.push(QueryWarning {
+                        field: "set_ids",
+                        value: "Duplicate word IDs".to_owned(),
+                    });
                 } else {
                     query.word_set = Some(unique);
                 }
             }
         }
         if let Some(source) = fields.get("source") {
-            let valid = source.starts_with("filters:") && source.len() <= 2048
-                && source.bytes().all(|byte| byte.is_ascii_alphanumeric()
-                    || matches!(byte, b':' | b'|' | b',' | b'.' | b'_'));
-            if valid && query.word_set.is_none() && !fields.contains_key("set_ids")
-                && !fields.contains_key("seed") {
+            let valid = source.starts_with("filters:")
+                && source.len() <= 2048
+                && source.bytes().all(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b':' | b'|' | b',' | b'.' | b'_')
+                });
+            if valid
+                && query.word_set.is_none()
+                && !fields.contains_key("set_ids")
+                && !fields.contains_key("seed")
+            {
                 query.dictionary_source = Some((*source).to_owned());
             } else {
-                query.warnings.push(QueryWarning { field: "source", value: "Invalid filtered practice source or incompatible seed/Word Set".to_owned() });
+                query.warnings.push(QueryWarning {
+                    field: "source",
+                    value: "Invalid filtered practice source or incompatible seed/Word Set"
+                        .to_owned(),
+                });
             }
         }
         if query.word_set.is_some() && fields.contains_key("seed") {
-            query.warnings.push(QueryWarning { field: "seed", value: "Seeded practice is not supported for a Word Set".to_owned() });
+            query.warnings.push(QueryWarning {
+                field: "seed",
+                value: "Seeded practice is not supported for a Word Set".to_owned(),
+            });
             query.seed = None;
         }
         if matches!(query.mode, PracticeMode::Fixed(_)) && fields.contains_key("seed") {

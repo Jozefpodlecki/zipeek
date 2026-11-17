@@ -1,44 +1,158 @@
 use crate::{Hsk3Level, HskLevel, PartOfSpeech};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExerciseVariant {
-    EngPinyin,
-    PinyinHanzi,
-    HanziEng,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ExerciseMechanic {
+    Matching,
+    MultipleChoice,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum QuestionFormat {
+    EnglishToPinyin,
+    PinyinToHanzi,
     HanziToMeaning,
     MeaningToHanzi,
     MeaningToPinyin,
 }
 
-impl ExerciseVariant {
-    pub const fn seed_token(self) -> &'static str {
+impl QuestionFormat {
+    pub const fn label(self) -> &'static str {
         match self {
-            Self::EngPinyin => "eng-pinyin",
-            Self::PinyinHanzi => "pinyin-hanzi",
-            Self::HanziEng => "hanzi-eng",
-            Self::HanziToMeaning => "hanzi-to-meaning",
-            Self::MeaningToHanzi => "meaning-to-hanzi",
-            Self::MeaningToPinyin => "meaning-to-pinyin",
+            Self::EnglishToPinyin => "Meaning → Pinyin",
+            Self::PinyinToHanzi => "Pinyin → Hanzi",
+            Self::HanziToMeaning => "Hanzi → Meaning",
+            Self::MeaningToHanzi => "Meaning → Hanzi",
+            Self::MeaningToPinyin => "Meaning → Pinyin",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ExerciseVariant {
+    MatchingEnglishPinyin,
+    MatchingPinyinHanzi,
+    MatchingHanziMeaning,
+    MultipleChoiceHanziMeaning,
+    MultipleChoiceMeaningHanzi,
+    MultipleChoiceMeaningPinyin,
+}
+
+impl ExerciseVariant {
+    pub const ALL: [Self; 6] = [
+        Self::MatchingEnglishPinyin,
+        Self::MatchingPinyinHanzi,
+        Self::MatchingHanziMeaning,
+        Self::MultipleChoiceHanziMeaning,
+        Self::MultipleChoiceMeaningHanzi,
+        Self::MultipleChoiceMeaningPinyin,
+    ];
+
+    pub const CANONICAL: [Self; 6] = [
+        Self::MultipleChoiceHanziMeaning,
+        Self::MultipleChoiceMeaningHanzi,
+        Self::MultipleChoiceMeaningPinyin,
+        Self::MatchingEnglishPinyin,
+        Self::MatchingPinyinHanzi,
+        Self::MatchingHanziMeaning,
+    ];
+
+    pub const fn mechanic(self) -> ExerciseMechanic {
+        match self {
+            Self::MatchingEnglishPinyin
+            | Self::MatchingPinyinHanzi
+            | Self::MatchingHanziMeaning => ExerciseMechanic::Matching,
+            Self::MultipleChoiceHanziMeaning
+            | Self::MultipleChoiceMeaningHanzi
+            | Self::MultipleChoiceMeaningPinyin => ExerciseMechanic::MultipleChoice,
         }
     }
 
+    pub const fn format(self) -> QuestionFormat {
+        match self {
+            Self::MatchingEnglishPinyin => QuestionFormat::EnglishToPinyin,
+            Self::MatchingPinyinHanzi => QuestionFormat::PinyinToHanzi,
+            Self::MatchingHanziMeaning | Self::MultipleChoiceHanziMeaning => {
+                QuestionFormat::HanziToMeaning
+            }
+            Self::MultipleChoiceMeaningHanzi => QuestionFormat::MeaningToHanzi,
+            Self::MultipleChoiceMeaningPinyin => QuestionFormat::MeaningToPinyin,
+        }
+    }
+
+    pub const fn label(self) -> &'static str {
+        self.format().label()
+    }
+
+    pub const fn seed_token(self) -> &'static str {
+        match self {
+            Self::MatchingEnglishPinyin => "eng-pinyin",
+            Self::MatchingPinyinHanzi => "pinyin-hanzi",
+            Self::MatchingHanziMeaning => "hanzi-eng",
+            Self::MultipleChoiceHanziMeaning => "hanzi-to-meaning",
+            Self::MultipleChoiceMeaningHanzi => "meaning-to-hanzi",
+            Self::MultipleChoiceMeaningPinyin => "meaning-to-pinyin",
+        }
+    }
+
+    pub fn from_seed_token(token: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|variant| variant.seed_token() == token)
+    }
+
     pub const fn is_mcq(self) -> bool {
-        matches!(
-            self,
-            Self::HanziToMeaning | Self::MeaningToHanzi | Self::MeaningToPinyin
-        )
+        matches!(self.mechanic(), ExerciseMechanic::MultipleChoice)
     }
 
     pub const fn requires_english(self) -> bool {
-        !matches!(self, Self::PinyinHanzi)
+        !matches!(self.format(), QuestionFormat::PinyinToHanzi)
+    }
+}
+
+#[cfg(test)]
+mod taxonomy_tests {
+    use super::*;
+
+    #[test]
+    fn both_mechanics_share_the_same_hanzi_meaning_format() {
+        assert_eq!(
+            ExerciseVariant::MatchingHanziMeaning.format(),
+            QuestionFormat::HanziToMeaning
+        );
+        assert_eq!(
+            ExerciseVariant::MultipleChoiceHanziMeaning.format(),
+            QuestionFormat::HanziToMeaning
+        );
+        assert_ne!(
+            ExerciseVariant::MatchingHanziMeaning.mechanic(),
+            ExerciseVariant::MultipleChoiceHanziMeaning.mechanic()
+        );
+        assert_eq!(
+            ExerciseVariant::MatchingHanziMeaning.label(),
+            ExerciseVariant::MultipleChoiceHanziMeaning.label()
+        );
     }
 
-    pub fn route_path(self) -> String {
-        format!(
-            "/practice/{}{}",
-            if self.is_mcq() { "mcq/" } else { "" },
-            self.seed_token()
-        )
+    #[test]
+    fn every_format_token_round_trips_without_accepting_unknown_formats() {
+        for variant in ExerciseVariant::ALL {
+            assert_eq!(
+                ExerciseVariant::from_seed_token(variant.seed_token()),
+                Some(variant)
+            );
+        }
+        for invalid in ["", "hanzi-eng,eng-pinyin", "not-a-format", "HANZI-ENG"] {
+            assert_eq!(ExerciseVariant::from_seed_token(invalid), None);
+        }
+    }
+
+    #[test]
+    fn every_variant_has_a_distinct_stable_token_and_valid_mechanic() {
+        let tokens = ExerciseVariant::ALL.map(ExerciseVariant::seed_token);
+        for (index, token) in tokens.iter().enumerate() {
+            assert!(!token.is_empty());
+            assert!(!tokens[..index].contains(token));
+        }
     }
 }
 

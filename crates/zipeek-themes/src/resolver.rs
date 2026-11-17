@@ -19,7 +19,9 @@ pub fn resolve_theme(request: &ThemeRequest) -> ThemeId {
     if max == 0 {
         return ThemeId::Neutral;
     }
-    let candidates: Vec<usize> = counts.iter().enumerate()
+    let candidates: Vec<usize> = counts
+        .iter()
+        .enumerate()
         .filter_map(|(index, count)| (*count == max).then_some(index))
         .collect();
     let selected = candidates[(request.seed % candidates.len() as u64) as usize];
@@ -37,19 +39,34 @@ mod tests {
 
     #[test]
     fn unknown_topics_use_neutral() {
-        assert_eq!(resolve_theme(&ThemeRequest { categories: vec!["unknown".into()], seed: 0 }), ThemeId::Neutral);
+        assert_eq!(
+            resolve_theme(&ThemeRequest {
+                categories: vec!["unknown".into()],
+                seed: 0
+            }),
+            ThemeId::Neutral
+        );
     }
 
     #[test]
     fn majority_wins_independent_of_order() {
-        let request = ThemeRequest { categories: vec!["shopping".into(), "travel".into(), "travel".into()], seed: 9 };
+        let request = ThemeRequest {
+            categories: vec!["shopping".into(), "travel".into(), "travel".into()],
+            seed: 9,
+        };
         assert_eq!(resolve_theme(&request), ThemeId::Travel);
     }
 
     #[test]
     fn ties_are_seeded_and_stable() {
-        let request = ThemeRequest { categories: vec!["shopping".into(), "travel".into()], seed: 0 };
+        let request = ThemeRequest {
+            categories: vec!["shopping".into(), "travel".into()],
+            seed: 0,
+        };
         assert_eq!(resolve_theme(&request), resolve_theme(&request));
-        assert_ne!(resolve_theme(&request), resolve_theme(&ThemeRequest { seed: 1, ..request }));
+        assert_ne!(
+            resolve_theme(&request),
+            resolve_theme(&ThemeRequest { seed: 1, ..request })
+        );
     }
 }
