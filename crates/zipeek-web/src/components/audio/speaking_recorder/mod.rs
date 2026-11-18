@@ -1,7 +1,10 @@
 mod bindings;
 mod state;
 
-use wasm_bindgen::{JsValue, closure::Closure};
+use wasm_bindgen::{JsValue, closure::Closure, prelude::*};
+
+use zipeek_browser::local_speech;
+
 use yew::prelude::*;
 
 use self::{
@@ -84,11 +87,15 @@ pub fn speaking_recorder() -> Html {
     let environment = use_app_environment();
     let recorder = use_reducer(RecorderState::default);
     let bindings = use_mut_ref(|| None::<RecorderBindings>);
+    let transcript = use_state(|| None::<Result<String, String>>);
+    let transcribing = use_state(|| false);
+    let transcription_epoch = use_mut_ref(|| 0_u64);
 
     {
         let recorder = recorder.clone();
         let bindings = bindings.clone();
         let window = environment.window.clone();
+        let transcription_epoch = transcription_epoch.clone();
         use_effect_with((), move |_| {
             let levels_callback = {
                 let recorder = recorder.clone();
@@ -136,6 +143,8 @@ pub fn speaking_recorder() -> Html {
             recorder.dispatch(RecorderAction::Initialized);
 
             move || {
+                *transcription_epoch.borrow_mut() += 1;
+                local_speech::cancel();
                 if let Some(active) = bindings.borrow_mut().take() {
                     active.dispose();
                 }
@@ -147,7 +156,12 @@ pub fn speaking_recorder() -> Html {
     let on_start = {
         let recorder = recorder.clone();
         let bindings = bindings.clone();
+        let transcript = transcript.clone();
+        let transcription_epoch = transcription_epoch.clone();
         Callback::from(move |_: MouseEvent| {
+            *transcription_epoch.borrow_mut() += 1;
+            local_speech::cancel();
+            transcript.set(None);
             recorder.dispatch(RecorderAction::StartRequested);
             if let Some(active) = bindings.borrow().as_ref() {
                 active.start();
@@ -169,11 +183,42 @@ pub fn speaking_recorder() -> Html {
     let on_discard = {
         let recorder = recorder.clone();
         let bindings = bindings.clone();
+        let transcript = transcript.clone();
+        let transcription_epoch = transcription_epoch.clone();
         Callback::from(move |_: MouseEvent| {
+            *transcription_epoch.borrow_mut() += 1;
+            local_speech::cancel();
+            transcript.set(None);
             if let Some(active) = bindings.borrow().as_ref() {
                 active.discard();
             }
             recorder.dispatch(RecorderAction::Discarded);
+        })
+    };
+    let on_transcribe = {
+        let url = recorder.audio_url.clone();
+        let transcript = transcript.clone();
+        let transcribing = transcribing.clone();
+        let transcription_epoch = transcription_epoch.clone();
+        Callback::from(move |_: MouseEvent| {
+            if *transcribing || url.is_empty() || !local_speech::enabled() { return; }
+            *transcription_epoch.borrow_mut() += 1;
+            let revision = *transcription_epoch.borrow();
+            let transcription_epoch = transcription_epoch.clone();
+            let transcript = transcript.clone();
+            let transcribing = transcribing.clone();
+            let url = url.clone();
+            transcribing.set(true);
+            transcript.set(None);
+            wasm_bindgen_futures::spawn_local(async move {
+                let result = local_speech::transcribe_recording(&url).await.map(|value| JsValue::from_str(&value))
+                    .and_then(|value| value.as_string().ok_or_else(|| JsValue::from_str("No transcript")))
+                    .map_err(|error| error.as_string().unwrap_or_else(|| format!("{error:?}")));
+                if *transcription_epoch.borrow() == revision {
+                    transcript.set(Some(result));
+                    transcribing.set(false);
+                }
+            });
         })
     };
     let recording = recorder.phase == RecordingPhase::Recording;
@@ -211,9 +256,21 @@ pub fn speaking_recorder() -> Html {
                 />
                 if ready {
                     <RecorderPlayback audio_url={recorder.audio_url.clone()} />
+                    if local_speech::enabled() {
+                        <button type="button" onclick={on_transcribe} disabled={*transcribing}
+                            class="min-h-11 rounded-lg border border-line px-4 py-2 font-semibold disabled:opacity-50">
+                            {if *transcribing { "Transcribing locally..." } else { "Transcribe locally" }}
+                        </button>
+                    }
+                    if let Some(result) = &*transcript {
+                        <p role={if result.is_ok() {"status"} else {"alert"}} class="text-sm">
+                            {if result.is_ok() {"Mandarin transcript: "} else {"Transcription failed: "}}
+                            <span lang="zh-CN">{result.as_ref().map(String::as_str).unwrap_or_else(|error| error.as_str())}</span>
+                        </p>
+                    }
                 }
                 <p class="text-xs text-muted">
-                    {"Recordings stay in this browser tab. Audio is not uploaded or graded. Recording stops automatically after 30 seconds."}
+                    {"Recordings stay in this browser tab. Local transcription is optional and sends the selected recording only to the loopback Whisper service. No score is awarded. Recording stops automatically after 30 seconds."}
                 </p>
             </div>
         </section>

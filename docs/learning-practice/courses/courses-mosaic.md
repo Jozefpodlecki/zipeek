@@ -10,6 +10,10 @@ Course mosaics use the application's Chinese-inspired visual style with readable
 
 Regions may remain visible but locked until the learner meets the qualifying evidence rules. A locked region is not an invitation to generate or record unearned proficiency. Locked state must explain how progress is earned and remain accessible to keyboard and screen-reader users.
 
+## Grammar mosaic detail and example navigation
+
+The selected grammar course detail panel displays the course title and available points without repeating generic course-category labels or development-status disclaimers. A compact example strip beneath the artwork presents one point at a time, with previous/next controls, a visible position counter, Hanzi first, its curated Pinyin directly underneath when available, then the English translation. Navigating examples does not alter the selected region or award progress. Course changes reset the example index. The mosaic selection remains keyboard accessible.
+
 ## Learning evidence
 
 Grammar proficiency requires ten qualifying successes per pattern, distributed over at least seven distinct days within a rolling fourteen-day window, drawn from supported Translate Sentence, Sentence Builder and Sentence Transformation submissions. Mere lesson visits, draft examples or unscored interactions do not qualify. Vocabulary exposure and visitation must be distinguished from acquisition, and progress is derived from persisted evidence. See [learning evidence](../practice/learning-evidence.md).

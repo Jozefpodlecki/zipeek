@@ -252,6 +252,25 @@ fn field<'a>(content: &'a str, prefix: &str) -> Option<&'a str> {
     content.lines().find_map(|line| line.strip_prefix(prefix))
 }
 
+fn redact_image_payloads(value: &mut Value) {
+    match value {
+        Value::String(text) if text.starts_with("data:image/") => {
+            *text = "[image omitted from E2E artifacts]".to_owned();
+        }
+        Value::Array(items) => {
+            for item in items {
+                redact_image_payloads(item);
+            }
+        }
+        Value::Object(fields) => {
+            for value in fields.values_mut() {
+                redact_image_payloads(value);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn image_scene(body: &Value) -> Result<Value, String> {
     let subjects = message(body, "user")
         .strip_prefix("REQUIRED SUBJECTS: ")
@@ -371,12 +390,15 @@ fn handle(stream: &mut TcpStream, state: &mut FixtureState) -> Result<(), String
                 || system.contains("You author ONE Mandarin/English sentence-translation exercise");
             let evaluation =
                 system.contains("You evaluate one Mandarin/English sentence translation");
+            let recognition = system.contains("Read the Chinese characters or words in the image");
             let scene = system.contains("You are composing a photographic scene for a Mandarin vocabulary recognition exercise");
             let sentence_game =
                 system.contains("You create Mandarin-learning sentence ordering exercises.");
             let dialogue_game =
                 system.contains("You create Mandarin-learning short conversational roleplays.");
-            let kind = if sentence_game {
+            let kind = if recognition {
+                "hanzi-recognition"
+            } else if sentence_game {
                 "sentence-relay"
             } else if dialogue_game {
                 "dialogue-quest"
@@ -394,9 +416,11 @@ fn handle(stream: &mut TcpStream, state: &mut FixtureState) -> Result<(), String
                 return respond(stream, 400, json!({"error":"Unexpected prompt"}))
                     .map_err(|error| error.to_string());
             };
+            let mut safe_messages = body["messages"].clone();
+            redact_image_payloads(&mut safe_messages);
             state
                 .records
-                .push(json!({"kind": kind, "model": body["model"], "messages": body["messages"]}));
+                .push(json!({"kind": kind, "model": body["model"], "messages": safe_messages}));
             if state.scenario == "server-error" {
                 return respond(stream, 503, json!({"error":"Fixture server failure"}))
                     .map_err(|error| error.to_string());
@@ -407,7 +431,19 @@ fn handle(stream: &mut TcpStream, state: &mut FixtureState) -> Result<(), String
             if evaluation && state.scenario == "slow-evaluation" {
                 thread::sleep(Duration::from_millis(1200));
             }
-            let content = if (sentence_game || dialogue_game)
+            let content = if recognition {
+                let has_image = body["messages"].as_array().is_some_and(|messages| messages.iter().any(|message| {
+                    message["content"].as_array().is_some_and(|parts| parts.iter().any(|part| {
+                        part["type"] == "image_url"
+                            && part["image_url"]["url"].as_str().is_some_and(|url| url.starts_with("data:image/png;base64,") && url.len() > 100)
+                    }))
+                }));
+                if !has_image {
+                    return respond(stream, 400, json!({"error":"Recognition requires an image"}))
+                        .map_err(|error| error.to_string());
+                }
+                json!({"candidates":["汉"]}).to_string()
+            } else if (sentence_game || dialogue_game)
                 && state.scenario == "malformed-generation"
             {
                 "{invalid-game-json".to_owned()
@@ -693,4 +729,22 @@ mod tests {
         assert!(streamed.contains("data: [DONE]"));
         fixture.stop().unwrap();
     }
+    #[test]
+    fn vision_fixture_validates_image_and_redacts_request_evidence() {
+        let mut fixture = AiFixtureServer::start().unwrap();
+        let image = format!("data:image/png;base64,{}", "a".repeat(256));
+        let request = json!({"model":"fixture", "stream":false, "messages":[
+            {"role":"system", "content":"Read the Chinese characters or words in the image"},
+            {"role":"user", "content":[{"type":"image_url", "image_url":{"url":image}}]}
+        ]});
+        let response = exchange(fixture.port, "POST", "/v1/chat/completions", Some(request));
+        assert!(response.contains("200 OK"), "{response}");
+        assert!(response.contains("candidates"), "{response}");
+        let evidence = exchange(fixture.port, "GET", "/__e2e/requests", None);
+        assert!(evidence.contains("hanzi-recognition"), "{evidence}");
+        assert!(evidence.contains("image omitted from E2E artifacts"));
+        assert!(!evidence.contains("data:image/"));
+        fixture.stop().unwrap();
+    }
+
 }

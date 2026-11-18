@@ -81,9 +81,14 @@ pub fn parse_hsk(bytes: &[u8]) -> Result<HskImport, ImportError> {
         .iter()
         .filter(|diagnostic| diagnostic.kind == Kind::RepeatedReading)
         .count();
+    let gloss_pipe_replacements = diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.kind == Kind::GlossPipeReplacement)
+        .count();
     tracing::info!(
         repeated_readings,
-        other_diagnostics = diagnostics.len() - repeated_readings,
+        gloss_pipe_replacements,
+        other_diagnostics = diagnostics.len() - repeated_readings - gloss_pipe_replacements,
         "HSK import diagnostic summary"
     );
     Ok(HskImport {

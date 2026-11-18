@@ -236,6 +236,64 @@ fn fixture(dist: &Path, prefix: &str, output: &Path) -> HarnessResult<(OwnedProc
     Ok((process, format!("http://127.0.0.1:{port}{prefix}")))
 }
 
+fn dictionary_asset(root: &Path) -> HarnessResult<(String, u64)> {
+    let static_dir = root.join("zipeek-web/static");
+    let manifest_path = static_dir.join("hanzi.manifest.json");
+    let manifest_text = std::fs::read_to_string(&manifest_path).map_err(|error| {
+        format!(
+            "E2E dictionary preflight: cannot read {}: {error}. Run `cargo make db-generate`, `cargo make db-compress`, and `cargo make db-install`.",
+            manifest_path.display()
+        )
+    })?;
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_text)
+        .map_err(|error| format!("E2E dictionary preflight: invalid {}: {error}", manifest_path.display()))?;
+    let files = manifest["files"]
+        .as_array()
+        .ok_or("E2E dictionary preflight: manifest.files must be an array")?;
+    let compressed = files.iter().filter(|entry| {
+        entry["path"].as_str().is_some_and(|path| path.ends_with(".duckdb.gz"))
+    }).collect::<Vec<_>>();
+    if compressed.len() != 1 {
+        return Err(format!(
+            "E2E dictionary preflight: expected one compressed DuckDB entry in {}, found {}",
+            manifest_path.display(), compressed.len()
+        ).into());
+    }
+    let entry = compressed[0];
+    let filename = entry["path"]
+        .as_str()
+        .ok_or("E2E dictionary preflight: compressed entry has no path")?;
+    if !filename.starts_with("hanzi-")
+        || !filename.ends_with(".duckdb.gz")
+        || !filename.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.'))
+    {
+        return Err(format!("E2E dictionary preflight: invalid dictionary asset name {filename:?}").into());
+    }
+    let expected_size = entry["size_bytes"]
+        .as_u64()
+        .filter(|size| *size > 0)
+        .ok_or("E2E dictionary preflight: compressed database size must be positive")?;
+    verify_dictionary_file(&static_dir, filename, expected_size)?;
+    Ok((filename.to_owned(), expected_size))
+}
+
+fn verify_dictionary_file(directory: &Path, filename: &str, expected_size: u64) -> HarnessResult<()> {
+    let path = directory.join(filename);
+    let size = std::fs::metadata(&path).map_err(|error| {
+        format!(
+            "E2E dictionary preflight: {} unavailable: {error}. Run `cargo make db-generate`, `cargo make db-compress`, and `cargo make db-install`.",
+            path.display()
+        )
+    })?.len();
+    if size != expected_size {
+        return Err(format!(
+            "E2E dictionary preflight: {} has {size} bytes, manifest requires {expected_size}. Run `cargo make db-compress` and `cargo make db-install`.",
+            path.display()
+        ).into());
+    }
+    Ok(())
+}
+
 fn verify_web_prerequisites(root: &Path) -> HarnessResult<()> {
     let web = root.join("zipeek-web");
     if !web.join("Trunk.toml").is_file() {
@@ -275,6 +333,7 @@ fn verify_web_prerequisites(root: &Path) -> HarnessResult<()> {
 
 pub(super) fn start(kind: SuiteKind, output: &Path) -> HarnessResult<BuiltWeb> {
     let root = Harness::workspace();
+    let (dictionary_name, dictionary_size) = dictionary_asset(&root)?;
     verify_web_prerequisites(&root)?;
     let dist = output.join("dist");
     let mut command = Command::new("trunk");
@@ -288,6 +347,7 @@ pub(super) fn start(kind: SuiteKind, output: &Path) -> HarnessResult<BuiltWeb> {
     command.env("ZIPEEK_E2E_SPEECH", "1");
     let mut build = OwnedProcess::spawn(&mut command, &output.join("build.log"))?;
     build.complete(Duration::from_secs(300))?;
+    verify_dictionary_file(&dist, &dictionary_name, dictionary_size)?;
     let prefix = if matches!(kind, SuiteKind::Pages) {
         "/zipeek"
     } else {
@@ -308,6 +368,50 @@ pub(super) fn start(kind: SuiteKind, output: &Path) -> HarnessResult<BuiltWeb> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dictionary_preflight_rejects_missing_and_incorrect_assets() -> HarnessResult<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-e2e-db-preflight-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_nanos()
+        ));
+        let static_dir = root.join("zipeek-web/static");
+        std::fs::create_dir_all(&static_dir)?;
+        let missing = dictionary_asset(&root).unwrap_err().to_string();
+        assert!(missing.contains("db-install"), "{missing}");
+        std::fs::write(static_dir.join("hanzi.manifest.json"), "not json")?;
+        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("invalid"));
+        std::fs::write(
+            static_dir.join("hanzi.manifest.json"),
+            r#"{"files":[{"path":"hanzi-test.duckdb.gz","size_bytes":4}]}"#,
+        )?;
+        let missing = dictionary_asset(&root).unwrap_err().to_string();
+        assert!(missing.contains("hanzi-test.duckdb.gz"), "{missing}");
+        std::fs::write(static_dir.join("hanzi-test.duckdb.gz"), b"abc")?;
+        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("3 bytes"));
+        std::fs::write(static_dir.join("hanzi-test.duckdb.gz"), b"abcd")?;
+        assert_eq!(dictionary_asset(&root)?, ("hanzi-test.duckdb.gz".into(), 4));
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[test]
+    fn dictionary_preflight_rejects_unsafe_manifest_paths() -> HarnessResult<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-e2e-db-unsafe-{}",
+            std::process::id()
+        ));
+        let static_dir = root.join("zipeek-web/static");
+        std::fs::create_dir_all(&static_dir)?;
+        std::fs::write(
+            static_dir.join("hanzi.manifest.json"),
+            r#"{"files":[{"path":"../hanzi-test.duckdb.gz","size_bytes":4}]}"#,
+        )?;
+        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("invalid dictionary asset name"));
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
 
     #[test]
     fn missing_web_layout_fails_before_launching_trunk() {

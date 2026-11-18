@@ -5,5 +5,7 @@ mod page;
 mod prompt;
 mod review;
 mod setup;
+mod state;
+mod viewport;
 
 pub use page::ProvinceQuestPage;

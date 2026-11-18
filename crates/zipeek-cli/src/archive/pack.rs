@@ -24,8 +24,15 @@ fn write_zip(root: &Path, archive: &Path, files: &[PathBuf]) -> Result<()> {
     let temp = archive.with_extension("zip.part");
     let output = File::create(&temp)?;
     let mut zip = ZipWriter::new(output);
-    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
     for file in files {
+        let method = compression_method(file);
+        let options = SimpleFileOptions::default()
+            .compression_method(method)
+            .compression_level(if method == CompressionMethod::Deflated {
+                Some(3)
+            } else {
+                None
+            });
         let name = file
             .strip_prefix(root)?
             .to_string_lossy()
@@ -39,4 +46,27 @@ fn write_zip(root: &Path, archive: &Path, files: &[PathBuf]) -> Result<()> {
     }
     std::fs::rename(&temp, archive)?;
     Ok(())
+}
+
+fn compression_method(file: &Path) -> CompressionMethod {
+    match file.extension().and_then(|extension| extension.to_str()) {
+        Some("png" | "jpg" | "jpeg" | "webp" | "gif" | "gz" | "zst" | "zip" | "pdf"
+        | "mp3" | "mp4" | "wasm") => CompressionMethod::Stored,
+        _ => CompressionMethod::Deflated,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn already_compressed_assets_are_stored_without_recompression() {
+        for name in ["image.png", "image.webp", "archive.zip", "dictionary.gz"] {
+            assert_eq!(compression_method(Path::new(name)), CompressionMethod::Stored);
+        }
+        for name in ["source.rs", "characters.json", "README.md"] {
+            assert_eq!(compression_method(Path::new(name)), CompressionMethod::Deflated);
+        }
+    }
 }

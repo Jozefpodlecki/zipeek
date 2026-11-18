@@ -32,7 +32,7 @@ pub(super) fn record(
 ) {
     let detail = detail.into();
     match kind {
-        ImportDiagnosticKind::RepeatedReading => {
+        ImportDiagnosticKind::RepeatedReading | ImportDiagnosticKind::GlossPipeReplacement => {
             tracing::debug!(?kind, entry, simplified, detail, "HSK import diagnostic");
         }
         _ => {
@@ -52,7 +52,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn repeated_reading_diagnostics_are_still_retained() {
+    fn routine_diagnostics_are_retained_without_warning_level_logging() {
         let mut diagnostics = Vec::new();
         record(
             &mut diagnostics,
@@ -61,7 +61,16 @@ mod tests {
             "子",
             "duplicate",
         );
-        assert_eq!(diagnostics.len(), 1);
+        record(
+            &mut diagnostics,
+            ImportDiagnosticKind::GlossPipeReplacement,
+            6,
+            "骆驼",
+            "normalized separator",
+        );
+        assert_eq!(diagnostics.len(), 2);
         assert_eq!(diagnostics[0].detail, "duplicate");
+        assert_eq!(diagnostics[1].kind, ImportDiagnosticKind::GlossPipeReplacement);
+        assert_eq!(diagnostics[1].detail, "normalized separator");
     }
 }

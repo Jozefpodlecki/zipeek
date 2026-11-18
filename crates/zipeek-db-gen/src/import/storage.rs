@@ -1,5 +1,5 @@
-use duckdb_neo::{Parameters, connection::Connection};
-use zipeek_core::Word;
+use duckdb_neo::{Parameters, QueryParameter, connection::Connection};
+use zipeek_core::{PartOfSpeech, Word};
 
 use super::{
     CharacterReading, ImportError, SourceSense, enrichment::enrich_dictionary,
@@ -70,7 +70,73 @@ pub fn insert_full_dictionary(
     }
 }
 
+fn serialize_part_of_speech(values: &[PartOfSpeech]) -> Option<String> {
+    (!values.is_empty()).then(|| {
+        values
+            .iter()
+            .map(|value| value.as_str())
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
+const BULK_ROWS: usize = 256;
+
+fn bulk_sql(prefix: &str, columns: usize, rows: usize) -> String {
+    let mut sql = String::from(prefix);
+    sql.push_str(" VALUES ");
+    for row in 0..rows {
+        if row != 0 {
+            sql.push(',');
+        }
+        sql.push('(');
+        for column in 0..columns {
+            if column != 0 {
+                sql.push(',');
+            }
+            sql.push('$');
+            sql.push_str(&(row * columns + column + 1).to_string());
+        }
+        sql.push(')');
+    }
+    sql
+}
+
 fn insert_batch(connection: &Connection, words: &[Word]) -> Result<(), ImportError> {
+    if words.len() < BULK_ROWS {
+        return insert_batch_single_row(connection, words);
+    }
+    let prefix = INSERT_WORD.split_once(" VALUES (").unwrap().0;
+    for (batch_index, chunk) in words.chunks(BULK_ROWS).enumerate() {
+        let ids: Vec<i32> = chunk.iter().map(|word| word.id.as_i32()).collect();
+        let pos: Vec<Option<String>> = chunk.iter().map(|word| {
+            serialize_part_of_speech(&word.part_of_speech)
+        }).collect();
+        let old: Vec<Option<i32>> = chunk.iter().map(|word| word.hsk2_level.map(|level| level.as_i32())).collect();
+        let new: Vec<Option<i32>> = chunk.iter().map(|word| word.hsk3_level.map(|level| level.as_i32())).collect();
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 10);
+        for (index, word) in chunk.iter().enumerate() {
+            params.extend_from_slice(&[
+                &ids[index], &word.simplified, &word.traditional,
+                &word.pinyin, &word.pinyin_numeric, &word.english,
+                &pos[index], &old[index], &new[index], &word.frequency,
+            ]);
+        }
+        let sql = bulk_sql(prefix, 10, chunk.len());
+        let statement = connection.prepare(&sql, true).map_err(|source| ImportError::Insert {
+            word_id: None, source,
+        })?;
+        statement.execute(Parameters::Positional(&params))
+            .and_then(|mut result| result.drain())
+            .map_err(|source| ImportError::Insert {
+                word_id: (chunk.len() == 1).then_some(ids[0]), source,
+            })?;
+        report_progress("words", ((batch_index + 1) * BULK_ROWS).min(words.len()), words.len());
+    }
+    Ok(())
+}
+
+fn insert_batch_single_row(connection: &Connection, words: &[Word]) -> Result<(), ImportError> {
     let statement =
         connection
             .prepare(INSERT_WORD, true)
@@ -79,13 +145,7 @@ fn insert_batch(connection: &Connection, words: &[Word]) -> Result<(), ImportErr
                 source,
             })?;
     for (index, word) in words.iter().enumerate() {
-        let pos = (!word.part_of_speech.is_empty()).then(|| {
-            word.part_of_speech
-                .iter()
-                .map(|value| value.as_str())
-                .collect::<Vec<_>>()
-                .join(",")
-        });
+        let pos = serialize_part_of_speech(&word.part_of_speech);
         let old = word.hsk2_level.map(|level| level.as_i32());
         let new = word.hsk3_level.map(|level| level.as_i32());
         let result = statement.execute(Parameters::Positional(&[
@@ -111,6 +171,7 @@ fn insert_batch(connection: &Connection, words: &[Word]) -> Result<(), ImportErr
     Ok(())
 }
 
+
 fn populate_memberships(connection: &Connection) -> Result<(), ImportError> {
     for query in [
         "INSERT INTO word_hsk_membership (word_id, system, level) SELECT id, 'hsk2', hsk2_level FROM words WHERE hsk2_level IS NOT NULL AND id NOT IN (SELECT word_id FROM word_hsk_membership WHERE system = 'hsk2')",
@@ -128,13 +189,27 @@ fn populate_memberships(connection: &Connection) -> Result<(), ImportError> {
 }
 
 fn insert_senses(connection: &Connection, senses: &[SourceSense]) -> Result<(), ImportError> {
-    const INSERT: &str = "INSERT INTO word_senses (word_id, sense_order, gloss, source, source_ref, source_gloss_order) VALUES ($1,$2,$3,$4,$5,$6)";
-    let statement = connection
-        .prepare(INSERT, true)
-        .map_err(|source| ImportError::Insert {
-            word_id: None,
-            source,
+    let prefix = "INSERT INTO word_senses (word_id, sense_order, gloss, source, source_ref, source_gloss_order)";
+    for (batch_index, chunk) in senses.chunks(BULK_ROWS).enumerate() {
+        let ids: Vec<i32> = chunk.iter().map(|sense| sense.word_id.as_i32()).collect();
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 6);
+        for (index, sense) in chunk.iter().enumerate() {
+            params.extend_from_slice(&[
+                &ids[index], &sense.sense_order, &sense.gloss,
+                &sense.source, &sense.source_ref, &sense.source_gloss_order,
+            ]);
+        }
+        let sql = bulk_sql(prefix, 6, chunk.len());
+        let statement = connection.prepare(&sql, true).map_err(|source| ImportError::Insert {
+            word_id: None, source,
         })?;
+        statement.execute(Parameters::Positional(&params))
+            .and_then(|mut result| result.drain())
+            .map_err(|source| ImportError::Insert {
+                word_id: (chunk.len() == 1).then_some(ids[0]), source,
+            })?;
+        report_progress("raw senses", ((batch_index + 1) * BULK_ROWS).min(senses.len()), senses.len());
+    }
     let display_statement = connection.prepare(
         "INSERT INTO sense_display (word_id, sense_order, definition, derivation, sense_kind) VALUES ($1,$2,$3,$4,$5)", true,
     ).map_err(|source| ImportError::Insert { word_id: None, source })?;
@@ -145,20 +220,6 @@ fn insert_senses(connection: &Connection, senses: &[SourceSense]) -> Result<(), 
         "INSERT INTO sense_qualifiers (word_id, sense_order, qualifier_kind, qualifier_code, source_annotation, extraction_method) VALUES ($1,$2,$3,$4,$5,'explicit_source_annotation')", true,
     ).map_err(|source| ImportError::Insert { word_id: None, source })?;
     for (index, sense) in senses.iter().enumerate() {
-        statement
-            .execute(Parameters::Positional(&[
-                &sense.word_id.as_i32(),
-                &sense.sense_order,
-                &sense.gloss,
-                &sense.source,
-                &sense.source_ref,
-                &sense.source_gloss_order,
-            ]))
-            .and_then(|mut result| result.drain())
-            .map_err(|source| ImportError::Insert {
-                word_id: Some(sense.word_id.as_i32()),
-                source,
-            })?;
         let reference = lexical_reference(&sense.gloss);
         let (definition, derivation): (Option<&str>, &str) = match reference.as_ref() {
             Some(value) if value.definition.is_empty() => (None, "relation_only"),
@@ -242,26 +303,22 @@ pub fn insert_character_readings(
     connection: &Connection,
     readings: &[CharacterReading],
 ) -> Result<(), ImportError> {
-    let statement = connection
-        .prepare(
-            "INSERT INTO character_readings (character, traditional, pinyin_numeric, source_line) VALUES ($1, $2, $3, $4)",
-            true,
-        )
-        .map_err(|source| ImportError::Insert { word_id: None, source })?;
-    for (index, reading) in readings.iter().enumerate() {
-        statement
-            .execute(Parameters::Positional(&[
-                &reading.character,
-                &reading.traditional,
-                &reading.pinyin_numeric,
-                &reading.source_line,
-            ]))
+    let prefix = "INSERT INTO character_readings (character, traditional, pinyin_numeric, source_line)";
+    for (batch_index, chunk) in readings.chunks(BULK_ROWS).enumerate() {
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 4);
+        for reading in chunk {
+            params.extend_from_slice(&[
+                &reading.character, &reading.traditional,
+                &reading.pinyin_numeric, &reading.source_line,
+            ]);
+        }
+        let sql = bulk_sql(prefix, 4, chunk.len());
+        let statement = connection.prepare(&sql, true)
+            .map_err(|source| ImportError::Insert { word_id: None, source })?;
+        statement.execute(Parameters::Positional(&params))
             .and_then(|mut result| result.drain())
-            .map_err(|source| ImportError::Insert {
-                word_id: None,
-                source,
-            })?;
-        report_progress("readings", index + 1, readings.len());
+            .map_err(|source| ImportError::Insert { word_id: None, source })?;
+        report_progress("readings", ((batch_index + 1) * BULK_ROWS).min(readings.len()), readings.len());
     }
     Ok(())
 }
@@ -279,7 +336,27 @@ mod progress_tests {
     use super::*;
 
     #[test]
+    fn part_of_speech_serialization_matches_database_values() {
+        assert_eq!(serialize_part_of_speech(&[]), None);
+        assert_eq!(
+            serialize_part_of_speech(&[PartOfSpeech::Noun]),
+            Some("noun".to_owned()),
+        );
+        assert_eq!(
+            serialize_part_of_speech(&[PartOfSpeech::Noun, PartOfSpeech::Verb]),
+            Some("noun,verb".to_owned()),
+        );
+    }
+
+    #[test]
     fn progress_interval_is_nonzero() {
         assert!(PROGRESS_INTERVAL > 0);
+    }
+
+    #[test]
+    fn bulk_statement_uses_unique_positional_parameters() {
+        assert_eq!(bulk_sql("INSERT INTO t (a, b)", 2, 2),
+            "INSERT INTO t (a, b) VALUES ($1,$2),($3,$4)");
+        assert!(BULK_ROWS > 1);
     }
 }

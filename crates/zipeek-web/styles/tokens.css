@@ -40,8 +40,10 @@
     --province-map-stroke: #526f88;
     --province-map-focus: #1d4ed8;
     --province-map-hint: #eab308;
-    --province-map-correct: #15803d;
-    --province-map-wrong: #dc2626;
+    --province-map-correct: var(--accent);
+    --province-map-wrong: #b45309;
+    --province-choice-correct: color-mix(in srgb, var(--accent) 14%, var(--raised));
+    --province-choice-wrong: color-mix(in srgb, #b45309 13%, var(--raised));
     --match-success: #d1fae5;
     --match-rest: #f1f5f9;
     --topbar-height: 3rem;
@@ -76,8 +78,10 @@
     --province-map-stroke: #83a9b4;
     --province-map-focus: #f8fafc;
     --province-map-hint: #eab308;
-    --province-map-correct: #16a34a;
-    --province-map-wrong: #dc2626;
+    --province-map-correct: var(--accent);
+    --province-map-wrong: #fbbf24;
+    --province-choice-correct: color-mix(in srgb, var(--accent) 16%, var(--raised));
+    --province-choice-wrong: color-mix(in srgb, #fbbf24 13%, var(--raised));
     --match-success: #064e3b;
     --match-rest: #1e293b;
     --canvas: #0b1120;

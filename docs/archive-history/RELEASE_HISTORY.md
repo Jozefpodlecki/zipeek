@@ -1,3 +1,15 @@
+## R570 WIP - 2026-11-18 - Statistics async data source and section state
+
+Introduced typed owned section projections, replaceable async Statistics source, separate data-context reducer, per-tab loading/failure/retry/cache, stale-request rejection, and E2E section readiness selectors. Demo data remains local and unassessed; high-volume server pagination and live evidence integration remain open. Build and Chrome acceptance are pending.
+
+## R568 WIP - 2026-11-18 - Statistics selection and dashboard configuration
+
+Fixture-only controls for Overview card presets, allowlisted vocabulary page size, bounded filtered selection, Insights drilldowns, stable History pagination and selected-item review. Rust/WASM compilation and browser acceptance remain unverified. No production learner evidence, dependencies or schema changed.
+
+## R565 WIP - 2026-11-18 - Statistics 2.0 design contracts
+
+Documentation-only checkpoint. Approved the design direction in the maintained Statistics product specification, a new feature architecture contract and a phased acceptance matrix. No UI implementation or production evidence integration is claimed. See the root release notes and active project tasks for outstanding gates.
+
 ## R524 WIP - 2026-11-17 - Translation action routing and map asset diagnostics
 
 The source candidate replaces translator delegated dataset dispatch with typed direct callbacks, distinguishes connection failures in translation feedback, and identifies HTML map fallbacks or missing content separately from malformed JSON. It records approved service, course lock, grammar evidence and speech provider decisions D53-D56 without implementing their larger pipelines. Province Quest generated assets were not present in the baseline source archive. Rust/WASM and browser checks remain pending.
@@ -1054,3 +1066,17 @@ Extracted ten focused specification sections, kept their original entry point he
 - Added executable acceptance checklists as future verification gates, not statements of implementation.
 - Retained open technical architecture questions separately from consumed product decisions.
 - The documentation validator was run on the assembled documentation overlay. Rust, WASM and browser testing were not performed.
+
+## R538 WIP: Rust/WASM local speech and Chart.js bridge (2026-11-17)
+
+Source migration of local browser speech into Rust with WAV tests and typed state. Chart.js remains pinned under D35 with only thin JS interop. The archive is an unverified WIP pending Cargo, WASM and browser acceptance; see root `RELEASE_NOTES.md`.
+
+- R539 WIP: Recognition workspace redesign and canvas state consistency; browser acceptance outstanding.
+
+- R541 WIP (20261117-234235 UTC): Rust/WASM browser service migration for AI settings, clipboard and Hanzi recognition workspace. Full browser/WASM acceptance pending.
+
+## R553 WIP - full local install wiring
+
+Unified `cargo make install` with the pre-existing database, web and Worker build workflows and a new geography fetch/audit/build task chain. Local development only for AreaCity geography until upstream rights review. Build and browser verification pending.
+
+- **R566 WIP (2026-11-18):** Statistics UI reducer/context foundation, guarded preview loading, fixture Chart.js Overview and stable incomplete-page table layout; WASM/browser verification pending.

@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 use zipeek_exercises::province_quest::{Difficulty, LearningSupport};
 
 #[derive(Properties, PartialEq)]
@@ -58,7 +59,15 @@ pub fn province_setup(props: &ProvinceSetupProps) -> Html {
             }
             <div class="flex items-center justify-between gap-4 rounded-xl bg-raised p-4">
                 <span class="text-sm text-muted">{"10 randomized locations per game"}</span>
-                <button type="button" class="rounded-xl bg-brand-action px-5 py-3 font-semibold text-white disabled:opacity-50" disabled={props.loading} onclick={props.on_start.clone()}> {if props.loading { "Loading map…" } else { "Start game" }} </button>
+                <button type="button" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-action px-5 py-3 font-semibold text-white disabled:opacity-50" disabled={props.loading} onclick={props.on_start.clone()}>
+                    if props.loading {
+                        <Icon data={IconData::LUCIDE_REFRESH_CW} width="18px" height="18px" class="animate-spin motion-reduce:animate-none" />
+                        {"Loading"}
+                    } else {
+                        <Icon data={IconData::LUCIDE_PLAY} width="18px" height="18px" />
+                        {"Start"}
+                    }
+                </button>
             </div>
         </section>
     }

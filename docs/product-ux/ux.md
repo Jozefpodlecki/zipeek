@@ -20,3 +20,5 @@ Zipeek uses a consistent violet visual system, accessible controls, and a Chines
 The global header omits active page and exercise titles where these merely repeat context. The long dragon-shaped indicator represents persisted pedagogical evidence, not a plain exercise completion score. A dedicated Practice shell supplies consistent feedback and navigation without forcing different gameplay layouts into one component.
 
 The earlier dated UX compilation is retained only in [historical UX notes](../archive-history/audits/UX.md).
+
+For the approved Statistics 2.0 design, including the deterministic sample-data preview and the separate production evidence gate, see [Statistics product and interaction design](pages/learning-statistics-preview.md).

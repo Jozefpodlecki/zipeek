@@ -20,7 +20,7 @@ impl Area {
             Self::Learning => {
                 path.starts_with("/games/")
                     || path.starts_with("/courses/")
-                    || matches!(path, "/write-hanzi" | "/translate-sentence")
+                    || matches!(path, "/write-hanzi" | "/recognize-hanzi" | "/translate-sentence")
             }
             Self::Core => !Self::Practice.includes(path) && !Self::Learning.includes(path),
         }

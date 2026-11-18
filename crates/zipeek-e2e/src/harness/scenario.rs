@@ -37,7 +37,15 @@ impl ScenarioContext {
     }
 
     pub async fn open_route(&self, path: &str) -> HarnessResult<()> {
-        self.open(AppRoute::from_deep_link(path)?).await
+        let route = AppRoute::from_deep_link(path)?;
+        self.driver.goto(route.url(&self.base_url)).await?;
+        let route_path = path.split_once('?').map_or(path, |(path, _)| path);
+        let marker = crate::page_objects::routes::ROUTES
+            .iter()
+            .find(|case| case.path == route_path)
+            .map_or("[data-component='app-shell']", |case| case.marker);
+        self.driver.query_single(marker).await?;
+        Ok(())
     }
 
     pub async fn navigate_in_app(&self, route: AppRoute) -> HarnessResult<()> {

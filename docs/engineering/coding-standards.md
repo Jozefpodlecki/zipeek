@@ -40,6 +40,19 @@ testing strategy in [testing/TESTING.md](../testing-quality/acceptance/testing.m
 - Treat `cargo fmt` as the minimum formatting requirement, not permission to
   squeeze several logical operations onto a single line.
 
+### Imports and qualification
+
+- Prefer explicit `use` declarations at module scope for externally defined types,
+  traits, functions and constants used in implementation logic. Group related
+  imports clearly and keep application code focused on behavior rather than
+  repeated module paths.
+- Use a qualified path when it resolves ambiguity or materially improves clarity,
+  including naming conflicts and one-off references. Do not use wildcard imports
+  except for established preludes or intentionally scoped test imports.
+- Keep imports needed by a module at its boundary rather than inside event
+  callbacks, effects or render expressions. Preserve a local import only when
+  its limited scope serves a concrete purpose.
+
 ### Modules and platform API boundaries
 
 - A stateful browser integration such as microphone capture must separate the
@@ -124,6 +137,19 @@ testing strategy in [testing/TESTING.md](../testing-quality/acceptance/testing.m
 - WASM-specific browser access (DOM, `js_sys`, `web_sys`) belongs in
   `zipeek-browser` or the `zipeek-db/wasm` adapter when it is not Yew-specific.
   Yew rendering stays in `zipeek-web`. `zipeek-core` must compile natively.
+- **Rust/WASM-first browser implementation:** Implement Zipeek-owned application behavior,
+  state, validation, async orchestration, resource lifetime and cleanup in Rust.
+  Prefer typed `web-sys`/`js-sys` APIs. If a browser feature or third-party
+  library needs JavaScript, use the smallest `wasm-bindgen` interop boundary,
+  normally `inline_js`, with typed Rust-facing functions and opaque newtypes
+  for external objects. Do not add handwritten `.js` service layers merely to
+  call another JavaScript module or to hold application state.
+- **Exceptions are intentional:** Pinned third-party JavaScript/WASM assets
+  (including D35 Chart.js and DuckDB-WASM), build scripts, test probes, and
+  minimal pre-WASM bootstrap remain supported. Preserve their packaging and
+  licenses. Distinguish a permitted vendor module from application logic.
+  See [Rust/WASM browser interoperability](../architecture/modules/rust-wasm-interop.md)
+  for ownership, newtype, dynamic-import, lifecycle and verification rules.
 
 ## Yew
 

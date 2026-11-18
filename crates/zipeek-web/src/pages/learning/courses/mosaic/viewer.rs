@@ -1,3 +1,4 @@
+use yew_icons::{Icon, IconData};
 use super::super::curriculum::authored_grammar_region;
 use super::super::grammar_expansion::expanded_course;
 use super::super::grammar_plan::planned_title;
@@ -72,7 +73,7 @@ pub fn course_mosaic() -> Html {
                     </div>
                 }}
                 details={html! { <CourseDetails key={(*selected).to_string()} selected={*selected} /> }}
-                explorer={html! { <GrammarPatternPreview selected={*selected} /> }}
+                explorer={html! { <GrammarPatternPreview key={(*selected).to_string()} selected={*selected} /> }}
             />
         </section>
     }
@@ -85,19 +86,47 @@ struct GrammarPatternPreviewProps {
 
 #[function_component(GrammarPatternPreview)]
 fn grammar_pattern_preview(props: &GrammarPatternPreviewProps) -> Html {
-    let point = authored_grammar_region(props.selected)
+    let current = use_state(|| 0usize);
+    let course = authored_grammar_region(props.selected)
         .map(|(course, _)| course)
-        .or_else(|| expanded_course(props.selected))
-        .and_then(|course| course.points.first());
+        .or_else(|| expanded_course(props.selected));
+    let points = course.map(|course| course.points).unwrap_or(&[]);
+    let count = points.len();
+    let index = (*current).min(count.saturating_sub(1));
+    let point = points.get(index);
+    let pinyin = zipeek_pedagogy::grammar::pinyin::example_pinyin(props.selected, index);
+    let previous = {
+        let current = current.clone();
+        Callback::from(move |_: MouseEvent| current.set(index.saturating_sub(1)))
+    };
+    let next = {
+        let current = current.clone();
+        Callback::from(move |_: MouseEvent| current.set((index + 1).min(count.saturating_sub(1))))
+    };
     html! {
-        <section data-grammar-preview="" class="h-[166px] overflow-hidden rounded-xl border border-line bg-surface p-3 shadow-sm" aria-label="Grammar pattern preview">
-            <h3 class="text-sm font-bold text-ink">{"Grammar pattern"}</h3>
+        <section data-grammar-preview="" class="flex h-[166px] min-w-0 flex-col rounded-xl border border-line bg-surface px-4 py-3 shadow-sm" aria-label="Grammar examples">
             if let Some(point) = point {
-                <p class="mt-1 truncate text-xs font-semibold text-muted">{point.label}</p>
-                <p class="mt-2 truncate text-xl font-semibold text-ink" lang="zh">{point.example}</p>
+                <div class="flex items-center justify-between gap-2">
+                    <span class="truncate text-xs font-semibold text-muted">{point.label}</span>
+                    <div class="flex shrink-0 items-center gap-2">
+                        <span class="text-xs tabular-nums text-muted">{format!("{} / {}", index + 1, count)}</span>
+                        <button type="button" aria-label="Previous grammar example" title="Previous example" disabled={index == 0} onclick={previous}
+                            class="inline-flex size-8 items-center justify-center rounded-lg border border-line hover:bg-raised disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-accent">
+                            <Icon data={IconData::LUCIDE_CHEVRON_LEFT} width="16px" height="16px" />
+                        </button>
+                        <button type="button" aria-label="Next grammar example" title="Next example" disabled={index + 1 >= count} onclick={next}
+                            class="inline-flex size-8 items-center justify-center rounded-lg border border-line hover:bg-raised disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-accent">
+                            <Icon data={IconData::LUCIDE_CHEVRON_RIGHT} width="16px" height="16px" />
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-1 truncate text-xl font-semibold text-ink" lang="zh-Hans">{point.example}</p>
+                if let Some(pinyin) = pinyin {
+                    <p class="truncate text-sm text-accent" lang="zh-Latn">{pinyin}</p>
+                }
                 <p class="mt-1 line-clamp-2 text-sm text-muted">{point.translation}</p>
             } else {
-                <p class="mt-3 text-sm text-muted">{"Select a published course to preview a sentence pattern."}</p>
+                <p class="text-sm text-muted">{"Select an available course to view examples."}</p>
             }
         </section>
     }

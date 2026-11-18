@@ -36,6 +36,7 @@ pub async fn unpack(root: &Path, archive: &Path) -> Result<()> {
 fn extract(archive: &Path, stage: &Path) -> Result<()> {
     let mut zip = ZipArchive::new(File::open(archive)?)?;
     let mut seen = HashSet::new();
+    let mut created_directories = HashSet::new();
     for index in 0..zip.len() {
         let mut entry = zip.by_index(index)?;
         if entry.is_dir() {
@@ -62,7 +63,10 @@ fn extract(archive: &Path, stage: &Path) -> Result<()> {
             continue;
         }
         let path = stage.join(relative);
-        std::fs::create_dir_all(path.parent().ok_or("invalid destination")?)?;
+        let parent = path.parent().ok_or("invalid destination")?;
+        if created_directories.insert(parent.to_owned()) {
+            std::fs::create_dir_all(parent)?;
+        }
         io::copy(&mut entry, &mut File::create(path)?)?;
     }
     Ok(())

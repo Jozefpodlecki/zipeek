@@ -47,3 +47,5 @@ pub use practice::vocabulary_exercises::VocabularyExercisePage;
 
 pub use practice::listening_choice::ListeningChoicePage;
 pub use practice::local_session::LocalPracticeSession;
+
+pub use learning::recognize_hanzi::RecognizeHanziPage;

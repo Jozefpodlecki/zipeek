@@ -294,9 +294,30 @@ description = "Validate bundled WebP backgrounds and embed the Lavender first-pa
 command = "cargo"
 args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "web", "prepare-backgrounds"]
 
+[tasks.geo-fetch]
+description = "Fetch or reuse the pinned AreaCity geography source for local Province Quest development"
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "geo", "fetch", "--provider", "areacity", "--output", "target/geo-workflow/areacity"]
+
+[tasks.geo-audit]
+description = "Audit the pinned AreaCity hierarchy and geometry before generating game assets"
+dependencies = ["geo-fetch"]
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "geo", "audit", "--provider", "areacity", "--input", "target/geo-workflow/areacity"]
+
+[tasks.geo-build]
+description = "Build Province Quest geography from validated pinned source data"
+dependencies = ["geo-audit"]
+command = "cargo"
+args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "geo", "build", "--provider", "areacity", "--input", "target/geo-workflow/areacity", "--output", "crates/zipeek-web/static/province-quest"]
+
+[tasks.geo-install]
+description = "Fetch, audit and install local-only Province Quest geometry"
+dependencies = ["geo-build"]
+
 [tasks.install]
-description = "Prepare reproducible web assets including optimized theme backgrounds"
-dependencies = ["prepare-assets"]
+description = "Explicit full local setup: web assets, dictionary, geography, pedagogy worker, docs and deploy checks"
+dependencies = ["setup-all", "db-generate", "db-compress", "db-install", "geo-install", "pedagogy-worker", "preflight-deploy"]
 
 [tasks.e2e-wasm]
 description = "Validate the browser WASM application before E2E compilation"

@@ -35,7 +35,7 @@ struct NavigationItemConfig {
     icon: IconData,
 }
 
-const NAVIGATION_ITEMS: [NavigationItemConfig; 12] = [
+const NAVIGATION_ITEMS: [NavigationItemConfig; 13] = [
     NavigationItemConfig {
         route: Route::Home,
         label: "Home",
@@ -57,6 +57,11 @@ const NAVIGATION_ITEMS: [NavigationItemConfig; 12] = [
         icon: IconData::LUCIDE_BOOK_OPEN,
     },
     NavigationItemConfig {
+        route: Route::Stats,
+        label: "Stats",
+        icon: IconData::LUCIDE_LAYOUT_GRID,
+    },
+    NavigationItemConfig {
         route: Route::WordSets,
         label: "Word Sets",
         icon: IconData::LUCIDE_BOOKMARK,
@@ -65,6 +70,11 @@ const NAVIGATION_ITEMS: [NavigationItemConfig; 12] = [
         route: Route::WriteHanzi,
         label: "Write Hanzi",
         icon: IconData::LUCIDE_FILE_TEXT,
+    },
+    NavigationItemConfig {
+        route: Route::RecognizeHanzi,
+        label: "Recognize Hanzi",
+        icon: IconData::LUCIDE_SCAN_LINE,
     },
     NavigationItemConfig {
         route: Route::TranslateSentence,
@@ -80,11 +90,6 @@ const NAVIGATION_ITEMS: [NavigationItemConfig; 12] = [
         route: Route::Random,
         label: "Random",
         icon: IconData::LUCIDE_SHUFFLE,
-    },
-    NavigationItemConfig {
-        route: Route::Stats,
-        label: "Stats",
-        icon: IconData::LUCIDE_BOOK_OPEN,
     },
     NavigationItemConfig {
         route: Route::Settings,

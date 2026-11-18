@@ -26,3 +26,11 @@ The installed manifest declares 120,970 `words` rows, engine `v2.0.0`, storage `
 - [Artifact evidence](../../dictionary-data/schema/artifacts.md)
 - [Inputs and provenance](../../dictionary-data/schema/sources.md)
 - [Current acceptance](../../project-management/current.md)
+
+## Generation performance review (R528 WIP)
+
+The artifact writer currently specifies `BLOCK_SIZE 262144` (256 KiB). Increasing the storage block size is not an established optimization for this workload. The import operates in a transaction with reusable prepared statements but performs individual executes for words, senses and character readings; the artifact writer then bulk-copies the in-memory tables, builds English FTS, checkpoints and verifies the reopened file. Benchmark these phases separately before changing bulk ingestion, schema/index ordering or database layout. Expected gloss pipe normalization diagnostics remain preserved in the structured artifact, but no longer emit WARN per occurrence.
+
+## Batched ingestion (R529 WIP)
+
+The main `words`, `word_senses`, and `character_readings` imports now use parameterized multi-row inserts in chunks of 256, reducing query executions for large dictionaries. Sense display derivation, qualifier and relation extraction, and character enrichment keep their existing per-row logic and transactional boundaries. Small word inserts retain their individual error attribution. The artifact still uses DuckDB's maximum supported 256 KiB block size, and logical snapshot/reopen verification remains mandatory. Benchmark and run the generator's import tests locally before considering the optimization accepted.

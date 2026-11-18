@@ -1,3 +1,427 @@
+# R570 WIP - Statistics async sections and replaceable projections (2026-11-18)
+
+- Replaced direct fixture reads in the Statistics Overview, Vocabulary, Grammar, Skills, History, Insights and metric cards with typed, owned projections loaded through an asynchronous `StatisticsSource` implementation.
+- Added a separate data reducer and scoped context for per-tab loading, immutable successful results, failure/retry, cached successful sections and generation-checked completion and typed projection mismatch rejection. Abandoning a view invalidates its pending request; closing preview resets the cache.
+- Retained the existing UI reducer for filtering, sorting, pagination and bulk selection. Vocabulary selection now uses the record identifier supplied by the section projection rather than the rendered Hanzi label. The two-second initial demo preview is unchanged; per-tab source loading does not add artificial waits.
+- Updated the Statistics E2E journey to wait for real tab-specific UI markers. Added source/reducer unit tests for all seven projection kinds, stale completions, retry, reset and successful empty sections.
+- Updated the normative Statistics architecture and product docs, current work, tasks and release history.
+
+**Boundary:** All projections still originate from fictional offline fixtures; no personal records, database schema, dependencies or production evidence rules changed. Current explorer filtering/pagination remains client-side over bounded loaded projections. A server-side query/page contract is an explicitly outstanding prerequisite for high-volume API integration. No real Practice/Word Set handoff was added.
+
+**Verification:** Static source checks and ZIP integrity only. Rust/WASM compilation, automated unit tests and browser E2E were not run because a Rust toolchain and browser are unavailable here. R570 is an unverified WIP candidate.
+
+# R569 WIP - Statistics History and interaction design (2026-11-18)
+
+- Built a deterministic 72-session History fixture representing all sixteen current registered Practice exercise types and eight representative game activities, with canonical exercise IDs, category, dates, focuses and scored/unscored distinctions. Real personal learning history is not read or changed.
+- Replaced the generic repeated History timeline with searchable Practice/Games filters, expandable typed session cards, stable eight-item paging and a recent-activity strip. Practice-only exercise types intentionally have no correctness score.
+- Added a reusable, theme-integrated and keyboard-operable Yew selection checkbox for the Statistics vocabulary and grammar tables. Preserved semantic accessible names and state.
+- Replaced flat fixture index distribution with date-derived five-week Overview activity counts; Chart.js labels now show the sample week boundaries.
+- Updated Statistics product/UI standards and E2E selectors, added regression tests for exercise registry coverage, score eligibility, category filtering and reducer pagination resets.
+
+Archive: `zipeek-R569-WIP-statistics-history-and-ui-controls-20261118-225149.zip` (packaging timestamp recorded in final artifact name).
+
+Source and ZIP checks only. Rust/WASM compilation, actual Chrome visualization, E2E and keyboard acceptance were not run here. No new dependencies, schema changes, generated database edits or actual Practice/Word Set handoffs. This is an unverified WIP, not an accepted release.
+
+# R568 WIP - Statistics preview controls and selection safety
+
+- Added Focused, Activity and Detailed Overview card presets with independently toggleable cards, owned by the existing Statistics reducer.
+- Added validated vocabulary page sizes 10, 25, 50 and 100; page changes reset the visible page and retain selected IDs.
+- Added explicit select-all-filtered actions for vocabulary and grammar, bounded to 250 matching fixture identities with a clear disabled state for larger matches.
+- Limited selection-review previews to twelve labels while preserving the true selection count; added regression tests for preset transitions, invalid page sizes and bounded bulk selection.
+- Improved Insights navigation: listening and speaking gap cards now open the corresponding filtered vocabulary; review candidates select review-first sorting. Kept History page height stable across the short last page.
+- Updated Statistics product and architecture contracts, current tasks and this canonical handoff note.
+
+No personal evidence or production database changes. No dependency changes. Rust/WASM compilation, browser E2E and theme/mobile acceptance are **not run** in this environment. The complete project ZIP is an unverified WIP.
+
+## R567 WIP - Statistics 2.0 explorers and Chart.js bridge (2026-11-18)
+
+Archive: `zipeek-R567-WIP-statistics-explorers-and-chart-reliability-20261118-220836.zip`
+
+- Added searchable, sortable, paginated Hanzi and Words preview with stable cross-page selection and an explicit temporary selection review. No Word Sets mutation and no selected-ID transfer to Practice yet.
+- Added a first-class Grammar tab with 16 illustrative grammar patterns, text filtering, pagination and selection review. These are mock course patterns, not authoritative assessed evidence.
+- Added five interactive skill-gap views that navigate to matching sample vocabulary. Added a compact expandable session timeline and actionable demo evidence-gap panels.
+- Changed Chart.js configuration serialization to a plain-JavaScript-object-compatible serializer, and added a visible fallback activity visualization while Chart.js is unavailable. Existing pinned vendor library remains.
+- Consolidated legacy Statistics sections, extended reducer/context state, added pure selection/filter tests and updated the Statistics E2E contract and owner documentation.
+- No new dependencies, database format changes, personal evidence writes or real proficiency assertions. Source/ZIP checks only; Cargo/WASM/Chrome acceptance not executed in the packaging environment.
+
+## R566 WIP - Statistics foundation, Overview and lifecycle (2026-11-18)
+
+- Added a typed Yew feature reducer with guarded preview completion, tab/page state and metric configuration, plus route-local Statistics context. No app-global state or personal records introduced.
+- Replaced the blank loading spinner with dashboard-shaped skeletons that honor reduced motion. The Demo retains a simulated two-second load; no delay is imposed on future real data.
+- Replaced the default Overview table with a Chart.js activity bar plot (through the existing Rust interop) and an accessible data table plus four short review candidates linking to the full vocabulary tab.
+- Kept incomplete pages visually stable in the full vocabulary and history tables; repaired zero-result pagination ranges. No invented table records are added.
+- Preserved demo-only fixtures, pinned dependencies, data integrity and no proficiency inference. Work on selection, grammar, full settings and high-volume fixtures remains open.
+- ZIP integrity verified. Rust/WASM compilation, Chrome E2E and visual review not run in this environment.
+
+## R565 WIP - Statistics 2.0 documentation-first design (2026-11-18)
+
+- Archive: `zipeek-R565-WIP-statistics-dashboard-design-specification-20261118-212849.zip`. Documentation-only source checkpoint, not an accepted software release.
+- Rewrote the maintained Statistics product contract with seven sections, actions, stable pagination, evidence semantics, 5,000+ word scalability, grammar, history, skills, insights, settings presets and dashboard-shaped loading.
+- Added the Rust/Yew reducer/context, typed identity, demo-source isolation, Chart.js, selection/Practice handoff and data projection architecture plan.
+- Added an explicit Statistics design acceptance matrix with empty/medium/large fixture families, keyboard, theme, E2E, performance and privacy gates.
+- Updated docs index/navigation, UI architecture, current work and the task list. No application code, dependencies, schemas or generated databases changed.
+- Verification: ZIP integrity passed; the generated Docs index is synchronized, and all new/changed local documentation links resolve. The Node Docs validator still reports three pre-existing obsolete `services/ai/config.js` references (including two archive/audit paths) and one frozen-history warning; those were not altered in this scope. Rust/WASM and browser acceptance were not run for this documentation-only change.
+
+## R564 WIP - Statistics design refinement (2026-11-18)
+
+- Simplified dashboard presentation: one Demo provenance indicator, no repeated assessment warnings or duplicate headings.
+- Added a two-second simulated preview loading state with cleanup, preserving the sample-only and zero-persistence boundary.
+- Compact Overview with four table rows per page, expanded word table with a separate Writing observation column.
+- Added Writing to illustrative Skills coverage, with counts of observed/review/missing records rather than mastery estimates.
+- Replaced native Stats settings checkboxes with theme-aware accessible switch buttons.
+- Updated Stats E2E contracts and owning Statistics product specification.
+- ZIP integrity and static source review only; Rust/WASM compilation and browser acceptance remain unverified.
+
+## R563 WIP - Statistics preview depth and Grammar mosaic navigation (2026-11-18)
+
+- Moved Statistics after Browse with a distinct dashboard icon.
+- Expanded strictly in-memory, unassessed fixture data to 30 words and 20 fictional sessions; added paginated evidence and history tables.
+- Added tab icons, evidence coverage summaries, sample insights, and a Settings tab for temporary overview card selection. Shifted metric explanations into info controls.
+- Removed redundant Grammar course and unfinished-assessment copy. Added previous/next example controls, curated Pinyin underneath Hanzi, and an example counter.
+- Preserved the sample-only statistics boundary and did not connect or modify real personal learning records.
+- Source review and ZIP integrity only. Rust/WASM compilation and browser acceptance not run in this environment.
+
+# R562 WIP: Province Quest loading icon compile fix
+
+Archive: zipeek-R562-WIP-province-quest-loading-icon-compile-fix-20261118-165500.zip
+
+- Fix the R561 WASM build failure in Province Quest setup: `yew_icons` 0.11 does not provide `IconData::LUCIDE_LOADER_CIRCLE`.
+- Use the already established `LUCIDE_REFRESH_CW` loading spinner with reduced-motion support; preserve Start/Loading button behavior and all existing dependencies.
+- Source and archive checks passed; Cargo/WASM compile and browser acceptance require verification on Windows.
+
+# R561 WIP: Game controls and Statistics preview
+
+Archive: zipeek-R561-WIP-game-controls-and-stats-preview-20261118-163149.zip
+
+- Provide a visible Exit action on Province Quest setup and gameplay, and pair Start with the Lucide Play icon. The immersive shell remains unchanged.
+- Use concise Random word actions: a Dice icon plus Surprise me, and Dictionary rather than Open in Dictionary.
+- Introduce a deterministic, explicit sample-data Statistics preview with tabs for Overview, Hanzi and words, Skills, History and Insights, plus a per-word evidence table. Preview data is not persisted, never counted as proficiency and cannot be mistaken for user progress.
+- Add a compact expandable data categories table in Learning Data settings; no personal storage format or recording behavior changed.
+- Update the Stats E2E contract and add fixture invariants. No new dependencies.
+- Static source/archive integrity checked; Rust/WASM compilation and browser visual acceptance not run in the packaging environment.
+
+## R560 WIP - Province Quest region component boundaries (2026-11-18)
+
+- Extract per-region SVG presentation, semantic visual-state mapping, accessibility labels, and keyboard/mouse selection callbacks into a focused Yew `MapRegion` component.
+- Retain viewport gestures and drag-click suppression in the parent; guard suppression before dispatching pointer selection and leave keyboard selection independent.
+- Share the existing `Rc<GeoDataset>` and region index with children instead of cloning complete geometry, and index region identifiers once per map render.
+- Use named intermediate `MapPoint` values and guarded `unchecked_into::<Element>()` for known SVG event targets.
+- Add pure Rust region visual-state tests; runtime Cargo/WASM/browser checks remain outstanding.
+
+## R559 WIP - Province Quest map interaction refinement
+
+- Account for SVG letterboxing in map panning and wheel-zoom anchoring.
+- Normalize mouse-wheel delta units and bound the zoom increment to reduce device-dependent jumps.
+- Defer pointer capture until a drag is established so clicking a region remains a native SVG click.
+- Preserve cumulative drag distance at threshold crossing; add focused pure-Rust regression coverage.
+- Browser acceptance and Rust/WASM compilation remain unverified in the packaging environment.
+
+## R558 WIP - Province Quest map visibility and game controls (2026-11-18)
+
+- Corrected the Hard-mode map regression: render an initial national overview rather than hiding the map until a province is chosen. Selecting a mapped province drills down without scoring an answer.
+- Excluded administrative regions without prefecture geometry from the Hard-mode province picker, preventing a blank map when choosing Macau or another region with no mapped divisions.
+- Replaced text-only Exit and Settings gameplay controls with accessible Lucide buttons.
+- Added regression coverage for the filtered region picker and E2E overview visibility.
+- ZIP integrity and source-level checks only; Rust/WASM compilation, unit tests and Chrome acceptance not run.
+
+## R557 WIP - Province Quest feature state and map interaction refactor
+
+- Introduce a feature-level Yew reducer coordinating setup, loading, load failures, active province, and gameplay, while retaining `zipeek-exercises::province_quest::Session` as the scoring authority.
+- Guard asynchronous map/deck initialization with request generations, rejecting stale completions after leaving setup or starting a different request.
+- Move map view-box math, bounded zoom and pan, and pointer gesture distance tracking into typed Rust structures with focused tests.
+- Prevent unrelated pointer events from ending a drag, use cumulative movement to distinguish click from drag, and reset map gestures when datasets or parent regions change.
+- Keep the immersive shell, theme-derived map palette, keyboard map selection, and existing geography validation unchanged.
+- Offline source and ZIP structure checks only; Cargo, WASM compilation, browser gesture tests, and performance profiling still require Windows execution.
+
+## R556 WIP - Province Quest immersive presentation and map controls
+
+- Use the immersive game shell for Province Quest, removing the regular navigation drawer, top bar, and footer during the game.
+- Provide an explicit Exit control in the game header, plus Settings.
+- Add mouse wheel zoom, pointer capture for pan, and theme-derived answer colors while retaining keyboard and zoom controls.
+- Reduce redundant map copy and relocate geography provenance to Credits.
+- Improve map sizing in the viewport and update the choice-round E2E selector.
+- Static source and archive checks completed; Rust/WASM build and browser gameplay were not executed in the packaging environment.
+
+## R555 WIP - DB generator bulk insert compile fix
+
+- Fix the Windows `cargo make install` failure in `zipeek-db-gen` caused by attempting `join` on `Vec<PartOfSpeech>`.
+- Use one canonical `PartOfSpeech::as_str()` serializer for both the 256-row bulk insert and single-row insert paths, preserving existing comma-separated database values and empty-list handling.
+- Add unit coverage for empty, single, and multiple part-of-speech values.
+- Verification: source assertions and ZIP integrity checked. Cargo formatting, generator compilation, database generation, and full install were not run because Cargo is unavailable in this environment.
+- Next Windows gate: `cargo test --locked -p zipeek-db-gen` followed by `cargo make install`.
+
+## R554 WIP - recognition candidate rendering compile fixes
+
+- Replace unsupported `IconData::LUCIDE_BOOKMARK_CHECK` with existing `LUCIDE_BOOKMARK` for saved Word Set actions. Keep `LUCIDE_BOOKMARK_PLUS` for unsaved entries.
+- Compute the Yew candidate-row `key` before moving `RecognitionHit` into its component property, avoiding E0382 without cloning the full hit.
+- Reported Windows WASM build failures E0599 and E0382 addressed in source. Archive integrity checked. Cargo/WASM compilation and browser acceptance not run in this environment.
+
+## R553 WIP - full local install task and Province Quest geography
+
+- `cargo make install` now runs the complete explicit local asset preparation sequence, including the dictionary, geography and pedagogy Worker, followed by deployment preflight checks. `cargo make serve` remains unchanged and fast for iterative frontend work.
+- Added `geo-fetch`, `geo-audit`, `geo-build` and `geo-install` tasks using the existing pinned AreaCity CLI and local asset destination. Source validation and geography audit precede publishing the map JSON.
+- Documented the cold-setup prerequisites and the restriction that AreaCity-derived geometry is local-development-only pending upstream redistribution-rights review.
+- Added a no-dependency regression test for task wiring.
+- Verification: task-graph and ZIP integrity tests; cargo-make execution, downloading geographic source data, native DB generation and browser acceptance not run in this environment.
+
+## R552 WIP: Recognition response and compact suggestions (20261118 UTC)
+
+- Align the recognition workspace and suggestions as equal-height grid peers on desktop, with internally scrollable candidate rows and normal mobile document flow.
+- Replace oversized candidate cards with compact single-row entries and accessible icon actions; keep verified dictionary data and Word Set commands.
+- Tighten the vision system prompt to an explicit bounded candidate JSON contract, including the empty-candidate case and rejecting instructions embedded in images.
+- Add an optional validated output-token budget to the shared AI client and apply a 1,024-token budget only to recognition; preserve other client request behavior.
+- Recognize output truncation in non-streaming completions as well as streaming completions.
+- Remove duplicated icon imports and ARIA attributes and add request serialization regression coverage.
+- Source/archive verification performed; Rust/WASM compilation and browser acceptance not available in this environment.
+
+## R551 WIP: Recognition icons and loading feedback (20261118-003325 UTC)
+
+- Replace the wordy Upload image button with an image icon and concise Upload label; retain accessible name and focus styles.
+- Replace the persistent Draw here text with a subtle decorative pencil icon shown only while the workspace is empty.
+- Use a scan icon and Recognize label for explicit AI submission, with an animated and reduced-motion-aware loading indicator during recognition.
+- Show an accessible loading indicator in the suggestions header instead of duplicated Recognizing... text.
+- Update the recognition E2E submit selector to the stable data-recognition-submit contract.
+- Archive integrity checked; Rust/WASM compilation and browser acceptance not run in this environment.
+
+## R550 WIP: Responsive split recognition workspace
+
+Archive: `zipeek-R550-WIP-recognition-split-workspace-and-results-20261118-002406.zip`. Unverified WIP checkpoint.
+
+- Move recognition suggestions beside the writing workspace at desktop widths, retaining the canvas while reviewing candidates. On narrower screens the panels stack, and completed results scroll into view.
+- Keep candidate list scrolling bounded on desktop, without nested mobile scrolling or persistent explanatory empty-state copy.
+- Preserve typed reducer transitions, theme-aware rendering, explicit AI submission, local dictionary verification and Word Set controls.
+- Update recognition E2E selectors to match existing accessible icon-only Clear action and assert the new layout landmarks.
+- Update the product specification, task register and current work. No dependencies, schema, AI prompt, image retention or browser interop changed.
+- Archive structure and integrity checked. Rust formatting, WASM compilation, Chrome E2E and visual acceptance not run in this environment.
+
+## R549 WIP: Recognition UI copy reduction and interface policy
+
+- Remove the redundant recognition status badge, persistent canvas-help footer, page subtitle, privacy chip, secondary action-panel heading, repeated empty-input instructions and duplicate result disclaimers.
+- Use accessible Lucide icon-only controls for Undo and Clear with keyboard focus and explanatory titles, while retaining explicit Upload and Recognize actions in a single workspace panel.
+- Keep a minimal empty canvas prompt, model-configuration prerequisite, meaningful errors and active recognition state. Remove the unused feedback/guidance field from the recognition reducer without changing its transition protections.
+- Document progressive disclosure and visible-copy standards in `interface-and-platform-policy.md`, including accessibility and timely consent exceptions.
+- Update current work and acceptance tasks. No dependency, endpoint, database, image upload or route changes.
+- ZIP integrity and source-level consistency checked. Cargo, WASM compilation, E2E and visual browser acceptance remain unverified.
+
+## R548 WIP: Explicit import style for Rust application code
+
+- Document the approved general preference for explicit module-scope imports,
+  with qualified paths retained for clarity and disambiguation.
+- Import `RecognitionWorkspace`, `RecognitionWorkspaceCallback`, and
+  `RecognitionWorkspaceEvent` together at the recognition page module boundary.
+- Remove the local `use` in the workspace mount effect and shorten the workspace
+  handle annotation and constructor call.
+- No runtime, routing, dependency, schema, or static asset changes.
+- Verified source substitutions and full ZIP integrity; Cargo formatting,
+  WASM compilation and browser acceptance remain unverified.
+
+## R547 WIP: Recognition feature Yew compilation corrections
+
+- Repair the recognition result card's Word Set action by evaluating callback setup in a Rust expression block and returning valid `html!` markup from both branches.
+- Expose candidate parsing to its parent recognition feature module with `pub(super)` instead of a private sibling-only function.
+- Explicitly type the parsed candidate collection as `Vec<String>` at the async dictionary lookup boundary.
+- Address the ten `zipeek-web` diagnostics reported from the R546 WASM build, including cascading unsized string errors. No dependencies, persistent storage, routes, or database assets changed.
+- Static source and archive checks completed. Rust/WASM compilation and browser E2E are not available in this environment and remain unverified.
+
+## R546 WIP: Typed recognition workspace events and WASM build corrections
+
+- Replace browser canvas DOM attributes and custom-event roundtrips with a typed `RecognitionWorkspaceEvent` callback passed at mount. Yew receives input state and typed operation failures directly.
+- Keep the workspace in `zipeek-browser` and the reducer in `zipeek-web`; use explicit typed state conversion at the crate boundary.
+- Correct WASM compiler errors from the R545 recognition workspace: web `File.size()` representation, `JsCast` error conversions, optional clipboard file lists, and deprecated canvas-style setters.
+- Surface painting failures through the callback rather than silently suppressing them. Invalidate in-flight recognition when a workspace error occurs, and prevent stale image upload errors after another edit or Clear.
+- Ignore secondary pointer-down events while one drawing pointer owns the active stroke.
+- No dependency, database, URL, or persisted-data format changes.
+- Archive validation only: Rust/WASM compilation, browser acceptance, and full regression tests remain pending on a Rust toolchain.
+
+## R545 WIP: Hanzi recognition feature-state and component refactor
+
+- Replace the monolithic recognition page with reducer-backed state transitions for input changes, request lifecycle, errors, and verified results.
+- Split workspace, controls, candidate results, and candidate parsing into focused feature modules.
+- Keep workspace browser resources in `zipeek-browser`; feature state and orchestration remain in `zipeek-web`.
+- Prevent stale AI responses from replacing results after the canvas changes; add native reducer tests.
+- The current canvas-to-Yew event attributes are retained until a separately approved typed event interface can replace them.
+- Validation is static only: Rust/WASM compilation and Chrome acceptance were unavailable in the packaging environment.
+
+# R544 WIP: Typed recognition geometry and event-boundary conventions
+Archive: zipeek-R544-WIP-recognition-geometry-and-browser-contracts-20261117-235700.zip
+
+- Use a named `CanvasPoint { x, y }` for responsive canvas coordinate transforms and strokes, rather than `Vec<Vec<(f64, f64)>>`. Add coordinate boundary coverage.
+- Confirm recognition paste focus and image element creation use `Document` already injected through the existing `AppEnvironment` (introduced in R543). No new global `web_sys::window()` discovery.
+- Retain checked `dyn_ref` casts for generic event listeners because the runtime event subtype is not represented by their `Event` callback type; document when unchecked casting is appropriate.
+- Extend the Rust/WASM interop contract with browser handle injection, event-casting boundaries, and named domain geometry.
+- Verification: static checks and ZIP integrity. Cargo/Rustfmt and browser tests not run in this environment.
+
+# R543 WIP: Recognition workspace error and browser-environment refactor
+Archive: zipeek-R543-WIP-recognition-workspace-typed-errors-and-environment-20261117-235120.zip
+
+- Replace ad hoc `JsValue`/`String` errors in the recognition workspace with the domain-specific `RecognitionWorkspaceError` covering unavailable canvas/theme/root, empty input, invalid image input, and browser API failures with operation context.
+- Inject the existing `AppEnvironment.window` and `AppEnvironment.document` into the `RecognitionWorkspace::mount` constructor; stop global `web_sys::window()` lookups in drawing, paste focus, and image replacement.
+- Pass the injected document root and window into the minimal MutationObserver JS bridge instead of reaching for global `document`/`window` inside the bridge.
+- Preserve recognition behavior, privacy and API contracts; report initialization failures through existing `log::error!` and the user-facing error state rather than silently discarding them.
+- Verification: static source checks and full archive ZIP integrity only. Rust/WASM compilation and live browser acceptance not run in this environment.
+
+# R542 WIP: Rust/WASM interoperability architecture standards
+Archive: zipeek-R542-WIP-rust-wasm-interop-architecture-standards-20261117-234417.zip
+
+- Documentation-only update defining Rust/WASM-first implementation: Rust owns application behavior, async state, validation, resource ownership and cleanup.
+- Codifies `zipeek-browser` ownership for reusable browser APIs, `zipeek-db/src/wasm/` for DuckDB-WASM-specific transport, and `zipeek-web` for Yew presentation.
+- Documents minimal `wasm-bindgen(inline_js)` shims, opaque Rust newtypes for vendor handles, the approved Chart.js/DuckDB-WASM vendor exception, and build/test/early-bootstrap exceptions.
+- Adds cross-links from the architecture overview, coding standards, and docs index. No code, dependencies, approved decisions, runtime behavior, or source archive layout changed.
+- Verification: documentation link checks and ZIP integrity only. Cargo and browser tests are not applicable to this documentation-only handoff. R542 is a documentation WIP, not a major release.
+
+# R541 WIP - Rust/WASM browser services migration
+
+Archive: zipeek-R541-WIP-rust-wasm-browser-services-migration-20261117-234235.zip
+
+- Moves AI URL/model settings and tab-memory API key to `zipeek-browser::ai_configuration` using the existing `zipeek.preferences.v1` local storage document. API keys are never persisted.
+- Routes the active Hanzi clipboard action through `zipeek-browser::clipboard`. Deletes the unused JS clipboard service.
+- Migrates the active Recognize Hanzi workspace into `zipeek-browser::recognition_workspace`. Rust now owns pointer strokes, uploads, clipboard paste, image validation, theme repaint, input events, capture, undo, clear, cancellation of stale image decodes and listener cleanup.
+- The single inline JavaScript browser adapter is limited to theme observation with MutationObserver and matchMedia; it has no application data or drawing state.
+- Adds native unit coverage for workspace states, supported image limits and scaled canvas coordinates.
+- Removes the superseded AI settings and canvas JavaScript modules and canvas-specific Node tests.
+- Preserves the pinned Chart.js vendor module, scripts and dependency/decision D35. Adds no crate dependencies; enables necessary existing `web-sys` browser interfaces.
+- Updates architecture and current-task documentation.
+
+Verification: static source review and complete archive ZIP integrity check. Cargo/rustfmt, native tests, wasm32 compilation, Trunk build and actual browser behavior could not be executed. R541 remains an unverified WIP.
+
+Required checks: `cargo fmt --all -- --check`, `cargo test --locked -p zipeek-browser`, `cargo check --locked --target wasm32-unknown-unknown -p zipeek-web`, `cargo make prepare-summary`, `cargo make verify-assets`, and the Hanzi recognition browser journey including image upload, paste, Undo, Clear, theme switching and navigation cleanup.
+
+---
+
+# R540 WIP: Chart.js Rust/WASM browser boundary
+
+Date: 2026-11-17
+
+- Move asynchronous Chart.js module loading and chart instance lifecycle to `zipeek-browser::charts`, following the established browser interop crate boundary.
+- Use `wasm-bindgen(inline_js)` solely for JavaScript `import(url)`; call the pinned vendor bundle's exported `createChart` from Rust through `js-sys` and `Reflect`.
+- Resolve the vendor URL relative to the document base URI to support root development and `/zipeek/` deployment.
+- Keep summary/course progress chart configurations in `zipeek-web`, with the opaque Chart.js newtype and `Drop` cleanup owned by `zipeek-browser`.
+- Remove the redundant `chart_bridge.js` file. Preserve the pinned Chart.js/esbuild bundle, licensing, preparation, and D35 decision. No dependency or generated vendor changes.
+- Chart integration has no live Yew callers in this source baseline. No claim of runtime chart rendering acceptance.
+- Verification: static source inspection and ZIP integrity only. Cargo/rustfmt, WASM build, browser chart import, and root/Pages routing checks not run in this environment.
+- Windows acceptance: `cargo fmt --all -- --check`, `cargo check --locked --target wasm32-unknown-unknown -p zipeek-web`, `cargo make verify-assets`, and confirm bundled Chart.js loading under `/` and `/zipeek/` in Chrome.
+
+---
+
+# R535 WIP: Native Mandarin speech output correctness
+
+Date: 2026-11-17
+
+- Correct eSpeak NG stdout WAV placeholder lengths before HTTP delivery, verifying PCM16 mono audio, sample-rate/byte-rate consistency, bounded payload and nonempty samples.
+- Reject empty or invalid Whisper transcripts instead of returning HTTP success with no recognized text.
+- Apply loopback Host, browser-Origin rejection and no-store responses consistently to health and capability endpoints.
+- Add regression tests for real stdout-style placeholder WAV headers, malformed output, invalid transcription text and local-only status endpoints.
+- No dependency or engine changes, model additions, database changes or browser-provider integration. The D56 trusted speech bridge remains unapproved.
+- Verification: static source review and ZIP integrity only. Cargo/rustfmt, native speech round-trips and performance tests not run in this environment.
+- Required Windows checks: `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-tts-stt`, `cargo test --locked -p zipeek-tts-stt`; then exercise real local eSpeak NG and Whisper engines.
+
+---
+
+# R534 WIP: Native speech protocol and lifecycle hardening
+
+Date: 2026-11-17
+
+- Restrict `/v1/tts` and `/v1/stt` native POST requests to explicit localhost/127.0.0.1 Host values while retaining browser Origin rejection.
+- Fail fast if eSpeak exceeds the bounded output stream, and terminate/reap its process when synthesis errors or times out.
+- Add HTTP-handler regression tests for valid loopback hosts, invalid/missing hosts, browser origins, invalid WAV/text, and unavailable models.
+- Expand strict WAV parser regression coverage for duplicate data, unsupported formats, oversized chunks, and padded ancillary metadata.
+- Keep current browser speech provider unchanged. An authenticated desktop speech bridge needs separate design approval under D56.
+- Verification in this environment: source edits and ZIP integrity only. Cargo/rustfmt, native eSpeak/Whisper execution, and browser tests were not run.
+- Windows checks: `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-tts-stt`, `cargo test --locked -p zipeek-tts-stt`.
+
+---
+
+# R533 WIP: Native Mandarin speech service
+
+Date: 2026-11-17
+Archive: `zipeek-R533-WIP-local-mandarin-tts-stt-service-20261117-213024.zip`
+
+- Implemented runnable loopback-only `zipeek-tts-stt` server instead of its no-op main and unused draft module.
+- Replaced Serbian `sr`/`sr` behavior with Mandarin `cmn` synthesis and `zh` Whisper transcription.
+- Added strict bounded WAV PCM16 parsing, 4 KiB synthesis text limit, 30-second transcription limit, per-engine concurrency limits, failure/status handling and native health/capability endpoints.
+- Avoided logging/persisting speech payloads and blocked browser Origin requests pending an approved trusted desktop-bridge design.
+- Added crate unit tests and authoritative module documentation. No dependencies, models or binaries were added. Existing browser speech remains active.
+- **Not verified**: Cargo formatting, locked compilation/tests, real eSpeak/Whisper model execution, browser integration and runtime performance. These require the Windows environment and licensed resources.
+- Run `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-tts-stt`, and `cargo test --locked -p zipeek-tts-stt`.
+
+---
+
+# R532 WIP: Hanzi recognition route and privacy-aware E2E fixtures
+
+Date: 2026-11-17
+
+Archive: `zipeek-R532-WIP-hanzi-recognition-and-e2e-integration-20261117-212525.zip`
+
+## Implementation
+
+- Added `/recognize-hanzi` to the Yew route, global navigation and E2E route registry, with an integrated image/drawing canvas. Users can draw with pointer, touch or stylus, Undo/Clear, upload PNG/JPEG/WebP up to 5 MB, or paste a focused clipboard image. Replacing existing content asks permission.
+- A deliberate Recognize action sends the composited image through Zipeek's configured OpenAI-compatible chat client. No image upload occurs on paste/upload/mount. Inputs and results are not persisted; page teardown drops image references and invalidates results from stale requests. Network cancellation requires separate client support.
+- Parse up to five deduplicated Hanzi candidate strings from bounded JSON. Verify exact dictionary hits locally, including traditional forms. Display pinyin/meaning only from the dictionary; unverified predictions remain identified. Link to Dictionary, Listen, Write Hanzi, and the active Word Set.
+- Extended the AI fixture to accept recognition requests, validate that they contain an image, and redact image data from scenario request artifacts. Added a dedicated E2E journey, accessibility route coverage, parser unit test and Node canvas-state tests.
+- No new dependencies, no dictionary schema changes, no modifications to persisted learning data. ISS-001, ISS-021 and ISS-028 remain open pending reproduced root causes and actual browser evidence. Geography asset generation and licensing remain separate prerequisites.
+
+## Verification status
+
+- Passed: `node --test scripts/tests/recognition-workspace.test.cjs` (2 tests); JavaScript module import/syntax check; `node scripts/docs-validate.cjs` (zero maintained-document errors; one existing frozen-history warning); ZIP integrity and source content comparison at packaging.
+- Not run: Cargo tests, `cargo fmt`, Rust/WASM compile, Trunk build, Chrome E2E, actual vision model and map/translation service acceptance. Cargo/rustc/rustfmt are unavailable in the execution container.
+- The selected vision model's image capability cannot be established by the current settings contract. The UI requires a configured model but may receive an actionable provider error if unsupported.
+
+## Required Windows checks
+
+```powershell
+cargo fmt --all -- --check
+cargo test --locked -p zipeek-e2e --lib
+cargo check --locked --target wasm32-unknown-unknown -p zipeek-web
+cargo check --locked -p zipeek-e2e --tests
+cargo test --release --locked -p zipeek-e2e --test hanzi_recognition -- --nocapture
+cargo test --release --locked -p zipeek-e2e --test accessibility_matrix -- --nocapture
+```
+
+Also test a real image-capable model using the Settings endpoint and verify `/zipeek/` deployment behavior, images, keyboard/touch input, Word Sets, and generated geography assets before release acceptance.
+
+---
+
+## R531 WIP: E2E dictionary preflight and route readiness
+
+- Validate the compressed DuckDB entry from the installed dictionary manifest before launching Trunk. Reject missing, malformed, empty or size-mismatched assets with actionable setup instructions. After Trunk, verify that the distribution includes the expected compressed file.
+- Make E2E deep-link navigation wait for the route-specific readiness marker rather than requiring the app shell on standalone game, lesson and error screens. Retain the shell requirement for unregistered routes.
+- Use the Time Weaver setup marker for its initial route, retaining the gameplay marker for gameplay-specific tests.
+- Add preflight regression coverage for missing, corrupt and unsafe asset paths.
+- The uploaded 2026-11-17 browser evidence still reports Province Quest readiness failure; browser-level root-cause verification remains outstanding.
+- Not verified in this environment: Rust compilation, Trunk builds, live Chrome E2E, database provisioning and asset hashes. Run `cargo fmt --all -- --check`, `cargo test --locked -p zipeek-e2e --lib`, and `cargo test --release --locked -p zipeek-e2e --test accessibility_matrix -- --nocapture` after installing a generated dictionary.
+
+# R530 WIP: dictionary-only installation
+
+Archive: `zipeek-R530-WIP-db-install-preserves-static-assets-20261117-202702.zip`
+
+- Corrected `cargo make db-install` to preserve the existing `crates/zipeek-web/static` tree and replace only verified dictionary-owned files. Unrelated practice, Courses, brand, Docs and user-added assets remain untouched.
+- Superseded timestamped `.duckdb` and `.duckdb.gz` files are moved into timestamped backups, not deleted permanently. Updated manifest, diagnostics, attribution, inputs and dictionary notices are installed individually; the HTML dictionary preload is updated after the files are in place.
+- Kept existing file and HTML backups and added best-effort rollback if file publication fails. Refused unexpected dictionary manifest paths and symlinked replacement targets.
+- Added regression tests checking `practice/white-tiger.webp`, course/brand art, unrelated files, old database backup and rejection of an injected practice asset.
+- Static review and ZIP integrity verified. Rust compilation, formatting and tests could not run here because Cargo/rustfmt are unavailable. This is an unverified WIP handoff.
+
+---
+
+# R529 WIP: parameterized dictionary bulk insertion
+
+- Replaced row-at-a-time main-table insertion with 256-row parameterized multi-value inserts for dictionary words, source senses, and character readings, without a dependency upgrade.
+- Retained the established transaction, rollback, enrichment, and artifact logical verification pipeline. Small word inserts still use individual statements for exact error attribution.
+- Added a regression test inserting 513 character readings across three batch boundaries.
+- Kept `BLOCK_SIZE 262144` (256 KiB), the maximum DuckDB permits; 512 KiB or 1 MiB would be invalid. This request was reviewed against current upstream documentation.
+- No local Rust compiler available. The SQL generation, native import tests, regenerated database equivalence and performance gains require local verification. This is an unverified WIP handoff.
+
+---
+
+# R528 WIP: dictionary import diagnostics
+
+- Downgraded expected `GlossPipeReplacement` diagnostics from WARN to DEBUG while retaining each record in the structured diagnostics artifact.
+- Added an explicit `gloss_pipe_replacements` count to the existing HSK import summary and kept unexpected diagnostic kinds at WARN.
+- Expanded the diagnostic retention unit test to cover the normalized-gloss case.
+- Reviewed generator performance: the output already uses `BLOCK_SIZE 262144`; per-row prepared statements and profiling of import, enrichment, FTS, and verification are the next performance investigation candidates. No database format, batching, or dependency changes were made.
+- Verification: static source review and ZIP integrity only; Rust checks and performance benchmarks were not run because Cargo is unavailable here.
+
+---
+
 # Asset-integrity technical-debt reduction
 
 This unverified source handoff reduces TD-009, without closing its acceptance gate.
@@ -665,3 +1089,37 @@ In Chrome, verify all three guidance modes, Watch hidden when disabled, Undo/Res
 - Added a `cargo make e2e-evidence-audit-tests` task and updated E2E workflow documentation, coverage notes, and the current verification tracker.
 - No crates or dependencies were changed. No product gameplay or learner data was modified.
 - Verified: five Node artifact-integrity tests pass; documentation validator reports zero maintained-document errors and one existing frozen-history warning. Rust/Cargo and live browser E2E could not be executed here and remain unverified. The next verification gate is the Windows locked E2E compilation and a real Chrome recording reviewed with the new auditor.
+
+## R536 WIP - trusted local speech bridge and recognition UI (2026-11-17)
+
+- Added exact-origin, local-development-only browser access to the loopback native Mandarin speech service. Browser-origin requests outside the local Zipeek development origin remain rejected.
+- Added explicit runtime-only local provider opt-in in Speech Settings, with capability checks, WAV TTS playback and five-second microphone capture converted to 16 kHz PCM16 WAV for Whisper.
+- Wired normal Mandarin Listen/Practice speech requests to the selected local service; browser speech remains the default.
+- Reduced Recognize Hanzi canvas height and removed unrelated Word Set selection from the initial view. Word Set actions remain available for verified results.
+- Accepted strictly fenced candidate JSON without accepting invalid Hanzi candidates.
+- Added offline JS WAV/bridge tests. Rust compilation, browser speech acceptance and deployed path checks remain unverified.
+- Existing Speaking Recorder now offers an explicit local transcription action for completed in-memory recordings, with no grading or history.
+
+## R537 WIP - recognition theme, scroll and safe diagnostics (2026-11-17)
+
+- Corrected the recognition canvas's hard-coded white fill and dark stroke color: appearance now follows the active application surface and ink tokens, with theme-change repaint support.
+- Reduced initial page spacing for smaller viewports; result content remains vertically scrollable rather than clipping.
+- Malformed vision model output now provides JSON error location and structural classification, with console WARN diagnostics that never include raw model text, submitted image data, character candidates or credentials.
+- Added offline canvas theme regression coverage and JSON failure assertions.
+- Rust compilation, WASM build, root/Pages browser acceptance and live recognition are not verified in this environment.
+
+## R538 WIP - Rust/WASM local speech and pinned Chart.js bridge (2026-11-17)
+
+Archive: `zipeek-R538-WIP-rust-wasm-speech-and-chart-interop-20261117-232322.zip`
+
+- Replaced the active JavaScript local speech module with Rust/WASM browser transport, explicit provider state, guarded loopback fetch, WAV playback, microphone capture, PCM16 audio conversion and cancellation. All existing direct Rust/Yew speech consumers now use the Rust implementation.
+- Added native Rust WAV encoding tests and origin tests; removed the superseded JavaScript implementation and its Node-specific test.
+- Retained the D35 Chart.js/esbuild pins, vendor packaging and notices. Chart.js construction uses a thin JavaScript module; Rust owns chart options and an opaque destructible handle. Unused JavaScript chart wrappers were removed.
+- No dependency or schema changes, no new native service exposure, no persistent audio. Browser speech remains the default.
+- Source and JavaScript syntax checks only. Rust formatting, native/WASM builds, real local speech/Chrome tests, Chart.js mounting/reduced-motion lifecycle and deployment-path acceptance were not run. This is an unverified WIP source candidate.
+
+## R539 WIP - Recognition experience redesign
+
+Reworked `/recognize-hanzi` into a responsive writing-and-actions workspace with theme-aware drawing surface, contextual empty and input states, explicit image submission, visible error recovery, concise privacy copy, and results displayed as dictionary-verified cards. Removed redundant controls in the empty state, kept Word Set actions contextual to verified hits, corrected the E2E's Recognize with AI label, and made Undo/Clear reflect actual editable content. Only the existing JavaScript canvas interop was changed; no dependency or storage changes.
+
+Verification: JavaScript syntax and ZIP integrity checked. Rust, WASM, and real browser visual acceptance not run in this environment.

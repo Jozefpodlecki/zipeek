@@ -20,14 +20,14 @@
     "{\"kind\":\"PRIMARY KEY\",\"definition\":\"PRIMARY KEY(id)\",\"columns\":[\"id\"]}",
     "{\"kind\":\"UNIQUE\",\"definition\":\"UNIQUE(simplified, pinyin)\",\"columns\":[\"simplified\",\"pinyin\"]}"
   ],
-  "created_on": "2026-11-15T21:55:34Z",
+  "created_on": "2026-11-17T20:13:13Z",
   "diagnostics": 10187,
   "diagnostics_sha256": "38b3e83cffe5911cf7f1d3cbfd0661ddef85ea1c8b13303e0d8ac344c31767e3",
   "engine": "v2.0.0",
   "files": [
     {
-      "path": "hanzi-20261115-215819.duckdb",
-      "sha256": "9048491ccb48874c9ad7030cae8a0f5d23709f67e06431ea121ba9879e47adfb",
+      "path": "hanzi-20261117-202245.duckdb",
+      "sha256": "ec1b78ee78115c452475e3ea0eeac54d553570bddcc1b6d9cdb574d948bc1a10",
       "size_bytes": 90189824
     },
     {
@@ -61,9 +61,9 @@
       "size_bytes": 20138
     },
     {
-      "path": "hanzi-20261115-215819.duckdb.gz",
-      "sha256": "4de5feec4fb7764232b4c7913abeee7949b75d6dae07d0a99433001f87797b5c",
-      "size_bytes": 26643937
+      "path": "hanzi-20261117-202245.duckdb.gz",
+      "sha256": "9e7b5574b47b918e9c1ef0dcc3f65555047f1654620dd608bd5bc0d9a8b72756",
+      "size_bytes": 26644180
     }
   ],
   "generator_manifest_sha256": "3671a100743a4908d162bc3414fe30b47b1390921f957163a3d1153d6a7d676d",

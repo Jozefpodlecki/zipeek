@@ -1,4 +1,8 @@
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
+
+use zipeek_browser::local_speech;
+
 use web_sys::{SpeechSynthesisUtterance, Window};
 
 pub(crate) const E2E_SETTINGS_KEY: &str = "zipeek.e2e.settings.v1";
@@ -75,6 +79,17 @@ impl SpeechService {
             });
             return Ok(());
         }
+        if language == "zh-CN" && local_speech::enabled() {
+            self.window.speech_synthesis()?.cancel();
+            let text = text.to_owned();
+            wasm_bindgen_futures::spawn_local(async move {
+                if let Err(error) = local_speech::play(&text).await {
+                    log::warn!("Local Mandarin playback failed: {error:?}");
+                }
+            });
+            return Ok(());
+        }
+        local_speech::cancel();
         let synthesis = self.window.speech_synthesis()?;
         let utterance = SpeechSynthesisUtterance::new_with_text(text)?;
         utterance.set_lang(language);
@@ -88,6 +103,7 @@ impl SpeechService {
             self.record(SpeechEvent::Cancel);
             return Ok(());
         }
+        local_speech::cancel();
         self.window.speech_synthesis()?.cancel();
         Ok(())
     }

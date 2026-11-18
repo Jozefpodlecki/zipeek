@@ -34,7 +34,8 @@ async fn illustrated_courses_have_visible_artwork(ctx: ScenarioContext) -> Harne
             .attr("fill-opacity")
             .await?
             .ok_or("Missing mosaic cover opacity")?
-            .parse::<f32>()?;
+            .parse::<f32>()
+            .map_err(|error| format!("Invalid mosaic cover opacity for {route}: {error}"))?;
         zipeek_e2e::e2e_ensure!(
             opacity < 0.9 && opacity > 0.5,
             "The initial illustration must be discernible without implying a completed region: {route} = {opacity}"

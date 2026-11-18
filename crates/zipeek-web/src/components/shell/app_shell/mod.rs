@@ -136,6 +136,18 @@ pub fn app_shell(props: &AppShellProps) -> Html {
     ) {
         return html! { <div data-component="docs-shell" class="min-h-dvh bg-surface text-ink">{props.children.clone()}</div> };
     }
+    if matches!(route.as_ref(), Some(Route::Game { slug }) if slug == "province-quest") {
+        return html! {
+            <div data-component="province-quest-shell" data-shell-mode="immersive-game"
+                class="relative isolate h-dvh min-h-0 overflow-hidden bg-canvas text-ink"
+                id="main-content" tabindex="-1" ref={content}>
+                <SessionBackground />
+                <div class="relative z-10 h-full min-h-0 overflow-hidden px-2 py-2 sm:px-4 sm:py-3">
+                    {props.children.clone()}
+                </div>
+            </div>
+        };
+    }
     if matches!(route.as_ref(), Some(Route::LocalPracticeSession { .. })) {
         return html! {
             <div data-component="practice-session-shell" data-shell-mode="practice-session" id="main-content"

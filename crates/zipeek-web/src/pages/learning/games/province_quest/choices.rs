@@ -35,9 +35,9 @@ pub fn hanzi_choices(props: &HanziChoicesProps) -> Html {
         let is_correct = props.correct_id.as_ref() == Some(id);
         let is_wrong = props.selected_id.as_ref() == Some(id) && !is_correct;
         let status_class = if is_correct {
-            "border-green-500 bg-green-950/30"
+            "border-[var(--province-map-correct)] bg-[var(--province-choice-correct)]"
         } else if is_wrong {
-            "border-red-500 bg-red-950/30"
+            "border-[var(--province-map-wrong)] bg-[var(--province-choice-wrong)]"
         } else {
             "border-line bg-raised hover:border-accent"
         };

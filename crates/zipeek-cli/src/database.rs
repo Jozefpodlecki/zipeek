@@ -1,6 +1,7 @@
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
+    collections::BTreeSet,
     fs,
     io::Read,
     path::{Component, Path, PathBuf},
@@ -282,6 +283,126 @@ fn update_html(html: &str, dictionary_asset: &str) -> Result<String> {
     Ok(updated)
 }
 
+fn installed_database_name(name: &str) -> bool {
+    dictionary_name(name)
+        || name
+            .strip_suffix(".gz")
+            .is_some_and(dictionary_name)
+}
+
+fn dictionary_bundle_name(name: &str) -> bool {
+    name == MANIFEST
+        || REQUIRED.contains(&name)
+        || installed_database_name(name)
+}
+
+fn existing_file(path: &Path) -> Result<bool> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_symlink() => {
+            Err(format!("Refusing symlinked dictionary target: {}", path.display()).into())
+        }
+        Ok(metadata) if !metadata.is_file() => {
+            Err(format!("Dictionary target is not a file: {}", path.display()).into())
+        }
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn install_dictionary_files(
+    stage: &Path,
+    dest: &Path,
+    backup: &Path,
+    html_path: &Path,
+    next_html: &str,
+    names: &[String],
+) -> Result<()> {
+    if dest.is_symlink() || html_path.is_symlink() {
+        return Err("Refusing symlinked installation target".into());
+    }
+    if dest.exists() && !dest.is_dir() {
+        return Err("Dictionary installation target must be a directory".into());
+    }
+    let mut published = BTreeSet::new();
+    for name in names {
+        if !dictionary_bundle_name(name) {
+            return Err(format!("Unexpected dictionary install artifact: {name}").into());
+        }
+        checked_file(stage, name)?;
+        let relative = Path::new(name);
+        let mut parent = dest.to_path_buf();
+        for component in relative.parent().into_iter().flat_map(|parent| parent.components()) {
+            parent.push(component.as_os_str());
+            if parent.is_symlink() || (parent.exists() && !parent.is_dir()) {
+                return Err(format!("Unsafe dictionary target parent: {}", parent.display()).into());
+            }
+        }
+        existing_file(&dest.join(relative))?;
+        if !published.insert(relative.to_path_buf()) {
+            return Err(format!("Duplicate dictionary install artifact: {name}").into());
+        }
+    }
+    let mut obsolete = BTreeSet::new();
+    if dest.exists() {
+        for entry in fs::read_dir(dest)? {
+            let entry = entry?;
+            let name = entry.file_name();
+            let Some(name) = name.to_str() else { continue };
+            if installed_database_name(name) && !published.contains(Path::new(name)) {
+                existing_file(&entry.path())?;
+                obsolete.insert(PathBuf::from(name));
+            }
+        }
+    }
+    let temp_html = html_path.with_extension("html.part");
+    if existing_file(&temp_html)? {
+        return Err("Previous HTML installation temporary file exists".into());
+    }
+    let saved_html = backup.join("index.html");
+    fs::create_dir_all(backup)?;
+    fs::write(&temp_html, next_html)?;
+    let mut backed_up = Vec::new();
+    let mut installed = Vec::new();
+    let mut html_backed_up = false;
+    let result = (|| -> Result<()> {
+        fs::create_dir_all(dest)?;
+        for relative in published.iter().chain(obsolete.iter()) {
+            let current = dest.join(relative);
+            if existing_file(&current)? {
+                let saved = backup.join(relative);
+                fs::create_dir_all(saved.parent().ok_or("Missing backup parent")?)?;
+                fs::rename(&current, &saved)?;
+                backed_up.push(relative.clone());
+            }
+        }
+        for relative in &published {
+            let destination = dest.join(relative);
+            fs::create_dir_all(destination.parent().ok_or("Missing artifact parent")?)?;
+            fs::rename(stage.join(relative), &destination)?;
+            installed.push(relative.clone());
+        }
+        fs::rename(html_path, &saved_html)?;
+        html_backed_up = true;
+        fs::rename(&temp_html, html_path)?;
+        Ok(())
+    })();
+    if let Err(error) = result {
+        if html_backed_up {
+            fs::rename(&saved_html, html_path)?;
+        }
+        for relative in installed.iter().rev() {
+            fs::remove_file(dest.join(relative))?;
+        }
+        for relative in backed_up.iter().rev() {
+            fs::rename(backup.join(relative), dest.join(relative))?;
+        }
+        let _ = fs::remove_file(&temp_html);
+        return Err(error);
+    }
+    Ok(())
+}
+
 pub fn install(root: &Path, require_enrichment: bool) -> Result<()> {
     let work = root.join("target/db-workflow");
     let pointer: Value = serde_json::from_reader(fs::File::open(work.join("latest.json"))?)?;
@@ -349,44 +470,20 @@ pub fn install(root: &Path, require_enrichment: bool) -> Result<()> {
     )?;
     validate(root, &stage, require_enrichment)?;
     let dest = root.join("crates/zipeek-web/static");
-    if dest.is_symlink() || html_path.is_symlink() {
-        return Err("Refusing symlinked installation target".into());
-    }
     fs::create_dir_all(backup.parent().ok_or("Invalid backup destination")?)?;
-    let had_previous = dest.exists();
-    if had_previous {
-        fs::rename(&dest, &backup)?;
-    }
-    if let Err(error) = fs::rename(&stage, &dest) {
-        if had_previous {
-            fs::rename(&backup, &dest)?;
+    let mut installed_names = files;
+    for name in &mut installed_names {
+        if *name == database {
+            *name = stamped.clone();
+        } else if compressed.as_ref() == Some(name) {
+            *name = selected.clone();
         }
-        return Err(error.into());
     }
-    let temp_html = html_path.with_extension("html.part");
-    let saved_html = backup.with_extension("index.html");
-    let publish_html = (|| -> Result<()> {
-        fs::write(&temp_html, next_html)?;
-        fs::rename(&html_path, &saved_html)?;
-        if let Err(error) = fs::rename(&temp_html, &html_path) {
-            fs::rename(&saved_html, &html_path)?;
-            return Err(error.into());
-        }
-        Ok(())
-    })();
-    if let Err(error) = publish_html {
-        let _ = fs::remove_file(&temp_html);
-        fs::remove_dir_all(&dest)?;
-        if had_previous {
-            fs::rename(&backup, &dest)?;
-        }
-        return Err(error);
-    }
+    installed_names.push(MANIFEST.to_owned());
+    install_dictionary_files(&stage, &dest, &backup, &html_path, &next_html, &installed_names)?;
     println!("Installed dictionary: {}", dest.join(&stamped).display());
     println!("HTML preload: {selected}");
-    if had_previous {
-        println!("Previous dictionary backup: {}", backup.display());
-    }
+    println!("Previous dictionary backup: {}", backup.display());
     Ok(())
 }
 
@@ -406,5 +503,96 @@ mod tests {
         assert!(dictionary_name("hanzi.duckdb"));
         assert!(dictionary_name("hanzi-20261106-111200.duckdb"));
         assert!(!dictionary_name("hanzi-foo.duckdb"));
+    }
+    #[test]
+    fn installing_dictionary_preserves_unrelated_static_assets() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("zipeek-db-install-{}-{unique}", std::process::id()));
+        let stage = root.join("stage");
+        let dest = root.join("static");
+        let backup = root.join("backup");
+        let html = root.join("index.html");
+        fs::create_dir_all(stage.join("notices")).unwrap();
+        fs::create_dir_all(dest.join("practice")).unwrap();
+        fs::create_dir_all(dest.join("courses")).unwrap();
+        fs::create_dir_all(dest.join("brand")).unwrap();
+        fs::write(dest.join("practice/white-tiger.webp"), b"white tiger").unwrap();
+        fs::write(dest.join("courses/card.png"), b"course image").unwrap();
+        fs::write(dest.join("brand/logo.png"), b"brand image").unwrap();
+        fs::write(dest.join("custom.txt"), b"unrelated asset").unwrap();
+        fs::write(dest.join("hanzi-20261106-111200.duckdb"), b"old db").unwrap();
+        fs::write(dest.join("hanzi-20261106-111200.duckdb.gz"), b"old gz").unwrap();
+        fs::write(dest.join("hanzi.manifest.json"), b"old manifest").unwrap();
+        fs::write(stage.join("hanzi-20261117-200000.duckdb"), b"new db").unwrap();
+        fs::write(stage.join("hanzi-20261117-200000.duckdb.gz"), b"new gz").unwrap();
+        fs::write(stage.join("hanzi.manifest.json"), b"new manifest").unwrap();
+        fs::write(&html, b"original html").unwrap();
+        let names = vec![
+            "hanzi-20261117-200000.duckdb".to_owned(),
+            "hanzi-20261117-200000.duckdb.gz".to_owned(),
+            MANIFEST.to_owned(),
+        ];
+        install_dictionary_files(&stage, &dest, &backup, &html, "new html", &names).unwrap();
+        for (path, expected) in [
+            ("practice/white-tiger.webp", b"white tiger".as_slice()),
+            ("courses/card.png", b"course image".as_slice()),
+            ("brand/logo.png", b"brand image".as_slice()),
+            ("custom.txt", b"unrelated asset".as_slice()),
+            ("hanzi-20261117-200000.duckdb", b"new db".as_slice()),
+            ("hanzi-20261117-200000.duckdb.gz", b"new gz".as_slice()),
+        ] {
+            assert_eq!(fs::read(dest.join(path)).unwrap(), expected);
+        }
+        assert!(!dest.join("hanzi-20261106-111200.duckdb").exists());
+        assert!(!dest.join("hanzi-20261106-111200.duckdb.gz").exists());
+        assert_eq!(
+            fs::read(backup.join("hanzi-20261106-111200.duckdb")).unwrap(),
+            b"old db"
+        );
+        assert_eq!(
+            fs::read(backup.join("hanzi.manifest.json")).unwrap(),
+            b"old manifest"
+        );
+        assert_eq!(fs::read(&html).unwrap(), b"new html");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn install_rejects_unrelated_manifest_paths_without_touching_assets() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir()
+            .join(format!("zipeek-db-reject-{}-{unique}", std::process::id()));
+        let stage = root.join("stage");
+        let dest = root.join("static");
+        fs::create_dir_all(stage.join("practice")).unwrap();
+        fs::create_dir_all(dest.join("practice")).unwrap();
+        fs::write(stage.join("practice/white-tiger.webp"), b"injected").unwrap();
+        fs::write(dest.join("practice/white-tiger.webp"), b"original").unwrap();
+        let html = root.join("index.html");
+        fs::write(&html, b"original html").unwrap();
+        assert!(
+            install_dictionary_files(
+                &stage,
+                &dest,
+                &root.join("backup"),
+                &html,
+                "new html",
+                &["practice/white-tiger.webp".to_owned()],
+            )
+            .is_err()
+        );
+        assert_eq!(
+            fs::read(dest.join("practice/white-tiger.webp")).unwrap(),
+            b"original"
+        );
+        assert_eq!(fs::read(&html).unwrap(), b"original html");
+        fs::remove_dir_all(root).unwrap();
     }
 }

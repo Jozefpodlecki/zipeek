@@ -18,6 +18,10 @@ This index describes the **checked-in source and installed manifest**, not an or
 
 The manifest includes checksums, source metadata, table names and generated-time properties. It declares 312,649 character occurrences and 11,846 explicit character readings. The 12,188 distinct HSK source reading keys described in the source audit are not the row count of this expanded dictionary. The original **12,100-row, 10-column HSK-only snapshot** is historical, not the installed database. The `words` compatibility projection remains ten columns, but normalized tables, senses, membership, classifications and identity candidates are part of the generated schema. The checked-in manifest lists the `character_readings` table, although its physical contents remain unverified until the database file is opened. See [schema](schema.md).
 
+## Installer safety
+
+`cargo make db-install` now publishes only verified dictionary artifacts (the database and gzip, manifest, diagnostics, pinned input metadata, attribution, and license notices). It leaves the existing `static/` directory and unrelated Practice, Courses, brand and Docs assets untouched. Obsolete timestamped dictionary files are moved to `target/db-workflow/backups/` for recovery. The preload in `index.html` is changed only after the dictionary files are published. The installer does not regenerate the database.
+
 ## Generator and browser responsibilities
 
 - [`zipeek-db-gen`](../../../crates/zipeek-db-gen) verifies pinned inputs, imports HSK, applies source-backed CC-CEDICT enrichment/expansion, builds normalized relations, and publishes a staged, checked and reopened artifact. Database generation is explicit, not part of every Trunk build.

@@ -8642,7 +8642,6 @@ name = "zipeek-app"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "duckdb-neo",
  "rand 0.10.3",
  "rfd",
  "rust_decimal",

@@ -24,3 +24,7 @@ Use the current Tailwind/theme infrastructure and shared accessible control styl
 Implementation should be checked against the actual Yew provider tree, `crates/zipeek-web/src/pages/`, and the responsible domain crates before refactoring. Names in this document are conceptual boundaries, not claims that every shared component already exists. Validate both root and hosted routing, keyboard access, browser storage and in-flight work cancellation.
 
 Older checkpoint observations, including source descriptions of Tailwind, Grammar and course adapters, are preserved in [the archived UI architecture snapshot](../archive-history/audits/superseded-maintained/architecture--ui-architecture-source.md). They are not evidence of current compilation or acceptance.
+
+## Statistics dashboard architecture
+
+The approved Statistics 2.0 UI uses a feature reducer and scoped context only for genuinely shared dashboard state. Heavy read-only projections are separate from UI selection state; typed IDs, stable paging, explicit provenance and Rust-owned Chart.js lifecycle are planned in the [Statistics architecture specification](modules/statistics-dashboard.md). This remains a design target, not the implemented R564 state-management structure.

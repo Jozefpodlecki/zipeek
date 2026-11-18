@@ -146,7 +146,7 @@ async fn docs_all_sections_and_issue_images(ctx: ScenarioContext) -> HarnessResu
         .convert::<bool>()?;
     zipeek_e2e::e2e_ensure!(valid_image, "Docs issue image did not decode");
     zipeek_e2e::e2e_ensure!(
-        image.get_attribute("src").await?.is_some(),
+        image.attr("src").await?.is_some(),
         "Docs issue image is missing its source"
     );
     ctx.checkpoint("docs-issue-image-rendered").await?;

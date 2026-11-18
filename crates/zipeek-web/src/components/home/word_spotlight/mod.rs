@@ -1,9 +1,8 @@
 mod data;
 mod meaning_navigator;
 
-use crate::hooks::{use_app_environment, use_dictionary};
+use crate::hooks::use_dictionary;
 use wasm_bindgen::prelude::*;
-use web_sys::Window;
 use yew::prelude::*;
 
 use yew_icons::{Icon, IconData};
@@ -18,28 +17,6 @@ mod relations;
 pub(crate) use meaning_navigator::MeaningNavigator;
 use relations::relation_label;
 
-use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
-
-pub async fn copy_hanzi(window: &Window, text: &str) -> Result<(), JsValue> {
-    if text.trim().is_empty() {
-        return Err(JsValue::from_str("No Chinese text to copy"));
-    }
-
-    let clipboard = window.navigator().clipboard();
-
-    let value = JsValue::from(clipboard.clone());
-
-    if value.is_undefined() || value.is_null() {
-        return Err(JsValue::from_str(
-            "Clipboard is unavailable. Use HTTPS or localhost.",
-        ));
-    }
-
-    JsFuture::from(clipboard.write_text(text)).await?;
-
-    Ok(())
-}
 
 #[derive(Properties, PartialEq)]
 pub struct WordSpotlightProps {
@@ -50,7 +27,6 @@ pub struct WordSpotlightProps {
 #[function_component(WordSpotlight)]
 pub fn word_spotlight(props: &WordSpotlightProps) -> Html {
     let dictionary = use_dictionary();
-    let app_env = use_app_environment();
     let day = chrono::Utc::now().timestamp().div_euclid(86_400) as u32;
     let refresh = use_state(|| 0_u32);
     let result = use_state(|| {
@@ -120,13 +96,11 @@ pub fn word_spotlight(props: &WordSpotlightProps) -> Html {
                 let on_copy = {
                     let hanzi = word.simplified.clone();
                     let toast = toast.clone();
-                    let window = app_env.window.clone();
                     Callback::from(move |_| {
-                        let window = window.clone();
                         let hanzi = hanzi.clone();
                         let toast = toast.clone();
                         wasm_bindgen_futures::spawn_local(async move {
-                            match copy_hanzi(&window, &hanzi).await {
+                            match zipeek_browser::clipboard::copy_hanzi(&hanzi).await {
                                 Ok(()) => {
                                     if let Some(toast) = toast {
                                         toast.success("Hanzi copied to clipboard");
@@ -200,10 +174,10 @@ pub fn word_spotlight(props: &WordSpotlightProps) -> Html {
                             class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-brand-action px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                         >
                             <Icon
-                                data={IconData::LUCIDE_SHUFFLE}
+                                data={IconData::LUCIDE_DICE_5}
                                 width="18px"
                                 height="18px"
-                            />{"Another word"}
+                            />{"Surprise me"}
                         </button>
                     }
                 } else {
@@ -340,7 +314,7 @@ pub fn word_spotlight(props: &WordSpotlightProps) -> Html {
                                     data={IconData::LUCIDE_BOOK_OPEN}
                                     width="18px"
                                     height="18px"
-                                />{"Open in Dictionary"}
+                                />{"Dictionary"}
                             </a>
                             <a
                                 data-write-hanzi-action=""

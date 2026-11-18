@@ -23,3 +23,7 @@ and animation tick. A provider belongs at the nearest shared ownership boundary.
 Use props for leaf inputs such as a card label, selected state or click callback.
 Components that need a shared service or feature state consume its hook directly;
 intermediate layout components must not relay those values through several levels.
+
+## Hanzi recognition feature ownership (R545 WIP)
+
+The `recognize_hanzi` feature reducer owns input classification, Undo availability, request status, errors, candidate results, and the monotonic request generation. The page owns scoped async orchestration and workspace mounting; child components receive typed props. The browser crate owns canvas, pointer, upload and clipboard resources. Candidate parsing remains a pure feature module. Browser verification is pending.

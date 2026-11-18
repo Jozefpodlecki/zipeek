@@ -1,5 +1,6 @@
 use zipeek_e2e::{
-    Harness, HarnessResult, ScenarioContext, SuiteKind, page_objects::WebDriverActions,
+    Harness, HarnessResult, ScenarioContext, SuiteKind,
+    page_objects::{WebDriverActions, WebElementQueryActions},
 };
 
 async fn three_tracks_have_independent_mosaics(ctx: ScenarioContext) -> HarnessResult<()> {

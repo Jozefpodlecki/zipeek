@@ -11,7 +11,7 @@
 | `src/prompts.rs` | Translation directions, source checks, translation and connection-test messages |
 | `src/error.rs` | Status-specific errors, provider JSON parsing, bounded/redacted diagnostic text |
 
-There is **no JavaScript HTTP transport**, wasm-bindgen HTTP binding or platform-specific stub. `reqwest` uses browser Fetch on WASM and the native async HTTP stack on desktop. The already-existing web `services/ai/config.js` remains solely for settings and tab-memory API-key storage; `zipeek-web/src/services/ai/mod.rs` passes the key per request, without storing it in `AiClient`.
+There is **no JavaScript HTTP transport**, wasm-bindgen HTTP binding or platform-specific stub. `reqwest` uses browser Fetch on WASM and the native async HTTP stack on desktop. AI settings and tab-memory API-key storage live in `zipeek-browser/src/ai_configuration.rs`; `zipeek-web/src/services/ai/mod.rs` passes the key per request without storing it in `AiClient`. The API key remains in tab memory and is never persisted.
 
 `zipeek-ai-protocol` is the pure sentence-analysis contract owner: it builds structured-analysis prompts, parses returned JSON, validates vocabulary and grammar against exact source/translation spans, and builds repair prompts. The web service still orchestrates the structured request, one repair, and plain-translation fallback when a provider rejects structured output with HTTP 400/422. No analysis fields or SQL have moved into the HTTP client.
 
@@ -67,3 +67,9 @@ The Translate Sentence workflow requests OpenAI-compatible `response_format: {ty
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../../archive-history/audits/maintained-source-snapshots/architecture-modules-ai-client.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## R532 image recognition request boundary
+
+`RecognizeHanziPage` uses the existing generic serializable chat message interface to send a multimodal OpenAI-compatible `image_url` data URL only after pressing Recognize. Images are composited to a bounded 768 by 480 canvas, not persisted; the web controller validates model candidates independently of model-supplied meanings or pinyin and checks exact dictionary entries. The E2E fixture redacts image data from captured request records. The client does not currently advertise a vision-capability probe or provide a cross-platform abort signal, so production acceptance must verify the selected model and cancellation behavior. No new dependency is introduced.
+
+R537: Hanzi recognition parses candidate responses with category and JSON line/column diagnostics and logs safe structural metadata on failure. It does not log model text or image data. The workspace samples theme surface/ink colors at paint time and repaints on appearance changes.

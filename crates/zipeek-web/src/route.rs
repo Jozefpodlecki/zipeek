@@ -26,6 +26,8 @@ pub enum Route {
     Games,
     #[at("/games/:slug")]
     Game { slug: String },
+    #[at("/recognize-hanzi")]
+    RecognizeHanzi,
     #[at("/write-hanzi")]
     WriteHanzi,
     #[at("/translate-sentence")]
@@ -96,6 +98,7 @@ pub fn switch(routes: Route) -> Html {
         Route::Random => html! { <Random /> },
         Route::PracticeSetup => html! { <PracticeSetup /> },
         Route::LocalPracticeSession { id } => html! { <LocalPracticeSession key={id.clone()} id={id.clone()} /> },
+        Route::RecognizeHanzi => html! { <WordSetsProvider><RecognizeHanziPage /></WordSetsProvider> },
         Route::WriteHanzi => html! { <WordSetsProvider>
             <WriteHanziPage />
         </WordSetsProvider> },
@@ -204,6 +207,7 @@ impl Route {
             Self::Debug => "Debug",
             Self::Docs | Self::DocsArticle { .. } => "Documentation",
             Self::TranslateSentence => "Translate Sentence",
+            Self::RecognizeHanzi => "Recognize Hanzi",
             Self::WriteHanzi => "Write Hanzi",
             Self::Games => "Games",
             Self::Game { slug } => GameId::from_slug(slug).map_or("Page not found", GameId::title),

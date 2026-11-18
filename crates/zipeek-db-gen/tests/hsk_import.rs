@@ -681,6 +681,34 @@ fn explicitly_sourced_character_readings_are_inserted_independently_of_words()
 }
 
 #[test]
+fn character_readings_bulk_insert_preserves_all_rows_across_chunks()
+-> Result<(), Box<dyn std::error::Error>> {
+    use zipeek_db_gen::import::{CharacterReading, insert_character_readings};
+
+    let database = GeneratorDatabase::open()?;
+    let connection = database.connection();
+    create_schema(connection)?;
+    let rows: Vec<CharacterReading> = (0..513)
+        .map(|index| CharacterReading {
+            character: char::from_u32(0x4E00 + index).unwrap().to_string(),
+            traditional: char::from_u32(0x4E00 + index).unwrap().to_string(),
+            pinyin_numeric: "yi1".into(),
+            source_line: index as i32 + 1,
+        })
+        .collect();
+    insert_character_readings(connection, &rows)?;
+    assert_eq!(
+        scalar(connection, "SELECT count(*)::VARCHAR FROM character_readings")?,
+        "513"
+    );
+    assert_eq!(
+        scalar(connection, "SELECT max(source_line)::VARCHAR FROM character_readings")?,
+        "513"
+    );
+    Ok(())
+}
+
+#[test]
 fn full_dictionary_rolls_back_words_if_character_reading_insertion_fails()
 -> Result<(), Box<dyn std::error::Error>> {
     use zipeek_db_gen::import::{CharacterReading, insert_full_dictionary};

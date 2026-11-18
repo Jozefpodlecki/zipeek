@@ -1,4 +1,3 @@
-use wasm_bindgen::prelude::*;
 
 pub(crate) async fn complete(
     endpoint: &str,
@@ -19,20 +18,20 @@ pub(crate) async fn complete(
         .map_err(|error| error.to_string())
 }
 
-#[wasm_bindgen(module = "/src/services/ai/config.js")]
-extern "C" {
-    #[wasm_bindgen(js_name = readAiConfiguration)]
-    fn read_ai_configuration() -> JsValue;
-    #[wasm_bindgen(catch, js_name = saveAiConfiguration)]
-    fn save_ai_configuration(url: &str, model: &str, key: &str) -> Result<(), JsValue>;
-    #[wasm_bindgen(js_name = clearAiKey)]
-    fn clear_ai_key();
-    #[wasm_bindgen(js_name = apiKeyForRequest)]
-    fn api_key_for_request() -> String;
+pub(crate) async fn complete_recognition(
+    endpoint: &str,
+    model: &str,
+    messages: Vec<serde_json::Value>,
+) -> Result<String, String> {
+    let client = zipeek_ai_client::AiClient::new(endpoint, model)
+        .map_err(|error| error.to_string())?;
+    client
+        .complete_with_budget(messages, &api_key_for_request(), None, Some(1024), |_| {})
+        .await
+        .map_err(|error| error.to_string())
 }
 
-#[derive(Clone, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone)]
 pub(crate) struct AiConfiguration {
     pub url: String,
     pub model: String,
@@ -40,27 +39,24 @@ pub(crate) struct AiConfiguration {
 }
 
 pub(crate) fn configuration() -> AiConfiguration {
-    serde_wasm_bindgen::from_value(read_ai_configuration()).unwrap_or(AiConfiguration {
-        url: "http://127.0.0.1:1234/v1/".to_owned(),
-        model: String::new(),
-        key_present: false,
-    })
+    let config = zipeek_browser::ai_configuration::configuration();
+    AiConfiguration {
+        url: config.url,
+        model: config.model,
+        key_present: config.key_present,
+    }
 }
 
 pub(crate) fn save_configuration(url: &str, model: &str, key: &str) -> Result<(), String> {
-    save_ai_configuration(url, model, key).map_err(js_error)
+    zipeek_browser::ai_configuration::save_configuration(url, model, key)
 }
 
 pub(crate) fn clear_key() {
-    clear_ai_key();
+    zipeek_browser::ai_configuration::clear_key();
 }
 
-fn js_error(value: JsValue) -> String {
-    js_sys::Reflect::get(&value, &"message".into())
-        .ok()
-        .and_then(|message| message.as_string())
-        .or_else(|| value.as_string())
-        .unwrap_or_else(|| "AI request failed".to_owned())
+fn api_key_for_request() -> String {
+    zipeek_browser::ai_configuration::api_key_for_request()
 }
 
 pub(crate) async fn translate(source: &str, direction: &str) -> Result<String, String> {

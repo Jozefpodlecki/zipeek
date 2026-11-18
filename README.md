@@ -1,5 +1,12 @@
 # Zipeek
 
+## Complete local installation
+
+Run `cargo make install` from the repository root for the full, explicit local setup. This performs the locked web dependency/vendor preparation, background and Hanzi reference preparation, Docs index generation, dictionary generation/compression/installation, Province Quest geography fetch/audit/build, pedagogy Worker generation, and final deploy asset validation. The command can take a long time, may download sizeable source data, and needs the pinned Rust toolchain, Node.js, cargo-make, the dictionary generator's native DuckDB library, and a working `7z`/`7zz` extractor for AreaCity. A failure stops installation; the final asset verification must pass. A source ZIP alone does not contain all generated artifacts.
+
+The AreaCity geography is for **local development only**. Its upstream boundary-data redistribution rights are unresolved; successful `cargo make install` is not permission to publish those files. The final preflight checks file validity, not redistribution licensing. To rebuild only Province Quest data use `cargo make geo-install`. After a successful installation, use `cargo make serve` for normal development; it does not regenerate the dictionary or download geography.
+
+
 Zipeek is a browser-based Mandarin Chinese dictionary and practice app built with **Rust 1.97.1**, **Yew 0.23**, **WebAssembly**, **Tailwind CSS** and **DuckDB-WASM**. It runs as a static web application under `/zipeek/` on GitHub Pages. The packaged dictionary is read-only; Word Sets, preferences and unfinished Practice records use browser-local storage.
 
 [CI](https://github.com/Jozefpodlecki/zipeek/actions/workflows/ci.yml) | [Documentation](docs/README.md) | [Current implementation](docs/project-management/current.md) | [Open tasks](docs/project-management/tasks.md)

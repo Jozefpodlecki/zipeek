@@ -72,3 +72,9 @@ as vocabulary proficiency evidence, and there is no implicit speech upload.
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../archive-history/audits/maintained-source-snapshots/architecture-audio-recording.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## Native Mandarin engine boundary
+
+`zipeek-tts-stt` is a separate loopback-only native service, not a web microphone provider. Its eSpeak NG synthesis emits PCM16 mono WAV. When eSpeak writes to stdout, it cannot seek back to update WAV length fields; the service verifies the returned format, sample rate and bounded audio payload, then writes actual RIFF/data sizes before serving the file. Corrupt or empty audio is rejected. Whisper recognition is restricted to bounded 16 kHz mono PCM16 WAV; results must contain a nonempty, bounded transcript without control characters. Transcript text is not a pronunciation score.
+
+Every HTTP endpoint, including health and capability checks, requires a localhost/127.0.0.1 Host and rejects browser Origin requests. Responses carry `Cache-Control: no-store`. The existing browser capture, TTS providers and microphone permissions remain independent. A desktop bridge needs a separate approved security design; do not expose the native server directly to hosted pages.

@@ -11,6 +11,7 @@ Use [AGENTS](../AGENTS.md) as the sole authoritative agent and contributor guide
 | Grammar course authoring and structural validation | [Courses authoring](engineering/courses-authoring.md) |
 | Product overview and UX | [Product](product-ux/product.md), [UX](product-ux/ux.md) |
 | Future Courses mosaic and grammar assessments | [Courses mosaic spec](learning-practice/courses/courses-mosaic.md) |
+| Statistics 2.0 dashboard design and implementation plan | [Statistics product design](product-ux/pages/learning-statistics-preview.md), [Statistics architecture](architecture/modules/statistics-dashboard.md), [Statistics acceptance](testing-quality/e2e/statistics-dashboard-design-acceptance.md) |
 | Planned session evidence and proficiency requirements | [Learning evidence](learning-practice/practice/learning-evidence.md) |
 | Practice setup and persisted translation | [Practice builder](learning-practice/practice/practice-session-builder.md), [Sentence translation](learning-practice/translation/translate-sentence.md) |
 | Word Sets, Browse, writing, games | [Dictionary Browse](dictionary-data/dictionary-browse.md), [Write Hanzi](learning-practice/hanzi/write-hanzi-activity.md), [Cloud Match](games/cloud-match.md) |
@@ -82,6 +83,7 @@ These topic pages contain the original approved specification text relocated fro
 | Appearance | [Theme and dark mode](product-ux/foundation/ux-appearance.md) |
 | Practice domain behavior | [Current Practice overview](learning-practice/practice/practice-overview.md) |
 | UI state architecture | [State ownership](architecture/ui-state-ownership.md), [Browse state](architecture/ui-browse-state.md) |
+| Rust/WASM browser interoperability | [Browser boundary and thin wrappers](architecture/modules/rust-wasm-interop.md) |
 
 Use the [documentation validation script](../scripts/docs-validate.cjs) to check source links, image references, navigation index freshness and prohibited typography before packaging.
 

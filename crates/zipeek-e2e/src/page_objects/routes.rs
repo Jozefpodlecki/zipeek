@@ -36,7 +36,7 @@ pub const ROUTES: &[RouteCase] = &[
     },
     RouteCase {
         path: "/games/time-weaver",
-        marker: "[data-time-weaver-game]",
+        marker: "[data-time-weaver-setup]",
     },
     RouteCase {
         path: "/games/tone-detective",
@@ -73,6 +73,10 @@ pub const ROUTES: &[RouteCase] = &[
     RouteCase {
         path: "/games/dialogue-quest",
         marker: "[data-game-setup='Dialogue Quest']",
+    },
+    RouteCase {
+        path: "/recognize-hanzi",
+        marker: "[data-component='recognize-hanzi-page']",
     },
     RouteCase {
         path: "/write-hanzi",

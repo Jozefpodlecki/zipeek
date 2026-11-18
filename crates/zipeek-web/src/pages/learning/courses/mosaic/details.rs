@@ -22,7 +22,6 @@ pub fn course_details(props: &CourseDetailsProps) -> Html {
     html! {
         <aside data-course-details="" class="min-w-0 rounded-xl border border-line bg-surface p-4 shadow-sm lg:h-full lg:overflow-y-auto" aria-live="polite">
                 <div class="space-y-2">
-                <p class="text-xs font-semibold uppercase tracking-wide text-muted">{"Grammar course"}</p>
                 <h2 class="text-xl font-bold text-ink">{display_course.map(|course| course.title.to_owned()).or_else(|| planned_title(props.selected).map(str::to_owned)).unwrap_or_else(|| "More grammar courses coming".to_owned())}</h2>
                 <p class="text-sm leading-5 text-muted">
                     {display_course.map(|course| course.description).unwrap_or("This topic is planned. Teaching examples and independent assessments have not been authored yet.")}
@@ -52,9 +51,6 @@ pub fn course_details(props: &CourseDetailsProps) -> Html {
                         if *checkpoint > 0 {
                             <p class="text-sm text-accent">{"Lesson checkpoint saved"}</p>
                         }
-                    }
-                    if expanded.is_some() {
-                        <p class="text-xs text-muted">{"Teaching lessons and review practice. Independently verified mastery assessment is still in authoring."}</p>
                     }
                     <div class="pt-2">
                         <Link<Route> to={authored_grammar_slug(props.selected).map_or_else(|| Route::GrammarExpanded { region: props.selected }, |slug| Route::GrammarLesson { slug: slug.to_owned() })} classes="inline-flex rounded-xl bg-brand-action px-5 py-3 font-semibold text-white no-underline hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">

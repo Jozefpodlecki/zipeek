@@ -38,3 +38,5 @@ pub(crate) mod tauri_database;
 pub(crate) mod tauri_ipc_error;
 
 pub(crate) mod browser_stt;
+
+pub(crate) mod charts;

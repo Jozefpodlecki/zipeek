@@ -3,7 +3,7 @@ use zipeek_e2e::{
     Harness, HarnessResult, ScenarioContext, SuiteKind, page_objects::WebDriverActions,
 };
 
-const SETUP: &str = "[data-game-setup='Province Quest']";
+const SETUP: &str = "[data-game-setup='China Map Challenge']";
 const MAP: &str = "[data-province-map]";
 const REGIONS: &str = "[data-province-map] [data-region]";
 const CHOICES: &str = "[data-province-choices] button";
@@ -15,14 +15,14 @@ async fn complete_game(ctx: ScenarioContext, difficulty: usize) -> HarnessResult
     driver.query_single(SETUP).await?;
 
     let difficulty_buttons = driver
-        .find_all_css("[data-game-setup='Province Quest'] button[aria-pressed]")
+        .find_all_css("[data-game-setup='China Map Challenge'] button[aria-pressed]")
         .await?;
     zipeek_e2e::e2e_ensure_eq!(difficulty_buttons.len(), 6);
     difficulty_buttons[difficulty].click().await?;
 
     difficulty_buttons[4].click().await?;
     driver
-        .query_single("[data-game-setup='Province Quest'] button:not([aria-pressed])")
+        .query_single("[data-game-setup='China Map Challenge'] button:not([aria-pressed])")
         .await?
         .click()
         .await?;
@@ -30,6 +30,12 @@ async fn complete_game(ctx: ScenarioContext, difficulty: usize) -> HarnessResult
     for round in 0..10 {
         if round % 2 == 0 {
             if difficulty == 2 {
+                driver.query_single(MAP).await?;
+                let available_provinces = driver.find_all_css(REGIONS).await?;
+                zipeek_e2e::e2e_ensure!(
+                    !available_provinces.is_empty(),
+                    "Hard mode must render an overview before choosing a province"
+                );
                 let province = driver.query_single("[data-province-quest] select").await?;
 
                 SelectElement::new(&province)
@@ -58,7 +64,7 @@ async fn complete_game(ctx: ScenarioContext, difficulty: usize) -> HarnessResult
         } else {
             driver.query_single(MAP).await?;
             let highlighted = driver
-                .find_all_css("[data-province-map] path[fill='#eab308']")
+                .find_all_css("[data-province-map] path[fill='var(--province-map-hint)']")
                 .await?;
             zipeek_e2e::e2e_ensure_eq!(
                 highlighted.len(),
@@ -111,7 +117,7 @@ async fn complete_game(ctx: ScenarioContext, difficulty: usize) -> HarnessResult
         .await?
         .text()
         .await?;
-    zipeek_e2e::e2e_ensure_eq!(completed.as_str(), "Province Quest complete");
+    zipeek_e2e::e2e_ensure_eq!(completed.as_str(), "China Map Challenge complete");
     driver
         .query_single("[data-province-quest] button")
         .await?

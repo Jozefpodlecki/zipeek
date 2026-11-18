@@ -73,12 +73,31 @@ impl AiClient {
         messages: Vec<M>,
         api_key: &str,
         response_format: Option<&ResponseFormat>,
+        on_update: F,
+    ) -> Result<String, AiClientError>
+    where
+        F: FnMut(StreamUpdate),
+        M: Serialize,
+    {
+        self.complete_with_budget(messages, api_key, response_format, None, on_update)
+            .await
+    }
+
+    pub async fn complete_with_budget<F, M>(
+        &self,
+        messages: Vec<M>,
+        api_key: &str,
+        response_format: Option<&ResponseFormat>,
+        max_completion_tokens: Option<u32>,
         mut on_update: F,
     ) -> Result<String, AiClientError>
     where
         F: FnMut(StreamUpdate),
         M: Serialize,
     {
+        if max_completion_tokens.is_some_and(|limit| !(64..=16_384).contains(&limit)) {
+            return Err(AiClientError("AI output token budget must be between 64 and 16384".to_owned()));
+        }
         if messages.is_empty() {
             return Err(AiClientError("AI request requires messages".to_owned()));
         }
@@ -88,6 +107,7 @@ impl AiClient {
             messages: &messages,
             temperature: 0.2,
             stream: true,
+            max_completion_tokens,
             response_format,
         };
         let mut request = self
@@ -124,8 +144,12 @@ impl AiClient {
                         .to_owned(),
                 )
             })?;
-            let content = payload.choices.into_iter().next()
-                .and_then(|choice| choice.message.content)
+            let choice = payload.choices.into_iter().next()
+                .ok_or_else(|| AiClientError("AI returned no completion choices".to_owned()))?;
+            if choice.finish_reason.as_deref() == Some("length") {
+                return Err(AiClientError("AI stopped because its output token limit was reached".to_owned()));
+            }
+            let content = choice.message.content
                 .filter(|content| !content.trim().is_empty())
                 .ok_or_else(|| AiClientError("AI returned no text response. Check whether the model supports chat completions.".to_owned()))?;
             on_update(StreamUpdate::Content(content.clone()));

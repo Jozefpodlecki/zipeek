@@ -35,6 +35,8 @@ The installed dictionary manifest currently declares 120,970 `words` rows, `v2.0
 
 `zipeek-pedagogy::grammar` is the authoritative static Grammar catalogue, slug mapping and region plan for 100 draft courses. `zipeek-exercises::grammar_learning` provides pure step, recall and answer-transition rules without Yew dependencies. `zipeek-web` maps these to a local reducer, route-specific learning components and browser-local progress persistence, while both course engines reuse `GrammarLessonScaffold`. The web layer has no generated Grammar curriculum tables. Two separate pedagogical lesson engines remain; no mastery inference or HSK verification has been added. Rust/WASM/browser acceptance is pending.
 
+Browser functionality follows the [Rust/WASM interoperability contract](modules/rust-wasm-interop.md): Rust owns application state and lifecycle, `zipeek-browser` owns reusable browser bindings, Yew owns presentation, and permitted JavaScript stays a thin vendor/host boundary.
+
 ## Runtime
 
 `crates/zipeek-web/index.html` supplies the static loading shell and packaged asset references. Trunk builds the Yew/WASM app, which mounts the router and providers. Shared global state includes theme, dictionary readiness, Word Sets and exercise contexts. The app uses the `/#/` hash router for static hosting and `/zipeek/` as the Pages base path.

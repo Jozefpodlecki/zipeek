@@ -17,6 +17,11 @@ zipeek-pedagogy = { path = "../zipeek-pedagogy" }
 workspace = true
 features = [
     "console",
+    "Storage",
+    "File",
+    "FileList",
+    "HtmlImageElement",
+    "CssStyleDeclaration",
     "Document",
     "Navigator",
     "Clipboard",
