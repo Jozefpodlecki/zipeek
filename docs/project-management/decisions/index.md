@@ -8,6 +8,10 @@ retaining decision history.
 
 Current approved policy is consolidated in [current product policy](current-product-policy.md). Where older decision text conflicts with this newer approved policy, the newer policy governs intended behavior. Historical entries remain for provenance.
 
+The [Tauri frontend/database separation decision](process-and-infra.md#tauri-frontenddatabase-separation-2026-11-26) records the user-approved 2026-11-26 desktop asset and shared database boundary. Broader native personal storage and speech integration remain separate scopes.
+
+The [confirmed Settings reset](process-and-infra.md#confirmed-settings-reset-2026-11-26) records the user-approved permanent deletion and fresh-onboarding behavior, including retained dictionary/model/exported files.
+
 This file is the index. Each earlier decision is elaborated in one of the group files:
 
 | Group file | Decisions |

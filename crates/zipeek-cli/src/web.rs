@@ -58,6 +58,11 @@ pub fn verify_all(root: &std::path::Path) -> crate::archive::Result<()> {
     backgrounds::verify(root)
 }
 
+pub fn verify_desktop(root: &std::path::Path) -> crate::archive::Result<()> {
+    fingerprint::verify(root, Asset::Summary)?;
+    backgrounds::verify(root)
+}
+
 pub use backgrounds::prepare as backgrounds_prepare;
 pub use install::install;
 pub use prepare::{prepare, prepare_all};

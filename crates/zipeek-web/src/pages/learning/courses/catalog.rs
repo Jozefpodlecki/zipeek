@@ -162,7 +162,10 @@ pub const PINYIN_LESSONS: [Lesson; 12] = [
         summary: "Combine initials, finals and tone marks",
         explanation: "Most Mandarin syllables combine an optional initial, a final and one tone. Some begin with a vowel, while others use y and w spelling conventions. Distinguish the spoken syllable from its written Pinyin form.",
         examples: &[
-            ("Zhōngguó 中国 — China", "Two syllables with different tones"),
+            (
+                "Zhōngguó 中国 — China",
+                "Two syllables with different tones",
+            ),
             ("ér 儿 — child", "Vowel-initial syllable"),
             ("yǔ 雨 — rain", "Initial-free syllable with y spelling"),
             ("huā 花 — flower", "Initial h with the final ua"),

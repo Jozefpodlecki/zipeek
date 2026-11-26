@@ -245,19 +245,30 @@ fn dictionary_asset(root: &Path) -> HarnessResult<(String, u64)> {
             manifest_path.display()
         )
     })?;
-    let manifest: serde_json::Value = serde_json::from_str(&manifest_text)
-        .map_err(|error| format!("E2E dictionary preflight: invalid {}: {error}", manifest_path.display()))?;
+    let manifest: serde_json::Value = serde_json::from_str(&manifest_text).map_err(|error| {
+        format!(
+            "E2E dictionary preflight: invalid {}: {error}",
+            manifest_path.display()
+        )
+    })?;
     let files = manifest["files"]
         .as_array()
         .ok_or("E2E dictionary preflight: manifest.files must be an array")?;
-    let compressed = files.iter().filter(|entry| {
-        entry["path"].as_str().is_some_and(|path| path.ends_with(".duckdb.gz"))
-    }).collect::<Vec<_>>();
+    let compressed = files
+        .iter()
+        .filter(|entry| {
+            entry["path"]
+                .as_str()
+                .is_some_and(|path| path.ends_with(".duckdb.gz"))
+        })
+        .collect::<Vec<_>>();
     if compressed.len() != 1 {
         return Err(format!(
             "E2E dictionary preflight: expected one compressed DuckDB entry in {}, found {}",
-            manifest_path.display(), compressed.len()
-        ).into());
+            manifest_path.display(),
+            compressed.len()
+        )
+        .into());
     }
     let entry = compressed[0];
     let filename = entry["path"]
@@ -265,9 +276,14 @@ fn dictionary_asset(root: &Path) -> HarnessResult<(String, u64)> {
         .ok_or("E2E dictionary preflight: compressed entry has no path")?;
     if !filename.starts_with("hanzi-")
         || !filename.ends_with(".duckdb.gz")
-        || !filename.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.'))
+        || !filename
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.'))
     {
-        return Err(format!("E2E dictionary preflight: invalid dictionary asset name {filename:?}").into());
+        return Err(format!(
+            "E2E dictionary preflight: invalid dictionary asset name {filename:?}"
+        )
+        .into());
     }
     let expected_size = entry["size_bytes"]
         .as_u64()
@@ -277,7 +293,11 @@ fn dictionary_asset(root: &Path) -> HarnessResult<(String, u64)> {
     Ok((filename.to_owned(), expected_size))
 }
 
-fn verify_dictionary_file(directory: &Path, filename: &str, expected_size: u64) -> HarnessResult<()> {
+fn verify_dictionary_file(
+    directory: &Path,
+    filename: &str,
+    expected_size: u64,
+) -> HarnessResult<()> {
     let path = directory.join(filename);
     let size = std::fs::metadata(&path).map_err(|error| {
         format!(
@@ -374,14 +394,21 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "zipeek-e2e-db-preflight-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_nanos()
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
         ));
         let static_dir = root.join("zipeek-web/static");
         std::fs::create_dir_all(&static_dir)?;
         let missing = dictionary_asset(&root).unwrap_err().to_string();
         assert!(missing.contains("db-install"), "{missing}");
         std::fs::write(static_dir.join("hanzi.manifest.json"), "not json")?;
-        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("invalid"));
+        assert!(
+            dictionary_asset(&root)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid")
+        );
         std::fs::write(
             static_dir.join("hanzi.manifest.json"),
             r#"{"files":[{"path":"hanzi-test.duckdb.gz","size_bytes":4}]}"#,
@@ -389,7 +416,12 @@ mod tests {
         let missing = dictionary_asset(&root).unwrap_err().to_string();
         assert!(missing.contains("hanzi-test.duckdb.gz"), "{missing}");
         std::fs::write(static_dir.join("hanzi-test.duckdb.gz"), b"abc")?;
-        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("3 bytes"));
+        assert!(
+            dictionary_asset(&root)
+                .unwrap_err()
+                .to_string()
+                .contains("3 bytes")
+        );
         std::fs::write(static_dir.join("hanzi-test.duckdb.gz"), b"abcd")?;
         assert_eq!(dictionary_asset(&root)?, ("hanzi-test.duckdb.gz".into(), 4));
         std::fs::remove_dir_all(root)?;
@@ -398,17 +430,20 @@ mod tests {
 
     #[test]
     fn dictionary_preflight_rejects_unsafe_manifest_paths() -> HarnessResult<()> {
-        let root = std::env::temp_dir().join(format!(
-            "zipeek-e2e-db-unsafe-{}",
-            std::process::id()
-        ));
+        let root =
+            std::env::temp_dir().join(format!("zipeek-e2e-db-unsafe-{}", std::process::id()));
         let static_dir = root.join("zipeek-web/static");
         std::fs::create_dir_all(&static_dir)?;
         std::fs::write(
             static_dir.join("hanzi.manifest.json"),
             r#"{"files":[{"path":"../hanzi-test.duckdb.gz","size_bytes":4}]}"#,
         )?;
-        assert!(dictionary_asset(&root).unwrap_err().to_string().contains("invalid dictionary asset name"));
+        assert!(
+            dictionary_asset(&root)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid dictionary asset name")
+        );
         std::fs::remove_dir_all(root)?;
         Ok(())
     }

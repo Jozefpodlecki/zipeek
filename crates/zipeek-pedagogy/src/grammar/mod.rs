@@ -1,8 +1,8 @@
+mod completed;
 pub mod curriculum;
 pub mod expansion;
-pub mod plan;
 pub mod pinyin;
-mod completed;
+pub mod plan;
 
 pub fn course(region: usize) -> Option<&'static curriculum::GrammarCourse> {
     match region {
@@ -24,7 +24,10 @@ mod tests {
             assert_eq!(course.id, format!("grammar-{region}"));
             assert!((4..=6).contains(&course.points.len()));
             total += course.points.len();
-            assert!(course.points.iter().all(|p| !p.label.is_empty() && !p.explanation.is_empty() && !p.example.is_empty() && !p.translation.is_empty()));
+            assert!(course.points.iter().all(|p| !p.label.is_empty()
+                && !p.explanation.is_empty()
+                && !p.example.is_empty()
+                && !p.translation.is_empty()));
         }
         assert_eq!(total, 550);
         assert!(course(0).is_none());

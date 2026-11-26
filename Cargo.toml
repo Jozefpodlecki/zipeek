@@ -21,7 +21,8 @@ members = [
     "crates/zipeek-geo-assets",
     "crates/zipeek-docs",
     "crates/zipeek-pedagogy",
-    "crates/zipeek-tts-stt"
+    "crates/zipeek-tts-stt",
+    "crates/zipeek-tts-stt-client"
 ]
 default-members = [
     "crates/zipeek-db-gen",

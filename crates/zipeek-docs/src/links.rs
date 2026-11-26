@@ -70,7 +70,11 @@ mod tests {
     #[test]
     fn routes_relative_markdown_and_assets_under_base_path() {
         assert_eq!(
-            destination("architecture/architecture.md", "../project-management/tasks.md", BASE),
+            destination(
+                "architecture/architecture.md",
+                "../project-management/tasks.md",
+                BASE
+            ),
             "#/docs/project-management~tasks.md"
         );
         assert_eq!(

@@ -27,6 +27,9 @@ watch = [
 ]
 ignore = [
     "dist/**",
+    "dist-desktop/**",
+    ".desktop-assets/**",
+    "index.desktop.html",
     "target/**",
     "node_modules/**",
     "vendor/**"

@@ -76,6 +76,9 @@ impl WorkerCoordinator {
 
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
+        if !enabled {
+            self.latest_projection = None;
+        }
     }
 
     pub fn enqueue(
@@ -156,6 +159,9 @@ impl WorkerCoordinator {
     }
 
     pub fn latest_projection(&self) -> Option<&RecognitionProjection> {
+        if !self.enabled || self.last_error.is_some() {
+            return None;
+        }
         self.latest_projection.as_ref()
     }
 
@@ -195,6 +201,7 @@ impl WorkerCoordinator {
                 RunOutcome::Completed(id)
             }
             Err(error) => {
+                self.latest_projection = None;
                 job.attempts += 1;
                 self.last_error = Some(format!("{error:?}"));
                 if job.attempts >= MAX_ATTEMPTS {
@@ -311,6 +318,46 @@ mod tests {
             worker.run_next(&TestJournal::default(), 20_000),
             RunOutcome::Completed("one".into())
         );
+    }
+
+    #[test]
+    fn disabled_worker_does_not_expose_old_evidence() {
+        let mut worker = WorkerCoordinator::new(true);
+        worker.enqueue(request("one"), 20_000).unwrap();
+        assert_eq!(
+            worker.run_next(&TestJournal::default(), 20_000),
+            RunOutcome::Completed("one".into())
+        );
+        assert!(worker.latest_projection().is_some());
+        worker.set_enabled(false);
+        assert!(worker.latest_projection().is_none());
+        worker.set_enabled(true);
+        assert!(worker.latest_projection().is_none());
+        assert_eq!(worker.health().last_success_utc_ms, Some(20_000));
+    }
+
+    #[test]
+    fn failing_new_read_hides_prior_projection_until_recovery() {
+        let mut worker = WorkerCoordinator::new(true);
+        worker.enqueue(request("one"), 20_000).unwrap();
+        assert_eq!(
+            worker.run_next(&TestJournal::default(), 20_000),
+            RunOutcome::Completed("one".into())
+        );
+        assert!(worker.latest_projection().is_some());
+        worker.enqueue(request("two"), 20_100).unwrap();
+        assert_eq!(
+            worker.run_next(&TestJournal { fail: true }, 20_100),
+            RunOutcome::RetryScheduled("two".into())
+        );
+        assert!(worker.latest_projection().is_none());
+        assert_eq!(worker.health().last_success_utc_ms, Some(20_000));
+        assert_eq!(
+            worker.run_next(&TestJournal::default(), 21_100),
+            RunOutcome::Completed("two".into())
+        );
+        assert!(worker.latest_projection().is_some());
+        assert!(worker.health().last_error.is_none());
     }
 
     #[test]

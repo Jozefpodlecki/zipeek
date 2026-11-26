@@ -9,7 +9,8 @@ pub(crate) fn labels(word: &Word, variant: ExerciseVariant) -> (&str, &str) {
     match variant {
         ExerciseVariant::MatchingEnglishPinyin => (english, &word.pinyin),
         ExerciseVariant::MatchingPinyinHanzi => (&word.pinyin, &word.simplified),
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
+        ExerciseVariant::MatchingAudioHanzi => (&word.simplified, &word.simplified),
+        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
             (&word.simplified, english)
         }
         ExerciseVariant::MultipleChoiceMeaningHanzi => (english, &word.simplified),
@@ -30,10 +31,10 @@ pub(crate) fn answer_key(word: &Word, variant: ExerciseVariant) -> String {
         ExerciseVariant::MatchingEnglishPinyin | ExerciseVariant::MultipleChoiceMeaningPinyin => {
             normalize_for_comparison(right)
         }
-        ExerciseVariant::MatchingPinyinHanzi | ExerciseVariant::MultipleChoiceMeaningHanzi => {
+        ExerciseVariant::MatchingPinyinHanzi | ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MultipleChoiceMeaningHanzi => {
             right.to_owned()
         }
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
+        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
             right
                 .split_whitespace()
                 .collect::<Vec<_>>()

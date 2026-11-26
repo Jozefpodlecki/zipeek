@@ -36,16 +36,21 @@ async fn browser_exposes_shared_service_status_without_process_controls(
     Ok(())
 }
 
-async fn grammar_does_not_offer_inline_ai_generation(
-    ctx: ScenarioContext,
-) -> HarnessResult<()> {
+async fn grammar_does_not_offer_inline_ai_generation(ctx: ScenarioContext) -> HarnessResult<()> {
     let driver = &ctx.driver;
     ctx.open_route("/courses/grammar").await?;
     zipeek_e2e::e2e_ensure!(
-        driver.find_all_css("[data-grammar-ai-example]").await?.is_empty(),
+        driver
+            .find_all_css("[data-grammar-ai-example]")
+            .await?
+            .is_empty(),
         "The retired inline Grammar player must not offer its own AI generator",
     );
-    driver.query_single("[data-course-details] a").await?.click().await?;
+    driver
+        .query_single("[data-course-details] a")
+        .await?
+        .click()
+        .await?;
     driver.query_single("[data-grammar-lesson]").await?;
     ctx.checkpoint("grammar-authored-single-lesson").await?;
     Ok(())

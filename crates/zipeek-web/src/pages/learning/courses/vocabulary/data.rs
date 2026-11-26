@@ -15,16 +15,22 @@ fn validate_course_words(words: Vec<Word>, expected: usize) -> Result<Vec<Word>,
     Ok(words)
 }
 
-pub fn resolve_course_words(course: &VocabularyRegion, matches: Vec<Word>) -> Result<Vec<Word>, String> {
+pub fn resolve_course_words(
+    course: &VocabularyRegion,
+    matches: Vec<Word>,
+) -> Result<Vec<Word>, String> {
     let mut candidates = BTreeMap::<(String, String), Word>::new();
     for word in matches {
         if let Some(numeric) = word.pinyin_numeric.clone() {
-            candidates.entry((word.simplified.clone(), numeric)).or_insert(word);
+            candidates
+                .entry((word.simplified.clone(), numeric))
+                .or_insert(word);
         }
     }
     let mut resolved = Vec::with_capacity(course.readings.len());
     for &(spelling, numeric) in course.readings {
-        let word = candidates.remove(&(spelling.to_owned(), numeric.to_owned()))
+        let word = candidates
+            .remove(&(spelling.to_owned(), numeric.to_owned()))
             .ok_or_else(|| format!("HSK reading unavailable: {spelling} ({numeric})"))?;
         resolved.push(word);
     }

@@ -1,7 +1,5 @@
-pub(crate) mod app_footer;
 pub(crate) mod app_shell;
 pub(crate) mod background;
-pub(crate) mod footer;
 pub(crate) mod layout;
 pub(crate) mod navigation;
 pub(crate) mod navigation_tile;

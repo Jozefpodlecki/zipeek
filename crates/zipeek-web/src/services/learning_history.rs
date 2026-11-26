@@ -1,9 +1,10 @@
+use super::database::backend::{self, DatabaseBackend};
 use crate::services::tauri_database;
 use web_sys::Document;
-use zipeek_db::wasm::{PersonalLearningHistory, PracticeOutcomeSummary};
+use zipeek_db::{PracticeOutcomeSummary, wasm::PersonalLearningHistory};
 
 pub async fn commit(document: &Document, session_id: &str, evidence: &str) -> Result<(), String> {
-    if tauri_database::available() {
+    if backend::selected()? == DatabaseBackend::Native {
         tauri_database::commit_history(session_id, evidence).await
     } else {
         PersonalLearningHistory::commit(document, session_id, evidence)
@@ -13,7 +14,7 @@ pub async fn commit(document: &Document, session_id: &str, evidence: &str) -> Re
 }
 
 pub async fn summary(document: &Document) -> Result<PracticeOutcomeSummary, String> {
-    if tauri_database::available() {
+    if backend::selected()? == DatabaseBackend::Native {
         let rows = tauri_database::history_rows().await?;
         if rows.len() > 100_000 {
             return Err("Too many native Practice sessions for summary".into());
@@ -31,7 +32,7 @@ pub async fn summary(document: &Document) -> Result<PracticeOutcomeSummary, Stri
 }
 
 pub async fn count(document: &Document) -> Result<u64, String> {
-    if tauri_database::available() {
+    if backend::selected()? == DatabaseBackend::Native {
         Ok(tauri_database::history_rows().await?.len() as u64)
     } else {
         PersonalLearningHistory::recorded_session_count(document)
@@ -41,7 +42,7 @@ pub async fn count(document: &Document) -> Result<u64, String> {
 }
 
 pub async fn erase(document: &Document) -> Result<(), String> {
-    if tauri_database::available() {
+    if backend::selected()? == DatabaseBackend::Native {
         tauri_database::erase_history().await
     } else {
         PersonalLearningHistory::erase(document)

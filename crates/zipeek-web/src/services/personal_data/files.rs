@@ -72,13 +72,22 @@ pub async fn pick(document: &Document) -> Result<String, PersonalDataError> {
         }
     }) as Box<dyn FnMut(_)>);
     input.add_event_listener_with_callback("change", on_change.as_ref().unchecked_ref())?;
-    input.add_event_listener_with_callback("cancel", on_cancel.as_ref().unchecked_ref())?;
+    if let Err(error) =
+        input.add_event_listener_with_callback("cancel", on_cancel.as_ref().unchecked_ref())
+    {
+        let _ =
+            input.remove_event_listener_with_callback("change", on_change.as_ref().unchecked_ref());
+        return Err(error.into());
+    }
     input.click();
-    let file = receiver
-        .await
-        .map_err(|_| PersonalDataError::File("File picker cancelled".into()))?;
-    input.remove_event_listener_with_callback("change", on_change.as_ref().unchecked_ref())?;
-    input.remove_event_listener_with_callback("cancel", on_cancel.as_ref().unchecked_ref())?;
+    let result = receiver.await;
+    let change_cleanup =
+        input.remove_event_listener_with_callback("change", on_change.as_ref().unchecked_ref());
+    let cancel_cleanup =
+        input.remove_event_listener_with_callback("cancel", on_cancel.as_ref().unchecked_ref());
+    change_cleanup?;
+    cancel_cleanup?;
+    let file = result.map_err(|_| PersonalDataError::File("File picker cancelled".into()))?;
     let Some(file) = file else {
         return Ok(String::new());
     };

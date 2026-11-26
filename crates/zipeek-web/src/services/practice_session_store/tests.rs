@@ -1036,9 +1036,13 @@ fn write_hanzi_configuration_is_part_of_validated_session() {
     )
     .unwrap();
     let crate::services::practice_session_store::ExerciseConfiguration::WriteHanzi(options) =
-        session.exercise_configurations.get_mut("write-hanzi").unwrap() else {
-            panic!("Write Hanzi must use its own configuration");
-        };
+        session
+            .exercise_configurations
+            .get_mut("write-hanzi")
+            .unwrap()
+    else {
+        panic!("Write Hanzi must use its own configuration");
+    };
     options.guidance = crate::models::WritingGuidance::FullGuide;
     options.animation = false;
     options.show_pinyin = false;
@@ -1046,8 +1050,12 @@ fn write_hanzi_configuration_is_part_of_validated_session() {
     options.playable_audio = false;
     options.assistance = crate::models::StrokeAssistance::AfterFive;
     session.validate().unwrap();
-    let restored: PracticeSession = serde_json::from_str(&serde_json::to_string(&session).unwrap()).unwrap();
-    assert_eq!(restored.exercise_configurations, session.exercise_configurations);
+    let restored: PracticeSession =
+        serde_json::from_str(&serde_json::to_string(&session).unwrap()).unwrap();
+    assert_eq!(
+        restored.exercise_configurations,
+        session.exercise_configurations
+    );
 }
 
 #[test]
@@ -1059,15 +1067,147 @@ fn listening_configuration_is_validated_and_round_trips() {
         1,
         29,
         BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
-    ).unwrap();
-    let ExerciseConfiguration::ListeningChoice(options) =
-        session.exercise_configurations.get_mut("listening-choice").unwrap() else {
-            panic!("Listening Choice must have a typed configuration");
-        };
+    )
+    .unwrap();
+    let ExerciseConfiguration::ListeningChoice(options) = session
+        .exercise_configurations
+        .get_mut("listening-choice")
+        .unwrap()
+    else {
+        panic!("Listening Choice must have a typed configuration");
+    };
     options.pinyin = ListeningHintVisibility::Always;
     options.meaning = ListeningHintVisibility::Never;
     options.autoplay = true;
     session.validate().unwrap();
-    let restored: PracticeSession = serde_json::from_str(&serde_json::to_string(&session).unwrap()).unwrap();
-    assert_eq!(restored.exercise_configurations, session.exercise_configurations);
+    let restored: PracticeSession =
+        serde_json::from_str(&serde_json::to_string(&session).unwrap()).unwrap();
+    assert_eq!(
+        restored.exercise_configurations,
+        session.exercise_configurations
+    );
+}
+
+#[test]
+fn stored_session_rejects_inverted_completion_and_step_timestamps() {
+    let mut completed = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174176".to_owned(),
+        &["type-pinyin".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    let step_id = completed.current_step().unwrap().id.clone();
+    completed
+        .complete(&step_id, ExerciseOutcome::Completed)
+        .unwrap();
+    assert!(completed.validate().is_ok());
+    let start = completed.started_at.unwrap();
+    completed.completed_at = Some(start - chrono::Duration::seconds(1));
+    assert_eq!(
+        completed.validate(),
+        Err(PracticeSessionError::InvalidStoredSession)
+    );
+    completed.completed_at = None;
+    completed.steps[0].finished_at = Some(completed.created_at - chrono::Duration::seconds(1));
+    assert_eq!(
+        completed.validate(),
+        Err(PracticeSessionError::InvalidStoredSession)
+    );
+}
+
+#[cfg(test)]
+mod completion_timestamp_tests {
+    use super::*;
+
+    #[test]
+    fn timestamp_is_once_only_and_survives_roundtrip() {
+        let mut session = PracticeSession::new(
+            "123e4567-e89b-72d3-a456-426614174001".to_owned(),
+            &["type-pinyin".to_owned()].into_iter().collect(),
+            1,
+            27,
+            BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+        )
+        .unwrap();
+        assert_eq!(
+            session.stamp_completed_at(1_700_000_000_000),
+            Err(PracticeSessionError::NotReady)
+        );
+        let id = session.current_step().unwrap().id.clone();
+        session.complete(&id, ExerciseOutcome::Completed).unwrap();
+        assert_eq!(
+            session.stamp_completed_at(0),
+            Err(PracticeSessionError::NotReady)
+        );
+        session
+            .stamp_completed_at(
+                (session.created_at + chrono::Duration::seconds(10)).timestamp_millis() as u64,
+            )
+            .unwrap();
+        session
+            .stamp_completed_at(
+                (session.created_at + chrono::Duration::seconds(10)).timestamp_millis() as u64,
+            )
+            .unwrap();
+        assert_eq!(
+            session.stamp_completed_at(
+                (session.created_at + chrono::Duration::seconds(11)).timestamp_millis() as u64
+            ),
+            Err(PracticeSessionError::InvalidResult)
+        );
+        let restored: PracticeSession =
+            serde_json::from_str(&serde_json::to_string(&session).unwrap()).unwrap();
+        restored.validate().unwrap();
+        assert_eq!(restored.completed_at, session.completed_at);
+    }
+}
+
+#[test]
+fn inventory_snapshot_requires_the_same_keys() {
+    let original = vec!["one".to_owned(), "two".to_owned()];
+    assert_eq!(
+        inventory::inventory_keys_match(&original, &original),
+        Ok(())
+    );
+    assert_eq!(
+        inventory::inventory_keys_match(&original, &["one".to_owned(), "three".to_owned()]),
+        Err(PracticeSessionError::OutOfDate)
+    );
+    assert_eq!(
+        inventory::inventory_keys_match(&original, &["one".to_owned()]),
+        Err(PracticeSessionError::OutOfDate)
+    );
+}
+
+#[test]
+fn ai_generated_matching_is_queued_saved_and_restored() {
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174321".to_owned(),
+        &["matching".to_owned()].into_iter().collect(),
+        1,
+        17,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    ).unwrap();
+    if let Some(ExerciseConfiguration::Quiz { ai_generated, .. }) =
+        saved.exercise_configurations.get_mut("matching") {
+        *ai_generated = true;
+    }
+    saved.steps[0].readiness = ExerciseReadiness::NeedsGeneration;
+    saved.queue_generation(2);
+    assert!(saved.validate().is_ok());
+    let id = saved.steps[0].id.clone();
+    let attempt = saved.start_generation(&id).unwrap();
+    let raw = serde_json::json!({
+        "kind":"matching",
+        "words":[
+            {"id":1,"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},
+            {"id":2,"hanzi":"谢谢","pinyin":"xièxie","meaning":"thank you"}
+        ]
+    }).to_string();
+    saved.generation_succeeded(&id, attempt, raw).unwrap();
+    assert!(saved.validate().is_ok());
+    let stored = serde_json::to_string(&saved).unwrap();
+    assert!(decode_stored_session(&saved.id, &stored).is_ok());
 }

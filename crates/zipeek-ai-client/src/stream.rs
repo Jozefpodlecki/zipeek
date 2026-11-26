@@ -38,6 +38,7 @@ const MAX_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 pub(super) struct SseDecoder {
     pending: Vec<u8>,
     data_lines: Vec<String>,
+    data_bytes: usize,
     content: String,
     done: bool,
     completed: bool,
@@ -54,14 +55,15 @@ impl SseDecoder {
         bytes: &[u8],
         on_delta: &mut F,
     ) -> Result<(), AiClientError> {
-        self.pending.extend_from_slice(bytes);
-        if self.pending.len() > MAX_EVENT_BYTES {
-            return Err(AiClientError(
-                "AI streamed an excessively large event".to_owned(),
-            ));
-        }
-        while let Some(position) = self.pending.iter().position(|byte| *byte == b'\n') {
-            let mut line = self.pending.drain(..=position).collect::<Vec<_>>();
+        let mut remaining = bytes;
+        while let Some(position) = remaining.iter().position(|byte| *byte == b'\n') {
+            self.pending.extend_from_slice(&remaining[..=position]);
+            if self.pending.len() > MAX_EVENT_BYTES {
+                return Err(AiClientError(
+                    "AI streamed an excessively large event".to_owned(),
+                ));
+            }
+            let mut line = std::mem::take(&mut self.pending);
             line.pop();
             if line.last() == Some(&b'\r') {
                 line.pop();
@@ -71,12 +73,25 @@ impl SseDecoder {
             if line.is_empty() {
                 self.dispatch(on_delta)?;
             } else if let Some(data) = line.strip_prefix("data:") {
-                self.data_lines
-                    .push(data.strip_prefix(' ').unwrap_or(data).to_owned());
+                let data = data.strip_prefix(' ').unwrap_or(data);
+                self.data_bytes = self.data_bytes.saturating_add(data.len() + 1);
+                if self.data_bytes > MAX_EVENT_BYTES {
+                    return Err(AiClientError(
+                        "AI streamed an excessively large event".to_owned(),
+                    ));
+                }
+                self.data_lines.push(data.to_owned());
             }
             if self.done {
-                break;
+                return Ok(());
             }
+            remaining = &remaining[position + 1..];
+        }
+        self.pending.extend_from_slice(remaining);
+        if self.pending.len() > MAX_EVENT_BYTES {
+            return Err(AiClientError(
+                "AI streamed an excessively large event".to_owned(),
+            ));
         }
         Ok(())
     }
@@ -87,6 +102,7 @@ impl SseDecoder {
         }
         let data = self.data_lines.join("\n");
         self.data_lines.clear();
+        self.data_bytes = 0;
         if data.trim() == "[DONE]" {
             self.done = true;
             return Ok(());
@@ -165,6 +181,20 @@ mod tests {
     use super::{SseDecoder, StreamUpdate};
 
     #[test]
+    fn rejects_oversized_event_across_short_lines() {
+        let mut decoder = SseDecoder::default();
+        let line = b"data: abcdefghijklmnopqrstuvwxyz\n";
+        let mut rejected = false;
+        for _ in 0..(super::MAX_EVENT_BYTES / 24 + 1) {
+            if decoder.push(line, &mut |_| {}).is_err() {
+                rejected = true;
+                break;
+            }
+        }
+        assert!(rejected);
+    }
+
+    #[test]
     fn fragmented_unicode_and_multiline_events() {
         let mut reader = SseDecoder::default();
         let mut deltas = Vec::new();
@@ -181,6 +211,16 @@ mod tests {
                 StreamUpdate::Content("，世界".to_owned())
             ]
         );
+    }
+
+    #[test]
+    fn accepts_many_small_events_in_one_large_transport_chunk() {
+        let mut decoder = SseDecoder::default();
+        let event = "data: {\"choices\":[{\"delta\":{\"content\":\"a\"}}]}\n\n";
+        let data = event.repeat(super::MAX_EVENT_BYTES / event.len() + 1);
+        decoder.push(data.as_bytes(), &mut |_| {}).unwrap();
+        decoder.push(b"data: [DONE]\n\n", &mut |_| {}).unwrap();
+        assert!(!decoder.finish(&mut |_| {}).unwrap().is_empty());
     }
 
     #[test]

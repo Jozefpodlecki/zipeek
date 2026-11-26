@@ -12,8 +12,8 @@ use std::{cell::Cell, rc::Rc};
 use super::board::WritingBoard;
 use super::controller::{AttemptFeedback, WritingAction, WritingState};
 use super::controls::WritingControls;
-use super::targets::TARGETS;
 use super::standalone::{HanziTargetPicker, StrokeProgress};
+use super::targets::TARGETS;
 
 #[derive(Properties, PartialEq)]
 pub struct HanziWritingProps {
@@ -81,11 +81,14 @@ pub fn hanzi_writing(props: &HanziWritingProps) -> Html {
         && matches!(&state.study, Some(Ok(study)) if study.session.is_complete());
     {
         let completion_change = props.on_completion_change.clone();
-        use_effect_with((character.to_owned(), completed_character), move |(_, complete)| {
-            if let Some(callback) = &completion_change {
-                callback.emit(*complete);
-            }
-        });
+        use_effect_with(
+            (character.to_owned(), completed_character),
+            move |(_, complete)| {
+                if let Some(callback) = &completion_change {
+                    callback.emit(*complete);
+                }
+            },
+        );
     }
     {
         let state = state.clone();
@@ -159,7 +162,8 @@ pub fn hanzi_writing(props: &HanziWritingProps) -> Html {
             }
         });
     }
-    let pointer = super::canvas_input::canvas_pointer_handlers(canvas.clone(), state.clone(), enabled);
+    let pointer =
+        super::canvas_input::canvas_pointer_handlers(canvas.clone(), state.clone(), enabled);
     let on_workspace_action = {
         let state = state.clone();
         Callback::from(move |action: WorkspaceAction| match action {

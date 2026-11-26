@@ -34,7 +34,8 @@ pub fn selected_pattern_for_query(current: u8, query: &str) -> u8 {
 }
 
 pub fn pattern_index_for_label(label: &str) -> Option<u8> {
-    ITEMS.iter()
+    ITEMS
+        .iter()
         .position(|item| item.target_structure == label.trim())
         .and_then(|index| u8::try_from(index + 1).ok())
 }
@@ -44,8 +45,7 @@ pub fn grade_typed(item: &TransformationItem, typed: &str) -> bool {
     !normalized.is_empty()
         && validate(item)
         && item.accepted_orders.iter().any(|order| {
-            answer(item, order)
-                .is_some_and(|expected| normalize_answer(&expected) == normalized)
+            answer(item, order).is_some_and(|expected| normalize_answer(&expected) == normalized)
         })
 }
 
@@ -144,7 +144,6 @@ impl TransformationState {
         }
         *self != before
     }
-
 }
 
 pub const ITEMS: &[TransformationItem] = &[
@@ -257,11 +256,23 @@ mod tests {
         assert!(state.apply(item, AnswerMode::Both, TransformationAction::AddTile(2)));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::AddTile(2)));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::AddTile(99)));
-        assert!(state.apply(item, AnswerMode::Both, TransformationAction::UseTiles(false)));
-        assert!(state.apply(item, AnswerMode::Both, TransformationAction::SetTyped("我把门关上了。".into())));
+        assert!(state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::UseTiles(false)
+        ));
+        assert!(state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::SetTyped("我把门关上了。".into())
+        ));
         assert!(state.apply(item, AnswerMode::Both, TransformationAction::Check));
         assert!(state.is_correct(item));
-        assert!(!state.apply(item, AnswerMode::Both, TransformationAction::SetTyped("wrong".into())));
+        assert!(!state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::SetTyped("wrong".into())
+        ));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::UseTiles(true)));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::Undo));
     }
@@ -270,15 +281,27 @@ mod tests {
     fn inactive_answer_method_cannot_be_mutated() {
         let item = &ITEMS[1];
         let mut state = TransformationState::new(AnswerMode::Both);
-        assert!(!state.apply(item, AnswerMode::Both, TransformationAction::SetTyped("wrong".into())));
+        assert!(!state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::SetTyped("wrong".into())
+        ));
         assert!(state.apply(item, AnswerMode::Both, TransformationAction::AddTile(2)));
-        assert!(state.apply(item, AnswerMode::Both, TransformationAction::UseTiles(false)));
+        assert!(state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::UseTiles(false)
+        ));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::AddTile(3)));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::Undo));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::ResetTiles));
         assert!(!state.apply(item, AnswerMode::Both, TransformationAction::RemoveTile(0)));
         assert_eq!(state.selected, vec![2]);
-        assert!(state.apply(item, AnswerMode::Both, TransformationAction::SetTyped("我把门关上了".into())));
+        assert!(state.apply(
+            item,
+            AnswerMode::Both,
+            TransformationAction::SetTyped("我把门关上了".into())
+        ));
         assert!(state.apply(item, AnswerMode::Both, TransformationAction::Check));
         assert!(!state.can_check(item));
     }
@@ -287,7 +310,11 @@ mod tests {
     fn single_answer_mode_cannot_be_switched() {
         let item = &ITEMS[0];
         let mut state = TransformationState::new(AnswerMode::Typing);
-        assert!(!state.apply(item, AnswerMode::Typing, TransformationAction::UseTiles(true)));
+        assert!(!state.apply(
+            item,
+            AnswerMode::Typing,
+            TransformationAction::UseTiles(true)
+        ));
         assert!(!state.use_tiles);
     }
 

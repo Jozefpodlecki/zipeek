@@ -73,3 +73,8 @@ A full pre-reconciliation copy is retained in [historical source evidence](../..
 `RecognizeHanziPage` uses the existing generic serializable chat message interface to send a multimodal OpenAI-compatible `image_url` data URL only after pressing Recognize. Images are composited to a bounded 768 by 480 canvas, not persisted; the web controller validates model candidates independently of model-supplied meanings or pinyin and checks exact dictionary entries. The E2E fixture redacts image data from captured request records. The client does not currently advertise a vision-capability probe or provide a cross-platform abort signal, so production acceptance must verify the selected model and cancellation behavior. No new dependency is introduced.
 
 R537: Hanzi recognition parses candidate responses with category and JSON line/column diagnostics and logs safe structural metadata on failure. It does not log model text or image data. The workspace samples theme surface/ink colors at paint time and repaints on appearance changes.
+
+
+## AI Settings diagnostic lifecycle
+
+`crates/zipeek-web/src/pages/system/settings/ai/` owns the Settings AI page (`page.rs`), callback and asynchronous request orchestration (`controller.rs`), request-ticket reducer (`state.rs`) and diagnostic display (`diagnostics.rs`). Synchronous request gating prevents a rapid second test from launching before Yew rerenders; reducer ticket checks discard stale completions after edits, saves, dismissal, restart or unmount. **Dismiss test** invalidates display publication; it does **not** abort an already-started HTTP call. Verify with locked Rust/WASM and browser tests before claiming acceptance. This is diagnostic connectivity, not R608 evaluator evidence or mastery scoring.

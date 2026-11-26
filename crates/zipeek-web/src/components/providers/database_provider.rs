@@ -78,13 +78,12 @@ pub fn database_provider(props: &DatabaseProviderProps) -> Html {
         let owner = owner.clone();
         let dispatch = state.dispatcher();
         let document = environment.document.clone();
-        let is_tauri = environment.is_tauri;
         use_effect_with(state.request, move |request| {
             let request = *request;
             let pending = owner.clone();
             let document = document.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                let result = Database::open(&document, is_tauri).await;
+                let result = Database::open(&document).await;
                 if !pending.borrow().gate.accepts(request) {
                     return;
                 }

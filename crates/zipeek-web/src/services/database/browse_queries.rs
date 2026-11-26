@@ -61,7 +61,9 @@ impl Database {
             return Ok(Vec::new());
         }
         if text.chars().count() > 128 || limit == 0 || limit > 100 {
-            return Err(DbError::Decode("Invalid Write Hanzi search request".to_owned()));
+            return Err(DbError::Decode(
+                "Invalid Write Hanzi search request".to_owned(),
+            ));
         }
         let normalized_reading = "replace(translate(lower(w.pinyin), 'āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜü', 'aaaaeeeeiiiioooouuuuvvvvv'), ' ', '')";
         let sql = format!(
@@ -83,11 +85,23 @@ impl Database {
         self.words(
             &sql,
             vec![
-                json!(text), json!(text), json!(folded), json!(folded), json!(folded), json!(folded), json!(text),
-                json!(text), json!(text), json!(folded), json!(text), json!(folded),
-                json!(text), json!(limit),
+                json!(text),
+                json!(text),
+                json!(folded),
+                json!(folded),
+                json!(folded),
+                json!(folded),
+                json!(text),
+                json!(text),
+                json!(text),
+                json!(folded),
+                json!(text),
+                json!(folded),
+                json!(text),
+                json!(limit),
             ],
-        ).await
+        )
+        .await
     }
 
     pub async fn write_hanzi_english_search(

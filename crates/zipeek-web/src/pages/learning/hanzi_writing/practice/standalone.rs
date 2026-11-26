@@ -1,8 +1,8 @@
 use super::stroke_loading::StrokeStudy;
 use super::targets::TARGETS;
+use crate::route::Route;
 use yew::prelude::*;
 use yew_router::prelude::Link;
-use crate::route::Route;
 
 #[derive(Properties, PartialEq)]
 pub(super) struct StrokeProgressProps {
@@ -127,7 +127,6 @@ pub(super) fn hanzi_target_picker(props: &HanziTargetPickerProps) -> Html {
         </aside>
     }
 }
-
 
 pub(super) fn standalone_header() -> Html {
     html! {

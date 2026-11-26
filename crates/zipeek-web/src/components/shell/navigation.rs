@@ -35,7 +35,7 @@ struct NavigationItemConfig {
     icon: IconData,
 }
 
-const NAVIGATION_ITEMS: [NavigationItemConfig; 13] = [
+const NAVIGATION_ITEMS: [NavigationItemConfig; 14] = [
     NavigationItemConfig {
         route: Route::Home,
         label: "Home",
@@ -85,6 +85,11 @@ const NAVIGATION_ITEMS: [NavigationItemConfig; 13] = [
         route: Route::Games,
         label: "Games",
         icon: IconData::LUCIDE_GAMEPAD,
+    },
+    NavigationItemConfig {
+        route: Route::Record,
+        label: "Record",
+        icon: IconData::LUCIDE_MIC,
     },
     NavigationItemConfig {
         route: Route::Random,

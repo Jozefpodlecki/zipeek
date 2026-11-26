@@ -1,6 +1,6 @@
-use crate::components::ListenButton;
-use super::state::RegionLoad;
 use super::loading::{ExplorerLoading, LoadingPhase};
+use super::state::RegionLoad;
+use crate::components::ListenButton;
 use yew::prelude::*;
 
 pub const PAGE_SIZE: usize = 4;

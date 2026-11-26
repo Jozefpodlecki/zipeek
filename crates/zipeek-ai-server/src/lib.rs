@@ -4,6 +4,9 @@
 
 use std::{convert::Infallible, net::SocketAddr, sync::Arc};
 
+pub mod llama_cpp;
+
+#[cfg(test)]
 pub mod fixture_backend;
 
 use axum::{

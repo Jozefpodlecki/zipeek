@@ -24,6 +24,18 @@ pub struct CharacterPinyinReading {
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct TextWordReading {
+    pub simplified: String,
+    pub pinyin_numeric: Option<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TextReadingCandidates {
+    pub words: Vec<TextWordReading>,
+    pub characters: Vec<CharacterPinyinReading>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct BrowseRelation {
     pub relation_type: String,
     pub target_simplified: String,
@@ -40,6 +52,41 @@ impl Database {
             vec![json!(character.to_string())],
         )
         .await
+    }
+
+    pub async fn text_reading_candidates(&self, text: &str) -> Result<TextReadingCandidates, DbError> {
+        let characters: Vec<String> = text.chars()
+            .filter(|character| ('\u{3400}'..='\u{9fff}').contains(character))
+            .map(|character| character.to_string())
+            .collect::<BTreeSet<_>>().into_iter().collect();
+        if characters.is_empty() {
+            return Ok(TextReadingCandidates::default());
+        }
+        let character_placeholders = vec!["?"; characters.len()].join(",");
+        let characters_rows = self.query(
+            &format!("SELECT character, traditional, pinyin_numeric FROM character_readings WHERE character IN ({character_placeholders}) ORDER BY character, pinyin_numeric"),
+            characters.iter().map(|character| json!(character)).collect(),
+        ).await?;
+        let source: Vec<char> = text.chars().collect();
+        let mut fragments = BTreeSet::new();
+        for start in 0..source.len() {
+            for size in 2..=5 {
+                let Some(slice) = source.get(start..start.saturating_add(size)) else { break; };
+                if slice.iter().all(|character| ('\u{3400}'..='\u{9fff}').contains(character)) {
+                    fragments.insert(slice.iter().collect::<String>());
+                }
+            }
+        }
+        let words = if fragments.is_empty() {
+            Vec::new()
+        } else {
+            let placeholders = vec!["?"; fragments.len()].join(",");
+            self.query(
+                &format!("SELECT DISTINCT simplified, pinyin_numeric FROM words WHERE simplified IN ({placeholders}) AND pinyin_numeric IS NOT NULL ORDER BY simplified, pinyin_numeric"),
+                fragments.iter().map(|fragment| json!(fragment)).collect(),
+            ).await?
+        };
+        Ok(TextReadingCandidates { words, characters: characters_rows })
     }
 
     pub async fn word_relations(&self, word_id: WordId) -> Result<Vec<BrowseRelation>, DbError> {
@@ -170,7 +217,9 @@ ORDER BY id ASC"#
             let placeholders = vec!["?"; chunk.len()].join(",");
             let mut found = self
                 .words(
-                    &format!("SELECT * FROM words WHERE simplified IN ({placeholders}) ORDER BY id ASC"),
+                    &format!(
+                        "SELECT * FROM words WHERE simplified IN ({placeholders}) ORDER BY id ASC"
+                    ),
                     chunk.iter().map(|spelling| json!(spelling)).collect(),
                 )
                 .await?;

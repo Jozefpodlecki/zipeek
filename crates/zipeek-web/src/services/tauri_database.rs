@@ -1,32 +1,11 @@
 use super::tauri_ipc_error::message;
 use js_sys::{Function, Object, Promise, Reflect};
-use serde::{Deserialize, de::DeserializeOwned};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct NativeDictionaryInfo {
-    pub engine: String,
-    pub native_engine: String,
-    pub storage_compatibility: String,
-    pub row_count: u32,
-}
-
-pub fn available() -> bool {
-    let Some(window) = web_sys::window() else {
-        return false;
-    };
-    let Ok(tauri) = Reflect::get(window.as_ref(), &JsValue::from_str("__TAURI__")) else {
-        return false;
-    };
-    let Ok(core) = Reflect::get(&tauri, &JsValue::from_str("core")) else {
-        return false;
-    };
-    Reflect::get(&core, &JsValue::from_str("invoke"))
-        .ok()
-        .is_some_and(|value| value.is_function())
-}
+use zipeek_db::contracts::{DatabaseInfo, HistoryRow};
 
 async fn invoke<T: DeserializeOwned>(command: &str, args: &Object) -> Result<T, String> {
     let window = web_sys::window().ok_or("Window not available")?;
@@ -45,7 +24,7 @@ async fn invoke<T: DeserializeOwned>(command: &str, args: &Object) -> Result<T, 
     serde_wasm_bindgen::from_value(value).map_err(|error| error.to_string())
 }
 
-pub async fn open() -> Result<NativeDictionaryInfo, String> {
+pub async fn open() -> Result<DatabaseInfo, String> {
     invoke("database_open", &Object::new()).await
 }
 
@@ -55,12 +34,6 @@ pub async fn query<T: DeserializeOwned>(sql: &str, parameters: Vec<Value>) -> Re
     let values = serde_wasm_bindgen::to_value(&parameters).map_err(|error| error.to_string())?;
     Reflect::set(&args, &JsValue::from_str("parameters"), &values).map_err(message)?;
     invoke("database_query", &args).await
-}
-
-#[derive(Deserialize)]
-pub struct HistoryRow {
-    pub session_id: String,
-    pub evidence: String,
 }
 
 pub async fn commit_history(session_id: &str, evidence: &str) -> Result<(), String> {
@@ -86,4 +59,10 @@ pub async fn history_rows() -> Result<Vec<HistoryRow>, String> {
 
 pub async fn erase_history() -> Result<(), String> {
     invoke("history_erase", &Object::new()).await
+}
+
+pub async fn reset_personal_data() -> Result<(), String> {
+    let args = Object::new();
+    Reflect::set(&args, &JsValue::from_str("confirmed"), &JsValue::TRUE).map_err(message)?;
+    invoke("personal_data_reset", &args).await
 }

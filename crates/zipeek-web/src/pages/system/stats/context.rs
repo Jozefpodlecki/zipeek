@@ -32,5 +32,6 @@ pub(super) struct LoadedSectionContext(pub Rc<SectionPayload>);
 #[hook]
 pub(super) fn use_loaded_section() -> Rc<SectionPayload> {
     use_context::<LoadedSectionContext>()
-        .expect("Statistics section must be rendered beneath a loaded projection provider").0
+        .expect("Statistics section must be rendered beneath a loaded projection provider")
+        .0
 }

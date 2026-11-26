@@ -10,15 +10,18 @@ async fn pinyin_lessons_are_instructional_not_self_certified(
     let lesson = driver.query_single(page_objects::courses::LESSON).await?;
     zipeek_e2e::e2e_ensure!(lesson.text().await?.contains("Initial sounds"));
     zipeek_e2e::e2e_ensure!(lesson.text().await?.contains("Practise what you learned"));
-    lesson
-        .query_single("button")
-        .await?;
+    lesson.query_single("button").await?;
     driver
         .query_single("[data-component='course-lesson'] button")
         .await?;
     driver.refresh().await?;
     zipeek_e2e::e2e_ensure!(
-        driver.query_single(page_objects::courses::LESSON).await?.text().await?.contains("Initial sounds")
+        driver
+            .query_single(page_objects::courses::LESSON)
+            .await?
+            .text()
+            .await?
+            .contains("Initial sounds")
     );
     ctx.open_route("/courses/pinyin").await?;
     zipeek_e2e::e2e_ensure!(driver.find_all_css("[data-pinyin-region]").await?.len() == 6);
@@ -31,11 +34,25 @@ async fn catalogue_lesson_links_open_authored_content(ctx: ScenarioContext) -> H
     driver.query_single(page_objects::courses::PINYIN).await?;
     zipeek_e2e::e2e_ensure!(driver.find_all_css("[data-pinyin-region]").await?.len() == 6);
     for (index, slug) in [
-        "tones", "initials", "simple-finals", "nasal-finals", "syllable-building", "sound-contrasts",
-    ].iter().enumerate() {
+        "tones",
+        "initials",
+        "simple-finals",
+        "nasal-finals",
+        "syllable-building",
+        "sound-contrasts",
+    ]
+    .iter()
+    .enumerate()
+    {
         ctx.open_route("/courses/pinyin").await?;
-        driver.find_all_css("[data-pinyin-region]").await?[index].click().await?;
-        driver.query_single(&format!("[data-pinyin-details] a[href*='/courses/pinyin/{slug}']")).await?;
+        driver.find_all_css("[data-pinyin-region]").await?[index]
+            .click()
+            .await?;
+        driver
+            .query_single(&format!(
+                "[data-pinyin-details] a[href*='/courses/pinyin/{slug}']"
+            ))
+            .await?;
     }
     Ok(())
 }
@@ -43,17 +60,42 @@ async fn catalogue_lesson_links_open_authored_content(ctx: ScenarioContext) -> H
 async fn all_pinyin_lessons_remain_navigable(ctx: ScenarioContext) -> HarnessResult<()> {
     let driver = &ctx.driver;
     let lessons = [
-        "tones", "tone-patterns", "initials", "initial-contrasts",
-        "simple-finals", "finals", "nasal-finals", "spelling-review",
-        "syllable-building", "connected-speech", "sound-contrasts", "comprehensive-review",
+        "tones",
+        "tone-patterns",
+        "initials",
+        "initial-contrasts",
+        "simple-finals",
+        "finals",
+        "nasal-finals",
+        "spelling-review",
+        "syllable-building",
+        "connected-speech",
+        "sound-contrasts",
+        "comprehensive-review",
     ];
     for (index, slug) in lessons.iter().enumerate() {
         ctx.open_route(&format!("/courses/pinyin/{slug}")).await?;
         let lesson = driver.query_single(page_objects::courses::LESSON).await?;
-        zipeek_e2e::e2e_ensure!(lesson.text().await?.contains(&format!("Module {} of 12", index + 1)));
+        zipeek_e2e::e2e_ensure!(
+            lesson
+                .text()
+                .await?
+                .contains(&format!("Module {} of 12", index + 1))
+        );
         if let Some(next) = lessons.get(index + 1) {
-            driver.query(By::XPath("//article[@data-component='course-lesson']//a[contains(., 'Next module')]")).single().await?.click().await?;
-            zipeek_e2e::page_objects::browser::wait_for_hash_route(driver, &format!("/courses/pinyin/{next}")).await?;
+            driver
+                .query(By::XPath(
+                    "//article[@data-component='course-lesson']//a[contains(., 'Next module')]",
+                ))
+                .single()
+                .await?
+                .click()
+                .await?;
+            zipeek_e2e::page_objects::browser::wait_for_hash_route(
+                driver,
+                &format!("/courses/pinyin/{next}"),
+            )
+            .await?;
         }
     }
     ctx.checkpoint("pinyin-twelve-modules-navigable").await?;
@@ -65,20 +107,54 @@ async fn pinyin_written_check_persists_without_claiming_speech_mastery(
 ) -> HarnessResult<()> {
     let driver = &ctx.driver;
     ctx.open_route("/courses/pinyin/tones").await?;
-    driver.query_single("[data-component='course-lesson'] button:not([data-listen])").await?;
-    driver.query(By::XPath("//button[contains(., 'Practise what you learned')]")).single().await?.click().await?;
+    driver
+        .query_single("[data-component='course-lesson'] button:not([data-listen])")
+        .await?;
+    driver
+        .query(By::XPath(
+            "//button[contains(., 'Practise what you learned')]",
+        ))
+        .single()
+        .await?
+        .click()
+        .await?;
     let checks = driver.query_single("[data-pinyin-check]").await?;
     zipeek_e2e::e2e_ensure!(checks.text().await?.contains("written recognition"));
     let options = checks.find_all(By::Css("button[aria-pressed]")).await?;
     zipeek_e2e::e2e_ensure!(options.len() == 6);
     options[1].click().await?;
     options[3].click().await?;
-    driver.query(By::XPath("//button[contains(., 'Check answers')]")).single().await?.click().await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-pinyin-check]").await?.text().await?.contains("2 of 2 correct"));
+    driver
+        .query(By::XPath("//button[contains(., 'Check answers')]"))
+        .single()
+        .await?
+        .click()
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-pinyin-check]")
+            .await?
+            .text()
+            .await?
+            .contains("2 of 2 correct")
+    );
     driver.refresh().await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-pinyin-completed]").await?.is_displayed().await?);
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-pinyin-completed]")
+            .await?
+            .is_displayed()
+            .await?
+    );
     ctx.open_route("/courses/pinyin").await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-pinyin-details]").await?.text().await?.contains("Check passed"));
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-pinyin-details]")
+            .await?
+            .text()
+            .await?
+            .contains("Check passed")
+    );
     Ok(())
 }
 
@@ -208,22 +284,44 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
         driver.find_all_css("[data-grammar-play]").await?.is_empty(),
         "Grammar has one lesson entry, not a duplicate player",
     );
-    driver.query_single("[data-course-details] a[href*='/courses/grammar/intro']").await?.click().await?;
-    driver.query_single("[data-component='course-lesson-shell']").await?;
-    driver.query_single("[data-grammar-lesson='grammar-1']").await?;
+    driver
+        .query_single("[data-course-details] a[href*='/courses/grammar/intro']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-component='course-lesson-shell']")
+        .await?;
+    driver
+        .query_single("[data-grammar-lesson='grammar-1']")
+        .await?;
     for index in 0..4 {
-        driver.query_single(&format!("[data-grammar-point-id] [lang='zh-Hans']")).await?;
+        driver
+            .query_single(&format!("[data-grammar-point-id] [lang='zh-Hans']"))
+            .await?;
         if index < 3 {
-            driver.query_single("[data-grammar-next]").await?.click().await?;
+            driver
+                .query_single("[data-grammar-next]")
+                .await?
+                .click()
+                .await?;
         }
     }
-    driver.query_single("[data-grammar-next]").await?.click().await?;
+    driver
+        .query_single("[data-grammar-next]")
+        .await?
+        .click()
+        .await?;
     for (index, choice) in [0, 1, 2, 0].into_iter().enumerate() {
         let selector = format!("[data-grammar-question='{index}'] button");
         let choices = driver.find_all_css(&selector).await?;
         zipeek_e2e::e2e_ensure_eq!(choices.len(), 3);
         choices[choice].click().await?;
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
     driver.query_single("[data-guided-grammar-bank]").await?;
     ctx.checkpoint("grammar-guided-checks-staged").await?;
@@ -281,14 +379,22 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
         .query_single("[data-grammar-lesson='grammar-2']")
         .await?;
     for _ in 0..5 {
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
     for (index, choice) in [0, 1, 2, 0, 1].into_iter().enumerate() {
         let selector = format!("[data-grammar-question='{index}'] button");
         let choices = driver.find_all_css(&selector).await?;
         zipeek_e2e::e2e_ensure!(choices.len() == 3);
         choices[choice].click().await?;
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
 
     let time_place_orders: [&[&str]; 6] = [
@@ -340,14 +446,22 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
         .query_single("[data-grammar-lesson='grammar-3']")
         .await?;
     for _ in 0..5 {
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
     for (index, choice) in [1, 1, 0, 2, 0].into_iter().enumerate() {
         let selector = format!("[data-grammar-question='{index}'] button");
         let choices = driver.find_all_css(&selector).await?;
         zipeek_e2e::e2e_ensure!(choices.len() == 3);
         choices[choice].click().await?;
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
 
     let possession_orders: [&[&str]; 6] = [
@@ -399,14 +513,22 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
         .query_single("[data-grammar-lesson='grammar-4']")
         .await?;
     for _ in 0..5 {
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
     for (index, choice) in [1, 0, 2, 1, 0].into_iter().enumerate() {
         let selector = format!("[data-grammar-question='{index}'] button");
         let choices = driver.find_all_css(&selector).await?;
         zipeek_e2e::e2e_ensure!(choices.len() == 3);
         choices[choice].click().await?;
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
 
     let description_orders: [&[&str]; 6] = [
@@ -457,14 +579,22 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
         .query_single("[data-grammar-lesson='grammar-5']")
         .await?;
     for _ in 0..5 {
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
     for (index, choice) in [1, 0, 2, 0, 1].into_iter().enumerate() {
         let selector = format!("[data-grammar-question='{index}'] button");
         let choices = driver.find_all_css(&selector).await?;
         zipeek_e2e::e2e_ensure!(choices.len() == 3);
         choices[choice].click().await?;
-        driver.query_single("[data-grammar-next]").await?.click().await?;
+        driver
+            .query_single("[data-grammar-next]")
+            .await?
+            .click()
+            .await?;
     }
 
     let wants_orders: [&[&str]; 6] = [
@@ -734,43 +864,154 @@ async fn mosaic_selection_and_guided_lesson(ctx: ScenarioContext) -> HarnessResu
     Ok(())
 }
 
-async fn expanded_grammar_courses_are_authored_and_resumable(ctx: ScenarioContext) -> HarnessResult<()> {
+async fn expanded_grammar_courses_are_authored_and_resumable(
+    ctx: ScenarioContext,
+) -> HarnessResult<()> {
     let driver = &ctx.driver;
-    for (region, title) in [(6, "Aspect: completed events"), (12, "Possibility complements"), (20, "Sequence and complex actions")] {
-        ctx.open_route(&format!("/courses/grammar/topic/{region}")).await?;
+    for (region, title) in [
+        (6, "Aspect: completed events"),
+        (12, "Possibility complements"),
+        (20, "Sequence and complex actions"),
+    ] {
+        ctx.open_route(&format!("/courses/grammar/topic/{region}"))
+            .await?;
         let lesson = driver.query_single("[data-grammar-expanded]").await?;
         zipeek_e2e::e2e_ensure!(lesson.text().await?.contains(title));
-        zipeek_e2e::e2e_ensure!(lesson.text().await?.contains("does not award verified mastery"));
-        zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-ai-example]").await?.is_displayed().await?);
-        driver.query(By::XPath("//button[contains(., 'Continue')]")).single().await?.click().await?;
-        zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-step='1']").await?.is_displayed().await?);
+        zipeek_e2e::e2e_ensure!(
+            lesson
+                .text()
+                .await?
+                .contains("does not award verified mastery")
+        );
+        zipeek_e2e::e2e_ensure!(
+            driver
+                .query_single("[data-grammar-ai-example]")
+                .await?
+                .is_displayed()
+                .await?
+        );
+        driver
+            .query(By::XPath("//button[contains(., 'Continue')]"))
+            .single()
+            .await?
+            .click()
+            .await?;
+        zipeek_e2e::e2e_ensure!(
+            driver
+                .query_single("[data-grammar-step='1']")
+                .await?
+                .is_displayed()
+                .await?
+        );
         driver.refresh().await?;
-        zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-step='1']").await?.is_displayed().await?);
+        zipeek_e2e::e2e_ensure!(
+            driver
+                .query_single("[data-grammar-step='1']")
+                .await?
+                .is_displayed()
+                .await?
+        );
     }
-    for (region, title) in [(21, "Serial-verb sequences"), (100, "Grammar consolidation and review")] {
-        ctx.open_route(&format!("/courses/grammar/topic/{region}")).await?;
+    for (region, title) in [
+        (21, "Serial-verb sequences"),
+        (100, "Grammar consolidation and review"),
+    ] {
+        ctx.open_route(&format!("/courses/grammar/topic/{region}"))
+            .await?;
         let lesson = driver.query_single("[data-grammar-expanded]").await?;
         zipeek_e2e::e2e_ensure!(lesson.text().await?.contains(title));
-        zipeek_e2e::e2e_ensure!(lesson.text().await?.contains("does not award verified mastery"));
+        zipeek_e2e::e2e_ensure!(
+            lesson
+                .text()
+                .await?
+                .contains("does not award verified mastery")
+        );
     }
     ctx.open_route("/courses/grammar/topic/80").await?;
     for _ in 0..5 {
-        driver.query(By::XPath("//button[contains(., 'Continue')]")).single().await?.click().await?;
+        driver
+            .query(By::XPath("//button[contains(., 'Continue')]"))
+            .single()
+            .await?
+            .click()
+            .await?;
     }
-    let practice = driver.query_single("[data-grammar-expansion-practice]").await?;
-    zipeek_e2e::e2e_ensure!(practice.text().await?.contains("Recall the Chinese sentence"));
+    let practice = driver
+        .query_single("[data-grammar-expansion-practice]")
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        practice
+            .text()
+            .await?
+            .contains("Recall the Chinese sentence")
+    );
     zipeek_e2e::e2e_ensure!(practice.text().await?.contains("Reveal sentence"));
-    zipeek_e2e::e2e_ensure!(!driver.query(By::XPath("//button[contains(., 'Continue')]")).single().await?.is_enabled().await?);
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-expansion-practice][data-grammar-practice-phase='recall']").await?.is_displayed().await?);
-    driver.query_single("[data-grammar-reveal]").await?.click().await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-expansion-practice]").await?.text().await?.contains("Check the meaning"));
-    zipeek_e2e::e2e_ensure!(driver.find_all_css("[data-grammar-expansion-practice] button[data-listen]").await?.len() >= 5);
+    zipeek_e2e::e2e_ensure!(
+        !driver
+            .query(By::XPath("//button[contains(., 'Continue')]"))
+            .single()
+            .await?
+            .is_enabled()
+            .await?
+    );
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-grammar-expansion-practice][data-grammar-practice-phase='recall']")
+            .await?
+            .is_displayed()
+            .await?
+    );
+    driver
+        .query_single("[data-grammar-reveal]")
+        .await?
+        .click()
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-grammar-expansion-practice]")
+            .await?
+            .text()
+            .await?
+            .contains("Check the meaning")
+    );
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .find_all_css("[data-grammar-expansion-practice] button[data-listen]")
+            .await?
+            .len()
+            >= 5
+    );
     zipeek_e2e::e2e_ensure!(driver.find_all_css("[data-grammar-choice]").await?.len() >= 5);
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-grammar-expansion-practice][data-grammar-practice-phase='recognition']").await?.is_displayed().await?);
-    zipeek_e2e::e2e_ensure!(!driver.query(By::XPath("//button[contains(., 'Continue')]")).single().await?.is_enabled().await?);
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single(
+                "[data-grammar-expansion-practice][data-grammar-practice-phase='recognition']"
+            )
+            .await?
+            .is_displayed()
+            .await?
+    );
+    zipeek_e2e::e2e_ensure!(
+        !driver
+            .query(By::XPath("//button[contains(., 'Continue')]"))
+            .single()
+            .await?
+            .is_enabled()
+            .await?
+    );
     ctx.open_route("/courses/grammar").await?;
-    driver.query_single("[data-mosaic-region='grammar-100']").await?.click().await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-course-details] a[href*='/courses/grammar/topic/100']").await?.is_displayed().await?);
+    driver
+        .query_single("[data-mosaic-region='grammar-100']")
+        .await?
+        .click()
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-course-details] a[href*='/courses/grammar/topic/100']")
+            .await?
+            .is_displayed()
+            .await?
+    );
     Ok(())
 }
 

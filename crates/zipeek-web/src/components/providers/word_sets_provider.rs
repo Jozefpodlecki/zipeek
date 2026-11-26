@@ -12,7 +12,11 @@ use crate::{
 #[derive(Clone)]
 pub(crate) enum WordSetsCommand {
     Create(String),
-    CreateFromCourse { name: String, word_ids: Vec<i32>, source: word_sets::CourseWordSetSource },
+    CreateFromCourse {
+        name: String,
+        word_ids: Vec<i32>,
+        source: word_sets::CourseWordSetSource,
+    },
     Rename(String),
     Delete,
     Toggle(i32),
@@ -58,10 +62,12 @@ pub(crate) fn word_sets_provider(props: &WordSetsProviderProps) -> Html {
             let mutation = match command {
                 WordSetsCommand::Create(name) => word_sets::create(&mut next, &name)
                     .map(|_| ("Word Set created".to_owned(), false, None)),
-                WordSetsCommand::CreateFromCourse { name, word_ids, source } => {
-                    word_sets::create_from_course(&mut next, &name, &word_ids, source)
-                        .map(|_| ("Course Word Set created".to_owned(), false, None))
-                }
+                WordSetsCommand::CreateFromCourse {
+                    name,
+                    word_ids,
+                    source,
+                } => word_sets::create_from_course(&mut next, &name, &word_ids, source)
+                    .map(|_| ("Course Word Set created".to_owned(), false, None)),
                 WordSetsCommand::Rename(name) => state
                     .target
                     .as_ref()
@@ -119,7 +125,8 @@ pub(crate) fn word_sets_provider(props: &WordSetsProviderProps) -> Html {
                         state.dispatch(WordSetsAction::Committed(next, message.clone()));
                         if let Some(source) = course_source {
                             state.dispatch(WordSetsAction::CourseFeedback(
-                                source, WordSetsFeedback::Success(message),
+                                source,
+                                WordSetsFeedback::Success(message),
                             ));
                         }
                     }
@@ -127,7 +134,8 @@ pub(crate) fn word_sets_provider(props: &WordSetsProviderProps) -> Html {
                 Err(error) => {
                     if let Some(source) = course_source {
                         state.dispatch(WordSetsAction::CourseFeedback(
-                            source, WordSetsFeedback::Error(error),
+                            source,
+                            WordSetsFeedback::Error(error),
                         ));
                     } else {
                         state.dispatch(WordSetsAction::Feedback(WordSetsFeedback::Error(error)));
@@ -142,13 +150,19 @@ pub(crate) fn word_sets_provider(props: &WordSetsProviderProps) -> Html {
         let storage = environment.local_storage.clone();
         Callback::from(move |id: Option<word_sets::WordSetId>| {
             if let Some(selected) = id.as_ref() {
-                if !state.sets.as_ref().is_ok_and(|sets| word_sets::find(sets, selected).is_some()) {
+                if !state
+                    .sets
+                    .as_ref()
+                    .is_ok_and(|sets| word_sets::find(sets, selected).is_some())
+                {
                     return;
                 }
             }
             match word_sets::set_active_dictionary_set(&storage, id.as_ref()) {
                 Ok(()) => state.dispatch(WordSetsAction::Select(id)),
-                Err(error) => state.dispatch(WordSetsAction::Feedback(WordSetsFeedback::Error(error))),
+                Err(error) => {
+                    state.dispatch(WordSetsAction::Feedback(WordSetsFeedback::Error(error)))
+                }
             }
         })
     };

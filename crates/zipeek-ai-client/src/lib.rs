@@ -11,7 +11,7 @@ mod protocol;
 mod stream;
 mod structured;
 
-pub use client::AiClient;
+pub use client::{AiClient, discover_models};
 pub use error::AiClientError;
 pub use message::{ChatMessage, ChatRole};
 pub use prompts::{

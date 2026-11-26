@@ -37,14 +37,22 @@ mod request_tests {
     fn output_budget_is_only_serialized_when_requested() {
         let messages = [serde_json::json!({"role":"user", "content":"test"})];
         let limited = ChatCompletionRequest {
-            model: "test", messages: &messages, temperature: 0.2, stream: true,
-            max_completion_tokens: Some(1024), response_format: None,
+            model: "test",
+            messages: &messages,
+            temperature: 0.2,
+            stream: true,
+            max_completion_tokens: Some(1024),
+            response_format: None,
         };
         let value = serde_json::to_value(limited).unwrap();
         assert_eq!(value["max_completion_tokens"], 1024);
         let unlimited = ChatCompletionRequest {
-            model: "test", messages: &messages, temperature: 0.2, stream: true,
-            max_completion_tokens: None, response_format: None,
+            model: "test",
+            messages: &messages,
+            temperature: 0.2,
+            stream: true,
+            max_completion_tokens: None,
+            response_format: None,
         };
         let value = serde_json::to_value(unlimited).unwrap();
         assert!(value.get("max_completion_tokens").is_none());

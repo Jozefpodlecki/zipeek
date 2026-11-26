@@ -96,7 +96,9 @@ impl AiClient {
         M: Serialize,
     {
         if max_completion_tokens.is_some_and(|limit| !(64..=16_384).contains(&limit)) {
-            return Err(AiClientError("AI output token budget must be between 64 and 16384".to_owned()));
+            return Err(AiClientError(
+                "AI output token budget must be between 64 and 16384".to_owned(),
+            ));
         }
         if messages.is_empty() {
             return Err(AiClientError("AI request requires messages".to_owned()));
@@ -138,16 +140,27 @@ impl AiClient {
             .and_then(|value| value.to_str().ok())
             .is_some_and(|value| value.to_ascii_lowercase().starts_with("text/event-stream"));
         if !is_event_stream {
-            let payload: ChatCompletionResponse = response.json().await.map_err(|_| {
+            let body = response.bytes().await.map_err(request_error)?;
+            if body.len() > 4 * 1024 * 1024 {
+                return Err(AiClientError(
+                    "AI response exceeded the maximum supported size".to_owned(),
+                ));
+            }
+            let payload: ChatCompletionResponse = serde_json::from_slice(&body).map_err(|_| {
                 AiClientError(
                     "AI returned invalid JSON instead of a chat completion or SSE stream"
                         .to_owned(),
                 )
             })?;
-            let choice = payload.choices.into_iter().next()
+            let choice = payload
+                .choices
+                .into_iter()
+                .next()
                 .ok_or_else(|| AiClientError("AI returned no completion choices".to_owned()))?;
             if choice.finish_reason.as_deref() == Some("length") {
-                return Err(AiClientError("AI stopped because its output token limit was reached".to_owned()));
+                return Err(AiClientError(
+                    "AI stopped because its output token limit was reached".to_owned(),
+                ));
             }
             let content = choice.message.content
                 .filter(|content| !content.trim().is_empty())
@@ -224,5 +237,71 @@ impl AiClient {
             "truncated": reply.chars().count() > 600,
         })
         .to_string())
+    }
+}
+
+
+pub async fn discover_models(endpoint: &str, api_key: &str) -> Result<Vec<String>, AiClientError> {
+    let mut url = chat_url(endpoint, api_key)?;
+    let prefix = url.path().strip_suffix("chat/completions")
+        .ok_or_else(|| AiClientError("Invalid AI API base URL".into()))?
+        .to_owned();
+    url.set_path(&format!("{prefix}models"));
+    #[cfg(not(target_arch = "wasm32"))]
+    let builder = reqwest::Client::builder()
+        .timeout(Duration::from_secs(15))
+        .redirect(reqwest::redirect::Policy::none());
+    #[cfg(target_arch = "wasm32")]
+    let builder = reqwest::Client::builder();
+    let client = builder.build().map_err(request_error)?;
+    let mut request = client.get(url.clone());
+    if !api_key.is_empty() {
+        request = request.bearer_auth(api_key);
+    }
+    let response = request.send().await.map_err(request_error)?;
+    if response.url() != &url {
+        return Err(AiClientError("Model discovery redirected to a different URL".into()));
+    }
+    if !response.status().is_success() {
+        let status = response.status();
+        return Err(AiClientError(format!("Model discovery failed: HTTP {status}")));
+    }
+    let bytes = response.bytes().await.map_err(request_error)?;
+    if bytes.len() > 1024 * 1024 {
+        return Err(AiClientError("Model inventory is too large".into()));
+    }
+    let payload: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|_| AiClientError("Invalid model inventory JSON".into()))?;
+    models_from_payload(&payload)
+}
+
+fn models_from_payload(payload: &serde_json::Value) -> Result<Vec<String>, AiClientError> {
+    let list = payload.get("data").and_then(serde_json::Value::as_array)
+        .ok_or_else(|| AiClientError("Model inventory lacks a data array".into()))?;
+    let models: Vec<String> = list.iter().take(100)
+        .filter_map(|item| item.get("id").and_then(serde_json::Value::as_str))
+        .filter(|id| !id.trim().is_empty() && id.len() <= 256)
+        .map(str::to_owned)
+        .collect();
+    if models.is_empty() {
+        return Err(AiClientError("No models available at this endpoint".into()));
+    }
+    Ok(models)
+}
+
+
+#[cfg(test)]
+mod model_discovery_tests {
+    use super::models_from_payload;
+    use serde_json::json;
+
+    #[test]
+    fn rejects_invalid_inventories_and_filters_bad_ids() {
+        assert!(models_from_payload(&json!({})).is_err());
+        assert!(models_from_payload(&json!({"data": []})).is_err());
+        let models = models_from_payload(&json!({
+            "data": [{"id": "qwen-instruct"}, {"id": ""}, {"wrong": "value"}]
+        })).expect("valid inventory");
+        assert_eq!(models, vec!["qwen-instruct"]);
     }
 }

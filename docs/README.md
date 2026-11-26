@@ -12,11 +12,12 @@ Use [AGENTS](../AGENTS.md) as the sole authoritative agent and contributor guide
 | Product overview and UX | [Product](product-ux/product.md), [UX](product-ux/ux.md) |
 | Future Courses mosaic and grammar assessments | [Courses mosaic spec](learning-practice/courses/courses-mosaic.md) |
 | Statistics 2.0 dashboard design and implementation plan | [Statistics product design](product-ux/pages/learning-statistics-preview.md), [Statistics architecture](architecture/modules/statistics-dashboard.md), [Statistics acceptance](testing-quality/e2e/statistics-dashboard-design-acceptance.md) |
-| Planned session evidence and proficiency requirements | [Learning evidence](learning-practice/practice/learning-evidence.md) |
-| Practice setup and persisted translation | [Practice builder](learning-practice/practice/practice-session-builder.md), [Sentence translation](learning-practice/translation/translate-sentence.md) |
+| Prospective Knowledge Points scoring policy and unresolved decisions | [Knowledge Points](learning-practice/pedagogy/knowledge-points.md), [scoring engine architecture](architecture/modules/knowledge-scoring.md) |
+| Planned session evidence and legacy proficiency requirements | [Learning evidence](learning-practice/practice/learning-evidence.md) |
+| Practice setup, storage and persisted translation | [Practice builder](learning-practice/practice/practice-session-builder.md), [Practice session storage](architecture/modules/practice-session-storage.md), [Sentence translation](learning-practice/translation/translate-sentence.md) |
 | Word Sets, Browse, writing, games | [Dictionary Browse](dictionary-data/dictionary-browse.md), [Write Hanzi](learning-practice/hanzi/write-hanzi-activity.md), [Cloud Match](games/cloud-match.md) |
 | Private data, backup and personal database status | [Personal data](dictionary-data/personal/personal-data-storage.md), [personal schema](dictionary-data/schema/personal-data.md) |
-| Historical source-to-documentation evidence | [Archived source reconciliation](archive-history/audits/SOURCE_RECONCILIATION.md) |
+| Historical source-to-documentation evidence | [Archived source reconciliation](archive-history/audits/SOURCE_RECONCILIATION.md), [release engineering review history](archive-history/audits/release-engineering-review-history.md) |
 | System architecture and dependencies | [Architecture](architecture/architecture.md), [UI architecture](architecture/ui-architecture.md) |
 | Translation and AI responsibilities | [Sentence exercises](architecture/modules/sentence-exercises.md), [AI client](architecture/modules/ai-client.md) |
 | Dictionary schema, generator and runtime | [DB index](dictionary-data/schema/db.md), [regeneration](dictionary-data/schema/regeneration.md), [runtime](dictionary-data/schema/runtime.md) |
@@ -119,3 +120,5 @@ Maintained article filenames use lowercase kebab-case, except conventional `READ
 Overlapping contracts: the current [UX overview](product-ux/ux.md) and [Practice overview](learning-practice/practice/practice-overview.md) are navigation entry points, not duplicate authorities. E2E [recording workflow](testing-quality/e2e/e2e-recording.md) is operational guidance; the [video evidence contract](testing-quality/e2e/e2e-video-recording.md) governs recording metadata and validity. Historical implementation chronicles are stored in archive-history/audits.
 
 For ongoing editorial and implementation verification gaps, see [documentation quality](project-management/documentation-quality.md).
+
+- [Native Candle streaming ASR implementation status](architecture/native-streaming-asr.md)

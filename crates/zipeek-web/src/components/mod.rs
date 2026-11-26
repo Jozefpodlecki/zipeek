@@ -45,10 +45,8 @@ pub use providers::theme_provider::ThemeProvider;
 pub(crate) use providers::toast_provider::{ToastBus, ToastProvider};
 pub(crate) use providers::word_sets_provider::{WordSetsCommand, WordSetsProvider};
 
-pub use shell::app_footer::AppFooter;
 pub use shell::app_shell::AppShell;
 pub use shell::background::Background;
-pub use shell::footer::Footer;
 pub use shell::layout::{Layout, SearchBar};
 pub use shell::navigation::Navigation;
 pub use shell::navigation_tile::NavigationTile;

@@ -14,7 +14,10 @@ use zipeek_exercises::practice_draft::{
 
 use crate::{
     components::practice::setup::practice_flow_navigation::PracticeStep,
-    models::{AnswerPolicy, AudioPreference, ListeningHintVisibility, PracticeExerciseOptions, WritingGuidance},
+    models::{
+        AnswerPolicy, AudioPreference, ListeningHintVisibility, PracticeExerciseOptions,
+        WritingGuidance,
+    },
 };
 
 pub(crate) const QUICK_EXERCISES: [&str; 8] = [
@@ -65,6 +68,8 @@ pub(crate) enum PracticeSetupAction {
     ToggleFormat(ExerciseVariant),
     SetMatchingColumnOrder(MatchingColumnOrder),
     SetMatchingPairs(u8),
+    SetMatchingAiGenerated(bool),
+    SetMatchingShowPinyin(bool),
     SetWritingGuidance(WritingGuidance),
     SetWritingAnimation(bool),
     SetWritingAssistance(crate::models::StrokeAssistance),
@@ -225,6 +230,12 @@ impl Reducible for PracticeSetupFlow {
             }
             PracticeSetupAction::SetMatchingColumnOrder(order) => {
                 next.draft.matching_column_order = order;
+            }
+            PracticeSetupAction::SetMatchingAiGenerated(enabled) => {
+                next.exercise_options.matching_ai_generated = enabled;
+            }
+            PracticeSetupAction::SetMatchingShowPinyin(enabled) => {
+                next.exercise_options.matching_show_pinyin = enabled;
             }
             PracticeSetupAction::SetMatchingPairs(count) => {
                 if (2..=7).contains(&count) {

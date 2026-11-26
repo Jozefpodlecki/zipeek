@@ -29,11 +29,15 @@ struct ExpandedLessonContentProps {
 
 #[function_component(ExpandedLessonContent)]
 fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
-    let Some(course) = expanded_course(props.region) else { return Html::default(); };
+    let Some(course) = expanded_course(props.region) else {
+        return Html::default();
+    };
     let total_steps = grammar_learning_flow::step_count(course.points.len());
-    let initial = progress::load().ok()
+    let initial = progress::load()
+        .ok()
         .and_then(|saved| saved.grammar_steps.get(course.id).copied())
-        .unwrap_or(0).min(total_steps - 1);
+        .unwrap_or(0)
+        .min(total_steps - 1);
     let step = use_state(|| initial);
     let practice = use_reducer(|| PracticeState::new(course.points.len()));
     let save_error = use_state(|| None::<String>);
@@ -52,7 +56,10 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             let value = step.saturating_sub(1);
             match progress::update(|record| record.mark_grammar_step(&id, value, total_steps)) {
-                Ok(()) => { save_error.set(None); step.set(value); }
+                Ok(()) => {
+                    save_error.set(None);
+                    step.set(value);
+                }
                 Err(error) => save_error.set(Some(error)),
             }
         })
@@ -64,7 +71,10 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             let value = (*step + 1).min(total_steps - 1);
             match progress::update(|record| record.mark_grammar_step(&id, value, total_steps)) {
-                Ok(()) => { save_error.set(None); step.set(value); }
+                Ok(()) => {
+                    save_error.set(None);
+                    step.set(value);
+                }
                 Err(error) => save_error.set(Some(error)),
             }
         })
@@ -73,9 +83,12 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
         .expect("A bounded grammar checkpoint always corresponds to a learning step");
     let question_index = learning_step.point_index;
     let point = &course.points[question_index];
-    let example_pinyin = zipeek_pedagogy::grammar::pinyin::example_pinyin(props.region, question_index);
+    let example_pinyin =
+        zipeek_pedagogy::grammar::pinyin::example_pinyin(props.region, question_index);
     let can_continue = grammar_learning_flow::can_advance(
-        learning_step, practice.revealed[question_index], practice.answers[question_index],
+        learning_step,
+        practice.revealed[question_index],
+        practice.answers[question_index],
     );
     let stage = match learning_step.phase {
         LearningPhase::Explain => {
@@ -99,7 +112,7 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
                         explanation={point.explanation.to_owned()} example={point.example.to_owned()} />
                 </section>
             }
-        },
+        }
         LearningPhase::Practise => {
             let answer_is_revealed = practice.revealed[question_index];
             let selected = practice.answers[question_index];
@@ -163,7 +176,7 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
                     }
                 </section>
             }
-        },
+        }
     };
     html! {
         <GrammarLessonScaffold title={course.title} course_id={course.id} expanded=true current={current} total_steps={total_steps} subtitle={Some(AttrValue::from("Teaching and exploratory practice. This lesson does not award verified mastery."))}>

@@ -2,6 +2,11 @@
 #![allow(unused)]
 #![allow(private_interfaces)]
 
+pub mod contracts;
+mod evidence_summary;
+
+pub use evidence_summary::{EvidenceError, PracticeOutcomeSummary};
+
 #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 pub mod native;
 

@@ -1,39 +1,52 @@
 use serde_json::Value;
-use tauri::State;
+use tauri::{State, command};
 
-use crate::database::{DatabaseError, DatabaseInfo, NativeDatabase};
+use super::error::CommandError;
+use crate::database::{DatabaseError, NativeDatabase};
+use zipeek_db::contracts::{DatabaseInfo, HistoryRow};
 
-#[tauri::command]
-pub async fn database_open(
-    state: State<'_, NativeDatabase>,
-) -> Result<DatabaseInfo, DatabaseError> {
-    state.open().await
+#[command]
+pub async fn database_open(state: State<'_, NativeDatabase>) -> Result<DatabaseInfo, CommandError> {
+    Ok(state.open().await?)
 }
 
-#[tauri::command]
+#[command]
 pub async fn database_query(
     sql: String,
     parameters: Vec<Value>,
     state: State<'_, NativeDatabase>,
-) -> Result<Vec<Value>, DatabaseError> {
-    state.query(sql, parameters).await
+) -> Result<Vec<Value>, CommandError> {
+    Ok(state.query(sql, parameters).await?)
 }
 
-#[tauri::command]
+#[command]
 pub async fn history_commit(
     session_id: String,
     evidence: String,
     state: State<'_, NativeDatabase>,
-) -> Result<(), DatabaseError> {
-    state.commit_history(session_id, evidence).await
+) -> Result<(), CommandError> {
+    Ok(state.commit_history(session_id, evidence).await?)
 }
 
-#[tauri::command]
-pub async fn history_rows(state: State<'_, NativeDatabase>) -> Result<Vec<Value>, DatabaseError> {
-    state.history_rows().await
+#[command]
+pub async fn history_rows(
+    state: State<'_, NativeDatabase>,
+) -> Result<Vec<HistoryRow>, CommandError> {
+    Ok(state.history_rows().await?)
 }
 
-#[tauri::command]
-pub async fn history_erase(state: State<'_, NativeDatabase>) -> Result<(), DatabaseError> {
-    state.erase_history().await
+#[command]
+pub async fn history_erase(state: State<'_, NativeDatabase>) -> Result<(), CommandError> {
+    Ok(state.erase_history().await?)
+}
+
+#[command]
+pub async fn personal_data_reset(
+    confirmed: bool,
+    state: State<'_, NativeDatabase>,
+) -> Result<(), CommandError> {
+    if !confirmed {
+        return Err(DatabaseError::Operation("Reset must be explicitly confirmed".into()).into());
+    }
+    Ok(state.reset_personal_data().await?)
 }

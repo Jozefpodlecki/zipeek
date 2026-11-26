@@ -202,30 +202,47 @@ impl Harness {
         }
         let primary_error = primary.as_ref().err().map(ToString::to_string);
         let evidence_strict = std::env::var("ZIPEEK_E2E_EVIDENCE_STRICT").as_deref() == Ok("1");
-        let strict_recording_error = if primary.is_ok() && (recorder::VisualRecorder::strict() || evidence_strict) {
-            recording_error.as_ref().map(ToString::to_string).or_else(|| {
-                if evidence_strict && !directory.join("video/status.json").is_file() {
-                    Some("Strict E2E evidence requires a completed video capture status".to_owned())
-                } else {
-                    None
-                }
-            }).or_else(|| {
-                if evidence_strict {
-                    let video_status = std::fs::read(directory.join("video/status.json"))
-                        .ok()
-                        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok());
-                    if video_status.as_ref().is_none_or(|value| value["validation"]["status"] != "valid" || value["truncated"] == true || value["captured"].as_u64() == Some(0)) {
-                        Some("Strict E2E evidence requires a valid, nontruncated recording".to_owned())
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            })
-        } else {
-            None
-        };
+        let strict_recording_error =
+            if primary.is_ok() && (recorder::VisualRecorder::strict() || evidence_strict) {
+                recording_error
+                    .as_ref()
+                    .map(ToString::to_string)
+                    .or_else(|| {
+                        if evidence_strict && !directory.join("video/status.json").is_file() {
+                            Some(
+                                "Strict E2E evidence requires a completed video capture status"
+                                    .to_owned(),
+                            )
+                        } else {
+                            None
+                        }
+                    })
+                    .or_else(|| {
+                        if evidence_strict {
+                            let video_status = std::fs::read(directory.join("video/status.json"))
+                                .ok()
+                                .and_then(|bytes| {
+                                    serde_json::from_slice::<serde_json::Value>(&bytes).ok()
+                                });
+                            if video_status.as_ref().is_none_or(|value| {
+                                value["validation"]["status"] != "valid"
+                                    || value["truncated"] == true
+                                    || value["captured"].as_u64() == Some(0)
+                            }) {
+                                Some(
+                                    "Strict E2E evidence requires a valid, nontruncated recording"
+                                        .to_owned(),
+                                )
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    })
+            } else {
+                None
+            };
         let strict_checkpoint_error = if evidence_strict && primary.is_ok() {
             checkpoint_failure.clone().or_else(|| {
                 if !directory.join("timeline/steps.jsonl").is_file() {
@@ -260,7 +277,9 @@ impl Harness {
         };
         let assertion_status = if phase == "scenario" {
             if primary.is_ok() { "passed" } else { "failed" }
-        } else { "not_run" };
+        } else {
+            "not_run"
+        };
         std::fs::write(directory.join("assertion-status.txt"), assertion_status)?;
         artifacts::case_result(&directory, case_status, case_phase, case_error)?;
         if let Some(error) = primary_error {
@@ -407,8 +426,18 @@ impl Harness {
         )?;
         let review = format!(
             "# E2E run review\n\nBrowser: {}\n\nScenarios: {}\n\nSee `suite.json` for separate execution, assertion and recording states. Each scenario has an `agent-feedback.md` report.\n\n{}\n",
-            self.browser.as_str(), cases.len(),
-            cases.iter().map(|case| format!("- {}: {} (video: {})", case["scenario"].as_str().unwrap_or("unknown"), case["status"].as_str().unwrap_or("unknown"), case["recording_status"].as_str().unwrap_or("unavailable"))).collect::<Vec<_>>().join("\n")
+            self.browser.as_str(),
+            cases.len(),
+            cases
+                .iter()
+                .map(|case| format!(
+                    "- {}: {} (video: {})",
+                    case["scenario"].as_str().unwrap_or("unknown"),
+                    case["status"].as_str().unwrap_or("unknown"),
+                    case["recording_status"].as_str().unwrap_or("unavailable")
+                ))
+                .collect::<Vec<_>>()
+                .join("\n")
         );
         std::fs::write(self.artifacts.join("review.md"), review)?;
         let report = std::fs::write(self.artifacts.join("summary.txt"), &summary);

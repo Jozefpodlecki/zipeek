@@ -62,12 +62,12 @@ impl PlannedSession {
         if step.definition_id != definition_id {
             return Err(PlannedSessionError::WrongDefinition);
         }
+        let instance = ExerciseInstance::new(instance_id, definition_id, visible_input)
+            .map_err(PlannedSessionError::Ledger)?;
         let mut next = self.clone();
         next.plan
             .submit(instance_id, result)
             .map_err(PlannedSessionError::Plan)?;
-        let instance = ExerciseInstance::new(instance_id, definition_id, visible_input)
-            .map_err(PlannedSessionError::Ledger)?;
         next.ledger
             .record_completed(instance, result)
             .map_err(PlannedSessionError::Ledger)?;

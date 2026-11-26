@@ -3,6 +3,7 @@ mod asset_preflight;
 mod build;
 mod command;
 mod database;
+mod desktop_frontend;
 mod desktop_sidecars;
 mod docs;
 mod error;

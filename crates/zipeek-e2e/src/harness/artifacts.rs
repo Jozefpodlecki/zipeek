@@ -183,11 +183,20 @@ pub fn case_result(
     };
     let recording_status = if recording_error.is_some() {
         "failed"
-    } else if capture.as_ref().is_some_and(|value| value["truncated"] == true) {
+    } else if capture
+        .as_ref()
+        .is_some_and(|value| value["truncated"] == true)
+    {
         "truncated"
-    } else if capture.as_ref().is_some_and(|value| value["captured"].as_u64() == Some(0)) {
+    } else if capture
+        .as_ref()
+        .is_some_and(|value| value["captured"].as_u64() == Some(0))
+    {
         "unverified"
-    } else if capture.as_ref().is_some_and(|value| value["validation"]["status"] == "valid") {
+    } else if capture
+        .as_ref()
+        .is_some_and(|value| value["validation"]["status"] == "valid")
+    {
         "validated"
     } else if capture.is_some() {
         "unverified"
@@ -232,22 +241,38 @@ pub fn case_result(
     Ok(())
 }
 
-fn write_agent_feedback(directory: &std::path::Path, result: &serde_json::Value) -> HarnessResult<()> {
+fn write_agent_feedback(
+    directory: &std::path::Path,
+    result: &serde_json::Value,
+) -> HarnessResult<()> {
     let scenario = result["scenario"].as_str().unwrap_or("unknown");
     let status = result["execution_status"].as_str().unwrap_or("unknown");
     let recording = result["recording_status"].as_str().unwrap_or("unavailable");
     let phase = result["phase"].as_str().unwrap_or("unknown");
     let error = result["error"].as_str().unwrap_or("None reported");
-    let recording_error = result["recording_error"].as_str().unwrap_or("None reported");
-    let checkpoint_error = result["checkpoint_error"].as_str().unwrap_or("None reported");
-    let checkpoint_status = result["checkpoint_status"].as_str().unwrap_or("unavailable");
-    let recording_detail = result["recording_validation"]["detail"].as_str().unwrap_or("Not probed");
+    let recording_error = result["recording_error"]
+        .as_str()
+        .unwrap_or("None reported");
+    let checkpoint_error = result["checkpoint_error"]
+        .as_str()
+        .unwrap_or("None reported");
+    let checkpoint_status = result["checkpoint_status"]
+        .as_str()
+        .unwrap_or("unavailable");
+    let recording_detail = result["recording_validation"]["detail"]
+        .as_str()
+        .unwrap_or("Not probed");
     let capture_start = std::fs::read(directory.join("video/status.json"))
         .ok()
         .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
         .and_then(|value| value["started_unix_ms"].as_u64());
-    let mut report = format!("# E2E evidence: {scenario}\n\nExecution: {status}\n\nAssertion: {}\n\nVideo evidence: {recording}\n\nPhase: {phase}\n\nReported failure: {error}\n\nRecording failure: {recording_error}\n\nVideo validation: {recording_detail}\n\n", result["assertion_status"].as_str().unwrap_or("not_run"));
-    report.push_str(&format!("Checkpoint evidence: {checkpoint_status}\n\nCheckpoint failure: {checkpoint_error}\n\n"));
+    let mut report = format!(
+        "# E2E evidence: {scenario}\n\nExecution: {status}\n\nAssertion: {}\n\nVideo evidence: {recording}\n\nPhase: {phase}\n\nReported failure: {error}\n\nRecording failure: {recording_error}\n\nVideo validation: {recording_detail}\n\n",
+        result["assertion_status"].as_str().unwrap_or("not_run")
+    );
+    report.push_str(&format!(
+        "Checkpoint evidence: {checkpoint_status}\n\nCheckpoint failure: {checkpoint_error}\n\n"
+    ));
     if directory.join("video/recording.mp4").is_file() {
         report.push_str("Video: `video/recording.mp4`\n\n");
     }
@@ -260,15 +285,23 @@ fn write_agent_feedback(directory: &std::path::Path, result: &serde_json::Value)
     let timeline = directory.join("timeline/steps.jsonl");
     if let Ok(content) = std::fs::read_to_string(timeline) {
         report.push_str("## Evidence checkpoints\n\n");
-        for line in content.lines().filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok()) {
+        for line in content
+            .lines()
+            .filter_map(|line| serde_json::from_str::<serde_json::Value>(line).ok())
+        {
             let label = line["label"].as_str().unwrap_or("unknown");
-            let screenshot = line["screenshot"].as_str().map(|name| format!(" - `timeline/{name}`")).unwrap_or_default();
+            let screenshot = line["screenshot"]
+                .as_str()
+                .map(|name| format!(" - `timeline/{name}`"))
+                .unwrap_or_default();
             let timestamp = line["unix_ms"].as_u64().unwrap_or(0);
             let relative = capture_start
                 .and_then(|start| timestamp.checked_sub(start))
                 .map(|elapsed| format!(", approximately {} ms after recording start", elapsed))
                 .unwrap_or_default();
-            report.push_str(&format!("- {label} (Unix ms {timestamp}{relative}){screenshot}\n"));
+            report.push_str(&format!(
+                "- {label} (Unix ms {timestamp}{relative}){screenshot}\n"
+            ));
         }
     }
     report.push_str("\nThis report is based on recorded assertions and artifacts. Video frames have not been interpreted automatically.\n");
@@ -349,11 +382,14 @@ mod tests {
 
     #[test]
     fn case_evidence_separates_assertion_and_recording_results() {
-        let directory = std::env::temp_dir().join(format!("zipeek-evidence-separation-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("zipeek-evidence-separation-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(directory.join("video-failure.txt"), "FFmpeg unavailable").unwrap();
         case_result(&directory, "passed", "scenario", None).unwrap();
-        let data: serde_json::Value = serde_json::from_slice(&std::fs::read(directory.join("scenario.json")).unwrap()).unwrap();
+        let data: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(directory.join("scenario.json")).unwrap())
+                .unwrap();
         assert_eq!(data["execution_status"], "passed");
         assert_eq!(data["assertion_status"], "passed");
         assert_eq!(data["recording_status"], "failed");
@@ -363,11 +399,18 @@ mod tests {
 
     #[test]
     fn case_feedback_reports_failed_checkpoint_capture() {
-        let directory = std::env::temp_dir().join(format!("zipeek-checkpoint-failed-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("zipeek-checkpoint-failed-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
-        std::fs::write(directory.join("checkpoint-failure.txt"), "Screenshot unavailable").unwrap();
+        std::fs::write(
+            directory.join("checkpoint-failure.txt"),
+            "Screenshot unavailable",
+        )
+        .unwrap();
         case_result(&directory, "passed", "scenario", None).unwrap();
-        let data: serde_json::Value = serde_json::from_slice(&std::fs::read(directory.join("scenario.json")).unwrap()).unwrap();
+        let data: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(directory.join("scenario.json")).unwrap())
+                .unwrap();
         assert_eq!(data["checkpoint_status"], "failed");
         let feedback = std::fs::read_to_string(directory.join("agent-feedback.md")).unwrap();
         assert!(feedback.contains("Screenshot unavailable"));
@@ -376,14 +419,24 @@ mod tests {
 
     #[test]
     fn case_feedback_preserves_failed_assertion_and_evidence_links() {
-        let directory = std::env::temp_dir().join(format!("zipeek-evidence-failed-{}", std::process::id()));
+        let directory =
+            std::env::temp_dir().join(format!("zipeek-evidence-failed-{}", std::process::id()));
         std::fs::create_dir_all(directory.join("timeline")).unwrap();
-        std::fs::write(directory.join("timeline/steps.jsonl"), r#"{"label":"incorrect-pair","unix_ms":100,"screenshot":"002-incorrect-pair.png"}"#).unwrap();
-        case_result(&directory, "failed", "scenario", Some("Expected selected pair to flash red")).unwrap();
+        std::fs::write(
+            directory.join("timeline/steps.jsonl"),
+            r#"{"label":"incorrect-pair","unix_ms":100,"screenshot":"002-incorrect-pair.png"}"#,
+        )
+        .unwrap();
+        case_result(
+            &directory,
+            "failed",
+            "scenario",
+            Some("Expected selected pair to flash red"),
+        )
+        .unwrap();
         let feedback = std::fs::read_to_string(directory.join("agent-feedback.md")).unwrap();
         assert!(feedback.contains("Expected selected pair to flash red"));
         assert!(feedback.contains("timeline/002-incorrect-pair.png"));
         std::fs::remove_dir_all(directory).unwrap();
     }
-
 }

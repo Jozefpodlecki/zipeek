@@ -257,8 +257,16 @@ pub async fn word_set_rename_switch_and_delete(ctx: ScenarioContext) -> HarnessR
         .await?;
 
     for name in ["E2E first", "E2E second"] {
-        driver.find_css("[data-new-word-set]").await?.send_keys(name).await?;
-        driver.find_css("[data-create-word-set]").await?.click().await?;
+        driver
+            .find_css("[data-new-word-set]")
+            .await?
+            .send_keys(name)
+            .await?;
+        driver
+            .find_css("[data-create-word-set]")
+            .await?
+            .click()
+            .await?;
         zipeek_e2e::e2e_ensure!(
             zipeek_e2e::page_objects::browser::saved_word_sets(driver)
                 .await?
@@ -266,19 +274,43 @@ pub async fn word_set_rename_switch_and_delete(ctx: ScenarioContext) -> HarnessR
                 .any(|set| set["name"] == name)
         );
     }
-    driver.query_with_text("[data-word-set-option]", "E2E first").await?.click().await?;
-    driver.find_css("[data-word-set-rename-tools] summary").await?.click().await?;
-    driver.find_css("[data-rename-word-set]").await?.send_keys("E2E renamed").await?;
-    driver.find_css("[data-confirm-rename-word-set]").await?.click().await?;
-    driver.query_with_text("[data-target-word-set]", "E2E renamed").await?;
-    driver.query_with_text("[data-word-set-option]", "E2E second").await?.click().await?;
+    driver
+        .query_with_text("[data-word-set-option]", "E2E first")
+        .await?
+        .click()
+        .await?;
+    driver
+        .find_css("[data-word-set-rename-tools] summary")
+        .await?
+        .click()
+        .await?;
+    driver
+        .find_css("[data-rename-word-set]")
+        .await?
+        .send_keys("E2E renamed")
+        .await?;
+    driver
+        .find_css("[data-confirm-rename-word-set]")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_with_text("[data-target-word-set]", "E2E renamed")
+        .await?;
+    driver
+        .query_with_text("[data-word-set-option]", "E2E second")
+        .await?
+        .click()
+        .await?;
     driver.click(selectors::word_sets::DELETE).await?;
     driver.click(selectors::word_sets::DELETE).await?;
     let sets = zipeek_e2e::page_objects::browser::saved_word_sets(driver).await?;
     zipeek_e2e::e2e_ensure!(sets.iter().any(|set| set["name"] == "E2E renamed"));
     zipeek_e2e::e2e_ensure!(!sets.iter().any(|set| set["name"] == "E2E second"));
     driver.refresh().await?;
-    driver.query_with_text("[data-target-word-set]", "E2E renamed").await?;
+    driver
+        .query_with_text("[data-target-word-set]", "E2E renamed")
+        .await?;
     Ok(())
 }
 
@@ -336,7 +368,12 @@ pub async fn browse_filter_listen_and_save_word(ctx: ScenarioContext) -> Harness
         .await?;
     let search = driver.find_css("[data-word-set-search]").await?;
     search.send_keys("unmatched-vocabulary-search").await?;
-    driver.query_with_text("[data-word-set-vocabulary] [role='status']", "No words match your search.").await?;
+    driver
+        .query_with_text(
+            "[data-word-set-vocabulary] [role='status']",
+            "No words match your search.",
+        )
+        .await?;
     search.clear().await?;
     driver.query_single("[data-word-set-word-id]").await?;
     let saved_sets = zipeek_e2e::page_objects::browser::saved_word_sets(driver).await?;

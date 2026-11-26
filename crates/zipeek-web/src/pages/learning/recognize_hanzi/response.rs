@@ -17,14 +17,22 @@ fn recognition_response_kind(content: &str) -> &'static str {
 
 pub(super) fn parse_candidates(raw: &str) -> Result<Vec<String>, String> {
     if raw.len() > 8_192 {
-        log::warn!("Hanzi recognition response exceeded size limit: bytes={}", raw.len());
+        log::warn!(
+            "Hanzi recognition response exceeded size limit: bytes={}",
+            raw.len()
+        );
         return Err("The model response exceeded the recognition limit (8 KiB).".to_owned());
     }
     let trimmed = raw.trim();
     let content = if let Some(fenced) = trimmed.strip_prefix("```") {
         let after_language = fenced.strip_prefix("json").unwrap_or(fenced).trim_start();
-        after_language.strip_suffix("```").map(str::trim).unwrap_or(trimmed)
-    } else { trimmed };
+        after_language
+            .strip_suffix("```")
+            .map(str::trim)
+            .unwrap_or(trimmed)
+    } else {
+        trimmed
+    };
     let response: RecognitionResponse = match serde_json::from_str(content) {
         Ok(response) => response,
         Err(primary_error) => {
@@ -94,14 +102,23 @@ mod tests {
 
     #[test]
     fn recognition_candidates_are_bounded_and_deduplicated() {
-        assert_eq!(parse_candidates(r#"{"candidates":["汉", "汉", "漢字"]}"#).unwrap(), vec!["汉", "漢字"]);
+        assert_eq!(
+            parse_candidates(r#"{"candidates":["汉", "汉", "漢字"]}"#).unwrap(),
+            vec!["汉", "漢字"]
+        );
         assert!(parse_candidates(r#"{"candidates":["Hello"]}"#).is_err());
         assert!(parse_candidates(r#"{"candidates":["汉 English"]}"#).is_err());
         assert!(parse_candidates(r#"{"candidates":[]}"#).is_err());
         assert!(parse_candidates("```json\n{}\n```").is_err());
-        assert_eq!(parse_candidates("```json\n{\"candidates\":[\"十\"]}\n```").unwrap(), vec!["十"]);
+        assert_eq!(
+            parse_candidates("```json\n{\"candidates\":[\"十\"]}\n```").unwrap(),
+            vec!["十"]
+        );
         assert_eq!(parse_candidates("十").unwrap(), vec!["十"]);
-        assert_eq!(parse_candidates("Result: {\"candidates\":[\"汉\"]}").unwrap(), vec!["汉"]);
+        assert_eq!(
+            parse_candidates("Result: {\"candidates\":[\"汉\"]}").unwrap(),
+            vec!["汉"]
+        );
         assert!(parse_candidates("Guess: ten 十").is_err());
         let error = parse_candidates("{broken json}").unwrap_err();
         assert!(error.contains("line 1"));

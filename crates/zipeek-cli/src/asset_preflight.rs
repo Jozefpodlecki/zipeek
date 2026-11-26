@@ -356,10 +356,8 @@ mod tests {
     #[test]
     fn missing_vocabulary_artwork_is_rejected() {
         let root = fixture();
-        fs::remove_file(
-            root.join("crates/zipeek-web/static/courses/vocabulary-peony-garden.png"),
-        )
-        .unwrap();
+        fs::remove_file(root.join("crates/zipeek-web/static/courses/vocabulary-peony-garden.png"))
+            .unwrap();
         let error = verify(&root, false).unwrap_err().to_string();
         assert!(error.contains("vocabulary-peony-garden.png"));
         fs::remove_dir_all(root).unwrap();

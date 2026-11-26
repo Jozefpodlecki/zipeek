@@ -1,7 +1,5 @@
-use crate::hooks::use_app_environment;
-use crate::services::personal_data::PersonalDataService;
-use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 
 mod backup;
 mod deletion;
@@ -10,69 +8,28 @@ mod personal_storage_categories;
 
 #[function_component(PersonalStoragePanel)]
 pub fn personal_storage_panel() -> Html {
-    let environment = use_app_environment();
-    let personal_data = PersonalDataService::new(
-        environment.local_storage.clone(),
-        environment.document.clone(),
-        environment.navigator.clone(),
-    );
     let message = use_state(String::new);
-    let status = use_state(|| "Checking learning storage…".to_owned());
-    {
-        let status = status.clone();
-        let personal_data = personal_data.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                match personal_data.storage_status().await {
-                    Ok(description) => status.set(description),
-                    Err(error) => status.set(error.to_string()),
-                }
-            });
-            || ()
-        });
-    }
-    let storage_feedback = {
-        if !message.is_empty() {
-            html! {
-            <p
-                role="status"
-                class="rounded-lg bg-raised p-3 text-sm"
-                data-personal-feedback=""
-            >
-                {(*message).clone()}
-            </p>}
-        } else {
-            Html::default()
-        }
-    };
     html! {
-        <section
-            data-component="personal-storage"
-            class="flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8"
-        >
-            <div
-                class="space-y-2"
-            >
-                <h2
-                    class="text-xl font-semibold"
-                >
-                {"Learning data"}
-                </h2><p
-                    class="text-sm text-muted"
-                >
-                    {"Record, review, export and delete your learning activity. App appearance and the dictionary are separate."}
-                </p>
+        <section data-component="personal-storage" class="rounded-xl border border-line bg-surface p-4 sm:p-5 space-y-3" aria-labelledby="manage-learning-heading">
+            <div class="flex items-center gap-2">
+                <Icon data={IconData::LUCIDE_DATABASE} width="18px" />
+                <h3 id="manage-learning-heading" class="font-semibold">{"Manage learning data"}</h3>
+            </div>
+            <details class="rounded-lg border border-line bg-raised p-3" data-learning-backup-section="">
+                <summary class="cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-accent">{"Backup and restore"}</summary>
+                <p class="mt-2 text-xs text-muted">{"The portable JSON backup excludes the Practice outcomes database. Browser-local snapshots are managed separately."}</p>
+                <div class="mt-3"><backup::BackupPanel message={message.clone()} /></div>
+            </details>
+            <details class="rounded-lg border border-red-500/35 p-3" data-learning-delete-section="">
+                <summary class="cursor-pointer font-medium focus-visible:outline-2 focus-visible:outline-accent">{"Delete learning data"}</summary>
+                <div class="mt-3 space-y-4">
+                    <deletion::DeletionPanel message={message.clone()} />
+                    <history::PersonalLearningHistoryPanel />
                 </div>
-            <p
-                class="rounded-lg bg-raised px-3 py-3 text-sm text-muted"
-                data-storage-status=""
-            >
-                {(*status).clone()}
-            </p>
-            <history::PersonalLearningHistoryPanel />
-            <backup::BackupPanel message={message.clone()} />
-            <deletion::DeletionPanel message={message.clone()} />
-            {storage_feedback}
+            </details>
+            if !message.is_empty() {
+                <p role="status" data-personal-feedback="" class="rounded-lg bg-raised p-3 text-sm">{(*message).clone()}</p>
+            }
         </section>
     }
 }

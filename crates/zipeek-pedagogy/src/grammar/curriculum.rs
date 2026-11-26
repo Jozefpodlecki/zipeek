@@ -1,13 +1,22 @@
 pub const AUTHORED_GRAMMAR_SLUGS: [&str; 5] = [
-    "intro", "time-place", "possession-quantity", "descriptions", "wants-abilities",
+    "intro",
+    "time-place",
+    "possession-quantity",
+    "descriptions",
+    "wants-abilities",
 ];
 
 pub fn authored_grammar_slug(region: usize) -> Option<&'static str> {
-    region.checked_sub(1).and_then(|index| AUTHORED_GRAMMAR_SLUGS.get(index).copied())
+    region
+        .checked_sub(1)
+        .and_then(|index| AUTHORED_GRAMMAR_SLUGS.get(index).copied())
 }
 
 pub fn authored_grammar_region_from_slug(slug: &str) -> Option<usize> {
-    AUTHORED_GRAMMAR_SLUGS.iter().position(|candidate| *candidate == slug).map(|index| index + 1)
+    AUTHORED_GRAMMAR_SLUGS
+        .iter()
+        .position(|candidate| *candidate == slug)
+        .map(|index| index + 1)
 }
 
 pub fn authored_grammar_title_for_slug(slug: &str) -> Option<&'static str> {

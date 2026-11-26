@@ -32,11 +32,7 @@ pub(super) fn compare(reference: &Stroke, candidate: &Stroke) -> ShapeFit {
     for i in 1..=count {
         for j in (i.saturating_sub(radius).max(1))..=(i + radius).min(count) {
             let distance = reference_points[i - 1].distance(adjusted[j - 1]);
-            let predecessor = [
-                (i - 1, j - 1, 0.0),
-                (i - 1, j, 0.012),
-                (i, j - 1, 0.012),
-            ];
+            let predecessor = [(i - 1, j - 1, 0.0), (i - 1, j, 0.012), (i, j - 1, 0.012)];
             let (previous, best_cost) = predecessor
                 .iter()
                 .filter_map(|&(a, b, penalty)| {
@@ -59,9 +55,9 @@ pub(super) fn compare(reference: &Stroke, candidate: &Stroke) -> ShapeFit {
 }
 
 fn centroid(points: &[Point]) -> Point {
-    let (x, y) = points.iter().fold((0.0, 0.0), |(x, y), point| {
-        (x + point.x, y + point.y)
-    });
+    let (x, y) = points
+        .iter()
+        .fold((0.0, 0.0), |(x, y), point| (x + point.x, y + point.y));
     Point {
         x: x / points.len() as f64,
         y: y / points.len() as f64,
@@ -89,8 +85,7 @@ fn point_segment_distance(point: Point, a: Point, b: Point) -> f64 {
     if length_squared <= f64::EPSILON {
         return point.distance(a);
     }
-    let t = (((point.x - a.x) * dx + (point.y - a.y) * dy) / length_squared)
-        .clamp(0.0, 1.0);
+    let t = (((point.x - a.x) * dx + (point.y - a.y) * dy) / length_squared).clamp(0.0, 1.0);
     point.distance(Point {
         x: a.x + dx * t,
         y: a.y + dy * t,

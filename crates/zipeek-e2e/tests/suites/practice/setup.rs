@@ -573,7 +573,10 @@ pub async fn listening_choice_session_and_restore(ctx: ScenarioContext) -> Harne
                 .await?;
             zipeek_e2e::e2e_ensure_eq!(choices.len(), 3);
             zipeek_e2e::e2e_ensure_eq!(
-                driver.find_all_css("[data-listening-choice-id] .text-accent").await?.len(),
+                driver
+                    .find_all_css("[data-listening-choice-id] .text-accent")
+                    .await?
+                    .len(),
                 0,
             );
             choices[0].click().await?;
@@ -581,7 +584,10 @@ pub async fn listening_choice_session_and_restore(ctx: ScenarioContext) -> Harne
                 .query_single("[data-listening-session] [role='status']")
                 .await?;
             zipeek_e2e::e2e_ensure_eq!(
-                driver.find_all_css("[data-listening-choice-id] .text-accent").await?.len(),
+                driver
+                    .find_all_css("[data-listening-choice-id] .text-accent")
+                    .await?
+                    .len(),
                 3,
             );
             driver

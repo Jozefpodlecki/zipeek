@@ -16,9 +16,8 @@ pub fn run() {
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
                 use tauri::Manager;
-                app.state::<std::sync::Arc<services::NativeServices>>()
+                app.state::<services::NativeServices>()
                     .shutdown();
             }
-        })
-        .expect("error while running zipeek");
+        });
 }

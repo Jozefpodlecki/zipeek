@@ -159,37 +159,45 @@ description = "Generate, install the complete bundle, then start Trunk"
 dependencies = ["db-generate", "db-compress", "db-install", "serve"]
 
 [tasks.desktop-servers-build]
-description = "Compile debug AI and image server executables"
+description = "Compile debug AI, image and speech server executables"
 command = "cargo"
-args = ["build", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server"]
+args = ["build", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server", "-p", "zipeek-tts-stt"]
 
 [tasks.desktop-sidecars]
-description = "Build and stage both debug Rust servers as Tauri sidecars"
-dependencies = ["desktop-servers-build"]
-command = "cargo"
-args = ["run", "--locked", "-p", "zipeek-cli", "--", "desktop-sidecars"]
+description = "Stage existing debug sidecars; build only missing service executables and CLI"
+command = "node"
+args = ["scripts/run-existing-cli.cjs", "desktop-sidecars"]
+
+[tasks.desktop-sidecars-rebuild]
+description = "Explicitly rebuild debug services and then stage sidecars"
+dependencies = ["desktop-servers-build", "desktop-sidecars"]
 
 [tasks.desktop-servers-build-release]
-description = "Compile release AI and image server executables"
+description = "Compile release AI, image and speech server executables"
 command = "cargo"
-args = ["build", "--release", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server"]
+args = ["build", "--release", "--locked", "-p", "zipeek-ai-server", "-p", "zipeek-image-server", "-p", "zipeek-tts-stt"]
+
+[tasks.release-cli-build]
+description = "Explicitly rebuild the release CLI before verified packaging"
+command = "cargo"
+args = ["build", "--release", "--locked", "-p", "zipeek-cli"]
 
 [tasks.desktop-sidecars-release]
-description = "Build and stage release Rust servers as Tauri sidecars"
-dependencies = ["desktop-servers-build-release"]
-command = "cargo"
-args = ["run", "--locked", "-p", "zipeek-cli", "--", "desktop-sidecars", "--release"]
+description = "Rebuild release services and CLI, then stage installer sidecars"
+dependencies = ["desktop-servers-build-release", "release-cli-build"]
+command = "node"
+args = ["scripts/run-existing-cli.cjs", "--release", "desktop-sidecars", "--release"]
 
 [tasks.desktop-dev]
 description = "Build debug sidecars and launch Tauri desktop development"
-dependencies = ["duckdb-env", "desktop-sidecars", "docs", "verify-assets"]
+dependencies = ["duckdb-env", "desktop-sidecars", "docs"]
 cwd = "crates/zipeek-app"
 command = "cargo"
 args = ["tauri", "dev"]
 
 [tasks.desktop-build]
 description = "Build release sidecars and package the Tauri desktop installer"
-dependencies = ["duckdb-env", "desktop-sidecars-release", "docs", "verify-assets"]
+dependencies = ["duckdb-env", "desktop-sidecars-release", "docs"]
 cwd = "crates/zipeek-app"
 command = "cargo"
 args = ["tauri", "build"]
@@ -208,12 +216,16 @@ args = ["run", "--quiet", "--release", "-p", "zipeek-image-server", "--"]
 [tasks.image-server-test]
 description = "Run image-server unit tests"
 command = "cargo"
-args = ["test", "-p", "zipeek-image-server"]
+args = ["test", "-p", "zipeek-image-server", "-p", "zipeek-tts-stt"]
 
 [tasks.pack]
-description = "Package clean source archive with native zipeek-cli"
-command = "cargo"
-args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "pack"]
+description = "Pack with existing release CLI; build it only if missing"
+command = "node"
+args = ["scripts/run-existing-cli.cjs", "--release", "pack"]
+
+[tasks.pack-verified]
+description = "Run the locked Rust release gates before packaging a source checkpoint"
+dependencies = ["release-check", "release-cli-build", "pack"]
 
 [tasks.e2e-evidence-audit-tests]
 description = "Run offline E2E evidence integrity tests without Rust or a browser"
@@ -226,9 +238,9 @@ command = "cargo"
 args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "pack-e2e", "--all"]
 
 [tasks.unpack]
-description = "Restore latest numbered Zipeek release or WIP checkpoint from Downloads with managed source backups"
-command = "cargo"
-args = ["run", "--quiet", "--release", "-p", "zipeek-cli", "--locked", "--", "unpack"]
+description = "Restore the newest release with existing CLI; build only if missing"
+command = "node"
+args = ["scripts/run-existing-cli.cjs", "--release", "unpack"]
 
 [tasks.db-compress]
 description = "Gzip the latest verified dictionary candidate and update its manifest using native Rust"

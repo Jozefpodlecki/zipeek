@@ -1,3 +1,53 @@
+## R683 WIP: Streaming Zipformer checkpoint-head parity (2026-11-26)
+
+Corrected the real checkpoint's bias-free decoder convolution, added deterministic ONNX-versus-Candle decoder/joiner parity tooling, and atomic validation/replacement of all 74 streaming state outputs. Source packaged but real model parity and Rust execution remain pending. See root RELEASE_NOTES.md and docs/architecture/native-streaming-asr.md.
+
+## R679 WIP: Streaming ASR feature and token pipeline (2026-11-26)
+
+Implemented a provisional incremental 80-bin log-mel frontend, strict token vocabulary reader and encoder-injection streaming pipeline for native Candle ASR. Identified an Apache-2.0 listed small streaming Zipformer reference without bundling weights. No checkpoint parity, native build or UI integration is claimed. See the maintained architecture note and root release notes.
+
+## R677 WIP: Record result pinyin and playback layout (2026-11-26)
+
+Fixed reference Stop button reflow by overlaying the control, aligned the Heard match status indicator with a hover explanation, and added batched DuckDB pinyin resolution for recognized transcripts. Inspected a provided Mandarin WAV with no digital clipping; unrelated recognition output still needs end-to-end investigation. Windows WASM/browser verification pending. See RELEASE_NOTES.md.
+
+- R673 WIP (2026-11-25): Added adaptive browser microphone speech activity and silence-triggered auto-stop for the Record route, with word/sentence tuning, preserved manual stop, no-speech suppression and pure detector tests. Rust/WASM/Chrome acceptance pending; see root RELEASE_NOTES.md.
+- R662 WIP (2026-11-25): Typed speech errors and device configuration, non-sensitive failure diagnostics, explicit worker shutdown, cancellation-safe invalidation, model-backed sustained-operation tests. Three Node fixture tests passed; Rust/CUDA acceptance pending. See RELEASE_NOTES.md.
+- R661 WIP (2026-11-25): Dedicated persistent speech engine workers and bounded request channels. User-provided Windows CUDA EOS and Mandarin waveform tests passed; full reliability acceptance pending. See RELEASE_NOTES.md.
+- R658 WIP (2026-11-24): Removed duplicate local practice shell viewport sizing/padding and shortened audio-preparation UI to `Preparing...`, preserving accessible progress and failed-word diagnostics. WASM/browser verification pending; TTS EOS failure unresolved. See RELEASE_NOTES.md.
+- R656 WIP (2026-11-24): Local microphone RMS metering, manual stop to transcription, explicit processing UI and lifecycle cleanup. Source authored; WASM/browser verification pending. See RELEASE_NOTES.md.
+- R655 WIP (2026-11-24): Simplified Speech Settings feedback, added Yew icon control states and animated recording activity indicators, and changed voice sample to sunny-weather Mandarin; Rust/WASM/browser verification pending. See RELEASE_NOTES.md.
+- R652 WIP (2026-11-24): Accepted exact dotted localhost:1420 origin for local speech, injected origin trust from AppEnvironment and validated dotted CORS preflights; source-only, Windows Rust/WASM/browser checks pending. See RELEASE_NOTES.md.
+- R644 WIP (2026-11-24): Authored model-runtime improvements, cached rotary tensors, polyphase resampling, MP3 encoder output verification and retries, typed timeouts, weighted media negotiation, optional CUDA STT and additional regression coverage. Rust/CUDA/MP3 execution still unverified. See canonical release notes.
+- R643 WIP (2026-11-24): Authored GPU-side TTS greedy selection, single-token attention mask fast path, shared codec mask and anti-aliased STT downsampling. Rust compilation and checkpoint tests unverified. See canonical release notes.
+- R622 WIP (2026-11-23): Authored Candle Conv2D stem using Qwen3-ASR 0.6B published weight namespaces; corrected final partial-chunk token accounting. Cargo/model inference unverified. See canonical release notes.
+- R613 WIP (2026-11-23): Added explicit development DuckDB/OPFS persistence simulator in diagnostics (five-second interval, ten synthetic revisions, transactional close/reopen read-back and post-reload verification). Existing personal database, worker and Web Lock reused; browser/Rust acceptance outstanding. No live Knowledge Points persistence.
+- R611 WIP (2026-11-22): Replaced isolated R609 five-dimension scoring draft with finalized R608 category-specific dimensions, balanced Hanzi required readings, deterministic debt/relapse, retained observations and authored tests. No live integration; Rust/WASM/browser acceptance pending.
+- R609 WIP (2026-11-22): Added isolated pure-Rust Knowledge Points scoring engine candidate, parameter validation and scenario tests. Live pedagogy unchanged; Rust/WASM/Chrome acceptance pending. See canonical release notes and R609 engineering review.
+- R607 WIP (2026-11-21): AI Settings refactored into page, controller, reducer and diagnostic modules. Added synchronous request gate and ticket-matched reducer completions, plus a UI-only diagnostic dismissal. Rust/WASM/Chrome acceptance pending. See canonical release notes.
+- R606 WIP (2026-11-21): Practice session-store module separation and key-set inventory consistency checks. Cross-tab atomic writes remain unresolved; Rust/WASM/browser verification pending. See canonical release notes.
+- R601 WIP (2026-11-19): Ten approved architecture targets refactored across Practice, Statistics query/state, Settings AI, exercise engines and personal DB adapters. Added seeded tile ordering test and safe empty input. Offline checks passed, Rust/WASM/Chrome unverified; see canonical release notes.
+- R597 WIP (2026-11-19): Introduced detailed candidate dragon header artwork as an explicitly unavailable, recording-independent assessment state; removed centered route title and updated E2E expectations. Live pedagogical progress and visual/browser acceptance remain outstanding.
+- R596 WIP (2026-11-19): Clarified Practice recording preference versus unavailable pedagogical assessment in Learning Data, grouped backup/delete/history controls and diagnostic worker probe. Long evidence-driven header dragon remains unimplemented; Rust/WASM/Chrome verification pending.
+- R595 WIP (2026-11-19): Hardened native speech client response Content-Type checks, PCM16 WAV validation and chunk-length arithmetic, with regression tests. No dependencies or browser changes; Rust/native speech acceptance pending.
+- R594 WIP (2026-11-19): Ten-file reliability follow-up covering SSE/AI response bounds, Practice generation and session state, image errors, Cloud Match, AI Settings, recording levels and documentation path validation. Added dependency-free native `zipeek-tts-stt-client` for existing loopback endpoints. Source/tests authored, Node and data checks available, Rust/WASM/Chrome pending.
+## R592 WIP - 20261119-154100 UTC
+
+Ten approved technical-debt targets changed, with shared Statistics async bulk-selection hook, data-integrity checks and focused regression tests. The exact archive is `zipeek-R592-WIP-ten-file-debt-remediation-20261119-154100.zip`. The 16 Node tests, Hanzi source validation and docs validator passed. Rust/WASM/browser checks could not run, so this checkpoint is unverified. See `RELEASE_NOTES.md` and `docs/archive-history/audits/release-engineering-review-history.md#r592-ten-file-remediation`.
+
+- R591 WIP (2026-11-19): Read every source-archive file body, generated per-path hash/content evidence, checked 9,574 Hanzi Writer records, corrected maintained Settings AI documentation and docs index, and made historic-link warnings explicit. 16 offline Node tests passed; Rust/WASM/Chrome and semantic correctness remain unverified. See canonical RELEASE_NOTES.md.
+- R590 WIP (2026-11-19): Targeted Statistics state-management audit; extracted Overview chart lifecycle and fallback, consolidated loading/ready/failure status, corrected zero-week fallback bars. 16 offline Node tests passed; Rust/WASM/Chrome unverified. See canonical RELEASE_NOTES.md.
+- R588 WIP (2026-11-19): Cross-workspace technical-debt inventory and targeted ZIP unpack limits, Statistics Overview correctness fixes, compiler-gated pack task and README Node test correction. Three offline Node suites passed (16 tests). Rust/WASM/Chrome and full audit acceptance remain outstanding; candidate not accepted.
+- R587 WIP corrective collection boundary (20261119-144442 UTC): Replaced Statistics demo shared `Rc<Vec<T>>` record collections with typed `Rc<[T]>` wrappers and aligned SectionPayload/Overview props. Source-only, compilation outstanding.
+- R587 WIP corrective layout (20261119-142136 UTC): Moved seven Statistics feature roots to directory `mod.rs` locations while preserving module identities and source bytes. No compilation/browser acceptance performed.
+- R587 WIP (20261119-141830 UTC): Extracted Settings tiles, Skills cards, Insights rows and Overview activity/chart/breakdown/review modules. Existing reducer/query ownership preserved. Source packaged and ZIP checked, Cargo/WASM/browser gates not run.
+- R585 WIP corrective checkpoint (2026-11-19): Fixed user-reported E0382 in SelectionReview by evaluating keyed row IDs before moving items to Yew component props. Static packaging verified, Windows compiler/WASM/browser recheck outstanding. Original R585 source candidate did not compile.
+- R585 WIP (2026-11-19): Screenshot-driven Statistics compact interaction pass. Consolidated History icon controls and result bars, reduced unnecessary nested catalogue scrolling, added clickable Settings metric tiles, and introduced a readable preview-only selection review with individual removal. Source-only and ZIP-verified; WASM/browser and modal focus acceptance still outstanding. No real Practice/Word Set handoff or production personal data integration.
+- R573 WIP (2026-11-19): Repaired the Windows-reported R572 History delimiter and session cloning, validated async page response contracts, stabilized page ranges/shrinking totals, and guarded bulk selection races. Added tests and Statistics owner-doc acceptance tasks. WASM/Chrome verification pending.
+- R572 WIP (2026-11-18): Wired three Statistics explorers to bounded asynchronous page sources, added query-state and selection guards, and separated History activity aggregates from page rows. Unverified Windows/WASM/browser candidate.
+## R571 WIP - 2026-11-18 - Statistics typed pagination/query foundation
+
+Added a typed asynchronous query interface for Vocabulary, Grammar and History with deterministic fixture-backed filtering/sorting, validated page sizes and totals, guarded query-state transitions and large-fixture tests. The browser's existing seven-tab source remains in place; server-driven explorer pages and canonical production identifiers are explicitly outstanding. Cargo/WASM/Chrome not run.
+
 ## R570 WIP - 2026-11-18 - Statistics async data source and section state
 
 Introduced typed owned section projections, replaceable async Statistics source, separate data-context reducer, per-tab loading/failure/retry/cache, stale-request rejection, and E2E section readiness selectors. Demo data remains local and unassessed; high-volume server pagination and live evidence integration remain open. Build and Chrome acceptance are pending.
@@ -1080,3 +1130,102 @@ Source migration of local browser speech into Rust with WAV tests and typed stat
 Unified `cargo make install` with the pre-existing database, web and Worker build workflows and a new geography fetch/audit/build task chain. Local development only for AreaCity geography until upstream rights review. Build and browser verification pending.
 
 - **R566 WIP (2026-11-18):** Statistics UI reducer/context foundation, guarded preview loading, fixture Chart.js Overview and stable incomplete-page table layout; WASM/browser verification pending.
+
+## R576 Statistics History views and evidence exploration (2026-11-19)
+
+Added reducer-owned History Timeline/Table, focusable date filtering with independent weekly summary, clearer assessed-versus-activity wording in Skills, and five source-navigable Insights categories. Source tests and browser scenario updates authored; native/WASM, Chrome and full acceptance not executed by the packaging environment. No production learner data or dependency changes.
+
+## R577 WIP (2026-11-19)
+
+Grammar expandable detail presentation from owned async page projections, distinct demo and canonical identifiers, explicit assessment provenance absence and corrected selection-review link semantics. Locked Rust/WASM compilation and real browser validation pending. No production learner data or storage changes.
+
+## R578 WIP (2026-11-19)
+
+Statistics density and History fixture improvements: full deterministic UTC timestamps and illustrative durations in typed async History records, 84 interleaved recent sessions in addition to 72 original catalogue sessions, a styled weekly Practice/Games chart breakdown, reduced Skills/Insights disclaimer copy and redundant panels, and an explicit module-boundary and technical-debt audit. Source candidate only; no Cargo/WASM/Chrome execution in packaging environment. No real learner storage, database schema or dependency changes.
+
+## R579 WIP (2026-11-19)
+
+Statistics selection toolbar fixed-height integration, icon actions, compact History day navigation, reduced user-facing fixture caveats, deterministic simulator extraction with large-identity test scenarios, and source/UX debt documentation. Source handoff remains unverified pending Windows Cargo and Chrome acceptance.
+
+### R580 WIP: Statistics compact query controls and source-backed Grammar catalogue
+
+Removed the redundant preview badge and replaced its captioned action with an accessible icon toggle. Consolidated explorer selection and query controls, moved bounded select-all ahead of tables, added reversible vocabulary column sorting and page-backed search suggestions, and aligned Overview's chart and review cards. Replaced the 16-entry hand-authored Grammar sample with all 550 entries in the maintained teaching index, preserving teaching IDs and editorial status without creating assessment claims. The simulator caches immutable demo projections; product/architecture acceptance and technical-debt records updated. Source-only checks; Cargo/WASM and browser acceptance not executed.
+
+### R581 WIP: Grammar query controls and independent suggestions (2026-11-19)
+
+Extended the typed async Grammar query with region grouping, reversible pattern/attempt ordering, configurable 10/25/50/100-row paging and a bounded independent suggestion query. Added reducer/query tests, source ownership notes and open technical-debt items. Maintained the 550-entry teaching index without inventing canonical grammar/assessment evidence; no production data or dependency changes. Source/ZIP checks only; locked Rust/WASM and Chrome acceptance pending.
+
+## R582 WIP (2026-11-19)
+
+History week-navigation reducer and pure date-window query, persistent compact controls, Grammar suggestion keyboard/combobox interaction, focused regression tests and technical debt records. Archived source candidate only; Rust/WASM and browser checks pending.
+
+## R583 WIP (2026-11-19)
+
+Statistics Grammar now supports shared-query table and card layouts, with an owned-record side inspector rather than inline row expansion. Selection review and Overview chart breakdown use nonflowing viewport overlays. Insights became a ranked compact list. Updated reducer and E2E source tests, product/architecture documentation and the outstanding UI/identity accessibility debt. Archive checks only; Rust/WASM and Chrome not run. No dependencies or production data changed.
+
+### R584 WIP: Statistics density, custom choice controls and seeded catalogue (2026-11-19)
+
+Continued R583 with a compact HSK-derived vocabulary simulator, reconciled History/Vocabulary projections, Statistics-local themed ChoiceSelect, named Grammar teaching collections, bounded desktop explorer scrolling, compact metrics and Settings category filters. Source tests authored, not executed. Rust/WASM, Chrome and performance gates remain unverified. Demo lifecycle, dependencies and personal records unchanged.
+
+### R584 WIP compilation correction (2026-11-19)
+
+The R584 custom ChoiceSelect raised Rust E0382 in the Windows WASM build because a Yew state handle was moved into an option click closure and then borrowed for CSS highlighting. The focused handle is now cloned for the callback. Source-only correction, compilation and Chrome acceptance remain pending. The R584 number is retained; no R585 release is claimed.
+
+### R584 WIP ChoiceSelect component extraction (2026-11-19)
+
+Approved refactor split trigger and option-row presentation out of `ChoiceSelect` while retaining parent-owned selection and keyboard state. The option row emits its index via a typed callback; the parent validates index, updates selection, closes popup and restores trigger focus. This supersedes the targeted clone-only ownership fix. Source and ZIP inspection only, with Windows native/WASM build and Chrome accessibility acceptance still unverified. No dependencies or stored data changed.
+
+### R586 WIP: Statistics explorer component composition (2026-11-19)
+
+Extracted typed-prop leaf components for History timeline/table/activity day, Grammar detail/card/table row and Vocabulary evidence rows, and consolidated pagination. Retained Statistics reducer ownership and existing query lifecycle. Source-only archive verification; Rust/WASM and browser gates unverified. No dependency or data contract changes.
+
+### R587 WIP: Statistics deep module composition (2026-11-19)
+
+Completed source-only refactor into directory-owned feature pages, settings/skills/insights subcomponents, History toolbar, Grammar view control, selection-review resolution and state type modules. Root Statistics and state are now `mod.rs` modules. No Rust/WASM or browser validation was performed, and no release acceptance is claimed.
+
+### R589 WIP: Statistics dialog keyboard focus hardening (2026-11-19)
+
+Shared focus management and keyboard-wrap semantics across Selection Review, Grammar Details and Overview breakdown, with focused Rust tests. Existing offline Node tests passed; Rust/WASM/browser gates not run. Full source handoff remains unverified. No dependency or learner-data changes.
+
+### R593 WIP: Second ten-file technical-debt remediation (2026-11-19)
+
+Additional trust-boundary and correctness changes in Statistics paging, planned Practice tickets, conditional Practice options, Word Set names, OPFS/file picker handling, generated image URL validation, session persistence/chronology and exclusions. Rust regression tests authored; 16 Node tests passed. Rust/WASM/Chrome not executed. WIP checkpoint, not accepted release.
+
+### R598 WIP: Pedagogy worker fail-closed readback (2026-11-19)
+
+WorkerCoordinator no longer exposes cached older recognition projections after disabling or failed readback/analysis; targeted regression tests cover disable/re-enable and recovery. No new scoring, storage or header awards; Node/docs checks pass and Rust/WASM/browser verification is pending.
+
+- **R600 WIP (2026-11-19):** Learning Settings presentation separation, one recording preference owner, no duplicate activity inspection, management and diagnostics isolated. Source-only; Rust/WASM/browser verification outstanding.
+
+### R603 WIP: Practice route and session invariants (2026-11-20)
+
+Added current route-ID guarding for asynchronous Practice generation results and validation at exercise-session insertion boundaries, with focused Rust tests authored. Cargo/WASM/Chrome acceptance not run. No dependency or storage-format changes.
+
+- **R604 WIP (2026-11-20)**: Split Practice local-session ownership into dedicated modules; added route-keyed component lifecycle and consistent progress conflict reload. Static source candidate, Rust and browser acceptance pending.
+
+### R605 WIP: Generated Practice state ownership (2026-11-20)
+
+Separated validated generated translation and image vocabulary into keyed child components with independent state; removed redundant checked and image loading flags. Offline Node suite passed. Rust/WASM and browser validation remain blocked.
+
+
+## R610 WIP: documentation ownership consolidation
+
+Source-level editorial pass only: merged root R596 Learning Data and R600 candidate notes, the isolated R310 E2E driver WIP, and R592-R609 release-specific engineering reviews into subject-owned guides and [historical review collection](audits/release-engineering-review-history.md). Relocated the prospective R608 [Knowledge Points specification](../learning-practice/pedagogy/knowledge-points.md) and added [R609 scoring architecture](../architecture/modules/knowledge-scoring.md). Old compiler and browser claims were not reverified. This consolidation makes no product decisions and changes no Rust/runtime data.
+
+- R646 WIP (2026-11-24): authored eager Qwen3-TTS and Qwen3-ASR model startup, real TTS warm-up and readiness gating before Axum accepts connections. Rust/CUDA verification pending.
+
+- R653 WIP (2026-11-24): Qwen3-TTS normal Mandarin punctuation and mixed-text tokenizer, CUDA verification pending.
+
+- R670 WIP (2026-11-25): split Record feature into reducer, resource owner, controller and typed view components; removed independent recording-availability boolean in favor of typed audio identity. Windows WASM and Chrome acceptance pending.
+
+- R672 WIP (2026-11-25): Record reference/replay progress fill with browser audio seeking and approximate Hanzi playback highlight; Windows WASM and Chrome acceptance pending.
+
+- R674 WIP: Record waveform activation, empty-result suppression and explicit microphone WAV export; Windows/WASM acceptance pending.
+
+- R675 WIP (2026-11-25): authored Record batched read-only pinyin candidate lookup, per-Hanzi annotated text, dice selector and debounced background reference TTS preparation with in-browser audio resource reuse. Source packaging only; Windows WASM and Chrome acceptance pending.
+
+- R680 WIP (20261126-010436 UTC): dependency-free ONNX graph/weight inventory and strict embedded raw initializer safetensors export for native streaming-ASR checkpoint preparation; actual Zipformer encoder and model parity pending.
+
+- R691 WIP (2026-11-26): Desktop Services settings status and action feedback, centered Settings, removed general application footer. Windows verification pending.
+
+- R695 WIP (2026-11-26): Debug SQL UI simplification, enlarged editor, icon-only Run feedback, and single-trailing-semicolon/`word_relations` support. Source checks only; WASM and runtime database verification pending.

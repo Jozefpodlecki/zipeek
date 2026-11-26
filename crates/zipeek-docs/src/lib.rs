@@ -21,7 +21,9 @@ pub fn is_safe_path(path: &str) -> bool {
         && !path
             .split('/')
             .any(|part| part == ".." || part == "." || part.is_empty())
-        && !path.chars().any(|ch| matches!(ch, '?' | '#' | '%' | '\0'))
+        && !path
+            .chars()
+            .any(|ch| ch.is_control() || matches!(ch, '?' | '#' | '%'))
 }
 
 pub fn escape_html(text: &str) -> String {
@@ -81,5 +83,7 @@ mod tests {
     fn paths_reject_traversal() {
         assert!(is_safe_path("architecture/overview.md"));
         assert!(!is_safe_path("../.env"));
+        assert!(!is_safe_path("docs/a\n.md"));
+        assert!(!is_safe_path("docs/a\t.md"));
     }
 }

@@ -21,3 +21,21 @@ When modifying a feature, inspect its relevant debt IDs and update source/tests 
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../archive-history/audits/maintained-source-snapshots/project-management-technical-debt.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## R581 Statistics Grammar debt review
+
+- **TD-STATS-GRAMMAR-001, P1, open:** All source teaching entries have pending editorial review; teaching-region IDs must not become invented course IDs or assessed grammar point identities. Gate: verified curriculum/canonical mapping and distinct assessment provenance.
+- **TD-STATS-GRAMMAR-002, P1, open:** The Grammar UI now uses two bounded async source queries (table and six-item suggestion page), but suggestions have no request debounce or complete combobox keyboard/focus contract. Gate: browser test Arrow/Escape/Enter behavior, accessible active descendant, request-burst measurement and a dedicated source suggestion API if required.
+- **TD-STATS-GRAMMAR-003, P1, open:** Source-level typed filtering/sorting does not equal validated backend pagination. Gate: production adapter tests for stable snapshot order, filter semantics and request cancellation under concurrent edits.
+- **TD-STATS-GRAMMAR-004, P0, open:** Rust/WASM compile, Chrome E2E, responsive/theme checks and 5,000/10,000-record performance still require actual execution. Gate: Windows toolchain and browser evidence in the acceptance ledger.
+
+## R601 module-boundary review
+
+Ten approved source targets were refactored into responsibility-oriented modules. Source-level extraction is recorded in [component and state refactor review](../engineering/component-state-refactor-review.md). Do not close TD-001 or any affected workflow debt until the locked compiler and browser gates pass. Large Practice controllers, AI test lifecycle, exercise runtimes and DuckDB transaction handling remain open for follow-up.
+
+
+## Consolidated architecture candidates and remaining gates
+
+The historical ten-target R600 shortlist has been reconciled against the current R609 source at a **module existence and review-summary level**, not a successful compiler acceptance. Practice local-session and generated-session directories, Statistics reducer/query split, AI Settings directory, crossword and time-weaver work, exercise session transitions, and personal/recognition DuckDB modules were subjects of R601-R607 remediation. The R600 source paths and line counts are historical, not current navigation guidance.
+
+**Open:** (1) locked Rust/WASM/Chrome acceptance for all touched modules (TD-001); (2) external AI-generation transport cancellation and stale response browser races; (3) genuinely atomic cross-tab Practice writes; (4) DuckDB partial-commit/quota/recovery and single-writer semantics; (5) Statistics stable selection/query IDs and performance, Grammar keyboard/debounce semantics; (6) R608 evidence journal, independent-context certification and evaluator schema. The existence of split `mod.rs` files does **not** close any behavioural debt without tested invariants. The original R600 candidate rationale remains preserved in [historical review](../archive-history/audits/release-engineering-review-history.md).

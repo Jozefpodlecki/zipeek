@@ -46,3 +46,25 @@ Dependency governance: the installed npm package pin agrees with the generator p
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../../archive-history/audits/maintained-source-snapshots/dictionary-data-schema-db.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## Generator bulk-import and lexical reference additions (R615 WIP)
+
+The native generator now batches `sense_display`, `sense_qualifiers`, `sense_relations`, `characters`, `word_characters` and `vocabulary_identities` inserts. Performance changes require the same verified input set and fresh before/after timestamps; no measured speedup has been established in this authoring environment.
+
+The bundled `crates/zipeek-db-gen/data/relationships.csv` is imported into `word_relations` during full artifact generation. The original spelling pairs and relationship type are preserved, with separate `source_resolution` and `target_resolution` statuses (`resolved`, `missing`, `ambiguous`). A canonical `word_id` is populated only when exactly one `words.simplified` row matches the spelling. Ambiguous forms are **not** expanded into all pronunciation combinations. These lexical relationships are separate from sense-level source-annotation relations.
+
+`pinyin_syllable_candidates` groups numeric character-reading strings by attested characters. `character_gloss_candidates` associates each one-character dictionary entry's raw sense gloss with its character. Neither candidate table is an approved, curated R608 scoreable catalogue. Existing `vocabulary_identities.identity_status = 'unresolved'` also remains non-scoreable until explicit curation.
+
+The CSV is resolved from the db-gen crate's compile-time source location. Running the generator from a source checkout requires the bundled CSV to remain present. It is now part of the dictionary snapshot fingerprint. Test the locked native generator and verify final artifact row counts, relation resolution totals and snapshot equality on the target machine.
+
+## R616 WIP: relation import verification
+
+The relationship importer verifies the row count against the bundled CSV before it reports completion. It records `total`, `fully_resolved`, `ambiguous_endpoint` and `missing_endpoint` in the native build log. An unresolved or ambiguous endpoint is retained in the table, never expanded into guessed word IDs. These last two status counts can overlap when a row has one ambiguous and one missing endpoint.
+
+Focused generator tests cover unambiguous, ambiguous and missing endpoint resolution, plus an incomplete CSV import. The native test runner and full generator remain unverified in the R616 authoring environment.
+
+## R617 WIP: artifact dependency ordering
+
+The generated `character_gloss_candidates` table references `(word_id, sense_order)` in `word_senses`. The artifact writer now copies `word_senses` before this dependent table, preserving the schema's foreign key. A schema-driven unit test checks all foreign-key dependencies between tables in the artifact-copy sequence. The user's 2026-11-23 native generator run reached the artifact-copy stage after populating 267,447 word relationships but failed on the prior copy order; a completed artifact is not yet verified.
+
+Relationship resolution counters are now a mutually exclusive partition: `fully_resolved`, `ambiguous_only`, `missing_only`, and `ambiguous_and_missing`. This avoids double-counting rows that have one ambiguous and one missing endpoint. The source spellings remain intact irrespective of resolution.

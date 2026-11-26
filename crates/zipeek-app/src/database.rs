@@ -4,10 +4,13 @@ use std::{
     thread,
 };
 
-use duckdb_neo::{Parameters, connection::Connection};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use tauri::{Manager, Runtime};
+use zipeek_db::contracts::{DatabaseInfo, HistoryRow};
+use zipeek_db::native::{Connection, Environment, Parameters, StorageLocation};
+
+mod reset;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", content = "details", rename_all = "snake_case")]
@@ -28,20 +31,13 @@ impl std::fmt::Display for DatabaseError {
 
 impl std::error::Error for DatabaseError {}
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DatabaseInfo {
-    pub engine: String,
-    pub native_engine: String,
-    pub storage_compatibility: String,
-    pub row_count: u32,
-}
-
 enum Request {
     Open(mpsc::Sender<Result<DatabaseInfo, String>>),
     Query(String, Vec<Value>, mpsc::Sender<Result<Vec<Value>, String>>),
     CommitHistory(String, String, mpsc::Sender<Result<(), String>>),
-    ReadHistory(mpsc::Sender<Result<Vec<Value>, String>>),
+    ReadHistory(mpsc::Sender<Result<Vec<HistoryRow>, String>>),
     EraseHistory(mpsc::Sender<Result<(), String>>),
+    ResetPersonal(mpsc::Sender<Result<(), String>>),
 }
 
 pub struct NativeDatabase {
@@ -98,10 +94,22 @@ impl NativeDatabase {
             .map_err(DatabaseError::Operation)
     }
 
-    pub async fn history_rows(&self) -> Result<Vec<Value>, DatabaseError> {
+    pub async fn history_rows(&self) -> Result<Vec<HistoryRow>, DatabaseError> {
         let (tx, rx) = mpsc::channel();
         self.tx
             .send(Request::ReadHistory(tx))
+            .map_err(|_| DatabaseError::WorkerUnavailable)?;
+        tauri::async_runtime::spawn_blocking(move || rx.recv())
+            .await
+            .map_err(|error| DatabaseError::TaskFailure(error.to_string()))?
+            .map_err(|_| DatabaseError::WorkerUnavailable)?
+            .map_err(DatabaseError::Operation)
+    }
+
+    pub async fn reset_personal_data(&self) -> Result<(), DatabaseError> {
+        let (tx, rx) = mpsc::channel();
+        self.tx
+            .send(Request::ResetPersonal(tx))
             .map_err(|_| DatabaseError::WorkerUnavailable)?;
         tauri::async_runtime::spawn_blocking(move || rx.recv())
             .await
@@ -160,11 +168,11 @@ fn dictionary_path(resource: Option<&Path>) -> Result<PathBuf, String> {
                 .map(Path::to_path_buf)
         })
         .unwrap_or_else(|| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../zipeek-web/static/hanzi.duckdb")
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("binaries/dictionary/hanzi.duckdb")
         });
     if !path.is_file() {
         return Err(format!(
-            "Native dictionary missing: {}. Run cargo make db-full before building the desktop app",
+            "Native dictionary missing: {}. Run cargo make desktop-sidecars after installing the dictionary",
             path.display()
         ));
     }
@@ -248,7 +256,12 @@ fn worker(rx: mpsc::Receiver<Request>, resource: Option<PathBuf>, personal: Opti
             Request::ReadHistory(reply) => {
                 let result = personal_connection(connections.as_ref())
                     .and_then(|connection| execute_json(connection,
-                        "SELECT session_id, evidence_json AS evidence FROM personal.practice_sessions ORDER BY session_id LIMIT 100001", &[]));
+                        "SELECT session_id, evidence_json AS evidence FROM personal.practice_sessions ORDER BY session_id LIMIT 100001", &[]))
+                    .and_then(|rows| rows.into_iter().map(|row| serde_json::from_value(row).map_err(|error| error.to_string())).collect());
+                let _ = reply.send(result);
+            }
+            Request::ResetPersonal(reply) => {
+                let result = reset::reset_personal_database(&mut connections, personal.as_deref());
                 let _ = reply.send(result);
             }
             Request::EraseHistory(reply) => {
@@ -273,10 +286,9 @@ fn personal_connection(connections: Option<&NativeConnections>) -> Result<&Conne
 }
 
 fn memory_connection() -> Result<Connection, String> {
-    let environment =
-        duckdb_neo::environment::Environment::new().map_err(|error| error.to_string())?;
+    let environment = Environment::new().map_err(|error| error.to_string())?;
     let database = environment
-        .open(duckdb_neo::environment::StorageLocation::InMemory)
+        .open(StorageLocation::InMemory)
         .map_err(|error| error.to_string())?;
     database.connect().map_err(|error| error.to_string())
 }
@@ -479,10 +491,8 @@ mod tests {
     }
     #[test]
     fn json_rows_round_trip_through_native_duckdb() {
-        let environment = duckdb_neo::environment::Environment::new().unwrap();
-        let database = environment
-            .open(duckdb_neo::environment::StorageLocation::InMemory)
-            .unwrap();
+        let environment = Environment::new().unwrap();
+        let database = environment.open(StorageLocation::InMemory).unwrap();
         let connection = database.connect().unwrap();
         let rows = execute_json(
             &connection,

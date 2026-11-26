@@ -13,6 +13,26 @@ use zipeek_web::*;
 #[cfg(target_arch = "wasm32")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     console_error_panic_hook::set_once();
+    if mount_reset_if_requested().map_err(|message| {
+        show_fatal_error(&message);
+        message
+    })? {
+        return Ok(());
+    }
+    wasm_bindgen_futures::spawn_local(async {
+        if let Err(message) = acquire_app_storage_session().await {
+            show_fatal_error(&message);
+            return;
+        }
+        if let Err(error) = start_application() {
+            show_fatal_error(&error.to_string());
+        }
+    });
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn start_application() -> Result<(), Box<dyn std::error::Error>> {
     let environment = AppEnvironment::new().map_err(|error| {
         show_fatal_error(&format!("Application environment failed: {error}"));
         error

@@ -1,4 +1,5 @@
 pub(crate) mod ai;
+pub(crate) mod app_reset;
 pub mod database;
 pub(crate) mod exclusions;
 pub(crate) mod exercise_types;

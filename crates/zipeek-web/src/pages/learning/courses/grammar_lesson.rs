@@ -1,14 +1,14 @@
 use super::curriculum::{authored_grammar_region, authored_grammar_region_from_slug};
 use super::curriculum_registry::{registry_course, registry_entry};
+use super::grammar_ai_example::GrammarAiExample;
+use super::grammar_lesson_scaffold::GrammarLessonScaffold;
 use super::guided_bank::GuidedCourse;
 use super::guided_bank_view::GuidedGrammarBank;
 use super::progress;
-use super::grammar_lesson_scaffold::GrammarLessonScaffold;
-use super::grammar_ai_example::GrammarAiExample;
-use yew_icons::{Icon, IconData};
 use crate::components::ListenButton;
 use crate::route::Route;
 use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 use yew_router::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -27,9 +27,11 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
     let bank_step = check_start + checks.len();
     let assessment_step = bank_step + 1;
     let total_steps = assessment_step + 1;
-    let starting_step = progress::load().ok()
+    let starting_step = progress::load()
+        .ok()
         .and_then(|saved| saved.grammar_steps.get(course.id).copied())
-        .unwrap_or(0).min(assessment_step);
+        .unwrap_or(0)
+        .min(assessment_step);
     let step = use_state(|| starting_step);
     let save_error = use_state(|| None::<String>);
     let current = *step;
@@ -47,7 +49,10 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             let value = (*step + 1).min(assessment_step);
             step.set(value);
-            save_error.set(progress::update(|saved| saved.mark_grammar_step(&course_id, value, total_steps)).err());
+            save_error.set(
+                progress::update(|saved| saved.mark_grammar_step(&course_id, value, total_steps))
+                    .err(),
+            );
         })
     };
     let previous = {
@@ -57,7 +62,10 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             let value = step.saturating_sub(1);
             step.set(value);
-            save_error.set(progress::update(|saved| saved.mark_grammar_step(&course_id, value, total_steps)).err());
+            save_error.set(
+                progress::update(|saved| saved.mark_grammar_step(&course_id, value, total_steps))
+                    .err(),
+            );
         })
     };
     let next_allowed = if (check_start..bank_step).contains(&current) {
@@ -79,7 +87,12 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             answers.set(vec![None; checks.len()]);
             step.set(check_start);
-            save_error.set(progress::update(|saved| saved.mark_grammar_step(&course_id, check_start, total_steps)).err());
+            save_error.set(
+                progress::update(|saved| {
+                    saved.mark_grammar_step(&course_id, check_start, total_steps)
+                })
+                .err(),
+            );
         })
     };
     let stage_content = if current < teaching_count {
@@ -138,20 +151,20 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
         }
     } else if current == bank_step {
         html! { <section class="space-y-4 rounded-2xl border border-line bg-surface p-5 sm:p-7" aria-label="Guided sentence building and transformation">
-                    <h2 class="text-xl font-bold">{"Build and transform sentences"}</h2>
-                    <p class="text-sm text-muted">{"Rehearse the patterns with the word bank. Reference answers remain visible in this guided activity."}</p>
-                    <GuidedGrammarBank course={props.course} />
-                </section> }
+            <h2 class="text-xl font-bold">{"Build and transform sentences"}</h2>
+            <p class="text-sm text-muted">{"Rehearse the patterns with the word bank. Reference answers remain visible in this guided activity."}</p>
+            <GuidedGrammarBank course={props.course} />
+        </section> }
     } else {
         html! { <section class="space-y-4 rounded-2xl border border-line bg-surface p-6 sm:p-8" aria-label="Independent grammar assessment">
-                    <h2 class="text-2xl font-bold">{"Check your understanding"}</h2>
-                    <p class="text-muted">{"Try the independent assessment without hints. Guided practice does not count as mastery."}</p>
-                    <p data-grammar-review="" class="text-sm text-muted">{format!("Guided checks: {correct} of {answered} correct")}</p>
-                    <div class="flex flex-wrap gap-3">
-                        <Link<Route> to={Route::GrammarAssessment { course: course.id.to_owned() }} classes="inline-flex rounded-lg bg-brand-action px-5 py-3 font-semibold text-white no-underline">{"Start assessment"}</Link<Route>>
-                        <button type="button" class="rounded-lg border border-line px-4 py-2" onclick={restart}>{"Retry guided checks"}</button>
-                    </div>
-                </section> }
+            <h2 class="text-2xl font-bold">{"Check your understanding"}</h2>
+            <p class="text-muted">{"Try the independent assessment without hints. Guided practice does not count as mastery."}</p>
+            <p data-grammar-review="" class="text-sm text-muted">{format!("Guided checks: {correct} of {answered} correct")}</p>
+            <div class="flex flex-wrap gap-3">
+                <Link<Route> to={Route::GrammarAssessment { course: course.id.to_owned() }} classes="inline-flex rounded-lg bg-brand-action px-5 py-3 font-semibold text-white no-underline">{"Start assessment"}</Link<Route>>
+                <button type="button" class="rounded-lg border border-line px-4 py-2" onclick={restart}>{"Retry guided checks"}</button>
+            </div>
+        </section> }
     };
     html! {
         <GrammarLessonScaffold title={course.title} course_id={course.id} current={current} total_steps={total_steps}>

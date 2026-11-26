@@ -135,13 +135,13 @@ pub(super) fn creature_progress(props: &CreatureProgressProps) -> Html {
             "relative flex w-14 shrink-0 self-stretch items-center justify-center sm:w-[min(25dvh,12rem)] lg:w-[min(28dvh,15rem)]"
         }
         CreatureOrientation::Horizontal => {
-            "relative order-2 flex h-[min(26dvh,15rem)] min-h-0 w-full shrink-0 items-center justify-center"
+            "relative order-2 flex w-full shrink-0 items-center justify-center pb-2"
         }
     };
     let frame_classes = match orientation {
         CreatureOrientation::Vertical => "practice-creature-frame relative aspect-[1/3] w-full",
         CreatureOrientation::Horizontal => {
-            "practice-creature-frame relative aspect-[3/1] h-full max-w-full"
+            "practice-creature-frame relative aspect-[3/1] w-full max-w-[28rem] shrink-0"
         }
     };
     html! {

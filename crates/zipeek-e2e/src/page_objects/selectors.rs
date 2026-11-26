@@ -66,7 +66,8 @@ pub mod speaking {
 
 pub mod word_sets {
     pub const DELETE: &str = "[data-delete-word-set]";
-    pub const SELECTABLE_OPTION: &str = "[data-target-word-set][data-selected-word-set-id]:not([data-selected-word-set-id=''])";
+    pub const SELECTABLE_OPTION: &str =
+        "[data-target-word-set][data-selected-word-set-id]:not([data-selected-word-set-id=''])";
     pub const CONFIRM_DELETION: &str = "Confirm deletion";
 }
 

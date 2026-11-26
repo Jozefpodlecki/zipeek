@@ -87,14 +87,22 @@ impl Reducible for VocabularyState {
                 next.page = 0;
                 next.load = RegionLoad::WaitingForDictionary;
             }
-            VocabularyAction::DictionaryFailed { selected, request, message } => {
+            VocabularyAction::DictionaryFailed {
+                selected,
+                request,
+                message,
+            } => {
                 if selected != next.selected || request != next.request {
                     return self;
                 }
                 next.page = 0;
                 next.load = RegionLoad::DictionaryUnavailable(message);
             }
-            VocabularyAction::Loaded { selected, request, result } => {
+            VocabularyAction::Loaded {
+                selected,
+                request,
+                result,
+            } => {
                 if selected != next.selected || request != next.request {
                     return self;
                 }
@@ -163,10 +171,12 @@ mod readiness_tests {
         let state = Rc::new(VocabularyState::default());
         assert!(matches!(&state.load, RegionLoad::WaitingForDictionary));
         let selected = state.reduce(VocabularyAction::Select(9));
-        let waiting = selected.clone().reduce(VocabularyAction::DictionaryWaiting {
-            selected: 9,
-            request: selected.request,
-        });
+        let waiting = selected
+            .clone()
+            .reduce(VocabularyAction::DictionaryWaiting {
+                selected: 9,
+                request: selected.request,
+            });
         assert!(matches!(&waiting.load, RegionLoad::WaitingForDictionary));
         let stale = waiting.clone().reduce(VocabularyAction::DictionaryFailed {
             selected: 0,
@@ -190,7 +200,9 @@ mod readiness_tests {
             request: state.request,
             message: "offline".into(),
         });
-        assert!(matches!(&failed.load, RegionLoad::DictionaryUnavailable(message) if message == "offline"));
+        assert!(
+            matches!(&failed.load, RegionLoad::DictionaryUnavailable(message) if message == "offline")
+        );
         let waiting = failed.reduce(VocabularyAction::DictionaryWaiting {
             selected: state.selected,
             request: state.request,

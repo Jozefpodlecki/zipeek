@@ -15,14 +15,19 @@ unsafe extern "C" {
 pub struct ChartInstance(JsValue);
 
 impl ChartInstance {
-    pub async fn create(canvas: &HtmlCanvasElement, configuration: &JsValue) -> Result<Self, JsValue> {
+    pub async fn create(
+        canvas: &HtmlCanvasElement,
+        configuration: &JsValue,
+    ) -> Result<Self, JsValue> {
         let module_url = chart_module_url()?;
         let module = unsafe { load_chart_module(&module_url).await? };
-        let create_chart = Reflect::get(&module, &JsValue::from_str("createChart"))?
-            .dyn_into::<Function>()?;
+        let create_chart =
+            Reflect::get(&module, &JsValue::from_str("createChart"))?.dyn_into::<Function>()?;
         let chart = create_chart.call2(&JsValue::UNDEFINED, canvas.as_ref(), configuration)?;
         if chart.is_null() || chart.is_undefined() {
-            return Err(JsValue::from_str("Chart.js did not return a chart instance"));
+            return Err(JsValue::from_str(
+                "Chart.js did not return a chart instance",
+            ));
         }
         Ok(Self(chart))
     }
@@ -31,8 +36,8 @@ impl ChartInstance {
         if self.0.is_null() {
             return Ok(());
         }
-        let destroy = Reflect::get(&self.0, &JsValue::from_str("destroy"))?
-            .dyn_into::<Function>()?;
+        let destroy =
+            Reflect::get(&self.0, &JsValue::from_str("destroy"))?.dyn_into::<Function>()?;
         destroy.call0(&self.0)?;
         self.0 = JsValue::NULL;
         Ok(())

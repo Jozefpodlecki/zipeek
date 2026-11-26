@@ -1,4 +1,7 @@
-use crate::{elastic, geometry::{Point, Stroke, resample}};
+use crate::{
+    elastic,
+    geometry::{Point, Stroke, resample},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MatchConfig {
@@ -174,9 +177,7 @@ fn match_stroke_inner(
     let candidate =
         resample(actual, config.samples).map_err(|_| StrokeRejection::InvalidGeometry)?;
     let fit = elastic::compare(&reference, &candidate);
-    if fit.mean > config.maximum_average_error
-        || fit.deviation > config.maximum_peak_error
-    {
+    if fit.mean > config.maximum_average_error || fit.deviation > config.maximum_peak_error {
         if detect_reverse {
             let reversed = Stroke {
                 points: actual.points.iter().rev().copied().collect(),

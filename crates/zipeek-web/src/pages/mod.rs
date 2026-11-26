@@ -1,5 +1,6 @@
 mod explore;
 mod home;
+mod record;
 pub mod learning;
 pub mod practice;
 mod system;
@@ -7,6 +8,7 @@ pub mod translation;
 
 pub use explore::{browse, random, word_sets};
 pub use home::{Home, SentencesPage};
+pub use record::RecordPage;
 pub use learning::courses;
 pub use learning::crossword;
 pub use learning::games;

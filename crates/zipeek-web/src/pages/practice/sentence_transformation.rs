@@ -1,7 +1,9 @@
-use yew::prelude::*;
-use yew::TargetCast;
-use zipeek_exercises::sentence_transformation::{self, AnswerMode, TransformationAction, TransformationItem, TransformationState};
 use std::rc::Rc;
+use yew::TargetCast;
+use yew::prelude::*;
+use zipeek_exercises::sentence_transformation::{
+    self, AnswerMode, TransformationAction, TransformationItem, TransformationState,
+};
 
 use crate::models::SentenceTransformationOptions;
 
@@ -14,11 +16,13 @@ pub struct SentenceTransformationProps {
 
 #[function_component(SentenceTransformation)]
 pub fn sentence_transformation(props: &SentenceTransformationProps) -> Html {
-    let Some(item) = sentence_transformation::item_for_seed(props.seed, props.options.pattern_index) else {
+    let Some(item) =
+        sentence_transformation::item_for_seed(props.seed, props.options.pattern_index)
+    else {
         return html! { <p role="alert">{"The selected grammar pattern has no authored question."}</p> };
     };
     html! { <TransformationExercise key={format!("{}-{}-{:?}", item.id, props.seed, props.options.answer_mode)}
-        item={item} seed={props.seed} mode={props.options.answer_mode} on_completed={props.on_completed.clone()} /> }
+    item={item} seed={props.seed} mode={props.options.answer_mode} on_completed={props.on_completed.clone()} /> }
 }
 
 #[derive(Properties, PartialEq)]
@@ -34,14 +38,24 @@ struct TransformationUiState(TransformationState);
 
 impl std::ops::Deref for TransformationUiState {
     type Target = TransformationState;
-    fn deref(&self) -> &Self::Target { &self.0 }
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 impl yew::Reducible for TransformationUiState {
-    type Action = (TransformationAction, &'static TransformationItem, AnswerMode);
+    type Action = (
+        TransformationAction,
+        &'static TransformationItem,
+        AnswerMode,
+    );
     fn reduce(self: Rc<Self>, (action, item, mode): Self::Action) -> Rc<Self> {
         let mut next = (*self).clone();
-        if next.0.apply(item, mode, action) { Rc::new(next) } else { self }
+        if next.0.apply(item, mode, action) {
+            Rc::new(next)
+        } else {
+            self
+        }
     }
 }
 
@@ -58,19 +72,27 @@ fn transformation_exercise(props: &TransformationExerciseProps) -> Html {
     let correct = state.is_correct(item);
     let add_tile = {
         let state = state.clone();
-        Callback::from(move |id: usize| state.dispatch((TransformationAction::AddTile(id), item, mode)))
+        Callback::from(move |id: usize| {
+            state.dispatch((TransformationAction::AddTile(id), item, mode))
+        })
     };
     let remove_tile = {
         let state = state.clone();
-        Callback::from(move |position: usize| state.dispatch((TransformationAction::RemoveTile(position), item, mode)))
+        Callback::from(move |position: usize| {
+            state.dispatch((TransformationAction::RemoveTile(position), item, mode))
+        })
     };
     let undo = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch((TransformationAction::Undo, item, mode)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch((TransformationAction::Undo, item, mode))
+        })
     };
     let clear = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch((TransformationAction::ResetTiles, item, mode)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch((TransformationAction::ResetTiles, item, mode))
+        })
     };
     let update_typed = {
         let state = state.clone();
@@ -82,15 +104,21 @@ fn transformation_exercise(props: &TransformationExerciseProps) -> Html {
     };
     let check = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch((TransformationAction::Check, item, mode)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch((TransformationAction::Check, item, mode))
+        })
     };
     let use_tiles_mode = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch((TransformationAction::UseTiles(true), item, mode)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch((TransformationAction::UseTiles(true), item, mode))
+        })
     };
     let use_typing_mode = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch((TransformationAction::UseTiles(false), item, mode)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch((TransformationAction::UseTiles(false), item, mode))
+        })
     };
     let continue_session = {
         let on_completed = props.on_completed.clone();

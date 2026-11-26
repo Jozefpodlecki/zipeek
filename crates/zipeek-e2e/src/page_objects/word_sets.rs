@@ -3,7 +3,8 @@ use thirtyfour::prelude::*;
 
 const NAME: &str = "[data-new-word-set]";
 const CREATE: &str = "[data-create-word-set]";
-const SELECTED: &str = "[data-target-word-set][data-selected-word-set-id]:not([data-selected-word-set-id=''])";
+const SELECTED: &str =
+    "[data-target-word-set][data-selected-word-set-id]:not([data-selected-word-set-id=''])";
 
 pub async fn create(driver: &WebDriver, name: &str) -> crate::HarnessResult<()> {
     let input = driver.query_named(NAME, "Word Sets - create").await?;

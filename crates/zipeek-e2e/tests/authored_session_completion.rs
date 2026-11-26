@@ -318,14 +318,13 @@ async fn complete(ctx: ScenarioContext, exercise: Exercise) -> HarnessResult<()>
     ctx.checkpoint(&format!("{}-practice-finished", exercise.id()))
         .await?;
     driver
-        .query_with_text(
-            "[data-practice-history-notice]",
-            "Learning history is off",
-        )
+        .query_with_text("[data-practice-history-notice]", "Learning history is off")
         .await?;
     driver.refresh().await?;
     driver
-        .query_single("[data-component='practice-session-unavailable'][data-session-error='not-found']")
+        .query_single(
+            "[data-component='practice-session-unavailable'][data-session-error='not-found']",
+        )
         .await?;
     zipeek_e2e::e2e_ensure_eq!(
         driver.current_url().await?,

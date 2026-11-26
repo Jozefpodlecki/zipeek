@@ -11,7 +11,10 @@ pub struct LogicalSnapshot {
     pub vocabulary_identities: Vec<String>,
     pub characters: Vec<String>,
     pub character_readings: Vec<String>,
+    pub pinyin_syllable_candidates: Vec<String>,
+    pub character_gloss_candidates: Vec<String>,
     pub word_characters: Vec<String>,
+    pub word_relations: Vec<String>,
     pub hsk_memberships: Vec<String>,
     pub pos_memberships: Vec<String>,
     pub senses: Vec<String>,
@@ -54,9 +57,24 @@ pub fn read_snapshot(connection: &Connection) -> Result<LogicalSnapshot, Artifac
             "SELECT to_json(characters)::VARCHAR FROM characters ORDER BY unicode_scalar",
             true,
         )?,
+        pinyin_syllable_candidates: query_strings(
+            connection,
+            "SELECT to_json(pinyin_syllable_candidates)::VARCHAR FROM pinyin_syllable_candidates ORDER BY pinyin_numeric",
+            true,
+        )?,
+        character_gloss_candidates: query_strings(
+            connection,
+            "SELECT to_json(character_gloss_candidates)::VARCHAR FROM character_gloss_candidates ORDER BY character, source_word_id, sense_order",
+            true,
+        )?,
         character_readings: query_strings(
             connection,
             "SELECT to_json(character_readings)::VARCHAR FROM character_readings ORDER BY character, pinyin_numeric",
+            true,
+        )?,
+        word_relations: query_strings(
+            connection,
+            "SELECT to_json(word_relations)::VARCHAR FROM word_relations ORDER BY relation_id",
             true,
         )?,
         word_characters: query_strings(

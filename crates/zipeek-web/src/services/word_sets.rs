@@ -119,8 +119,13 @@ fn valid_course_source(source: &CourseWordSetSource) -> bool {
         .is_some_and(|region| {
             region.id == source.region_id
                 && source.set_index > 0
-                && usize::from(source.set_index) <= region.readings.len().div_ceil(COURSE_WORD_SET_SIZE)
+                && usize::from(source.set_index)
+                    <= region.readings.len().div_ceil(COURSE_WORD_SET_SIZE)
         })
+}
+
+fn valid_set_name(name: &str) -> bool {
+    !name.trim().is_empty() && name.chars().count() <= 64 && !name.chars().any(char::is_control)
 }
 
 fn validate(sets: &[UserWordSet]) -> Result<(), String> {
@@ -128,7 +133,7 @@ fn validate(sets: &[UserWordSet]) -> Result<(), String> {
         return Err("Too many saved Word Sets".to_owned());
     }
     for (index, set) in sets.iter().enumerate() {
-        if set.name.trim().is_empty() || set.name.chars().count() > 64 {
+        if !valid_set_name(&set.name) {
             return Err(format!("Invalid name for Word Set {index}"));
         }
         if set.word_ids.len() > MAX_WORDS
@@ -144,7 +149,10 @@ fn validate(sets: &[UserWordSet]) -> Result<(), String> {
             if !valid_course_source(source) {
                 return Err("Invalid course Word Set source".to_owned());
             }
-            if sets[..index].iter().any(|other| other.source.as_ref() == Some(source)) {
+            if sets[..index]
+                .iter()
+                .any(|other| other.source.as_ref() == Some(source))
+            {
                 return Err("Course Word Set already acquired".to_owned());
             }
         }
@@ -182,7 +190,7 @@ pub fn write(storage: &web_sys::Storage, sets: &[UserWordSet]) -> Result<(), Str
 
 pub fn create(sets: &mut Vec<UserWordSet>, name: &str) -> Result<(), String> {
     let name = name.trim();
-    if name.is_empty() || name.chars().count() > 64 || sets.iter().any(|set| set.name == name) {
+    if !valid_set_name(name) || sets.iter().any(|set| set.name == name) {
         return Err("Enter a unique name (1–64 characters)".to_owned());
     }
     if sets.len() >= MAX_SETS {
@@ -246,7 +254,7 @@ pub fn acquired_source(sets: &[UserWordSet], source: &CourseWordSetSource) -> bo
 
 pub fn rename(sets: &mut [UserWordSet], id: &WordSetId, name: &str) -> Result<(), String> {
     let name = name.trim();
-    if name.is_empty() || name.chars().count() > 64 {
+    if !valid_set_name(name) {
         return Err("Enter a name (1–64 characters)".to_owned());
     }
     if sets.iter().any(|set| &set.id != id && set.name == name) {
@@ -356,23 +364,49 @@ mod tests {
 
     #[test]
     fn course_source_requires_real_region_and_existing_set_index() {
-        assert!(valid_course_source(&CourseWordSetSource { region_id: 1, set_index: 1 }));
-        assert!(!valid_course_source(&CourseWordSetSource { region_id: 0, set_index: 1 }));
-        assert!(!valid_course_source(&CourseWordSetSource { region_id: 101, set_index: 1 }));
-        assert!(!valid_course_source(&CourseWordSetSource { region_id: 1, set_index: 100 }));
+        assert!(valid_course_source(&CourseWordSetSource {
+            region_id: 1,
+            set_index: 1
+        }));
+        assert!(!valid_course_source(&CourseWordSetSource {
+            region_id: 0,
+            set_index: 1
+        }));
+        assert!(!valid_course_source(&CourseWordSetSource {
+            region_id: 101,
+            set_index: 1
+        }));
+        assert!(!valid_course_source(&CourseWordSetSource {
+            region_id: 1,
+            set_index: 100
+        }));
     }
 
     #[test]
     fn failed_course_acquisition_leaves_collection_unmodified() {
         let mut sets = Vec::new();
-        assert!(create_from_course(&mut sets, "Invalid", &[1], CourseWordSetSource { region_id: 1, set_index: 100 }).is_err());
+        assert!(
+            create_from_course(
+                &mut sets,
+                "Invalid",
+                &[1],
+                CourseWordSetSource {
+                    region_id: 1,
+                    set_index: 100
+                }
+            )
+            .is_err()
+        );
         assert!(sets.is_empty());
     }
 
     #[test]
     fn course_identity_survives_rename_and_rejects_duplicates() {
         let mut sets = Vec::new();
-        let source = CourseWordSetSource { region_id: 5, set_index: 2 };
+        let source = CourseWordSetSource {
+            region_id: 5,
+            set_index: 2,
+        };
         create_from_course(&mut sets, "Actions", &[4, 2, 3], source.clone()).unwrap();
         assert!(acquired_source(&sets, &source));
         let id = sets[0].id.clone();
@@ -390,7 +424,10 @@ mod tests {
 
     #[test]
     fn imported_duplicate_course_source_is_rejected() {
-        let source = CourseWordSetSource { region_id: 1, set_index: 1 };
+        let source = CourseWordSetSource {
+            region_id: 1,
+            set_index: 1,
+        };
         let mut sets = Vec::new();
         create_from_course(&mut sets, "One", &[1], source.clone()).unwrap();
         let mut other = Vec::new();
@@ -402,8 +439,12 @@ mod tests {
     fn personal_word_sets_can_hold_the_complete_vocabulary_curriculum() {
         let mut sets = Vec::new();
         for index in 0..130 {
-            create_with_words(&mut sets, &format!("HSK thematic set {}", index + 1), &[1, 2, 3])
-                .unwrap();
+            create_with_words(
+                &mut sets,
+                &format!("HSK thematic set {}", index + 1),
+                &[1, 2, 3],
+            )
+            .unwrap();
         }
         assert_eq!(sets.len(), 130);
         assert!(validate(&sets).is_ok());
@@ -488,5 +529,20 @@ mod tests {
         assert!(practice_snapshot(&sets, "0").is_err());
         assert!(browse_snapshot(&sets, "saved:0").is_err());
         assert!("ABC".parse::<WordSetId>().is_err());
+    }
+}
+
+#[cfg(test)]
+mod r593_name_boundary_tests {
+    use super::*;
+
+    #[test]
+    fn names_must_not_contain_control_characters() {
+        assert!(!valid_set_name("Control\nName"));
+        assert!(!valid_set_name("\t"));
+        assert!(valid_set_name("Review words"));
+        let mut sets = Vec::new();
+        assert!(create(&mut sets, "Bad\rName").is_err());
+        assert!(sets.is_empty());
     }
 }

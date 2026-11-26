@@ -7,8 +7,16 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-axum = { workspace = true, features = ["json"] }
+axum = { workspace = true, features = ["json", "ws"] }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
-whisper-rs = "0.16.0"
+candle-core = { version = "0.11.1", features = ["cuda"] }
+candle-nn = { version = "0.11.1", features = ["cuda"] }
+candle-transformers = { version = "0.11.1", features = ["cuda"] }
+candle-kernels = { version = "0.11.1" }
+symphonia = { version = "=0.5.5", default-features = false, features = ["mp3", "flac"] }
+opus-pure = "=0.2.3"
+shine-rs = "=0.1.5"
+serde_json = { workspace = true }
+

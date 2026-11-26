@@ -32,8 +32,8 @@ pub fn encode_mono_pcm16(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, &
         let before = (position.floor() as usize).min(samples.len() - 1);
         let after = (before + 1).min(samples.len() - 1);
         let fraction = (position - before as f64) as f32;
-        let sample = (samples[before] * (1.0 - fraction) + samples[after] * fraction)
-            .clamp(-1.0, 1.0);
+        let sample =
+            (samples[before] * (1.0 - fraction) + samples[after] * fraction).clamp(-1.0, 1.0);
         let pcm = if sample < 0.0 {
             (sample * 32768.0).round() as i16
         } else {

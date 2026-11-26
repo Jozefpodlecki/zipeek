@@ -1,4 +1,7 @@
-use super::{mosaic::CourseMosaic, track_navigation::{CourseTrack, CourseTrackNavigation}};
+use super::{
+    mosaic::CourseMosaic,
+    track_navigation::{CourseTrack, CourseTrackNavigation},
+};
 use yew::prelude::*;
 
 #[function_component(CoursesPage)]

@@ -1,8 +1,8 @@
 use super::assessment::items_for_region;
 use super::assessment_session::AssessmentSession;
-use super::progress;
 use super::construction_assessment_view::ConstructionAssessment;
 use super::curriculum::authored_grammar_region;
+use super::progress;
 use crate::route::Route;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -24,7 +24,9 @@ pub fn grammar_assessment_page(props: &GrammarAssessmentProps) -> Html {
 
     let initial_items = items.clone();
     let storage_error = use_state(|| None::<String>);
-    let previous_record = progress::load().ok().and_then(|saved| saved.grammar_assessments.get(&props.course).cloned());
+    let previous_record = progress::load()
+        .ok()
+        .and_then(|saved| saved.grammar_assessments.get(&props.course).cloned());
     let session = use_state(move || AssessmentSession::for_items(&initial_items));
 
     {
@@ -53,9 +55,16 @@ pub fn grammar_assessment_page(props: &GrammarAssessmentProps) -> Html {
             let mut updated = (*session).clone();
             if updated.submit().is_ok() {
                 if let Some(report) = updated.review(&current_items) {
-                    storage_error.set(progress::update(|saved| {
-                        saved.record_grammar_assessment(&course_id, report.correct, report.total)
-                    }).err());
+                    storage_error.set(
+                        progress::update(|saved| {
+                            saved.record_grammar_assessment(
+                                &course_id,
+                                report.correct,
+                                report.total,
+                            )
+                        })
+                        .err(),
+                    );
                 }
                 session.set(updated);
             }

@@ -24,7 +24,7 @@ The inspected but browser-unverified source includes an unverified opt-in Practi
 
 - Translation utility: `crates/zipeek-web/src/pages/translation/sentence_translator/`.
 - Standalone generated exercise: `crates/zipeek-web/src/pages/translation/sentence_practice/` (still independently routable).
-- Persisted Practice: `crates/zipeek-web/src/services/practice_launch.rs`, `practice_generated.rs`, `practice_session_store.rs`, and `pages/practice/local_session.rs`.
+- Persisted Practice: `crates/zipeek-web/src/services/practice_launch.rs`, `practice_generated.rs`, `practice_session_store/mod.rs`, and `pages/practice/local_session.rs`.
 - AI config and request client: `crates/zipeek-web/src/services/ai/`, `crates/zipeek-ai/` and `crates/zipeek-ai-client/`.
 - Deterministic and optional live Chrome tests: `crates/zipeek-e2e/tests/translation_fixture.rs` and `ai_learner.rs`.
 

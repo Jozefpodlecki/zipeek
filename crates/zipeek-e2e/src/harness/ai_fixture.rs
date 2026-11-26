@@ -432,20 +432,28 @@ fn handle(stream: &mut TcpStream, state: &mut FixtureState) -> Result<(), String
                 thread::sleep(Duration::from_millis(1200));
             }
             let content = if recognition {
-                let has_image = body["messages"].as_array().is_some_and(|messages| messages.iter().any(|message| {
-                    message["content"].as_array().is_some_and(|parts| parts.iter().any(|part| {
-                        part["type"] == "image_url"
-                            && part["image_url"]["url"].as_str().is_some_and(|url| url.starts_with("data:image/png;base64,") && url.len() > 100)
-                    }))
-                }));
+                let has_image = body["messages"].as_array().is_some_and(|messages| {
+                    messages.iter().any(|message| {
+                        message["content"].as_array().is_some_and(|parts| {
+                            parts.iter().any(|part| {
+                                part["type"] == "image_url"
+                                    && part["image_url"]["url"].as_str().is_some_and(|url| {
+                                        url.starts_with("data:image/png;base64,") && url.len() > 100
+                                    })
+                            })
+                        })
+                    })
+                });
                 if !has_image {
-                    return respond(stream, 400, json!({"error":"Recognition requires an image"}))
-                        .map_err(|error| error.to_string());
+                    return respond(
+                        stream,
+                        400,
+                        json!({"error":"Recognition requires an image"}),
+                    )
+                    .map_err(|error| error.to_string());
                 }
                 json!({"candidates":["汉"]}).to_string()
-            } else if (sentence_game || dialogue_game)
-                && state.scenario == "malformed-generation"
-            {
+            } else if (sentence_game || dialogue_game) && state.scenario == "malformed-generation" {
                 "{invalid-game-json".to_owned()
             } else if sentence_game {
                 game_sentences().to_string()
@@ -746,5 +754,4 @@ mod tests {
         assert!(!evidence.contains("data:image/"));
         fixture.stop().unwrap();
     }
-
 }

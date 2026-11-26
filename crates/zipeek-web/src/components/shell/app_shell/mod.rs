@@ -14,7 +14,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::{
-    components::{AppFooter, LandingPage, Navigation},
+    components::{LandingPage, Navigation},
     hooks::use_app_environment,
     preferences::KEY as PREFERENCES_KEY,
     route::Route,
@@ -102,18 +102,14 @@ pub fn app_shell(props: &AppShellProps) -> Html {
             entered.set(true);
         })
     };
-    let centered_title = route
-        .as_ref()
-        .filter(|route| {
-            !matches!(route, Route::Home)
-                && !matches!(route, Route::Game { slug } if matches!(slug.as_str(), "cloud-match" | "crosswords"))
-        })
-        .map(Route::title);
     let write_hanzi_workspace = matches!(route.as_ref(), Some(Route::WriteHanzi));
     let game_workspace =
         matches!(route.as_ref(), Some(Route::Game { slug }) if slug == "crosswords");
     let practice_setup_workspace = matches!(route.as_ref(), Some(Route::PracticeSetup));
-    let courses_workspace = matches!(route.as_ref(), Some(Route::VocabularyCourse | Route::GrammarCourse | Route::PinyinCourse));
+    let courses_workspace = matches!(
+        route.as_ref(),
+        Some(Route::VocabularyCourse | Route::GrammarCourse | Route::PinyinCourse)
+    );
     let expanded = use_state(|| true);
     let on_drawer_toggle = {
         let expanded = expanded.clone();
@@ -151,10 +147,10 @@ pub fn app_shell(props: &AppShellProps) -> Html {
     if matches!(route.as_ref(), Some(Route::LocalPracticeSession { .. })) {
         return html! {
             <div data-component="practice-session-shell" data-shell-mode="practice-session" id="main-content"
-                class="relative isolate h-dvh min-h-0 overflow-hidden bg-canvas text-ink"
+                class="relative isolate min-h-dvh bg-canvas text-ink"
                 tabindex="-1" ref={content}>
                 <SessionBackground />
-                <div class="relative z-10 h-full min-h-0 px-3 py-4 sm:px-6 sm:py-6">
+                <div class="relative z-10">
                     {props.children.clone()}
                 </div>
             </div>
@@ -190,7 +186,6 @@ pub fn app_shell(props: &AppShellProps) -> Html {
         } else {
             html! {
                 <ShellHeader
-                    centered_title={centered_title.map(str::to_owned)}
                     expanded={*expanded}
                     recording_enabled={*recording_enabled}
                     {game_workspace}
@@ -380,8 +375,6 @@ pub fn app_shell(props: &AppShellProps) -> Html {
                 >
                     {props.children.clone()}
                 </main>
-                {if write_hanzi_workspace || game_workspace || practice_setup_workspace || courses_workspace {Html::default()} else {html! {
-                    <AppFooter />}}}
             </div>
         </div>
     }

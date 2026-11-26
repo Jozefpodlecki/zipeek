@@ -86,6 +86,16 @@ async fn file_handle(
 async fn read_file(root: &JsValue, name: &str) -> Result<String, PersonalDataError> {
     let handle = file_handle(root, name, false).await?;
     let file = invoke(&handle, "getFile", &[]).await?;
+    if name == SNAPSHOT_FILE {
+        let size = property(&file, "size")?.as_f64().ok_or_else(|| {
+            PersonalDataError::Opfs("Private snapshot size is unavailable".into())
+        })?;
+        if !size.is_finite() || size < 0.0 || size > super::backup::MAX_IMPORT_BYTES as f64 {
+            return Err(PersonalDataError::InvalidBackup(
+                "Backup exceeds the 2 MB limit".into(),
+            ));
+        }
+    }
     invoke(&file, "text", &[])
         .await?
         .as_string()
@@ -136,6 +146,7 @@ pub async fn status(navigator: &Navigator) -> Result<String, PersonalDataError> 
 }
 
 pub async fn save(navigator: &Navigator, contents: &str) -> Result<String, PersonalDataError> {
+    super::backup::parse(contents)?;
     let root = directory(navigator).await?;
     write_file(&root, SNAPSHOT_FILE, contents).await?;
     Ok("Private browser snapshot saved. Keep a downloaded backup for device loss.".to_owned())

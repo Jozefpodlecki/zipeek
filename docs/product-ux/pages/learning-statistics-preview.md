@@ -46,6 +46,24 @@ Do not paginate a large table on Overview. Link to the full filtered Hanzi & Wor
 
 An advanced user's all-time encounter counts can be large. Use grouping, filters, truncation with tooltips and compact numeric formatting without losing the exact value on focus or drilldown. Cards must never use a highly ambiguous metric label merely because it is shorter.
 
+## Visual quality and evidence language acceptance
+
+The Statistics desktop canvas must use available screen width responsibly rather than restricting every section to a narrow fixed report column. At laptop widths preserve comfortable gutters; at wider widths support four competency cards across while keeping text readable. On mobile, allow horizontal scrolling of the section tabs and tables without compressing the labels into illegible fragments. Section controls must be theme-integrated, focus-visible, and keyboard usable.
+
+**Skills labels must not use “observed” as though it were a skill rating.** Present the number of distinct words with a recorded illustrative activity or review marker, a denominator, and explicitly distinguish activity coverage from assessment outcomes. Review markers and recorded activity can be rendered as separate bar segments, with a text equivalent; neither segment is evidence of success or failure. The four mandatory proficiency dimensions are recognition, listening, assessed speaking, and sentence use. Writing is a separate display category and is not a fifth mandatory competence. A future scored-performance panel requires assessor-qualified attempt data and cannot be inferred from current preview observations.
+
+Vocabulary and Grammar selection controls should show a visually compact checkbox within a keyboard-focusable touch-sized target, without giant filled squares covering adjacent table content. When any rows are selected, place their count, Clear, and Review selection actions immediately above the corresponding table; retain the selection across pages. All-matching selection is a separate bounded async operation with explicit counts, not a hidden side effect of selecting one visible page.
+
+Avoid redundant blank spacer rows and unnecessary artificial table footers. Maintain stable table height only when it genuinely avoids pagination jumps, and keep search, pagination, filter and selection actions understandable at common laptop heights. The approved R576 quality gate includes dark/light, narrow/wide, reduced-motion, keyboard, screen-reader, section loading/error/retry and 5,000/10,000-record test coverage. Static source inspection and deterministic unit tests do not substitute for measured Chrome performance or visual acceptance.
+
+## R585 compact interaction clarification
+
+For the Statistics navigation only, the concise visible tab label is **Vocabulary**; the maintained evidence explorer still distinguishes standalone Hanzi from whole words and must not infer one from the other. The technical route key remains `hanzi`. This terminology amendment does not claim that the underlying identity-type filter is implemented.
+
+History's familiar category and display actions use themed icons with accessible names, visible focus and discoverable titles. Search inputs should not repeat their placeholder as permanent visible copy. The count and view controls belong to the explorer toolbar rather than a disconnected second status row. A scored activity may display a correct/attempted ratio and a corresponding bar, but never imply mastery or task completion. Unscored activity has no numerical score bar. Preserve the explicit UTC label until real localization behavior is approved.
+
+For short paginated explorer pages, ordinary document scrolling is preferred to artificial 65vh nested list scrolling. The selection review must display human-readable source material, allow individual removal and remain preview-only until a typed validated source mapping is available. Its keyboard dialog acceptance includes focus trapping, return focus and Escape in real Chrome; merely setting `aria-modal` does not meet that contract.
+
 ## Hanzi & Words: scalable evidence explorer
 
 This is a proper data explorer, not a decorative table. It separates **Hanzi identities** from **whole-word identities** using a clear type filter or segmented view; a word's evidence does not automatically prove its constituent Hanzi. Present simplified/traditional form as relevant, Pinyin, short meaning, HSK/category metadata where sourced, distinct sessions, days, encounters, last relevant activity and per-competency evidence. Column visibility can be configured without losing access to meaning or identity.
@@ -182,3 +200,79 @@ The interaction policy now requires shared theme-integrated inputs with accessib
 Each of the seven preview tabs is now loaded through an asynchronous section source instead of synchronously importing fixture arrays inside the corresponding UI. The panel has an accessible, shape-preserving loading state; a failed load has a contextual retry action; an empty successful response stays a valid empty view. Changing tabs cancels ownership of a pending view request and previously loaded panels remain available in the preview cache. All values are still fictional, non-assessed and in-memory. No production learning evidence has been connected.
 
 The client-side explorer filtering used by the finite demo remains intentional for now. Remote, high-volume evidence requires a later approved query/pagination contract and per-item identity validation. The current interface should not be advertised as server-paginated or as a live learning dashboard.
+
+## R572 browser-query acceptance status
+
+The three large explorer views now request bounded, filtered pages asynchronously from the approved typed source interface. The UI keeps each section's editable filters and selection state while page requests load, treats failures as retryable and does not present old-query rows as current data. The Select all matching action is deliberately limited to 250 IDs and queries the source in batches; page-level selection can be used without loading the entire result set.
+
+History's activity summary is a separate query and cannot be computed solely from the current paginated session records. For the demo, dates are deterministic fixtures. Production date bucketing, timezone semantics and authoritative evidence provenance remain future work and must not be inferred from the mockup.
+
+## R575 tile-library interaction contract
+
+Statistics Settings provides **24 defined, in-memory Overview metrics**: four core summary cards and twenty optional tiles grouped into Vocabulary, Activity coverage, and Practice history. The optional tiles render only when enabled. They derive counts exclusively from the loaded `Overview` vocabulary/session projection and cannot represent proficiency, assessed competencies, verified attempts, or live learner data. In particular, review flags are not failed assessments, speaking activity is not independently assessed speaking, and Writing remains optional beyond the four required proficiency competencies.
+
+The tile library supports name/category search, themed keyboard-operable switches, Focused/Activity/Detailed presets, ordered up/down controls, reset, and a visible configured count. The focused default shows no extra tiles so Overview stays concise. The Activity preset adds three session/date activity indicators; Detailed enables all optional tiles. The ordered selection lives in the route-scoped reducer. Closing Preview restores the default layout, with no local storage or network persistence. Sorting under search changes the global order, not merely the filtered order; the ordering control must label its target and direction for screen readers.
+
+The user-selected metric set is a presentation configuration, not an API request for 24 independent server queries. For eventual production use, Overview projection aggregation must be authoritative and coherent by date range, provenance and population, with per-metric definitions verified before enabling live display. Real learner storage and settings persistence remain separate approvals.
+
+## R576 implementation: History modes and evidence language
+
+The History preview now includes reducer-owned **Timeline** and **Table** views of the same asynchronously queried session page. The Table view shows date, exercise, category, focus, attempts and a result field that explicitly reads **Not scored** for practice activities without assessed outcomes. The seven-day strip is a set of focusable buttons with pressed state; selecting a date filters the session query and preserves the seven-day activity context. Date selection can be cleared without losing the chosen view, and changes reset the session page to the first page. The seven-day preview window remains a fixed fictional date range, not a live calendar or a timezone-policy implementation.
+
+Skills labels explicitly separate activity/review **coverage**, **assessed accuracy unavailable**, and **missing evidence**, with a three-part legend. The four mandatory proficiency dimensions remain recognition, listening, assessed speaking and sentence use; Writing remains separate. Insights now offers independently computed coverage-gap counts for all four dimensions plus sample review candidates, each with a direct source-filter action. These are not proficiency judgments and do not infer unobserved performance or real due dates. Source-only implementation is pending real browser acceptance, and richer session-level provenance and Practice handoff remain open.
+
+## R577 Grammar source-label acceptance note
+
+In the current fixture preview, clicking or keyboard-activating a Grammar pattern expands its sample sentence and a provenance summary. Sample attempts are not assessed attempts; the course label is not a canonical course attribution; mock row IDs are not transferable to Practice. If canonical IDs or assessed-attempt evidence are absent, the detail shows their absence rather than assuming a relationship. Bulk selection remains useful for inspecting temporary items but must not modify Word Sets or create a Practice draft. Live handoff and Sentence Transformation defaults remain an open acceptance task.
+
+## R578 UI density and session-time refinement
+
+The Overview chart's main message is **completed sessions per week**, not a composite score. An accessible, optional **Weekly breakdown** presents Practice, Games and total counts with the same time buckets as the Chart.js visualization. It must be a compact, styled disclosure, not an unstyled duplicate `Activity data` table that expands the whole dashboard by default. The chart does not claim a date-range picker or independent exercise-category filtering yet.
+
+History should show an activity title plus a **date and time with an explicit timezone**, duration and score only where the exercise contract supports one. Demo timestamps/durations are deterministic fabricated records and have no production authority. The R578 fixture contains 156 fictional sessions with mixed recent Practice and Games entries to keep the newest page representative. Production must supply its own real timestamps, durations and approved local-time conversion; do not silently treat UTC text as the user's locale. Both Timeline and Table use the same async paginated records, while the seven-day aggregate uses a separate query that splits counts into Practice and Games. The History strip uses stacked activity segments and a compact legend rather than identical single-color bars.
+
+Learner-facing cards must avoid permanent paragraphs that recite the evidence policy. Use the single Demo badge, concise metric names, accessible legends and on-demand explanations. Remove redundant sections and over-tall cards before adding more statistics. Preserve required semantic distinctions in the data layer and tests even when the default screen uses shorter copy. R578 compresses Skills and Insights and removes their repetitive disclaimer paragraphs; assessment is still not claimed or inferred.
+
+Preserve reachable selection actions above long Vocabulary/Grammar tables. Do not collapse all table or settings content to a single screen at the expense of keyboard targets, readable Chinese text, or correct pagination. Full responsive, light/dark and 5,000/10,000-row Chrome acceptance remains outstanding.
+
+## R579 interaction density and language corrections
+
+Selection must not push a table or other content down on first selection. The compact selection toolbar is part of the base explorer layout in empty and populated states; active actions use consistent icon buttons, visible focus, meaningful accessible names and tooltips. Do not fill selection bars with repeated long labels. History uses a low-profile daily navigator instead of oversized activity tiles. Details and charts should be meaningful when expanded without turning Overview into a long page.
+
+The UI must not repeat technical provenance or fixture caveats in cards, metric descriptions, row details or Insights. Keep one unobtrusive Demo marker and put evidence correctness in the source, assessment contracts, and contextual accessibility labels. Short action labels such as `Explore` are preferable when the card context supplies the object; retain accurate explicit accessibility descriptions. Default configurations should favor compact, predictable geometry; progressive disclosure is preferable to instructional paragraphs.
+
+## R580 approved interaction update
+
+In the preview, omit the redundant Demo badge and use one compact icon action with an accessible label to open or close the preview. Do not remove fixture/provenance protections from the data layer. Explorer controls should share a single compact toolbar: a bounded-width search field, scoped filters and ordering, visible selection count and icon actions. Select-all-matching must be reachable before the table and must state the matching count via its accessible name. Where a query matches more than the approved 250-item selection bound, the operation remains unavailable until the search is narrowed.
+
+Vocabulary supports reversible column-heading ordering for Hanzi and encounter counts with `aria-sort` and stable identity tie-breakers. Search suggestions come from the currently loaded asynchronous query page and must not be described as exhaustive global matches. Grammar's current preview reads the maintained grammar teaching index, which contains 550 records, not 593; it preserves teaching IDs and editorial-review status, but does not claim canonical assessment identities or approved qualifications. Keep mock practice-attempt values distinct from verified assessed observations.
+
+The Overview activity chart and the adjacent review shortlist should share the same card height at desktop width, with details collapsed unless requested. History search should occupy only the width it needs, leaving category and view filters accessible. Use theme-integrated semantic controls with accessible keyboard operations; do not replace these with inaccessible ornamental widgets.
+
+## R581 Grammar explorer refinement
+
+Grammar filters now group the 100 teaching regions in five ranges, with an All option; this is a teaching catalogue organization, not a verified course filter. The Pattern and Attempts column headings support ascending/descending sort, and a compact page-size selector offers 10, 25, 50 and 100 records. Changing these controls resets pagination while preserving deliberate multi-selection. The search-suggestion query is independent of the current results page and remains capped to six source hits. Review status and canonical assessment provenance remain inspectable only where available; no new proficiency claims are implied by simulated attempts.
+
+The product target still calls for canonical course/assessment filters, keyboard-complete autocomplete, date-based evidence provenance and validated Practice setup handoffs. These are not fulfilled by the R581 fixture query extension.
+
+## R582 History and Grammar interaction checkpoint
+
+History offers compact previous/next seven-day activity navigation with a persistent week-label and a day drilldown. Changing the activity week does not replace the entire History table with seven days of records: an active date filter is cleared, while ordinary search and Practice/Games filters remain intact. Treat week navigation as a chart/date exploration control rather than a page-size mechanism.
+
+Grammar suggestion navigation is keyboard-operable with Up/Down, Enter, Escape and Tab, retaining custom styling and explicit combobox semantics. The suggestion list is source-backed, not derived from the current table page. Dismissal on focus loss, input debouncing, screen-reader behavior and production semantic suggestions require further browser acceptance before describing the component as complete.
+
+## R583 Grammar catalogue and overlay interaction checkpoint
+
+The source now offers two Grammar browsing layouts, a compact table for comparison and cards for pattern-first exploration, with both fed by the same bounded async page. Switching display mode preserves the query, sort, page and current selection. A pattern inspector appears as a side panel, displaying only available source-backed example, description and teaching metadata. Never fill absent curated translations, assessment results or verified course relationships by speculation.
+
+Selection review is a viewport dialog rather than a page-bottom disclosure. The Overview chart's tabular breakdown is also a popup detail view and must remain accessible without changing the comparative cards' height. Insights uses ordered coverage-gap rows and links back to evidence exploration, not generic claims about capability. Keep one preview indicator policy unchanged.
+
+Browser acceptance must explicitly verify dialog keyboard focus management, Escape, focus restoration, light and dark modes, narrow viewport sizing and reduced motion. The current source includes modal semantics and labeled close buttons, but this does not itself establish full accessibility acceptance.
+
+## R584 source-level interface refinement
+
+The default preview now samples 240 distinct real lexical spellings from an HSK-derived, seeded, locally packaged vocabulary catalogue; History and vocabulary derive their totals from one generated session projection. Sample identities are still preview-only. The seven-tab component architecture is unchanged and the Demo entry/exit presentation is not altered. Source-level implementation does not establish browser acceptance.
+
+Grammar's teaching partitions use Collection A through E, with ranges showing their original catalogue order. These groups are *not* verified courses, curated grammar families, difficulty levels or competence labels. Filters and paging share a compact themed ChoiceSelect. The same themed selection vocabulary is used for Vocabulary page sizes. The popover is intended to support keyboard and touch, with browser validation pending.
+
+For long explorers, desktop table/card content can scroll within a bounded region so its header and pager remain reachable. On narrow devices, prefer natural document scrolling and horizontal table navigation. Avoid blanket fixed heights or multiple competing scrolling regions on mobile. Metrics below the Overview primary content are treated as a continuation of the dashboard, not a separate miscellaneous category; use compact labels, values and optional accessible descriptions.

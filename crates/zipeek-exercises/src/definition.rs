@@ -6,7 +6,11 @@ pub enum ExternalService {
 
 pub fn required_external_services(exercise_id: &str) -> &'static [ExternalService] {
     match exercise_id {
-        "sentence-translation" | "fill-blank" | "sentence-builder" | "sentence-transformation" | "spot-mistake" => &[ExternalService::AiText],
+        "sentence-translation"
+        | "fill-blank"
+        | "sentence-builder"
+        | "sentence-transformation"
+        | "spot-mistake" => &[ExternalService::AiText],
         "image-vocabulary" => &[ExternalService::AiText, ExternalService::ImageGeneration],
         _ => &[],
     }
@@ -423,7 +427,12 @@ mod service_requirement_tests {
             &[ExternalService::AiText, ExternalService::ImageGeneration]
         );
         assert!(required_external_services("matching").is_empty());
-        for id in ["fill-blank", "sentence-builder", "sentence-transformation", "spot-mistake"] {
+        for id in [
+            "fill-blank",
+            "sentence-builder",
+            "sentence-transformation",
+            "spot-mistake",
+        ] {
             assert_eq!(required_external_services(id), &[ExternalService::AiText]);
         }
     }

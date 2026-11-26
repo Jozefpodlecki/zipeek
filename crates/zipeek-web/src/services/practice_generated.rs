@@ -5,6 +5,7 @@ use web_sys::Storage;
 use zipeek_ai_protocol::{Sentence, SentenceVocabulary};
 use zipeek_core::Word;
 use zipeek_exercises::{
+    local_quiz::QuizWord,
     image_questions::{ImageQuestionMode, VisualWord},
     translation::TranslationDirection,
 };
@@ -23,6 +24,9 @@ pub(crate) struct GeneratedImageChoice {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub(crate) enum GeneratedInstance {
+    Matching {
+        words: Vec<QuizWord>,
+    },
     SentenceTranslation {
         sentence: Sentence,
     },
@@ -42,6 +46,9 @@ impl GeneratedInstance {
         let instance: Self = serde_json::from_str(raw)
             .map_err(|_| "Generated exercise has an invalid structure".to_owned())?;
         match (&instance, exercise_id) {
+            (Self::Matching { words }, "matching") => {
+                validate_matching_words(words)?;
+            }
             (Self::SentenceTranslation { sentence }, "sentence-translation") => {
                 let vocabulary = SentenceVocabulary::new(
                     "Saved exercise".to_owned(),
@@ -100,6 +107,11 @@ impl GeneratedInstance {
                     || image_url.chars().any(char::is_whitespace)
                     || image_url.contains('@')
                     || image_url.contains('#')
+                    || image_url.contains('\\')
+                    || image_url.split_once("://").is_some_and(|(_, rest)| {
+                        let authority = rest.split('/').next().unwrap_or_default();
+                        authority.is_empty() || authority.starts_with(':')
+                    })
                     || image_url
                         .split_once("://")
                         .is_none_or(|(_, authority_and_path)| {
@@ -115,6 +127,65 @@ impl GeneratedInstance {
         }
         Ok(instance)
     }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GeneratedMatchingResponse {
+    words: Vec<MatchingCandidate>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MatchingCandidate {
+    hanzi: String,
+    pinyin: String,
+    meaning: String,
+}
+
+fn validate_matching_words(words: &[QuizWord]) -> Result<(), String> {
+    if !(2..=7).contains(&words.len()) {
+        return Err("Matching requires 2 to 7 distinct pairs".to_owned());
+    }
+    let mut hanzi = BTreeSet::new();
+    let mut meaning = BTreeSet::new();
+    for (index, word) in words.iter().enumerate() {
+        if word.id != index as i32 + 1
+            || word.hanzi.chars().count() == 0
+            || word.hanzi.chars().count() > 12
+            || !word.hanzi.chars().all(|ch| matches!(ch as u32, 0x3400..=0x9fff | 0x20000..=0x2fa1f))
+            || word.pinyin.trim().is_empty()
+            || word.pinyin.chars().count() > 80
+            || word.pinyin.chars().any(char::is_control)
+            || word.meaning.trim().is_empty()
+            || word.meaning.chars().count() > 160
+            || word.meaning.chars().any(char::is_control)
+            || !hanzi.insert(word.hanzi.clone())
+            || !meaning.insert(word.meaning.trim().to_lowercase())
+        {
+            return Err("AI matching data has invalid, duplicate or incomplete pairs".to_owned());
+        }
+    }
+    Ok(())
+}
+
+fn parse_generated_matching(raw: &str, count: usize) -> Result<Vec<QuizWord>, String> {
+    if raw.len() > 16_384 {
+        return Err("AI matching response is too large".to_owned());
+    }
+    let response: GeneratedMatchingResponse = serde_json::from_str(raw)
+        .map_err(|_| "AI matching response must contain a JSON object with a words array".to_owned())?;
+    if response.words.len() != count {
+        return Err("AI matching response contains the wrong number of pairs".to_owned());
+    }
+    let words = response.words.into_iter().enumerate().map(|(index, candidate)| QuizWord {
+        id: index as i32 + 1,
+        hanzi: candidate.hanzi,
+        pinyin: candidate.pinyin,
+        meaning: candidate.meaning,
+    }).collect::<Vec<_>>();
+    validate_matching_words(&words)?;
+    Ok(words)
 }
 
 fn sentence_vocabulary(words: &[Word], seed: u64) -> Result<SentenceVocabulary, String> {
@@ -157,6 +228,7 @@ pub(crate) async fn prepare(
     seed: u64,
     translation_direction: &str,
     translation_ordinal: usize,
+    matching_pairs: Option<u8>,
     dictionary: &Dictionary,
     storage: &Storage,
 ) -> Result<String, String> {
@@ -164,9 +236,20 @@ pub(crate) async fn prepare(
     if config.model.trim().is_empty() {
         return Err("Select an AI model in Settings before preparing this exercise".to_owned());
     }
-    let words = load_words(dictionary, vocabulary, false).await?;
     let generated = match exercise_id {
+        "matching" => {
+            let count = usize::from(matching_pairs.ok_or("Missing Matching pair count")?);
+            if !(2..=7).contains(&count) {
+                return Err("Matching requires 2 to 7 pairs".to_owned());
+            }
+            let raw = ai::complete(&config.url, &config.model, vec![
+                serde_json::json!({"role":"system", "content":"Generate accurate educational Mandarin vocabulary. Return only a JSON object with a words array, no Markdown. Each item must have exactly hanzi, pinyin with tone marks, and a concise English meaning. All meanings and words must be unique. Never include IDs or additional fields."}),
+                serde_json::json!({"role":"user", "content": format!("Create exactly {count} distinct beginner Mandarin vocabulary pairs, each 1 to 6 Chinese characters. The JSON format is an object with one words array and each word contains exactly hanzi, pinyin and meaning fields. No extra text.")}),
+            ]).await?;
+            GeneratedInstance::Matching { words: parse_generated_matching(&raw, count)? }
+        }
         "sentence-translation" => {
+            let words = load_words(dictionary, vocabulary, false).await?;
             let set = sentence_vocabulary(&words, seed)?;
             let direction =
                 configured_translation_direction(translation_direction, translation_ordinal)?;
@@ -181,6 +264,7 @@ pub(crate) async fn prepare(
             GeneratedInstance::SentenceTranslation { sentence }
         }
         "image-vocabulary" => {
+            let words = load_words(dictionary, vocabulary, false).await?;
             let candidates = words
                 .iter()
                 .filter_map(|word| {
@@ -282,6 +366,8 @@ mod tests {
             "https://user:pass@host/image",
             "https:///image",
             "https://host/image#fragment",
+            "https://:443/image",
+            "https://host\\evil/image",
         ] {
             let invalid = safe.replace("http://localhost:1431/v1/images/test", unsafe_url);
             assert!(GeneratedInstance::decode(&invalid, "image-vocabulary").is_err());
@@ -314,5 +400,31 @@ mod tests {
         bad = example;
         bad["choices"][0]["english"] = serde_json::json!("cat\0hidden");
         assert!(GeneratedInstance::decode(&bad.to_string(), "image-vocabulary").is_err());
+    }
+}
+
+#[cfg(test)]
+mod generated_matching_tests {
+    use super::*;
+
+    #[test]
+    fn ai_matching_pairs_are_strictly_validated_and_persistable() {
+        let raw = r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thank you"}]}"#;
+        let words = parse_generated_matching(raw, 2).unwrap();
+        let persisted = serde_json::to_string(&GeneratedInstance::Matching { words: words.clone() }).unwrap();
+        assert_eq!(GeneratedInstance::decode(&persisted, "matching"), Ok(GeneratedInstance::Matching { words }));
+        assert!(GeneratedInstance::decode(&persisted, "sentence-translation").is_err());
+        assert!(parse_generated_matching(raw, 3).is_err());
+    }
+
+    #[test]
+    fn ai_matching_rejects_untrusted_or_ambiguous_pairs() {
+        let invalid = [
+            r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"greetings"}]}"#,
+            r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"HELLO"}]}"#,
+            r#"{"words":[{"hanzi":"<script>","pinyin":"bad","meaning":"hello"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thanks"}]}"#,
+            r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello","extra":"no"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thanks"}]}"#,
+        ];
+        for raw in invalid { assert!(parse_generated_matching(raw, 2).is_err(), "accepted {raw}"); }
     }
 }

@@ -3,9 +3,13 @@ use crate::{
     components::providers::word_sets_provider::WordSetsCommand,
     contexts::database::DatabaseStatus,
     hooks::{use_database_commands, use_database_status, use_dictionary, use_word_sets},
-    services::word_sets::{CourseWordSetSource, COURSE_WORD_SET_SIZE},
+    services::word_sets::{COURSE_WORD_SET_SIZE, CourseWordSetSource},
 };
-use std::{cell::{Cell, RefCell}, collections::VecDeque, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    collections::VecDeque,
+    rc::Rc,
+};
 use yew::prelude::*;
 use zipeek_core::Word;
 use zipeek_pedagogy::curriculum::VOCABULARY_REGIONS as COURSES;
@@ -18,11 +22,11 @@ mod state;
 mod vocabulary_geometry;
 mod word_explorer;
 
+use super::workspace::CourseWorkspace;
 use mosaic::VocabularyMosaic;
 use region_details::RegionDetails;
 use state::{RegionLoad, VocabularyAction, VocabularyState};
 use word_explorer::WordExplorer;
-use super::workspace::CourseWorkspace;
 
 const WORD_SET_SIZE: usize = COURSE_WORD_SET_SIZE;
 const CACHE_LIMIT: usize = 4;
@@ -82,7 +86,9 @@ pub fn vocabulary_course_page() -> Html {
                         });
                     }
                     DatabaseStatus::Ready(_) => {
-                        let cached = cache.borrow().iter()
+                        let cached = cache
+                            .borrow()
+                            .iter()
                             .find(|(key, _)| *key == index)
                             .map(|(_, words)| words.clone());
                         if let Some(words) = cached {
@@ -100,11 +106,15 @@ pub fn vocabulary_course_page() -> Html {
                                     let course = COURSES.get(index).ok_or_else(|| {
                                         "Vocabulary collection unavailable".to_owned()
                                     })?;
-                                    let database = dictionary.database().map_err(|error| error.to_string())?;
-                                    let matches = database.words_by_simplified(course.hanzi).await
+                                    let database =
+                                        dictionary.database().map_err(|error| error.to_string())?;
+                                    let matches = database
+                                        .words_by_simplified(course.hanzi)
+                                        .await
                                         .map_err(|error| error.to_string())?;
                                     data::resolve_course_words(course, matches).map(Rc::new)
-                                }.await;
+                                }
+                                .await;
                                 if pending.get() {
                                     if let Ok(words) = &result {
                                         cache_insert(&mut cache.borrow_mut(), index, words.clone());
@@ -204,7 +214,8 @@ mod tests {
     #[test]
     fn all_one_hundred_regions_have_acquirable_collections() {
         assert_eq!(COURSES.len(), 100);
-        let titles: std::collections::BTreeSet<_> = COURSES.iter().map(|course| course.title).collect();
+        let titles: std::collections::BTreeSet<_> =
+            COURSES.iter().map(|course| course.title).collect();
         assert_eq!(titles.len(), 100);
     }
 

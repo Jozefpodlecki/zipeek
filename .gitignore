@@ -18,3 +18,8 @@ unpack.ps1
 models/
 # Built desktop sidecars (Tauri externalBin staging).
 /crates/zipeek-app/binaries/
+hanzi-*.duckdb
+static/
+/crates/zipeek-web/dist-desktop/
+/crates/zipeek-web/.desktop-assets/
+/crates/zipeek-web/index.desktop.html

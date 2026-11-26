@@ -1,7 +1,7 @@
-#[path = "time_weaver_pinyin.rs"]
-mod pinyin;
 #[path = "time_weaver_options.rs"]
 mod options_model;
+#[path = "time_weaver_pinyin.rs"]
+mod pinyin;
 
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -20,7 +20,10 @@ fn random_session(question_count: usize) -> TimeWeaver {
     let mut bytes = [0u8; 8];
     if let Err(error) = getrandom::fill(&mut bytes) {
         log::warn!("Unable to obtain random seed for Time Weaver: {error}");
-        return TimeWeaver::with_seed_and_count(chrono::Utc::now().timestamp_millis() as u64, question_count);
+        return TimeWeaver::with_seed_and_count(
+            chrono::Utc::now().timestamp_millis() as u64,
+            question_count,
+        );
     }
     TimeWeaver::with_seed_and_count(u64::from_le_bytes(bytes), question_count)
 }
@@ -60,7 +63,10 @@ pub fn time_weaver_page() -> Html {
             let options = options.clone();
             let storage = environment.local_storage.clone();
             Callback::from(move |_: MouseEvent| {
-                let next = GameOptions { show_pinyin: !options.show_pinyin, ..*options };
+                let next = GameOptions {
+                    show_pinyin: !options.show_pinyin,
+                    ..*options
+                };
                 next.save(&storage);
                 options.set(next);
             })
@@ -69,7 +75,10 @@ pub fn time_weaver_page() -> Html {
             let options = options.clone();
             let storage = environment.local_storage.clone();
             Callback::from(move |_: MouseEvent| {
-                let next = GameOptions { audio_on_click: !options.audio_on_click, ..*options };
+                let next = GameOptions {
+                    audio_on_click: !options.audio_on_click,
+                    ..*options
+                };
                 next.save(&storage);
                 options.set(next);
             })
@@ -78,7 +87,10 @@ pub fn time_weaver_page() -> Html {
             let options = options.clone();
             let storage = environment.local_storage.clone();
             Callback::from(move |count: usize| {
-                let next = GameOptions { question_count: count, ..*options };
+                let next = GameOptions {
+                    question_count: count,
+                    ..*options
+                };
                 next.save(&storage);
                 options.set(next);
             })
@@ -87,7 +99,10 @@ pub fn time_weaver_page() -> Html {
             let options = options.clone();
             let storage = environment.local_storage.clone();
             Callback::from(move |size: TileSize| {
-                let next = GameOptions { tile_size: size, ..*options };
+                let next = GameOptions {
+                    tile_size: size,
+                    ..*options
+                };
                 next.save(&storage);
                 options.set(next);
             })

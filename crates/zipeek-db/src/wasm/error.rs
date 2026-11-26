@@ -27,6 +27,8 @@ pub enum DuckDbError {
 pub enum DbError {
     #[error(transparent)]
     DuckDb(#[from] DuckDbError),
+    #[error(transparent)]
+    Evidence(#[from] crate::EvidenceError),
     #[error("{operation}: {message}")]
     Operation {
         operation: &'static str,

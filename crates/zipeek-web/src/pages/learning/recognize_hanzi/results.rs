@@ -2,12 +2,11 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
 use crate::{
-    components::ListenButton,
-    components::providers::word_sets_provider::WordSetsCommand,
+    components::ListenButton, components::providers::word_sets_provider::WordSetsCommand,
     hooks::use_word_sets,
 };
 
-use super::{RecognitionHit, DictionaryMatch};
+use super::{DictionaryMatch, RecognitionHit};
 
 #[derive(Properties, PartialEq)]
 pub(super) struct RecognitionResultsProps {
@@ -33,7 +32,10 @@ struct CandidateProps {
 fn candidate_row(props: &CandidateProps) -> Html {
     let hit = &props.hit;
     let dictionary = hit.dictionary.as_ref();
-    let search = format!("#/browse?query={}", js_sys::encode_uri_component(&hit.candidate));
+    let search = format!(
+        "#/browse?query={}",
+        js_sys::encode_uri_component(&hit.candidate)
+    );
     let save = props.save_action.as_ref();
     html! {
         <article class="flex min-w-0 items-center gap-3 border-b border-line px-2 py-2 last:border-b-0" data-recognition-candidate="">
@@ -75,9 +77,18 @@ fn candidate_row(props: &CandidateProps) -> Html {
 #[function_component(RecognitionResults)]
 pub(super) fn recognition_results(props: &RecognitionResultsProps) -> Html {
     let sets = use_word_sets();
-    let selected_set = sets.state.target.as_ref().and_then(|target| {
-        sets.state.sets.as_ref().ok().and_then(|items| crate::services::word_sets::find(items, target))
-    }).cloned();
+    let selected_set = sets
+        .state
+        .target
+        .as_ref()
+        .and_then(|target| {
+            sets.state
+                .sets
+                .as_ref()
+                .ok()
+                .and_then(|items| crate::services::word_sets::find(items, target))
+        })
+        .cloned();
     let on_add_word = {
         let sets = sets.clone();
         Callback::from(move |id: i32| sets.execute.emit(WordSetsCommand::Toggle(id)))

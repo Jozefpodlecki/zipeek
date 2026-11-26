@@ -58,6 +58,14 @@ pub(crate) async fn generate(api_url: &str, prompt: &str) -> Result<String, Stri
             "failed" => {
                 return Err(job
                     .error
+                    .map(|reason| {
+                        reason
+                            .chars()
+                            .filter(|c| !c.is_control())
+                            .take(300)
+                            .collect::<String>()
+                    })
+                    .filter(|reason| !reason.trim().is_empty())
                     .unwrap_or_else(|| "Image generation failed".into()));
             }
             "queued" | "running" => (),

@@ -239,3 +239,13 @@ and recheck the complete copy, retain the previous directory and roll back faile
 publication. Refuse unsafe paths, symlinks, partial bundles and checksum mismatch.
 User approval covers this workflow's real bundle installation and focused smoke
 validation. Candidates/backups remain under target/db-workflow for review.
+
+## Tauri frontend/database separation (2026-11-26)
+
+Approved by the user in this session: separate desktop database/assets first. The Yew/WASM UI remains shared; a Tauri frontend must omit browser dictionary preloads, compressed dictionary downloads and DuckDB-WASM/Arrow vendor assets. Browser builds retain their existing engine and `/zipeek/` deployment behavior. Select the database backend once during startup and keep shared metadata, history-row contracts and pure evidence summaries independent of the WASM transport. Native resource staging must select the installed manifest's dictionary, validate bytes and SHA-256, and package a stable native resource without regeneration or dependency changes.
+
+This scope reuses the existing dictionary and Practice-history IPC handlers. Remaining personal storage and speech commands require separate scopes. No migration, data deletion or model integration is approved by this decision. Owners: [native database](../../architecture/modules/tauri-native-database.md) and [web assets](../../architecture/modules/web-assets.md).
+
+## Confirmed Settings reset (2026-11-26)
+
+The user explicitly approved **Settings > Reset app > Clear all data and start over** after reviewing the permanent data-deletion scope. Delete Zipeek-owned preferences, progress, Word Sets, exclusions, saved sessions and personal snapshots in browser/WebView storage and native Tauri learning history. Preserve dictionary/model files, exported backups and unrelated origin data. Require an explicit in-app confirmation, isolate cleanup from normal providers, block conflicting active app sessions, and return to fresh landing/onboarding only after complete success. Show partial failures with Retry. No dependency addition, migration or broader native storage adapter is approved by this change. Owner: [personal storage](../../dictionary-data/personal/personal-data-storage.md#confirmed-app-reset-2026-11-26).

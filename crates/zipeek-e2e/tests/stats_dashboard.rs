@@ -14,18 +14,77 @@ async fn stats_route_and_sections(ctx: ScenarioContext) -> HarnessResult<()> {
             .await?
             .contains("Learning evidence not connected")
     );
-    driver.query_single("[data-stats-preview-toggle]").await?.click().await?;
+    driver
+        .query_single("[data-stats-preview-toggle]")
+        .await?
+        .click()
+        .await?;
     driver.query_single("[data-stats-loading]").await?;
     driver.query_single("[data-stats-demo]").await?;
     driver.query_single("[data-stats-activity-chart]").await?;
-    driver.query_single("[data-stats-tab='hanzi']").await?.click().await?;
-    driver.query_single("[data-stats-vocabulary-explorer]").await?;
-    driver.query_single("[role='checkbox'][aria-label='Select visible vocabulary']").await?.click().await?;
-    driver.query_single("[data-stats-vocabulary-explorer] button[aria-label='Next vocabulary page']").await?.click().await?;
-    driver.query_single("[data-stats-vocabulary-explorer] button[aria-label='Previous vocabulary page']").await?.click().await?;
-    driver.query_single("[data-stats-vocabulary-explorer] button").await?;
-    for tab in ["overview", "hanzi", "grammar", "skills", "history", "insights", "settings"] {
-        driver.query_single(&format!("[data-stats-tab='{tab}']")).await?.click().await?;
+    driver
+        .query_single("[data-stats-tab='hanzi']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-stats-query-ready='words']")
+        .await?;
+    driver
+        .query_single("[role='checkbox'][aria-label='Select visible vocabulary']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single(
+            "[data-stats-selection-toolbar='words'] button[aria-label='Review selected words']",
+        )
+        .await?
+        .click()
+        .await?;
+    let selected_review = driver.query_single("[data-stats-selection-review]").await?;
+    let review_text = selected_review.text().await?;
+    zipeek_e2e::e2e_ensure!(review_text.contains("Selected learning material"));
+    zipeek_e2e::e2e_ensure!(!review_text.contains("preview-word-"));
+    driver
+        .query_single("[data-stats-selection-review] li:first-child button[aria-label^='Remove ']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-stats-selection-review] button[aria-label='Close selection review']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-stats-vocabulary-explorer] button[aria-label='Next vocabulary page']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-stats-query-ready='words']")
+        .await?;
+    driver
+        .query_single(
+            "[data-stats-vocabulary-explorer] button[aria-label='Previous vocabulary page']",
+        )
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-stats-query-ready='words']")
+        .await?;
+    driver
+        .query_single("[data-stats-vocabulary-explorer] button")
+        .await?;
+    for tab in [
+        "overview", "hanzi", "grammar", "skills", "history", "insights", "settings",
+    ] {
+        driver
+            .query_single(&format!("[data-stats-tab='{tab}']"))
+            .await?
+            .click()
+            .await?;
         let panel = driver.query_single("[data-stats-panel]").await?;
         zipeek_e2e::e2e_ensure_eq!(panel.attr("data-stats-panel").await?, Some(tab.to_owned()));
         zipeek_e2e::e2e_ensure!(!panel.text().await?.is_empty());
@@ -41,21 +100,184 @@ async fn stats_route_and_sections(ctx: ScenarioContext) -> HarnessResult<()> {
         };
         driver.query_single(loaded_selector).await?;
         if tab == "grammar" {
-            driver.query_single("[data-stats-grammar]").await?;
+            driver
+                .query_single("[data-stats-query-ready='grammar']")
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Collection']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] [role='listbox'] [role='option']")
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Collection']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Rows']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] [role='listbox'] [role='option']")
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Rows']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Card view']")
+                .await?
+                .click()
+                .await?;
+            driver.query_single("[data-stats-grammar-cards]").await?;
+            driver
+                .query_single("[data-stats-grammar-cards] button[title='Details']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar-inspector]")
+                .await?;
+            driver
+                .query_single(
+                    "[data-stats-grammar-inspector] button[aria-label='Close grammar details']",
+                )
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-grammar] button[aria-label='Table view']")
+                .await?
+                .click()
+                .await?;
+        }
+        if tab == "hanzi" {
+            driver
+                .query_single("[data-stats-query-ready='words']")
+                .await?;
         }
         if tab == "history" {
             driver.query_single("[data-stats-history]").await?;
-            driver.query_single("[data-stats-history-activity='province-quest']").await?;
-            driver.query_single("[data-stats-history] button[aria-label='Next history page']").await?.click().await?;
-            driver.query_single("[data-stats-history] button[aria-label='Previous history page']").await?.click().await?;
-            driver.query_single("[data-stats-history] input[aria-label='Search history']").await?;
-            driver.query_single("[data-stats-history] button[aria-pressed='true']").await?;
+            driver
+                .query_single("[data-stats-query-ready='history']")
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label='Table']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-history-view='table']")
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label^='2026-11-16:']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-query-ready='history']")
+                .await?;
+            driver
+                .query_single(
+                    "[data-stats-history] button[aria-label^='2026-11-16:'][aria-pressed='true']",
+                )
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label='Timeline']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-history-view='timeline']")
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label^='2026-11-16:']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-query-ready='history']")
+                .await?;
+            let search = driver
+                .query_single("[data-stats-history] input[aria-label='Search history']")
+                .await?;
+            search.send_keys("province-quest").await?;
+            driver
+                .query_single("[data-stats-history-activity='province-quest']")
+                .await?;
+            search.clear().await?;
+            driver
+                .query_single("[data-stats-query-ready='history']")
+                .await?;
+            search.send_keys("zzzz-no-matching-exercise").await?;
+            driver
+                .query_single("[data-stats-history] li[role='status']")
+                .await?;
+            search.clear().await?;
+            driver
+                .query_single("[data-stats-query-ready='history']")
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label='Next history page']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-label='Previous history page']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-history] input[aria-label='Search history']")
+                .await?;
+            driver
+                .query_single("[data-stats-history] button[aria-pressed='true']")
+                .await?;
         }
         if tab == "settings" {
-            driver.query_single("[data-stats-settings] [role='switch']").await?;
+            let library = driver.query_single("[data-stats-tile-library]").await?;
+            zipeek_e2e::e2e_ensure!(!library.text().await?.is_empty());
+            driver
+                .query_single("[role='switch'][aria-label='Show Game sessions']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-tab='overview']")
+                .await?
+                .click()
+                .await?;
+            driver.query_single("[data-stats-extra-tiles]").await?;
+            driver
+                .query_single("[data-stats-tab='settings']")
+                .await?
+                .click()
+                .await?;
+            driver.query_single("[data-stats-settings] button").await?;
+            driver
+                .query_single("[data-stats-settings] button[aria-label='Move Game sessions up']")
+                .await?
+                .click()
+                .await?;
+            driver
+                .query_single("[data-stats-settings] button[aria-label='Move Game sessions down']")
+                .await?
+                .click()
+                .await?;
+            driver.query_single("[data-stats-settings] button").await?;
+            driver.query_single("[data-stats-settings] button").await?;
         }
     }
-    driver.query_single("[data-stats-preview-toggle]").await?.click().await?;
+    driver
+        .query_single("[data-stats-preview-toggle]")
+        .await?
+        .click()
+        .await?;
     driver
         .query_single("[data-stats-unavailable] a[href*='/settings']")
         .await?
@@ -77,7 +299,7 @@ async fn stats_route_and_sections(ctx: ScenarioContext) -> HarnessResult<()> {
         .click()
         .await?;
     let diagnostics = driver.query_single("[data-settings-learning]").await?;
-    zipeek_e2e::e2e_ensure!(diagnostics.text().await?.contains("Learning data"));
+    zipeek_e2e::e2e_ensure!(diagnostics.text().await?.contains("Learning"));
     driver
         .query_single("[data-learning-technical]")
         .await?

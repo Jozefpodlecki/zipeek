@@ -35,6 +35,15 @@ pub enum Command {
         command: HanziCommand,
     },
 
+    DesktopFrontend {
+        #[arg(long, conflicts_with = "release")]
+        serve: bool,
+        #[arg(long)]
+        release: bool,
+        #[arg(long, conflicts_with_all = ["serve", "release"])]
+        prepare_only: bool,
+    },
+
     DesktopSidecars {
         #[arg(long)]
         release: bool,
@@ -218,6 +227,12 @@ pub async fn run(args: Cli) -> Result<(), CliError> {
                 Ok(())
             }
         },
+        Command::DesktopFrontend {
+            serve,
+            release,
+            prepare_only,
+        } => desktop_frontend::run(&root, serve, release, prepare_only)
+            .map_err(|error| CliError::command("desktop-frontend", error)),
         Command::DesktopSidecars { release } => desktop_sidecars::stage(&root, release)
             .map_err(|error| CliError::command("desktop-sidecars", error.into())),
         Command::DbCompress => database::compress_latest(&root)

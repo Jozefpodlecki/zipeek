@@ -6,6 +6,15 @@ use crate::services::{
     word_sets::{self, UserWordSet},
 };
 
+pub(super) fn needs_local_tts(variants: &[ExerciseVariant]) -> bool {
+    variants.iter().any(|variant| {
+        matches!(
+            variant,
+            ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MatchingAudioMeaning
+        )
+    })
+}
+
 pub(super) struct StartEligibility {
     pub can_start: bool,
     pub message: &'static str,
@@ -68,6 +77,13 @@ pub(super) fn ai_model_configured() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_audio_matching_requires_local_tts() {
+        assert!(!needs_local_tts(&[ExerciseVariant::MatchingHanziMeaning]));
+        assert!(needs_local_tts(&[ExerciseVariant::MatchingAudioHanzi]));
+        assert!(needs_local_tts(&[ExerciseVariant::MatchingAudioMeaning]));
+    }
 
     #[test]
     fn existing_session_always_prevents_launch() {

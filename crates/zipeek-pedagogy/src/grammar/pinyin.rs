@@ -766,7 +766,10 @@ mod tests {
             let course = crate::grammar::course(region).expect("grammar course must exist");
             assert_eq!(GRAMMAR_PINYIN[region - 1].len(), course.points.len());
             for (point_index, pinyin) in GRAMMAR_PINYIN[region - 1].iter().enumerate() {
-                assert!(pinyin.is_some_and(|line| !line.trim().is_empty()), "missing pronunciation for {region}:{point_index}");
+                assert!(
+                    pinyin.is_some_and(|line| !line.trim().is_empty()),
+                    "missing pronunciation for {region}:{point_index}"
+                );
                 count += 1;
             }
         }

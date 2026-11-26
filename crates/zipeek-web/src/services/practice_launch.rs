@@ -34,6 +34,10 @@ pub(crate) fn create_session(
             "Configure an AI model in Settings before starting generated exercises".to_owned(),
         );
     }
+    if draft.has_exercise("matching") && exercise_options.matching_ai_generated
+        && super::ai::configuration().model.trim().is_empty() {
+        return Err("Configure an AI model in Settings before generating Matching questions".to_owned());
+    }
     let translation_only = draft.translation_session_only();
     let count = if translation_only {
         if draft.translation_count == 0 {
@@ -85,11 +89,18 @@ pub(crate) fn create_session(
     {
         *options = exercise_options.write_hanzi;
     }
-    if !exercise_options.sentence_transformation.valid() {
+    if session
+        .exercise_configurations
+        .contains_key("sentence-transformation")
+        && !exercise_options.sentence_transformation.valid()
+    {
         return Err("Select an available Sentence Transformation pattern".to_owned());
     }
-    if let Some(super::practice_session_store::ExerciseConfiguration::SentenceTransformation(options)) =
-        session.exercise_configurations.get_mut("sentence-transformation")
+    if let Some(super::practice_session_store::ExerciseConfiguration::SentenceTransformation(
+        options,
+    )) = session
+        .exercise_configurations
+        .get_mut("sentence-transformation")
     {
         *options = exercise_options.sentence_transformation;
     }
@@ -116,11 +127,22 @@ pub(crate) fn create_session(
                 == zipeek_exercises::practice_draft::MatchingColumnOrder::Reversed,
         )
         .map_err(|error| format!("Cannot prepare exercise formats: {error:?}"))?;
-    if let Some(super::practice_session_store::ExerciseConfiguration::Quiz { pair_count, .. }) =
+    if let Some(super::practice_session_store::ExerciseConfiguration::Quiz { pair_count, ai_generated, show_pinyin, .. }) =
         session.exercise_configurations.get_mut("matching")
     {
         *pair_count = exercise_options.matching_pairs;
+        *ai_generated = exercise_options.matching_ai_generated;
+        *show_pinyin = exercise_options.matching_show_pinyin;
     }
+    if exercise_options.matching_ai_generated {
+        for step in &mut session.steps {
+            if step.exercise_id == "matching" {
+                step.readiness = super::practice_session_store::ExerciseReadiness::NeedsGeneration;
+            }
+        }
+        session.queue_generation(2);
+    }
+    session.validate().map_err(|error| format!("Invalid prepared session: {error:?}"))?;
     super::practice_session_store::PracticeSessionStore::new(storage.clone())
         .create(&session)
         .map_err(|error| format!("Cannot save local session: {error:?}"))?;

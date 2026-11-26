@@ -24,6 +24,8 @@ struct MatchingColumnOrderProps {
 fn matching_column_order_settings(props: &MatchingColumnOrderProps) -> Html {
     let (standard_label, reversed_label) = match props.formats.as_slice() {
         [ExerciseVariant::MatchingHanziMeaning] => ("Hanzi / Meaning", "Meaning / Hanzi"),
+        [ExerciseVariant::MatchingAudioHanzi] => ("Audio / Hanzi", "Audio / Hanzi"),
+        [ExerciseVariant::MatchingAudioMeaning] => ("Audio / Meaning", "Audio / Meaning"),
         [ExerciseVariant::MatchingEnglishPinyin] => ("Meaning / Pinyin", "Pinyin / Meaning"),
         [ExerciseVariant::MatchingPinyinHanzi] => ("Pinyin / Hanzi", "Hanzi / Pinyin"),
         _ => ("Prompts / Answers", "Answers / Prompts"),
@@ -97,11 +99,13 @@ pub fn practice_format_settings(props: &PracticeFormatSettingsProps) -> Html {
                         })}
                     </div>
                 </div>
-                <MatchingColumnOrderSettings
-                    formats={props.draft.matching_formats.clone()}
-                    order={props.draft.matching_column_order}
-                    on_change={props.on_column_order.clone()}
-                />
+                {if props.draft.matching_formats.iter().any(|format| !matches!(format, ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MatchingAudioMeaning)) {
+                    html! { <MatchingColumnOrderSettings
+                        formats={props.draft.matching_formats.clone()}
+                        order={props.draft.matching_column_order}
+                        on_change={props.on_column_order.clone()}
+                    /> }
+                } else { Html::default() }}
             </>
         }
     };

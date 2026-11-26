@@ -25,9 +25,15 @@ fn meaning_score(meaning: &str, query: &str) -> i32 {
     let query = query.to_lowercase();
     if meaning.split('|').any(|sense| sense.trim() == query) {
         900
-    } else if meaning.split('|').any(|sense| sense.trim().starts_with(&query)) {
+    } else if meaning
+        .split('|')
+        .any(|sense| sense.trim().starts_with(&query))
+    {
         650
-    } else if meaning.split(|c: char| !c.is_alphanumeric()).any(|token| token == query) {
+    } else if meaning
+        .split(|c: char| !c.is_alphanumeric())
+        .any(|token| token == query)
+    {
         480
     } else if meaning.contains(&query) {
         200
@@ -58,7 +64,10 @@ pub(super) fn score(word: &Word, query: &str) -> i32 {
     } else if !folded.is_empty() && reading.contains(&folded) {
         350
     } else {
-        word.english.as_deref().map(|meaning| meaning_score(meaning, query)).unwrap_or(0)
+        word.english
+            .as_deref()
+            .map(|meaning| meaning_score(meaning, query))
+            .unwrap_or(0)
     }
 }
 
@@ -66,7 +75,12 @@ pub(super) fn rank(words: &mut [Word], query: &str) {
     words.sort_by(|left, right| {
         score(right, query)
             .cmp(&score(left, query))
-            .then_with(|| left.simplified.chars().count().cmp(&right.simplified.chars().count()))
+            .then_with(|| {
+                left.simplified
+                    .chars()
+                    .count()
+                    .cmp(&right.simplified.chars().count())
+            })
             .then_with(|| left.id.as_i32().cmp(&right.id.as_i32()))
     });
 }
@@ -86,6 +100,8 @@ mod tests {
     #[test]
     fn meaning_ranking_prioritizes_complete_senses() {
         assert!(meaning_score("water | river", "water") > meaning_score("underwater", "water"));
-        assert!(meaning_score("to make a sound", "make") > meaning_score("a handmade thing", "make"));
+        assert!(
+            meaning_score("to make a sound", "make") > meaning_score("a handmade thing", "make")
+        );
     }
 }

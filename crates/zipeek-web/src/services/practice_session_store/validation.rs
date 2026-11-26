@@ -16,6 +16,9 @@ impl PracticeSession {
             || self.created_at.timestamp() <= 0
             || self.started_at.is_some_and(|at| at < self.created_at)
             || self.completed_at.is_some_and(|at| at < self.created_at)
+            || self
+                .completed_at
+                .is_some_and(|at| self.started_at.is_none_or(|start| at < start))
             || !valid_translation_direction(self.translation_direction())
             || self.exercise_configurations.len()
                 != self
@@ -42,6 +45,8 @@ impl PracticeSession {
                                     formats,
                                     reverse_matching: _,
                                     pair_count,
+                                    ai_generated: _,
+                                    show_pinyin: _,
                                 },
                             ) => {
                                 !(2..=7).contains(pair_count)
@@ -59,9 +64,11 @@ impl PracticeSession {
                                     formats,
                                     reverse_matching,
                                     pair_count,
+                                    ai_generated,
+                                    show_pinyin: _,
                                 },
                             ) => {
-                                *reverse_matching
+                                *reverse_matching || *ai_generated
                                     || *pair_count != 4
                                     || formats.is_empty()
                                     || formats.iter().any(|format| {
@@ -118,6 +125,10 @@ impl PracticeSession {
             return Err(PracticeSessionError::InvalidStoredSession);
         }
         for (index, step) in self.steps.iter().enumerate() {
+            let needs_generation = zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                || (step.exercise_id == "matching"
+                    && matches!(self.exercise_configurations.get("matching"),
+                        Some(ExerciseConfiguration::Quiz { ai_generated: true, .. })));
             if step.id != format!("{}:{index}", self.id)
                 || step.configuration_id != step.exercise_id
                 || !self
@@ -129,6 +140,7 @@ impl PracticeSession {
                     && step.outcome.is_some())
                 || (step.finished_at.is_some() && step.outcome.is_none())
                 || step.started_at.is_some_and(|at| at < self.created_at)
+                || step.finished_at.is_some_and(|at| at < self.created_at)
                 || step
                     .finished_at
                     .is_some_and(|at| step.started_at.is_none_or(|start| at < start))
@@ -163,20 +175,20 @@ impl PracticeSession {
                     ExerciseReadiness::Queued | ExerciseReadiness::NeedsGeneration
                 ) && step.generated_instance.is_some())
                 || (matches!(&step.readiness, ExerciseReadiness::Failed(reason) if reason.trim().is_empty() || reason.len() > 512))
-                || (!zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                || (!needs_generation
                     && step.generation_attempt != 0)
                 || (step.generated_instance.is_some()
                     && !matches!(&step.readiness, ExerciseReadiness::Ready))
-                || (!zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                || (!needs_generation
                     && !zipeek_exercises::definition::supports_resumable_session_host(
                         &step.exercise_id,
                     )
                     && (!matches!(&step.readiness, ExerciseReadiness::Unavailable(_))
                         || step.generated_instance.is_some()))
-                || (zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                || (needs_generation
                     && matches!(&step.readiness, ExerciseReadiness::Ready)
                     && step.generated_instance.is_none())
-                || (!zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                || (!needs_generation
                     && zipeek_exercises::definition::supports_resumable_session_host(
                         &step.exercise_id,
                     )

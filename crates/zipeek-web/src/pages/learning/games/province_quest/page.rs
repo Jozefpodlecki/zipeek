@@ -11,8 +11,12 @@ use zipeek_exercises::province_quest::{
 };
 
 use super::{
-    choices::HanziChoices, data::load_map, map::{RegionMap, eligible_parent_regions}, prompt::ProvincePrompt,
-    review::ProvinceReview, setup::ProvinceSetup,
+    choices::HanziChoices,
+    data::load_map,
+    map::{RegionMap, eligible_parent_regions},
+    prompt::ProvincePrompt,
+    review::ProvinceReview,
+    setup::ProvinceSetup,
     state::{GameError, GamePhase, ProvinceQuestAction, ProvinceQuestState},
 };
 
@@ -30,7 +34,9 @@ pub fn province_quest_page() -> Html {
     let on_start = {
         let state = state.clone();
         Callback::from(move |_: MouseEvent| {
-            if matches!(&state.phase, GamePhase::Loading { .. }) { return; }
+            if matches!(&state.phase, GamePhase::Loading { .. }) {
+                return;
+            }
             let request = state.request_generation().wrapping_add(1);
             let difficulty = state.difficulty;
             let support = state.support;
@@ -38,18 +44,33 @@ pub fn province_quest_page() -> Html {
             let state = state.clone();
             spawn_local(async move {
                 let result = async {
-                    let loaded = load_map(difficulty == Difficulty::Hard).await
+                    let loaded = load_map(difficulty == Difficulty::Hard)
+                        .await
                         .map_err(GameError::Map)?;
                     let mut seed = [0u8; 8];
-                    getrandom::fill(&mut seed)
-                        .map_err(|failure| GameError::Seed(format!("Random seed unavailable: {failure}")))?;
-                    let questions = build_deck(&loaded, difficulty, u64::from_le_bytes(seed), ROUND_LIMIT)
-                        .map_err(|failure| GameError::Deck(format!("No usable map questions: {failure:?}")))?;
-                    Ok::<_, GameError>((Rc::new(loaded), Session::new(difficulty, support, questions)))
-                }.await;
+                    getrandom::fill(&mut seed).map_err(|failure| {
+                        GameError::Seed(format!("Random seed unavailable: {failure}"))
+                    })?;
+                    let questions =
+                        build_deck(&loaded, difficulty, u64::from_le_bytes(seed), ROUND_LIMIT)
+                            .map_err(|failure| {
+                                GameError::Deck(format!("No usable map questions: {failure:?}"))
+                            })?;
+                    Ok::<_, GameError>((
+                        Rc::new(loaded),
+                        Session::new(difficulty, support, questions),
+                    ))
+                }
+                .await;
                 match result {
-                    Ok((dataset, session)) => state.dispatch(ProvinceQuestAction::Loaded { request, dataset, session }),
-                    Err(error) => state.dispatch(ProvinceQuestAction::LoadFailed { request, error }),
+                    Ok((dataset, session)) => state.dispatch(ProvinceQuestAction::Loaded {
+                        request,
+                        dataset,
+                        session,
+                    }),
+                    Err(error) => {
+                        state.dispatch(ProvinceQuestAction::LoadFailed { request, error })
+                    }
                 }
             });
         })
@@ -60,19 +81,27 @@ pub fn province_quest_page() -> Html {
     };
     let on_answer = {
         let state = state.clone();
-        Callback::from(move |id| state.dispatch(ProvinceQuestAction::Session(Action::SelectMap(id))))
+        Callback::from(move |id| {
+            state.dispatch(ProvinceQuestAction::Session(Action::SelectMap(id)))
+        })
     };
     let on_hanzi = {
         let state = state.clone();
-        Callback::from(move |id| state.dispatch(ProvinceQuestAction::Session(Action::SelectHanzi(id))))
+        Callback::from(move |id| {
+            state.dispatch(ProvinceQuestAction::Session(Action::SelectHanzi(id)))
+        })
     };
     let on_reveal = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch(ProvinceQuestAction::Session(Action::RevealHint)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch(ProvinceQuestAction::Session(Action::RevealHint))
+        })
     };
     let on_continue = {
         let state = state.clone();
-        Callback::from(move |_: MouseEvent| state.dispatch(ProvinceQuestAction::Session(Action::Continue)))
+        Callback::from(move |_: MouseEvent| {
+            state.dispatch(ProvinceQuestAction::Session(Action::Continue))
+        })
     };
     let on_pick_parent = {
         let state = state.clone();
@@ -85,7 +114,9 @@ pub fn province_quest_page() -> Html {
         Callback::from(move |event: Event| {
             let input: web_sys::HtmlSelectElement = event.target_unchecked_into();
             let value = input.value();
-            state.dispatch(ProvinceQuestAction::SetActiveProvince((!value.is_empty()).then_some(value)));
+            state.dispatch(ProvinceQuestAction::SetActiveProvince(
+                (!value.is_empty()).then_some(value),
+            ));
         })
     };
     let empty_session = Session::new(state.difficulty, state.support, Vec::new());
@@ -95,7 +126,10 @@ pub fn province_quest_page() -> Html {
     };
     let playing = matches!(&state.phase, GamePhase::Playing { .. });
     let loading = matches!(&state.phase, GamePhase::Loading { .. });
-    let error = match &state.phase { GamePhase::Failed(error) => Some(error.to_string()), _ => None };
+    let error = match &state.phase {
+        GamePhase::Failed(error) => Some(error.to_string()),
+        _ => None,
+    };
     let question = game.current();
     let current_region = map.and_then(|dataset| {
         question.and_then(|question| {

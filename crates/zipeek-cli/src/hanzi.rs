@@ -371,14 +371,20 @@ mod tests {
 
     #[test]
     fn git_checkout_uses_repository_relative_path() {
-        let root = std::env::temp_dir().join(format!(
-            "zipeek-hanzi-git-path-test-{}",
-            std::process::id()
-        ));
+        let root =
+            std::env::temp_dir().join(format!("zipeek-hanzi-git-path-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("external")).unwrap();
         run_git(&root, &["init", "--bare", "upstream.git"]).unwrap();
-        run_git(&root, &["clone", "--quiet", "upstream.git", "external/hanzi-writer-data"])
+        run_git(
+            &root,
+            &[
+                "clone",
+                "--quiet",
+                "upstream.git",
+                "external/hanzi-writer-data",
+            ],
+        )
         .unwrap();
         run_git(
             &root,

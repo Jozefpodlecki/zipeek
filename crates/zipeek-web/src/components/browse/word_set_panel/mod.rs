@@ -5,8 +5,8 @@ use self::{backup::WordSetBackup, feedback::WordSetMessages, manager::WordSetMan
 use crate::hooks::use_word_sets;
 use crate::route::Route;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement};
-use yew_icons::{Icon, IconData};
 use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 use yew_router::prelude::use_navigator;
 
 use crate::{

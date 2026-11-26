@@ -24,8 +24,13 @@ impl std::fmt::Display for GameError {
 #[derive(Clone, Debug, PartialEq)]
 pub enum GamePhase {
     Setup,
-    Loading { request: u64 },
-    Playing { dataset: Rc<GeoDataset>, session: Session },
+    Loading {
+        request: u64,
+    },
+    Playing {
+        dataset: Rc<GeoDataset>,
+        session: Session,
+    },
     Failed(GameError),
 }
 
@@ -54,15 +59,24 @@ pub enum ProvinceQuestAction {
     SetDifficulty(Difficulty),
     SetSupport(LearningSupport),
     Start,
-    Loaded { request: u64, dataset: Rc<GeoDataset>, session: Session },
-    LoadFailed { request: u64, error: GameError },
+    Loaded {
+        request: u64,
+        dataset: Rc<GeoDataset>,
+        session: Session,
+    },
+    LoadFailed {
+        request: u64,
+        error: GameError,
+    },
     BackToSetup,
     SetActiveProvince(Option<String>),
     Session(SessionAction),
 }
 
 impl ProvinceQuestState {
-    pub fn request_generation(&self) -> u64 { self.next_request }
+    pub fn request_generation(&self) -> u64 {
+        self.next_request
+    }
 }
 
 impl Reducible for ProvinceQuestState {
@@ -71,24 +85,34 @@ impl Reducible for ProvinceQuestState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut state = (*self).clone();
         match action {
-            ProvinceQuestAction::SetDifficulty(value) if matches!(&state.phase, GamePhase::Setup | GamePhase::Failed(_)) => {
+            ProvinceQuestAction::SetDifficulty(value)
+                if matches!(&state.phase, GamePhase::Setup | GamePhase::Failed(_)) =>
+            {
                 state.difficulty = value;
             }
-            ProvinceQuestAction::SetSupport(value) if matches!(&state.phase, GamePhase::Setup | GamePhase::Failed(_)) => {
+            ProvinceQuestAction::SetSupport(value)
+                if matches!(&state.phase, GamePhase::Setup | GamePhase::Failed(_)) =>
+            {
                 state.support = value;
             }
             ProvinceQuestAction::Start if !matches!(&state.phase, GamePhase::Loading { .. }) => {
                 state.next_request = state.next_request.wrapping_add(1);
                 state.active_province = None;
-                state.phase = GamePhase::Loading { request: state.next_request };
+                state.phase = GamePhase::Loading {
+                    request: state.next_request,
+                };
             }
-            ProvinceQuestAction::Loaded { request, dataset, session }
-                if matches!(&state.phase, GamePhase::Loading { request: active } if *active == request) => {
+            ProvinceQuestAction::Loaded {
+                request,
+                dataset,
+                session,
+            } if matches!(&state.phase, GamePhase::Loading { request: active } if *active == request) =>
+            {
                 state.phase = GamePhase::Playing { dataset, session };
                 state.active_province = None;
             }
-            ProvinceQuestAction::LoadFailed { request, error }
-                if matches!(&state.phase, GamePhase::Loading { request: active } if *active == request) => {
+            ProvinceQuestAction::LoadFailed { request, error } if matches!(&state.phase, GamePhase::Loading { request: active } if *active == request) =>
+            {
                 state.phase = GamePhase::Failed(error);
             }
             ProvinceQuestAction::BackToSetup => {
@@ -96,7 +120,9 @@ impl Reducible for ProvinceQuestState {
                 state.phase = GamePhase::Setup;
                 state.active_province = None;
             }
-            ProvinceQuestAction::SetActiveProvince(value) if matches!(&state.phase, GamePhase::Playing { .. }) => {
+            ProvinceQuestAction::SetActiveProvince(value)
+                if matches!(&state.phase, GamePhase::Playing { .. }) =>
+            {
                 state.active_province = value;
             }
             ProvinceQuestAction::Session(action) => {
@@ -121,7 +147,10 @@ mod tests {
     #[test]
     fn stale_request_cannot_replace_newer_setup() {
         let state = Rc::new(ProvinceQuestState::default()).reduce(ProvinceQuestAction::Start);
-        let request = match &state.phase { GamePhase::Loading { request } => *request, _ => unreachable!() };
+        let request = match &state.phase {
+            GamePhase::Loading { request } => *request,
+            _ => unreachable!(),
+        };
         let state = state.reduce(ProvinceQuestAction::BackToSetup);
         let state = state.reduce(ProvinceQuestAction::LoadFailed {
             request,
@@ -133,8 +162,13 @@ mod tests {
     #[test]
     fn duplicate_start_does_not_advance_request_generation() {
         let state = Rc::new(ProvinceQuestState::default()).reduce(ProvinceQuestAction::Start);
-        let request = match &state.phase { GamePhase::Loading { request } => *request, _ => unreachable!() };
+        let request = match &state.phase {
+            GamePhase::Loading { request } => *request,
+            _ => unreachable!(),
+        };
         let state = state.reduce(ProvinceQuestAction::Start);
-        assert!(matches!(&state.phase, GamePhase::Loading { request: active } if *active == request));
+        assert!(
+            matches!(&state.phase, GamePhase::Loading { request: active } if *active == request)
+        );
     }
 }

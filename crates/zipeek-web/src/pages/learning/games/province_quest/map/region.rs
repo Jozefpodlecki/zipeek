@@ -120,18 +120,45 @@ mod tests {
 
     #[test]
     fn visual_state_preserves_priority_and_hint_visibility() {
-        assert_eq!(RegionVisualState::for_region(false, false, false, false), RegionVisualState::Default);
-        assert_eq!(RegionVisualState::for_region(false, true, true, false), RegionVisualState::Incorrect);
-        assert_eq!(RegionVisualState::for_region(true, true, true, false), RegionVisualState::Highlighted);
-        assert_eq!(RegionVisualState::for_region(true, false, true, true), RegionVisualState::Correct);
-        assert_eq!(RegionVisualState::for_region(true, false, false, false), RegionVisualState::Correct);
+        assert_eq!(
+            RegionVisualState::for_region(false, false, false, false),
+            RegionVisualState::Default
+        );
+        assert_eq!(
+            RegionVisualState::for_region(false, true, true, false),
+            RegionVisualState::Incorrect
+        );
+        assert_eq!(
+            RegionVisualState::for_region(true, true, true, false),
+            RegionVisualState::Highlighted
+        );
+        assert_eq!(
+            RegionVisualState::for_region(true, false, true, true),
+            RegionVisualState::Correct
+        );
+        assert_eq!(
+            RegionVisualState::for_region(true, false, false, false),
+            RegionVisualState::Correct
+        );
     }
 
     #[test]
     fn visual_states_use_theme_tokens() {
-        assert_eq!(RegionVisualState::Default.fill(), "var(--province-map-fill)");
-        assert_eq!(RegionVisualState::Highlighted.fill(), "var(--province-map-hint)");
-        assert_eq!(RegionVisualState::Correct.fill(), "var(--province-map-correct)");
-        assert_eq!(RegionVisualState::Incorrect.fill(), "var(--province-map-wrong)");
+        assert_eq!(
+            RegionVisualState::Default.fill(),
+            "var(--province-map-fill)"
+        );
+        assert_eq!(
+            RegionVisualState::Highlighted.fill(),
+            "var(--province-map-hint)"
+        );
+        assert_eq!(
+            RegionVisualState::Correct.fill(),
+            "var(--province-map-correct)"
+        );
+        assert_eq!(
+            RegionVisualState::Incorrect.fill(),
+            "var(--province-map-wrong)"
+        );
     }
 }

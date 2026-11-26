@@ -1,11 +1,11 @@
-use yew::prelude::*;
-use super::state::RegionLoad;
+use super::WORD_SET_SIZE;
 use super::loading::{LoadingPhase, RegionLoading};
-use zipeek_pedagogy::curriculum::VOCABULARY_REGIONS as COURSES;
+use super::state::RegionLoad;
 use crate::hooks::use_word_sets;
 use crate::reducers::word_sets::WordSetsFeedback;
-use crate::services::word_sets::{acquired_source, CourseWordSetSource};
-use super::WORD_SET_SIZE;
+use crate::services::word_sets::{CourseWordSetSource, acquired_source};
+use yew::prelude::*;
+use zipeek_pedagogy::curriculum::VOCABULARY_REGIONS as COURSES;
 
 #[derive(Properties, PartialEq)]
 pub struct RegionDetailsProps {

@@ -6,7 +6,9 @@ use yew_icons::{Icon, IconData};
 use yew_router::prelude::*;
 use zipeek_docs::DocumentEntry;
 
-use super::super::model::{category, group_entries, matches_search, ordered_categories, topic, visible};
+use super::super::model::{
+    category, group_entries, matches_search, ordered_categories, topic, visible,
+};
 use super::super::navigation::{asset_url, doc_route};
 use crate::route::Route;
 
@@ -28,7 +30,7 @@ pub(in crate::pages::system::docs) fn docs_explorer(props: &ExplorerProps) -> Ht
     let filtered = props
         .entries
         .iter()
-.filter(|entry| visible(entry) && matches_search(entry, &search))
+        .filter(|entry| visible(entry) && matches_search(entry, &search))
         .count();
     let groups = group_entries(&props.entries, &search);
     let current = &props.current;

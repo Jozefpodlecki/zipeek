@@ -16,6 +16,8 @@ pub enum Route {
     Home,
     #[at("/sentences")]
     Sentences,
+    #[at("/record")]
+    Record,
     #[at("/random")]
     Random,
     #[at("/practice")]
@@ -96,9 +98,14 @@ pub fn switch(routes: Route) -> Html {
         Route::Home => html! { <Home /> },
         Route::Sentences => html! { <SentencesPage /> },
         Route::Random => html! { <Random /> },
+        Route::Record => html! { <RecordPage /> },
         Route::PracticeSetup => html! { <PracticeSetup /> },
-        Route::LocalPracticeSession { id } => html! { <LocalPracticeSession key={id.clone()} id={id.clone()} /> },
-        Route::RecognizeHanzi => html! { <WordSetsProvider><RecognizeHanziPage /></WordSetsProvider> },
+        Route::LocalPracticeSession { id } => {
+            html! { <LocalPracticeSession key={id.clone()} id={id.clone()} /> }
+        }
+        Route::RecognizeHanzi => {
+            html! { <WordSetsProvider><RecognizeHanziPage /></WordSetsProvider> }
+        }
         Route::WriteHanzi => html! { <WordSetsProvider>
             <WriteHanziPage />
         </WordSetsProvider> },
@@ -142,8 +149,12 @@ pub fn switch(routes: Route) -> Html {
         Route::VocabularyCourse => {
             html! { <WordSetsProvider><VocabularyCoursePage /></WordSetsProvider> }
         }
-        Route::GrammarLesson { slug } => html! { <AuthoredGrammarLessonPage key={slug.clone()} slug={slug.clone()} /> },
-        Route::GrammarExpanded { region } => html! { <GrammarExpandedLessonPage region={region} /> },
+        Route::GrammarLesson { slug } => {
+            html! { <AuthoredGrammarLessonPage key={slug.clone()} slug={slug.clone()} /> }
+        }
+        Route::GrammarExpanded { region } => {
+            html! { <GrammarExpandedLessonPage region={region} /> }
+        }
         Route::GrammarAssessment { course } => {
             html! { <GrammarAssessmentPage key={course.clone()} course={course.clone()} /> }
         }
@@ -189,6 +200,7 @@ impl Route {
             Self::Home => "Home",
             Self::Sentences => "Sentences",
             Self::Random => "Random",
+            Self::Record => "Record",
             Self::PracticeSetup => "Practice",
             Self::LocalPracticeSession { .. } => "Practice session",
             Self::Browse => "Browse",
@@ -199,7 +211,10 @@ impl Route {
             Self::VocabularyCourse => "Vocabulary courses",
             Self::PinyinCourse => "Pinyin & Pronunciation",
             Self::CourseLesson { .. } => "Pinyin lesson",
-            Self::GrammarLesson { slug } => crate::pages::courses::authored_grammar_title_for_slug(slug).unwrap_or("Grammar lesson"),
+            Self::GrammarLesson { slug } => {
+                crate::pages::courses::authored_grammar_title_for_slug(slug)
+                    .unwrap_or("Grammar lesson")
+            }
             Self::GrammarExpanded { .. } => "Grammar lesson",
             Self::GrammarAssessment { .. } => "Grammar assessment",
             Self::Settings => "Settings",

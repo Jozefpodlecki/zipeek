@@ -14,13 +14,24 @@ pub struct ViewBox {
 
 impl ViewBox {
     pub fn parse(input: &str) -> Option<Self> {
-        let values = input.split_whitespace().map(str::parse::<f64>)
-            .collect::<Result<Vec<_>, _>>().ok()?;
-        if values.len() != 4 || !values.iter().all(|number| number.is_finite())
-            || values[2] <= 0.0 || values[3] <= 0.0 {
+        let values = input
+            .split_whitespace()
+            .map(str::parse::<f64>)
+            .collect::<Result<Vec<_>, _>>()
+            .ok()?;
+        if values.len() != 4
+            || !values.iter().all(|number| number.is_finite())
+            || values[2] <= 0.0
+            || values[3] <= 0.0
+        {
             return None;
         }
-        Some(Self { x: values[0], y: values[1], width: values[2], height: values[3] })
+        Some(Self {
+            x: values[0],
+            y: values[1],
+            width: values[2],
+            height: values[3],
+        })
     }
 }
 
@@ -33,7 +44,11 @@ pub struct MapViewport {
 
 impl MapViewport {
     pub fn new(base: ViewBox) -> Self {
-        Self { base, zoom: 1.0, pan: MapPoint { x: 0.0, y: 0.0 } }
+        Self {
+            base,
+            zoom: 1.0,
+            pan: MapPoint { x: 0.0, y: 0.0 },
+        }
     }
 
     pub fn view_box(self) -> String {
@@ -47,7 +62,9 @@ impl MapViewport {
     }
 
     pub fn zoom_at(&mut self, multiplier: f64, cursor: MapPoint) {
-        if !multiplier.is_finite() || multiplier <= 0.0 { return; }
+        if !multiplier.is_finite() || multiplier <= 0.0 {
+            return;
+        }
         let previous = self.zoom;
         self.zoom = (self.zoom * multiplier).clamp(1.0, 5.0);
         let shift = 1.0 / previous - 1.0 / self.zoom;
@@ -59,7 +76,12 @@ impl MapViewport {
     pub fn pan_by(&mut self, pixels: MapPoint, rendered_width: f64, rendered_height: f64) {
         let visible_width = self.base.width / self.zoom;
         let visible_height = self.base.height / self.zoom;
-        let Some(scale) = rendered_scale(rendered_width, rendered_height, visible_width, visible_height) else {
+        let Some(scale) = rendered_scale(
+            rendered_width,
+            rendered_height,
+            visible_width,
+            visible_height,
+        ) else {
             return;
         };
         if !pixels.x.is_finite() || !pixels.y.is_finite() {
@@ -70,10 +92,20 @@ impl MapViewport {
         self.constrain();
     }
 
-    pub fn cursor_in_viewbox(self, cursor: MapPoint, rendered_width: f64, rendered_height: f64) -> Option<MapPoint> {
+    pub fn cursor_in_viewbox(
+        self,
+        cursor: MapPoint,
+        rendered_width: f64,
+        rendered_height: f64,
+    ) -> Option<MapPoint> {
         let visible_width = self.base.width / self.zoom;
         let visible_height = self.base.height / self.zoom;
-        let scale = rendered_scale(rendered_width, rendered_height, visible_width, visible_height)?;
+        let scale = rendered_scale(
+            rendered_width,
+            rendered_height,
+            visible_width,
+            visible_height,
+        )?;
         if !cursor.x.is_finite() || !cursor.y.is_finite() {
             return None;
         }
@@ -93,9 +125,15 @@ impl MapViewport {
     }
 }
 
-fn rendered_scale(container_width: f64, container_height: f64, map_width: f64, map_height: f64) -> Option<f64> {
+fn rendered_scale(
+    container_width: f64,
+    container_height: f64,
+    map_width: f64,
+    map_height: f64,
+) -> Option<f64> {
     if ![container_width, container_height, map_width, map_height]
-        .into_iter().all(|value| value.is_finite() && value > 0.0)
+        .into_iter()
+        .all(|value| value.is_finite() && value > 0.0)
     {
         return None;
     }
@@ -125,7 +163,12 @@ pub struct DragGesture {
 
 impl DragGesture {
     pub fn new(pointer_id: i32, point: MapPoint) -> Self {
-        Self { pointer_id, start: point, previous: point, moved: false }
+        Self {
+            pointer_id,
+            start: point,
+            previous: point,
+            moved: false,
+        }
     }
 
     pub fn advance(&mut self, point: MapPoint) -> MapPoint {
@@ -133,8 +176,15 @@ impl DragGesture {
         if (point.x - self.start.x).hypot(point.y - self.start.y) >= 5.0 {
             self.moved = true;
         }
-        let reference = if !was_moved && self.moved { self.start } else { self.previous };
-        let delta = MapPoint { x: point.x - reference.x, y: point.y - reference.y };
+        let reference = if !was_moved && self.moved {
+            self.start
+        } else {
+            self.previous
+        };
+        let delta = MapPoint {
+            x: point.x - reference.x,
+            y: point.y - reference.y,
+        };
         self.previous = point;
         delta
     }
@@ -149,7 +199,14 @@ mod tests {
         let mut viewport = MapViewport::new(ViewBox::parse("0 0 100 60").unwrap());
         viewport.zoom_at(2.0, MapPoint { x: 0.0, y: 0.0 });
         assert_eq!(viewport.view_box(), "25 15 50 30");
-        viewport.pan_by(MapPoint { x: 10000.0, y: 10000.0 }, 600.0, 400.0);
+        viewport.pan_by(
+            MapPoint {
+                x: 10000.0,
+                y: 10000.0,
+            },
+            600.0,
+            400.0,
+        );
         assert_eq!(viewport.view_box(), "0 0 50 30");
         viewport.zoom_at(0.1, MapPoint { x: 0.0, y: 0.0 });
         assert_eq!(viewport.view_box(), "0 0 100 60");
@@ -159,7 +216,10 @@ mod tests {
     fn drag_threshold_measures_total_distance() {
         let mut gesture = DragGesture::new(7, MapPoint { x: 0.0, y: 0.0 });
         for x in 1..=6 {
-            gesture.advance(MapPoint { x: f64::from(x), y: 0.0 });
+            gesture.advance(MapPoint {
+                x: f64::from(x),
+                y: 0.0,
+            });
         }
         assert!(gesture.moved);
     }
@@ -175,10 +235,14 @@ mod tests {
     #[test]
     fn cursor_accounts_for_svg_letterboxing() {
         let viewport = MapViewport::new(ViewBox::parse("0 0 100 50").unwrap());
-        let left = viewport.cursor_in_viewbox(MapPoint { x: 0.0, y: 100.0 }, 200.0, 200.0).unwrap();
+        let left = viewport
+            .cursor_in_viewbox(MapPoint { x: 0.0, y: 100.0 }, 200.0, 200.0)
+            .unwrap();
         assert_eq!(left.x, -0.5);
         assert_eq!(left.y, 0.0);
-        let top = viewport.cursor_in_viewbox(MapPoint { x: 100.0, y: 0.0 }, 200.0, 200.0).unwrap();
+        let top = viewport
+            .cursor_in_viewbox(MapPoint { x: 100.0, y: 0.0 }, 200.0, 200.0)
+            .unwrap();
         assert_eq!(top.x, 0.0);
         assert_eq!(top.y, -0.5);
     }
@@ -195,7 +259,10 @@ mod tests {
     fn crossing_drag_threshold_includes_prior_motion() {
         let mut gesture = DragGesture::new(4, MapPoint { x: 0.0, y: 0.0 });
         for x in 1..=4 {
-            gesture.advance(MapPoint { x: f64::from(x), y: 0.0 });
+            gesture.advance(MapPoint {
+                x: f64::from(x),
+                y: 0.0,
+            });
             assert!(!gesture.moved);
         }
         let delta = gesture.advance(MapPoint { x: 5.0, y: 0.0 });

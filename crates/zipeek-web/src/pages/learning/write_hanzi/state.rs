@@ -119,7 +119,12 @@ impl Reducible for WriteHanziState {
                 }
             }
             WriteHanziAction::SearchLoading => next.results = None,
-            WriteHanziAction::SearchLoaded { mode, selected_set, submitted, result } => {
+            WriteHanziAction::SearchLoaded {
+                mode,
+                selected_set,
+                submitted,
+                result,
+            } => {
                 if next.mode != mode
                     || next.selected_set != selected_set
                     || next.submitted != submitted
@@ -133,10 +138,16 @@ impl Reducible for WriteHanziState {
             WriteHanziAction::OpenSuggestions => next.suggestions_open = true,
             WriteHanziAction::CloseSuggestions => next.suggestions_open = false,
             WriteHanziAction::MoveHighlight(delta) => {
-                let length = next.results.as_ref().and_then(|result| result.as_ref().ok())
+                let length = next
+                    .results
+                    .as_ref()
+                    .and_then(|result| result.as_ref().ok())
                     .map(|words| {
                         if next.mode == VocabularyMode::Sets && !next.query.trim().is_empty() {
-                            words.iter().filter(|word| super::ranking::score(word, &next.query) > 0).count()
+                            words
+                                .iter()
+                                .filter(|word| super::ranking::score(word, &next.query) > 0)
+                                .count()
                         } else {
                             words.len()
                         }
@@ -144,8 +155,8 @@ impl Reducible for WriteHanziState {
                     .unwrap_or(0)
                     .min(next.visible_count);
                 if length > 0 {
-                    next.highlighted = (next.highlighted as i32 + delta)
-                        .rem_euclid(length as i32) as usize;
+                    next.highlighted =
+                        (next.highlighted as i32 + delta).rem_euclid(length as i32) as usize;
                     next.suggestions_open = true;
                 }
             }
@@ -164,7 +175,9 @@ impl Reducible for WriteHanziState {
                     }
                 }
             }
-            WriteHanziAction::DirectLoading => next.direct_status = "Loading selected word…".to_owned(),
+            WriteHanziAction::DirectLoading => {
+                next.direct_status = "Loading selected word…".to_owned()
+            }
             WriteHanziAction::DirectLoaded(result) => match result {
                 Ok(Some(word)) if !hanzi_characters(&word.simplified).is_empty() => {
                     next.chosen = Some(word);
@@ -172,8 +185,13 @@ impl Reducible for WriteHanziState {
                     next.suggestions_open = false;
                     next.direct_status.clear();
                 }
-                Ok(Some(_)) => next.direct_status = "The requested entry has no supported Hanzi characters.".to_owned(),
-                Ok(None) => next.direct_status = "The requested dictionary word was not found.".to_owned(),
+                Ok(Some(_)) => {
+                    next.direct_status =
+                        "The requested entry has no supported Hanzi characters.".to_owned()
+                }
+                Ok(None) => {
+                    next.direct_status = "The requested dictionary word was not found.".to_owned()
+                }
                 Err(error) => next.direct_status = format!("Could not load selected word: {error}"),
             },
         }
@@ -187,7 +205,10 @@ mod tests {
 
     #[test]
     fn typing_opens_suggestions_and_keeps_pending_query_distinct() {
-        let original = Rc::new(WriteHanziState { suggestions_open: false, ..Default::default() });
+        let original = Rc::new(WriteHanziState {
+            suggestions_open: false,
+            ..Default::default()
+        });
         let updated = original.reduce(WriteHanziAction::QueryChanged("water".into()));
         assert_eq!(updated.query, "water");
         assert_eq!(updated.submitted, "");
@@ -198,7 +219,9 @@ mod tests {
     #[test]
     fn changing_query_invalidates_visible_results_immediately() {
         let original = Rc::new(WriteHanziState {
-            query: "old".into(), submitted: "old".into(), results: Some(Ok(Vec::new())),
+            query: "old".into(),
+            submitted: "old".into(),
+            results: Some(Ok(Vec::new())),
             ..Default::default()
         });
         let changed = original.reduce(WriteHanziAction::QueryChanged("new".into()));
@@ -209,7 +232,10 @@ mod tests {
 
     #[test]
     fn switching_source_invalidates_results() {
-        let original = Rc::new(WriteHanziState { results: Some(Ok(Vec::new())), ..Default::default() });
+        let original = Rc::new(WriteHanziState {
+            results: Some(Ok(Vec::new())),
+            ..Default::default()
+        });
         let switched = original.reduce(WriteHanziAction::SwitchMode(VocabularyMode::Search));
         assert!(switched.suggestions_open);
         assert!(switched.results.is_none());
@@ -218,7 +244,9 @@ mod tests {
     #[test]
     fn stale_search_completion_is_ignored() {
         let state = Rc::new(WriteHanziState {
-            mode: VocabularyMode::Search, query: "new".into(), submitted: "old".into(),
+            mode: VocabularyMode::Search,
+            query: "new".into(),
+            submitted: "old".into(),
             ..Default::default()
         });
         let updated = state.reduce(WriteHanziAction::SearchLoaded {

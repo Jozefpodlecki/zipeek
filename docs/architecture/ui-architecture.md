@@ -28,3 +28,9 @@ Older checkpoint observations, including source descriptions of Tailwind, Gramma
 ## Statistics dashboard architecture
 
 The approved Statistics 2.0 UI uses a feature reducer and scoped context only for genuinely shared dashboard state. Heavy read-only projections are separate from UI selection state; typed IDs, stable paging, explicit provenance and Rust-owned Chart.js lifecycle are planned in the [Statistics architecture specification](modules/statistics-dashboard.md). This remains a design target, not the implemented R564 state-management structure.
+
+## Record feature ownership (R670 WIP)
+
+The Record reference and replay panels read `currentTime / duration` from the active local browser audio element to render a progressing PCM waveform and offer accessible seeking; the reference text highlights progressively by character index. This highlight approximates timing and does not represent forced speech alignment. Playback progress is transient component state, not the reducer or persistent learning data.
+
+The `/record` route is composed within `crates/zipeek-web/src/pages/record/`. `mod.rs` mounts the feature controller and typed child views. `state.rs` owns target and workflow transitions, with a `RecordingId` identifying the current captured utterance. `audio.rs` owns the transient microphone WAV and its PCM-derived waveform. `controller.rs` owns local TTS/STT callbacks, cancellation, stale-request invalidation and the audio resource lifecycle. Target selection, reference, microphone, waveform and transcription panels render from typed properties and emit callbacks; they do not independently own speech requests or WAV buffers. The recorded payload is never in a Yew render-state value, and no audio persists beyond the route lifecycle. This is an authored, not yet WASM/browser-verified source boundary.

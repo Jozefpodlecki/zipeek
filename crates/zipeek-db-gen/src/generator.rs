@@ -5,8 +5,8 @@ use thiserror::Error;
 use crate::{
     database::{DbError, GeneratorDatabase},
     import::{
-        HskImport, ImportError, apply_cedict_fallback, expand_with_cedict, insert_full_dictionary,
-        parse_hsk,
+        HskImport, ImportError, apply_cedict_fallback, expand_with_cedict, import_relationship_csv,
+        insert_full_dictionary, parse_hsk,
     },
     inputs::{InputError, VerifiedInputs, verify},
 };
@@ -77,5 +77,7 @@ pub fn import_primary(prepared: &PreparedGeneration) -> Result<HskImport, Genera
         &imported.senses,
         &imported.character_readings,
     )?;
+    tracing::info!("Importing word relationships from the bundled CSV");
+    import_relationship_csv(prepared.database.connection())?;
     Ok(imported)
 }

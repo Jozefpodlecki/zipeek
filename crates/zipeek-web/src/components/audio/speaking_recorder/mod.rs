@@ -201,7 +201,9 @@ pub fn speaking_recorder() -> Html {
         let transcribing = transcribing.clone();
         let transcription_epoch = transcription_epoch.clone();
         Callback::from(move |_: MouseEvent| {
-            if *transcribing || url.is_empty() || !local_speech::enabled() { return; }
+            if *transcribing || url.is_empty() || !local_speech::enabled() {
+                return;
+            }
             *transcription_epoch.borrow_mut() += 1;
             let revision = *transcription_epoch.borrow();
             let transcription_epoch = transcription_epoch.clone();
@@ -211,8 +213,14 @@ pub fn speaking_recorder() -> Html {
             transcribing.set(true);
             transcript.set(None);
             wasm_bindgen_futures::spawn_local(async move {
-                let result = local_speech::transcribe_recording(&url).await.map(|value| JsValue::from_str(&value))
-                    .and_then(|value| value.as_string().ok_or_else(|| JsValue::from_str("No transcript")))
+                let result = local_speech::transcribe_recording(&url)
+                    .await
+                    .map(|value| JsValue::from_str(&value))
+                    .and_then(|value| {
+                        value
+                            .as_string()
+                            .ok_or_else(|| JsValue::from_str("No transcript"))
+                    })
                     .map_err(|error| error.as_string().unwrap_or_else(|| format!("{error:?}")));
                 if *transcription_epoch.borrow() == revision {
                     transcript.set(Some(result));

@@ -5,11 +5,28 @@ use super::{
 use std::{
     collections::HashSet,
     fs::File,
-    io,
+    io::{self, Read},
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
 use zip::ZipArchive;
+
+const MAX_ARCHIVE_ENTRIES: usize = 40_000;
+const MAX_ENTRY_BYTES: u64 = 256 * 1024 * 1024;
+const MAX_ARCHIVE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+
+#[derive(Clone, Copy)]
+struct ArchiveLimits {
+    entries: usize,
+    entry_bytes: u64,
+    total_bytes: u64,
+}
+
+const SOURCE_LIMITS: ArchiveLimits = ArchiveLimits {
+    entries: MAX_ARCHIVE_ENTRIES,
+    entry_bytes: MAX_ENTRY_BYTES,
+    total_bytes: MAX_ARCHIVE_BYTES,
+};
 
 pub async fn unpack(root: &Path, archive: &Path) -> Result<()> {
     let target = root.join("target/zipeek-unpack");
@@ -34,18 +51,40 @@ pub async fn unpack(root: &Path, archive: &Path) -> Result<()> {
 }
 
 fn extract(archive: &Path, stage: &Path) -> Result<()> {
+    extract_with_limits(archive, stage, SOURCE_LIMITS)
+}
+
+fn extract_with_limits(archive: &Path, stage: &Path, limits: ArchiveLimits) -> Result<()> {
     let mut zip = ZipArchive::new(File::open(archive)?)?;
+    if zip.len() > limits.entries {
+        return Err("archive contains too many entries".into());
+    }
+    let mut total_bytes = 0_u64;
     let mut seen = HashSet::new();
+    let mut normalized_paths = HashSet::new();
     let mut created_directories = HashSet::new();
     for index in 0..zip.len() {
         let mut entry = zip.by_index(index)?;
         if entry.is_dir() {
             continue;
         }
+        if entry.size() > limits.entry_bytes {
+            return Err("archive entry exceeds the source extraction size limit".into());
+        }
+        total_bytes = total_bytes
+            .checked_add(entry.size())
+            .ok_or("archive extraction size overflow")?;
+        if total_bytes > limits.total_bytes {
+            return Err("archive exceeds the total source extraction size limit".into());
+        }
         let name = entry.name()?;
         let relative = safe_relative(name.as_ref())?;
         if !seen.insert(relative.clone()) {
             return Err("duplicate archive entry refused".into());
+        }
+        let normalized = relative.to_string_lossy().to_lowercase();
+        if !normalized_paths.insert(normalized) {
+            return Err("case-insensitive archive path collision refused".into());
         }
         if entry
             .unix_mode()
@@ -67,7 +106,12 @@ fn extract(archive: &Path, stage: &Path) -> Result<()> {
         if created_directories.insert(parent.to_owned()) {
             std::fs::create_dir_all(parent)?;
         }
-        io::copy(&mut entry, &mut File::create(path)?)?;
+        let expected_size = entry.size();
+        let mut destination = File::create(path)?;
+        let copied = io::copy(&mut entry.take(limits.entry_bytes + 1), &mut destination)?;
+        if copied > limits.entry_bytes || copied != expected_size {
+            return Err("archive entry expanded beyond its declared source size".into());
+        }
     }
     Ok(())
 }
@@ -226,6 +270,77 @@ async fn rollback(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn archive_limits_reject_excessive_entry_size_count_and_total() -> Result<()> {
+        use std::io::Write;
+        use zip::{ZipWriter, write::SimpleFileOptions};
+        let parent = std::env::temp_dir().join(format!(
+            "zipeek-archive-limit-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
+        ));
+        std::fs::create_dir_all(&parent)?;
+        let archive = parent.join("source.zip");
+        {
+            let mut writer = ZipWriter::new(File::create(&archive)?);
+            for name in ["first.txt", "second.txt"] {
+                writer.start_file(name, SimpleFileOptions::default())?;
+                writer.write_all(&[b'x'; 16])?;
+            }
+            writer.finish()?;
+        }
+        let stage = parent.join("stage");
+        let defaults = ArchiveLimits {
+            entries: 2,
+            entry_bytes: 16,
+            total_bytes: 32,
+        };
+        assert!(extract_with_limits(&archive, &stage, defaults).is_ok());
+        let too_many = ArchiveLimits {
+            entries: 1,
+            ..defaults
+        };
+        assert!(extract_with_limits(&archive, &stage, too_many).is_err());
+        let too_large = ArchiveLimits {
+            entry_bytes: 15,
+            ..defaults
+        };
+        assert!(extract_with_limits(&archive, &stage, too_large).is_err());
+        let too_much = ArchiveLimits {
+            total_bytes: 31,
+            ..defaults
+        };
+        assert!(extract_with_limits(&archive, &stage, too_much).is_err());
+        std::fs::remove_dir_all(&parent)?;
+        Ok(())
+    }
+
+    #[test]
+    fn archive_rejects_case_colliding_source_files() -> Result<()> {
+        use std::io::Write;
+        use zip::{ZipWriter, write::SimpleFileOptions};
+        let parent = std::env::temp_dir().join(format!(
+            "zipeek-case-collision-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
+        ));
+        std::fs::create_dir_all(&parent)?;
+        let archive = parent.join("source.zip");
+        {
+            let mut writer = ZipWriter::new(File::create(&archive)?);
+            for name in ["docs/Readme.md", "docs/README.md"] {
+                writer.start_file(name, SimpleFileOptions::default())?;
+                writer.write_all(b"fixture")?;
+            }
+            writer.finish()?;
+        }
+        let result = extract(&archive, &parent.join("stage"));
+        assert!(result.is_err());
+        std::fs::remove_dir_all(parent)?;
+        Ok(())
+    }
+
     #[test]
     fn generated_web_assets_are_not_restored() {
         assert!(protected_generated_asset(Path::new(
@@ -326,8 +441,16 @@ mod tests {
         )
         .await?;
         restore(&root, &stage, Path::new("fixture.zip")).await?;
-        assert!(!root.join("crates/zipeek-web/static/courses/old-unused-image.png").exists());
-        assert!(!root.join("crates/zipeek-web/static/practice/old-creature.webp").exists());
+        assert!(
+            !root
+                .join("crates/zipeek-web/static/courses/old-unused-image.png")
+                .exists()
+        );
+        assert!(
+            !root
+                .join("crates/zipeek-web/static/practice/old-creature.webp")
+                .exists()
+        );
         for file in [
             "index.html",
             "static/hanzi.manifest.json",

@@ -120,8 +120,8 @@ impl CaptureStats {
         capture_error: Option<&str>,
         encoder_error: Option<&str>,
     ) -> Value {
-        let recording_available = fs::metadata(video)
-            .is_ok_and(|metadata| metadata.is_file() && metadata.len() > 0);
+        let recording_available =
+            fs::metadata(video).is_ok_and(|metadata| metadata.is_file() && metadata.len() > 0);
 
         json!({
             "started_unix_ms": started_unix_ms,
@@ -141,9 +141,7 @@ impl CaptureStats {
 }
 
 fn is_jpeg(data: &[u8]) -> bool {
-    data.len() >= 4
-        && data.starts_with(&[0xff, 0xd8])
-        && data.ends_with(&[0xff, 0xd9])
+    data.len() >= 4 && data.starts_with(&[0xff, 0xd8]) && data.ends_with(&[0xff, 0xd9])
 }
 
 fn start_encoder(directory: &Path) -> HarnessResult<Child> {
@@ -402,10 +400,7 @@ async fn record_frames(
     {
         return Err(format!(
             "Strict E2E recording failed: {} (captured {}, dropped {}, truncated {})",
-            status["validation"]["detail"],
-            counters.captured,
-            counters.dropped,
-            counters.truncated
+            status["validation"]["detail"], counters.captured, counters.dropped, counters.truncated
         )
         .into());
     }
@@ -560,7 +555,10 @@ mod tests {
         let file = std::env::temp_dir().join(format!(
             "zipeek-missing-video-{}-{}.mp4",
             std::process::id(),
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         assert_eq!(validate_mp4(&file)["status"], "invalid");
     }

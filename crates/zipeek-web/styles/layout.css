@@ -8,15 +8,4 @@
 :root[data-layout-density="compact"] [data-component="main-content"] .gap-5 { gap: .7rem; }
 
 
-@media (min-width: 768px) {
-  [data-centered-route-title] { z-index: 1; }
-  [data-component="app-header"] > .flex:last-child { z-index: 2; }
-}
-[data-component="themes-page"] > header > div:first-child > h1,
-[data-component="practice-setup-page"] > div:first-child > h1,
-[data-component="courses-page"] > header > h1,
-[data-component="browse-page"] > header > h1,
-[data-component="word-sets-page"] > header > h1,
-[data-component="about-page"] > header > h1,
-[data-component="games-gallery"] > header > h1,
-[data-component="translate-sentence-page"] > header h1 { display: none; }
+

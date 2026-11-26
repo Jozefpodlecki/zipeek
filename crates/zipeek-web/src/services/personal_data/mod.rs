@@ -89,7 +89,7 @@ pub fn error_message(error: impl std::fmt::Display) -> String {
 }
 
 pub async fn probe_personal_duckdb(document: &Document) -> Result<String, String> {
-    if crate::services::tauri_database::available() {
+    if super::database::backend::selected()? == super::database::backend::DatabaseBackend::Native {
         let rows = crate::services::tauri_database::history_rows().await?;
         return Ok(format!(
             "Native DuckDB learning-history access succeeded ({} sessions)",

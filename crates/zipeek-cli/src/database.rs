@@ -65,7 +65,7 @@ fn checked_file(root: &Path, name: &str) -> Result<PathBuf> {
     Ok(cursor)
 }
 
-fn hash_file(path: &Path) -> Result<(u64, String)> {
+pub(super) fn hash_file(path: &Path) -> Result<(u64, String)> {
     let mut file = fs::File::open(path)?;
     let mut hasher = Sha256::new();
     let mut size = 0u64;
@@ -102,6 +102,57 @@ fn dictionary_name(path: &str) -> bool {
             .bytes()
             .enumerate()
             .all(|(i, byte)| i == 8 || byte.is_ascii_digit())
+}
+
+pub struct NativeDictionaryArtifact {
+    pub path: PathBuf,
+    pub size_bytes: u64,
+    pub sha256: String,
+}
+
+pub fn installed_native_dictionary(root: &Path) -> Result<NativeDictionaryArtifact> {
+    let bundle = root.join("crates/zipeek-web/static");
+    if fs::symlink_metadata(&bundle)?.file_type().is_symlink() || !bundle.is_dir() {
+        return Err("Invalid installed dictionary directory".into());
+    }
+    let report: Value = serde_json::from_reader(fs::File::open(checked_file(&bundle, MANIFEST)?)?)?;
+    if report["engine"] != "v2.0.0" || report["storage_compatibility"] != "v2.0.0" {
+        return Err("Native dictionary engine/storage compatibility mismatch".into());
+    }
+    let files = report["files"]
+        .as_array()
+        .ok_or("Missing dictionary files")?;
+    let databases: Vec<_> = files
+        .iter()
+        .filter(|entry| {
+            entry["path"]
+                .as_str()
+                .is_some_and(|name| name.ends_with(".duckdb"))
+        })
+        .collect();
+    if databases.len() != 1 {
+        return Err("Dictionary manifest must include exactly one native database".into());
+    }
+    let entry = databases[0];
+    let name = entry["path"]
+        .as_str()
+        .ok_or("Missing native dictionary path")?;
+    if !dictionary_name(name) {
+        return Err("Invalid native dictionary filename".into());
+    }
+    let path = checked_file(&bundle, name)?;
+    let (size, digest) = hash_file(&path)?;
+    if size == 0
+        || entry["size_bytes"].as_u64() != Some(size)
+        || entry["sha256"].as_str() != Some(&digest)
+    {
+        return Err("Native dictionary size/checksum mismatch".into());
+    }
+    Ok(NativeDictionaryArtifact {
+        path,
+        size_bytes: size,
+        sha256: digest,
+    })
 }
 
 fn validate(
@@ -284,16 +335,11 @@ fn update_html(html: &str, dictionary_asset: &str) -> Result<String> {
 }
 
 fn installed_database_name(name: &str) -> bool {
-    dictionary_name(name)
-        || name
-            .strip_suffix(".gz")
-            .is_some_and(dictionary_name)
+    dictionary_name(name) || name.strip_suffix(".gz").is_some_and(dictionary_name)
 }
 
 fn dictionary_bundle_name(name: &str) -> bool {
-    name == MANIFEST
-        || REQUIRED.contains(&name)
-        || installed_database_name(name)
+    name == MANIFEST || REQUIRED.contains(&name) || installed_database_name(name)
 }
 
 fn existing_file(path: &Path) -> Result<bool> {
@@ -332,10 +378,16 @@ fn install_dictionary_files(
         checked_file(stage, name)?;
         let relative = Path::new(name);
         let mut parent = dest.to_path_buf();
-        for component in relative.parent().into_iter().flat_map(|parent| parent.components()) {
+        for component in relative
+            .parent()
+            .into_iter()
+            .flat_map(|parent| parent.components())
+        {
             parent.push(component.as_os_str());
             if parent.is_symlink() || (parent.exists() && !parent.is_dir()) {
-                return Err(format!("Unsafe dictionary target parent: {}", parent.display()).into());
+                return Err(
+                    format!("Unsafe dictionary target parent: {}", parent.display()).into(),
+                );
             }
         }
         existing_file(&dest.join(relative))?;
@@ -480,7 +532,14 @@ pub fn install(root: &Path, require_enrichment: bool) -> Result<()> {
         }
     }
     installed_names.push(MANIFEST.to_owned());
-    install_dictionary_files(&stage, &dest, &backup, &html_path, &next_html, &installed_names)?;
+    install_dictionary_files(
+        &stage,
+        &dest,
+        &backup,
+        &html_path,
+        &next_html,
+        &installed_names,
+    )?;
     println!("Installed dictionary: {}", dest.join(&stamped).display());
     println!("HTML preload: {selected}");
     println!("Previous dictionary backup: {}", backup.display());
@@ -489,6 +548,38 @@ pub fn install(root: &Path, require_enrichment: bool) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn native_selection_uses_verified_manifest_without_a_browser_gzip() -> super::Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-native-dictionary-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let bundle = root.join("crates/zipeek-web/static");
+        std::fs::create_dir_all(&bundle)?;
+        let name = "hanzi-20261124-214934.duckdb";
+        let path = bundle.join(name);
+        std::fs::write(&path, b"test dictionary")?;
+        let (size, digest) = super::hash_file(&path)?;
+        let mut report = serde_json::json!({"engine":"v2.0.0","storage_compatibility":"v2.0.0","files":[{"path":name,"size_bytes":size,"sha256":digest}]});
+        let manifest = bundle.join("hanzi.manifest.json");
+        std::fs::write(&manifest, serde_json::to_vec(&report)?)?;
+        assert_eq!(super::installed_native_dictionary(&root)?.path, path);
+        std::fs::write(&path, b"tampered dictionary")?;
+        assert!(super::installed_native_dictionary(&root).is_err());
+        report["files"][0]["path"] = "../outside.duckdb".into();
+        std::fs::write(&manifest, serde_json::to_vec(&report)?)?;
+        assert!(super::installed_native_dictionary(&root).is_err());
+        let duplicate = report["files"][0].clone();
+        report["files"].as_array_mut().unwrap().push(duplicate);
+        std::fs::write(&manifest, serde_json::to_vec(&report)?)?;
+        assert!(super::installed_native_dictionary(&root).is_err());
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
     use super::*;
     #[test]
     fn preload_update_preserves_manifest_hint() {
@@ -510,8 +601,8 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root = std::env::temp_dir()
-            .join(format!("zipeek-db-install-{}-{unique}", std::process::id()));
+        let root =
+            std::env::temp_dir().join(format!("zipeek-db-install-{}-{unique}", std::process::id()));
         let stage = root.join("stage");
         let dest = root.join("static");
         let backup = root.join("backup");
@@ -567,8 +658,8 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root = std::env::temp_dir()
-            .join(format!("zipeek-db-reject-{}-{unique}", std::process::id()));
+        let root =
+            std::env::temp_dir().join(format!("zipeek-db-reject-{}-{unique}", std::process::id()));
         let stage = root.join("stage");
         let dest = root.join("static");
         fs::create_dir_all(stage.join("practice")).unwrap();

@@ -2,7 +2,8 @@ use std::collections::{BTreeMap, HashMap};
 use yew_router::prelude::Location;
 use zipeek_core::practice::{ExerciseVariant, NormalizedPracticeQuery};
 
-pub(crate) const EXERCISES: [ExerciseVariant; 6] = ExerciseVariant::CANONICAL;
+pub(crate) const EXERCISES: [ExerciseVariant; ExerciseVariant::CANONICAL.len()] =
+    ExerciseVariant::CANONICAL;
 
 pub(crate) fn canonical(types: &[ExerciseVariant]) -> Vec<ExerciseVariant> {
     EXERCISES

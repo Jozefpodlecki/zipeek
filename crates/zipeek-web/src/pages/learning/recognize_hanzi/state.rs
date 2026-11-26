@@ -12,7 +12,9 @@ pub(super) enum InputKind {
 }
 
 impl InputKind {
-    pub(super) fn from_browser(value: zipeek_browser::recognition_workspace::RecognitionInputKind) -> Self {
+    pub(super) fn from_browser(
+        value: zipeek_browser::recognition_workspace::RecognitionInputKind,
+    ) -> Self {
         use zipeek_browser::recognition_workspace::RecognitionInputKind as BrowserKind;
         match value {
             BrowserKind::Empty => Self::Empty,
@@ -51,11 +53,20 @@ impl Default for RecognitionState {
 }
 
 pub(super) enum RecognitionAction {
-    InputChanged { input: InputKind, can_undo: bool },
+    InputChanged {
+        input: InputKind,
+        can_undo: bool,
+    },
     InputFailed(String),
     Begin,
-    Completed { generation: u64, hits: Vec<RecognitionHit> },
-    Failed { generation: u64, reason: String },
+    Completed {
+        generation: u64,
+        hits: Vec<RecognitionHit>,
+    },
+    Failed {
+        generation: u64,
+        reason: String,
+    },
 }
 
 impl Reducible for RecognitionState {
@@ -77,21 +88,27 @@ impl Reducible for RecognitionState {
                 next.busy = false;
                 next.error = Some(reason);
                 next.results.clear();
-            },
+            }
             RecognitionAction::Begin => {
-                if next.busy || !next.input.has_input() { return self; }
+                if next.busy || !next.input.has_input() {
+                    return self;
+                }
                 next.generation = next.generation.wrapping_add(1);
                 next.busy = true;
                 next.error = None;
                 next.results.clear();
             }
             RecognitionAction::Completed { generation, hits } => {
-                if generation != next.generation || !next.busy { return self; }
+                if generation != next.generation || !next.busy {
+                    return self;
+                }
                 next.busy = false;
                 next.results = hits;
             }
             RecognitionAction::Failed { generation, reason } => {
-                if generation != next.generation || !next.busy { return self; }
+                if generation != next.generation || !next.busy {
+                    return self;
+                }
                 next.busy = false;
                 next.error = Some(format!("Recognition failed: {reason}"));
             }
@@ -106,11 +123,20 @@ mod tests {
     #[test]
     fn stale_results_cannot_replace_newer_input() {
         let state = Rc::new(RecognitionState::default());
-        let state = state.reduce(RecognitionAction::InputChanged { input: InputKind::Drawing, can_undo: true });
+        let state = state.reduce(RecognitionAction::InputChanged {
+            input: InputKind::Drawing,
+            can_undo: true,
+        });
         let state = state.reduce(RecognitionAction::Begin);
         let stale = state.generation;
-        let state = state.reduce(RecognitionAction::InputChanged { input: InputKind::Image, can_undo: false });
-        let state = state.reduce(RecognitionAction::Completed { generation: stale, hits: vec![] });
+        let state = state.reduce(RecognitionAction::InputChanged {
+            input: InputKind::Image,
+            can_undo: false,
+        });
+        let state = state.reduce(RecognitionAction::Completed {
+            generation: stale,
+            hits: vec![],
+        });
         assert_eq!(state.input, InputKind::Image);
         assert!(state.results.is_empty());
         assert!(!state.busy);
@@ -125,9 +151,17 @@ mod tests {
         });
         let state = state.reduce(RecognitionAction::Begin);
         let previous_generation = state.generation;
-        let state = state.reduce(RecognitionAction::InputFailed("Canvas rendering failed".to_owned()));
+        let state = state.reduce(RecognitionAction::InputFailed(
+            "Canvas rendering failed".to_owned(),
+        ));
         assert!(!state.busy);
-        assert!(state.error.as_deref().unwrap_or_default().contains("Canvas rendering"));
+        assert!(
+            state
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("Canvas rendering")
+        );
         assert_ne!(state.generation, previous_generation);
         let state = state.reduce(RecognitionAction::Completed {
             generation: previous_generation,
@@ -142,11 +176,23 @@ mod tests {
         let state = Rc::new(RecognitionState::default());
         let state = state.reduce(RecognitionAction::Begin);
         assert!(!state.busy);
-        let state = state.reduce(RecognitionAction::InputChanged { input: InputKind::Drawing, can_undo: true });
+        let state = state.reduce(RecognitionAction::InputChanged {
+            input: InputKind::Drawing,
+            can_undo: true,
+        });
         let state = state.reduce(RecognitionAction::Begin);
         assert!(state.busy);
-        let state = state.reduce(RecognitionAction::Failed { generation: state.generation, reason: "unavailable".to_owned() });
+        let state = state.reduce(RecognitionAction::Failed {
+            generation: state.generation,
+            reason: "unavailable".to_owned(),
+        });
         assert!(!state.busy);
-        assert!(state.error.as_deref().unwrap_or_default().contains("unavailable"));
+        assert!(
+            state
+                .error
+                .as_deref()
+                .unwrap_or_default()
+                .contains("unavailable")
+        );
     }
 }

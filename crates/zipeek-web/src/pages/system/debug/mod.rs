@@ -1,4 +1,5 @@
 mod database_diagnostics;
+mod opfs;
 mod sql;
 mod sql_examples;
 mod sql_terminal;
@@ -21,6 +22,7 @@ enum DebugTab {
     Overview,
     Database,
     Sql,
+    Opfs,
 }
 
 #[function_component(DebugPage)]
@@ -48,7 +50,7 @@ pub fn debug_page() -> Html {
     html! {
         <section
             data-component="debug-page"
-            class="mx-auto max-w-3xl space-y-5 rounded-xl border border-line bg-surface p-6"
+            class={classes!("mx-auto", "w-full", "max-w-5xl", "min-h-[48rem]", "space-y-5", "rounded-xl", "border", "border-line", "bg-surface", "p-6")}
         >
             <h2
                 class="flex items-center gap-2 text-2xl font-bold"
@@ -60,33 +62,29 @@ pub fn debug_page() -> Html {
                 />
                 {"Development diagnostics"}
             </h2>
-            <p
-                class="text-sm text-muted"
-            >
-                {"Only exposed by debug builds. No API keys or personal records are displayed. Dictionary SQL results are available only when explicitly queried."}
-            </p>
-            <nav aria-label="Debug sections" data-debug-tabs="" class="flex flex-wrap gap-2 border-b border-line pb-4">
+            <nav aria-label="Debug sections" role="tablist" data-debug-tabs="" class="flex flex-wrap gap-2 border-b border-line pb-4">
                 {for [
-                    (DebugTab::Overview, "Overview"),
-                    (DebugTab::Database, "DuckDB"),
-                    (DebugTab::Sql, "SQL terminal"),
-                ].into_iter().map(|(choice, label)| {
+                    (DebugTab::Overview, "Overview", IconData::LUCIDE_INFO),
+                    (DebugTab::Database, "DuckDB", IconData::LUCIDE_DATABASE),
+                    (DebugTab::Sql, "SQL terminal", IconData::LUCIDE_TERMINAL),
+                    (DebugTab::Opfs, "OPFS", IconData::LUCIDE_FOLDER),
+                ].into_iter().map(|(choice, label, icon)| {
                     let active = *tab == choice;
                     let tab = tab.clone();
                     let onclick = Callback::from(move |_: MouseEvent| tab.set(choice));
                     let tab_classes = classes!(
-                        "min-h-10",
-                        "rounded-lg",
-                        "border",
-                        "px-4",
-                        "text-sm",
-                        "font-semibold",
-                        "focus-visible:outline-2",
+                        "inline-flex", "items-center", "gap-2", "min-h-10", "rounded-lg", "border",
+                        "px-4", "text-sm", "font-semibold", "focus-visible:outline-2",
                         "focus-visible:outline-accent",
                         if active { "border-accent bg-accent-soft" } else { "border-line" },
                     );
                     html! {
-                        <button key={label} type="button" data-debug-tab={label} aria-pressed={active.to_string()} {onclick} class={tab_classes}>
+                        <button key={label} type="button" role="tab" data-debug-tab={label} aria-selected={active.to_string()} {onclick} class={tab_classes}>
+                            {if choice == DebugTab::Database {
+                                html! { <img src="public/duckdb.webp" alt="" width="20" height="20" class="size-5 object-contain" /> }
+                            } else {
+                                html! { <Icon data={icon} width="17" height="17" /> }
+                            }}
                             {label}
                         </button>
                     }
@@ -158,11 +156,7 @@ pub fn debug_page() -> Html {
             } } else { Html::default() }}
             {if *tab == DebugTab::Database { html! { <DatabaseDiagnostics /> } } else { Html::default() }}
             {if *tab == DebugTab::Sql { html! { <sql_terminal::SqlTerminal /> } } else { Html::default() }}
-            <p
-                class="text-xs text-muted"
-            >
-                {"AI requests can be inspected through Settings > AI Translation > Test connection. Diagnostic failures are reported without provider credentials."}
-            </p>
+            {if *tab == DebugTab::Opfs { html! { <opfs::OpfsInspector /> } } else { Html::default() }}
         </section>
     }
 }

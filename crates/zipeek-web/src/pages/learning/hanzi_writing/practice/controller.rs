@@ -1,6 +1,6 @@
+use crate::models::StrokeAssistance;
 use std::rc::Rc;
 use yew::Reducible;
-use crate::models::StrokeAssistance;
 use zipeek_hanzi_writing::{InkCapture, MatchConfig, Point, StrokeOutcome, StrokeRejection};
 
 use super::stroke_loading::StrokeStudy;
@@ -103,7 +103,9 @@ pub(super) enum WritingAction {
     Clear,
     ToggleGuide,
     ConfigureAssistance(StrokeAssistance),
-    AssistFinished { epoch: u64 },
+    AssistFinished {
+        epoch: u64,
+    },
     Replay,
     ReplayFinished {
         epoch: u64,
@@ -187,10 +189,14 @@ impl Reducible for WritingState {
                             StrokeOutcome::Accepted { .. } => {
                                 state.rejection_count = 0;
                                 AttemptFeedback::Accepted
-                            },
+                            }
                             StrokeOutcome::Rejected(reason) => {
                                 state.rejection_count = state.rejection_count.saturating_add(1);
-                                if state.assistance.threshold().is_some_and(|threshold| state.rejection_count >= threshold) {
+                                if state
+                                    .assistance
+                                    .threshold()
+                                    .is_some_and(|threshold| state.rejection_count >= threshold)
+                                {
                                     state.replay_counter = state.replay_counter.wrapping_add(1);
                                     state.assist_epoch = Some(state.replay_counter);
                                     state.assist_index = Some(study.session.completed());
@@ -199,7 +205,7 @@ impl Reducible for WritingState {
                                 } else {
                                     AttemptFeedback::Rejected(reason)
                                 }
-                            },
+                            }
                             StrokeOutcome::Complete => AttemptFeedback::Complete,
                         });
                 }
@@ -250,9 +256,12 @@ impl Reducible for WritingState {
                         });
                     }
                 }
-            },
+            }
             WritingAction::Replay => {
-                if !matches!(&state.study, Some(Ok(_))) || state.ink.is_drawing() || state.assist_epoch.is_some() {
+                if !matches!(&state.study, Some(Ok(_)))
+                    || state.ink.is_drawing()
+                    || state.assist_epoch.is_some()
+                {
                     return self;
                 }
                 state.replay_counter = state.replay_counter.wrapping_add(1);
@@ -271,7 +280,8 @@ impl Reducible for WritingState {
 
 impl WritingState {
     pub fn ready(&self) -> bool {
-        self.assist_epoch.is_none() && matches!(&self.study, Some(Ok(study)) if !study.session.is_complete())
+        self.assist_epoch.is_none()
+            && matches!(&self.study, Some(Ok(study)) if !study.session.is_complete())
     }
 }
 
@@ -492,16 +502,38 @@ mod tests {
     #[test]
     fn three_rejections_trigger_single_stroke_assistance_then_advance() {
         let study = StrokeStudy::parse(r#"{"strokes":["M 0 0","M 0 0"],"medians":[[[100,700],[800,700]],[[100,600],[800,600]]]}"#).unwrap();
-        let mut state = select(Rc::new(WritingState::default()), "人").reduce(WritingAction::Load {
-            character: "人".into(), result: Ok(study),
-        });
+        let mut state =
+            select(Rc::new(WritingState::default()), "人").reduce(WritingAction::Load {
+                character: "人".into(),
+                result: Ok(study),
+            });
         for attempt in 0..3 {
-            state = state.reduce(WritingAction::Begin { pointer: 7, point: Point::new(0.1, 0.1).unwrap() })
-                .reduce(WritingAction::Move { pointer: 7, point: Point::new(0.1, 0.9).unwrap() })
-                .reduce(WritingAction::Finish { pointer: 7, point: None });
+            state = state
+                .reduce(WritingAction::Begin {
+                    pointer: 7,
+                    point: Point::new(0.1, 0.1).unwrap(),
+                })
+                .reduce(WritingAction::Move {
+                    pointer: 7,
+                    point: Point::new(0.1, 0.9).unwrap(),
+                })
+                .reduce(WritingAction::Finish {
+                    pointer: 7,
+                    point: None,
+                });
             if attempt < 2 {
                 assert_eq!(state.assist_epoch, None);
-                assert_eq!(state.study.as_ref().unwrap().as_ref().unwrap().session.completed(), 0);
+                assert_eq!(
+                    state
+                        .study
+                        .as_ref()
+                        .unwrap()
+                        .as_ref()
+                        .unwrap()
+                        .session
+                        .completed(),
+                    0
+                );
             }
         }
         assert_eq!(state.feedback, Some(AttemptFeedback::Assisting));
@@ -516,45 +548,129 @@ mod tests {
         assert_eq!(state.rejection_count, 0);
         assert!(state.ready());
         let state = state.reduce(WritingAction::AssistFinished { epoch });
-        assert_eq!(state.study.as_ref().unwrap().as_ref().unwrap().session.completed(), 1);
+        assert_eq!(
+            state
+                .study
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .session
+                .completed(),
+            1
+        );
     }
 
     #[test]
     fn five_attempt_policy_waits_until_fifth_rejection() {
-        let study = StrokeStudy::parse(r#"{"strokes":["M 0 0"],"medians":[[[100,700],[800,700]]]}"#).unwrap();
-        let mut state = select(Rc::new(WritingState::default()), "人").reduce(WritingAction::Load {
-            character: "人".into(), result: Ok(study),
-        }).reduce(WritingAction::ConfigureAssistance(StrokeAssistance::AfterFive));
+        let study =
+            StrokeStudy::parse(r#"{"strokes":["M 0 0"],"medians":[[[100,700],[800,700]]]}"#)
+                .unwrap();
+        let mut state = select(Rc::new(WritingState::default()), "人")
+            .reduce(WritingAction::Load {
+                character: "人".into(),
+                result: Ok(study),
+            })
+            .reduce(WritingAction::ConfigureAssistance(
+                StrokeAssistance::AfterFive,
+            ));
         for index in 0..5 {
-            state = state.reduce(WritingAction::Begin { pointer: 2, point: Point::new(0.1, 0.1).unwrap() })
-                .reduce(WritingAction::Move { pointer: 2, point: Point::new(0.1, 0.9).unwrap() })
-                .reduce(WritingAction::Finish { pointer: 2, point: None });
+            state = state
+                .reduce(WritingAction::Begin {
+                    pointer: 2,
+                    point: Point::new(0.1, 0.1).unwrap(),
+                })
+                .reduce(WritingAction::Move {
+                    pointer: 2,
+                    point: Point::new(0.1, 0.9).unwrap(),
+                })
+                .reduce(WritingAction::Finish {
+                    pointer: 2,
+                    point: None,
+                });
             assert_eq!(state.assist_epoch.is_some(), index == 4);
         }
     }
 
     #[test]
     fn assist_can_be_cancelled_and_off_never_auto_advances() {
-        let study = StrokeStudy::parse(r#"{"strokes":["M 0 0"],"medians":[[[100,700],[800,700]]]}"#).unwrap();
-        let mut state = select(Rc::new(WritingState::default()), "人").reduce(WritingAction::Load {
-            character: "人".into(), result: Ok(study),
-        }).reduce(WritingAction::ConfigureAssistance(StrokeAssistance::Off));
+        let study =
+            StrokeStudy::parse(r#"{"strokes":["M 0 0"],"medians":[[[100,700],[800,700]]]}"#)
+                .unwrap();
+        let mut state = select(Rc::new(WritingState::default()), "人")
+            .reduce(WritingAction::Load {
+                character: "人".into(),
+                result: Ok(study),
+            })
+            .reduce(WritingAction::ConfigureAssistance(StrokeAssistance::Off));
         for _ in 0..5 {
-            state = state.reduce(WritingAction::Begin { pointer: 1, point: Point::new(0.1, 0.1).unwrap() })
-                .reduce(WritingAction::Move { pointer: 1, point: Point::new(0.1, 0.9).unwrap() })
-                .reduce(WritingAction::Finish { pointer: 1, point: None });
+            state = state
+                .reduce(WritingAction::Begin {
+                    pointer: 1,
+                    point: Point::new(0.1, 0.1).unwrap(),
+                })
+                .reduce(WritingAction::Move {
+                    pointer: 1,
+                    point: Point::new(0.1, 0.9).unwrap(),
+                })
+                .reduce(WritingAction::Finish {
+                    pointer: 1,
+                    point: None,
+                });
         }
         assert_eq!(state.assist_epoch, None);
-        assert_eq!(state.study.as_ref().unwrap().as_ref().unwrap().session.completed(), 0);
-        state = state.reduce(WritingAction::ConfigureAssistance(StrokeAssistance::AfterThree));
-        state = state.reduce(WritingAction::Begin { pointer: 1, point: Point::new(0.1, 0.1).unwrap() })
-            .reduce(WritingAction::Move { pointer: 1, point: Point::new(0.1, 0.9).unwrap() })
-            .reduce(WritingAction::Finish { pointer: 1, point: None });
+        assert_eq!(
+            state
+                .study
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .session
+                .completed(),
+            0
+        );
+        state = state.reduce(WritingAction::ConfigureAssistance(
+            StrokeAssistance::AfterThree,
+        ));
+        state = state
+            .reduce(WritingAction::Begin {
+                pointer: 1,
+                point: Point::new(0.1, 0.1).unwrap(),
+            })
+            .reduce(WritingAction::Move {
+                pointer: 1,
+                point: Point::new(0.1, 0.9).unwrap(),
+            })
+            .reduce(WritingAction::Finish {
+                pointer: 1,
+                point: None,
+            });
         let epoch = state.assist_epoch.unwrap();
         state = state.reduce(WritingAction::Clear);
         state = state.reduce(WritingAction::AssistFinished { epoch });
-        assert_eq!(state.study.as_ref().unwrap().as_ref().unwrap().session.completed(), 0);
-        assert_eq!(state.study.as_ref().unwrap().as_ref().unwrap().session.assisted_strokes(), 0);
+        assert_eq!(
+            state
+                .study
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .session
+                .completed(),
+            0
+        );
+        assert_eq!(
+            state
+                .study
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .session
+                .assisted_strokes(),
+            0
+        );
     }
 
     #[test]

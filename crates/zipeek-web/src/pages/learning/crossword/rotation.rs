@@ -45,18 +45,31 @@ impl CrosswordRotation {
             && self.games.len() <= MAX_GAMES
             && self.words.iter().all(|word| {
                 (2..=5).contains(&word.answer.chars().count())
-                    && word.answer.chars().all(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch))
+                    && word
+                        .answer
+                        .chars()
+                        .all(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch))
                     && word.last_used <= self.next_sequence
                     && word.times_used > 0
             })
-            && self.words.iter().map(|word| &word.answer).collect::<BTreeSet<_>>().len()
+            && self
+                .words
+                .iter()
+                .map(|word| &word.answer)
+                .collect::<BTreeSet<_>>()
+                .len()
                 == self.words.len()
             && self.games.iter().all(|game| {
                 game.session_id.len() == 36
                     && game.answers.len() <= 128
                     && game.answers.iter().all(|answer| answer.len() <= 20)
             })
-            && self.games.iter().map(|game| &game.session_id).collect::<BTreeSet<_>>().len()
+            && self
+                .games
+                .iter()
+                .map(|game| &game.session_id)
+                .collect::<BTreeSet<_>>()
+                .len()
                 == self.games.len()
     }
 
@@ -100,7 +113,10 @@ impl CrosswordRotation {
 
     fn record_answers(&mut self, session_id: &str, selected: Vec<String>) -> bool {
         if selected.is_empty()
-            || self.games.iter().any(|recent| recent.session_id == session_id)
+            || self
+                .games
+                .iter()
+                .any(|recent| recent.session_id == session_id)
         {
             return false;
         }
@@ -117,12 +133,16 @@ impl CrosswordRotation {
                 });
             }
         }
-        self.words.sort_by_key(|entry| std::cmp::Reverse(entry.last_used));
+        self.words
+            .sort_by_key(|entry| std::cmp::Reverse(entry.last_used));
         self.words.truncate(MAX_WORDS);
-        self.games.insert(0, RecentGame {
-            session_id: session_id.to_owned(),
-            answers: selected,
-        });
+        self.games.insert(
+            0,
+            RecentGame {
+                session_id: session_id.to_owned(),
+                answers: selected,
+            },
+        );
         self.games.truncate(MAX_GAMES);
         true
     }
@@ -134,17 +154,25 @@ mod tests {
 
     fn vocabulary() -> Vec<CrosswordWord> {
         [
-            ("学生", "student", "xué shēng"), ("生活", "life", "shēng huó"),
-            ("活动", "activity", "huó dòng"), ("动物", "animal", "dòng wù"),
-            ("物理", "physics", "wù lǐ"), ("理想", "ideal", "lǐ xiǎng"),
-            ("想法", "thought", "xiǎng fǎ"), ("老师", "teacher", "lǎo shī"),
-            ("老人", "elder", "lǎo rén"), ("人生", "life", "rén shēng"),
-            ("生日", "birthday", "shēng rì"), ("日记", "diary", "rì jì"),
+            ("学生", "student", "xué shēng"),
+            ("生活", "life", "shēng huó"),
+            ("活动", "activity", "huó dòng"),
+            ("动物", "animal", "dòng wù"),
+            ("物理", "physics", "wù lǐ"),
+            ("理想", "ideal", "lǐ xiǎng"),
+            ("想法", "thought", "xiǎng fǎ"),
+            ("老师", "teacher", "lǎo shī"),
+            ("老人", "elder", "lǎo rén"),
+            ("人生", "life", "rén shēng"),
+            ("生日", "birthday", "shēng rì"),
+            ("日记", "diary", "rì jì"),
             ("法师", "master", "fǎ shī"),
         ]
         .into_iter()
         .map(|(answer, english, pinyin)| CrosswordWord {
-            answer: answer.to_owned(), english: english.to_owned(), pinyin: pinyin.to_owned(),
+            answer: answer.to_owned(),
+            english: english.to_owned(),
+            pinyin: pinyin.to_owned(),
         })
         .collect()
     }
@@ -159,7 +187,10 @@ mod tests {
             history.record(&format!("game-{n}"), &game);
         }
         assert_eq!(history.games.len(), 10);
-        assert_eq!(history.words.iter().map(|entry| entry.times_used).max(), Some(21));
+        assert_eq!(
+            history.words.iter().map(|entry| entry.times_used).max(),
+            Some(21)
+        );
     }
 
     #[test]
@@ -175,8 +206,13 @@ mod tests {
         assert_eq!(history.words.len(), 100);
         let first = history.words.last().unwrap().answer.clone();
         let second = history.words[98].answer.clone();
-        assert!(history.record_answers("00000064-0000-4000-8000-000000000000", vec![first.clone()]));
-        assert!(history.record_answers("00000065-0000-4000-8000-000000000000", vec!["中文".to_owned()]));
+        assert!(
+            history.record_answers("00000064-0000-4000-8000-000000000000", vec![first.clone()])
+        );
+        assert!(history.record_answers(
+            "00000065-0000-4000-8000-000000000000",
+            vec!["中文".to_owned()]
+        ));
         assert_eq!(history.words.len(), 100);
         assert!(history.words.iter().any(|entry| entry.answer == first));
         assert!(!history.words.iter().any(|entry| entry.answer == second));
@@ -207,7 +243,11 @@ mod tests {
     #[test]
     fn rejects_oversized_or_duplicate_history() {
         let mut history = CrosswordRotation::default();
-        history.words.push(WordUsage { answer: "学生".to_owned(), last_used: 1, times_used: 1 });
+        history.words.push(WordUsage {
+            answer: "学生".to_owned(),
+            last_used: 1,
+            times_used: 1,
+        });
         history.next_sequence = 1;
         assert!(history.valid());
         history.words.push(history.words[0].clone());

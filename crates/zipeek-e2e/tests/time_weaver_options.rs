@@ -17,21 +17,67 @@ async fn setup_and_options(ctx: ScenarioContext) -> HarnessResult<()> {
     audio.click().await?;
     zipeek_e2e::e2e_ensure_eq!(pinyin.attr("aria-checked").await?.as_deref(), Some("false"));
     zipeek_e2e::e2e_ensure_eq!(audio.attr("aria-checked").await?.as_deref(), Some("true"));
-    let preview = driver.query_single("[data-time-weaver-preview]").await?.text().await?;
-    zipeek_e2e::e2e_ensure!(!preview.contains("xīng qī yī"), "Preview hides reading when pinyin is off");
-    driver.query_single("[data-time-weaver-count='10']").await?.click().await?;
-    driver.query_single("[data-time-weaver-size='compact']").await?.click().await?;
+    let preview = driver
+        .query_single("[data-time-weaver-preview]")
+        .await?
+        .text()
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        !preview.contains("xīng qī yī"),
+        "Preview hides reading when pinyin is off"
+    );
+    driver
+        .query_single("[data-time-weaver-count='10']")
+        .await?
+        .click()
+        .await?;
+    driver
+        .query_single("[data-time-weaver-size='compact']")
+        .await?
+        .click()
+        .await?;
     ctx.open_route("/games/time-weaver").await?;
-    zipeek_e2e::e2e_ensure_eq!(driver.query_single("[data-time-weaver-count='10']").await?.attr("aria-pressed").await?.as_deref(), Some("true"));
-    zipeek_e2e::e2e_ensure_eq!(driver.query_single("[data-time-weaver-size='compact']").await?.attr("aria-pressed").await?.as_deref(), Some("true"));
-    zipeek_e2e::e2e_ensure_eq!(driver.query_single("[data-time-weaver-pinyin-setting]").await?.attr("aria-checked").await?.as_deref(), Some("false"));
+    zipeek_e2e::e2e_ensure_eq!(
+        driver
+            .query_single("[data-time-weaver-count='10']")
+            .await?
+            .attr("aria-pressed")
+            .await?
+            .as_deref(),
+        Some("true")
+    );
+    zipeek_e2e::e2e_ensure_eq!(
+        driver
+            .query_single("[data-time-weaver-size='compact']")
+            .await?
+            .attr("aria-pressed")
+            .await?
+            .as_deref(),
+        Some("true")
+    );
+    zipeek_e2e::e2e_ensure_eq!(
+        driver
+            .query_single("[data-time-weaver-pinyin-setting]")
+            .await?
+            .attr("aria-checked")
+            .await?
+            .as_deref(),
+        Some("false")
+    );
     driver
         .query_single("[data-time-weaver-start]")
         .await?
         .click()
         .await?;
     driver.query_single("[data-time-weaver-game]").await?;
-    zipeek_e2e::e2e_ensure!(driver.query_single("[data-time-weaver-progress]").await?.text().await?.contains("of 10"));
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .query_single("[data-time-weaver-progress]")
+            .await?
+            .text()
+            .await?
+            .contains("of 10")
+    );
     zipeek_e2e::e2e_ensure!(
         driver
             .find_all_css("[data-time-weaver-question] button[lang='zh-Hans'] span[lang='en']")

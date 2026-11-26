@@ -20,7 +20,11 @@ pub struct GrammarLessonScaffoldProps {
 #[function_component(GrammarLessonScaffold)]
 pub fn grammar_lesson_scaffold(props: &GrammarLessonScaffoldProps) -> Html {
     let current = props.current.min(props.total_steps.saturating_sub(1));
-    let progress = if props.total_steps == 0 { 0 } else { (current + 1) * 100 / props.total_steps };
+    let progress = if props.total_steps == 0 {
+        0
+    } else {
+        (current + 1) * 100 / props.total_steps
+    };
     html! {
         <article data-grammar-expanded={props.expanded.then_some(props.course_id.clone())} data-grammar-lesson={(!props.expanded).then_some(props.course_id.clone())} data-grammar-step={props.current.to_string()} class="mx-auto flex w-full max-w-3xl flex-col gap-4 py-3">
             <nav class="flex items-center justify-between gap-3 text-sm">

@@ -1,5 +1,7 @@
 use yew::prelude::*;
-use zipeek_exercises::sentence_transformation::{AnswerMode, ITEMS, pattern_index_for_label, selected_pattern_for_query};
+use zipeek_exercises::sentence_transformation::{
+    AnswerMode, ITEMS, pattern_index_for_label, selected_pattern_for_query,
+};
 
 use crate::models::SentenceTransformationOptions;
 use crate::reducers::practice_setup_flow::PracticeSetupAction;
@@ -16,7 +18,8 @@ pub(super) fn transformation_settings(props: &TransformationSettingsProps) -> Ht
     let selected_label = if props.options.pattern_index == 0 {
         String::new()
     } else {
-        ITEMS.get(usize::from(props.options.pattern_index - 1))
+        ITEMS
+            .get(usize::from(props.options.pattern_index - 1))
             .map_or(String::new(), |item| item.target_structure.to_owned())
     };
     let on_search = {

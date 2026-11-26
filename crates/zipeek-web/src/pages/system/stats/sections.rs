@@ -15,12 +15,20 @@ pub(super) enum DashboardTab {
 }
 
 impl DashboardTab {
-    pub(super) const ALL: [Self; 7] = [Self::Overview, Self::Hanzi, Self::Grammar, Self::Skills, Self::History, Self::Insights, Self::Settings];
+    pub(super) const ALL: [Self; 7] = [
+        Self::Overview,
+        Self::Hanzi,
+        Self::Grammar,
+        Self::Skills,
+        Self::History,
+        Self::Insights,
+        Self::Settings,
+    ];
 
     pub(super) const fn label(self) -> &'static str {
         match self {
             Self::Overview => "Overview",
-            Self::Hanzi => "Hanzi & words",
+            Self::Hanzi => "Vocabulary",
             Self::Grammar => "Grammar",
             Self::Skills => "Skills",
             Self::History => "History",
@@ -91,15 +99,17 @@ pub(super) struct OverviewCardsProps {
 #[function_component(OverviewCards)]
 pub(super) fn overview_cards(props: &OverviewCardsProps) -> Html {
     let loaded = use_loaded_section();
-    let SectionPayload::Overview { words, .. } = loaded.as_ref() else { unreachable!("Overview projection expected") };
+    let SectionPayload::Overview { words, .. } = loaded.as_ref() else {
+        unreachable!("Overview projection expected")
+    };
     let encounters: u32 = words.iter().map(|row| row.encounters).sum();
     let sessions: u32 = words.iter().map(|row| row.sessions).sum();
     html! {
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-4" data-stats-overview-cards="">
-            if props.words { <Metric label="Words encountered" value={words.len().to_string()} explanation="Distinct sample vocabulary identities with recorded fictional activity." /> }
-            if props.encounters { <Metric label="Encounters" value={encounters.to_string()} explanation="Sample attempts across vocabulary identities; not a proficiency score." /> }
+            if props.words { <Metric label="Words encountered" value={words.len().to_string()} explanation="Distinct vocabulary words." /> }
+            if props.encounters { <Metric label="Encounters" value={encounters.to_string()} explanation="Vocabulary encounters." /> }
             if props.sessions { <Metric label="Vocabulary session appearances" value={sessions.to_string()} explanation="The sum of per-word session appearances. One session can contribute more than one appearance." /> }
-            if props.assessment { <Metric label="Skills tracked" value="5" explanation="Five illustrative observation categories, not a proficiency assessment." /> }
+            if props.assessment { <Metric label="Skills tracked" value="5" explanation="Activity categories available for exploration." /> }
         </div>
     }
 }
@@ -116,6 +126,9 @@ mod tests {
         }
         assert_eq!(DashboardTab::ALL.len(), 7);
         assert_eq!(DashboardTab::Grammar.key(), "grammar");
-        assert_eq!(DashboardTab::ALL.last().map(|tab| tab.key()), Some("settings"));
+        assert_eq!(
+            DashboardTab::ALL.last().map(|tab| tab.key()),
+            Some("settings")
+        );
     }
 }

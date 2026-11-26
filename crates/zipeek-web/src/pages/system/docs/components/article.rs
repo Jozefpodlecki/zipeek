@@ -5,7 +5,9 @@ use yew_router::prelude::*;
 use zipeek_docs::{DocumentEntry, document_headings, render_document};
 
 use super::super::hooks::{LoadState, use_document};
-use super::super::model::{DocumentToc, category, group_entries, ordered_categories, reading_neighbours, topic};
+use super::super::model::{
+    DocumentToc, category, group_entries, ordered_categories, reading_neighbours, topic,
+};
 use super::super::navigation::{asset_url, doc_route, scroll_to_heading};
 use crate::route::Route;
 

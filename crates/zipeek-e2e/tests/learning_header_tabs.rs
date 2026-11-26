@@ -8,29 +8,48 @@ const DRAGON: &str = "[data-learning-dragon]";
 const RECORDING_TOGGLE: &str = "[data-personal-learning-history-toggle]";
 const OTHER_TAB: &str = "[data-other-tab-warning]";
 
-async fn recording_dragon_follows_preference(ctx: ScenarioContext) -> HarnessResult<()> {
+async fn dragon_is_independent_of_recording_preference(ctx: ScenarioContext) -> HarnessResult<()> {
     let driver = &ctx.driver;
-    ctx.open_route("/settings?section=data").await?;
+    ctx.open_route("/settings?section=learning").await?;
     driver.query_single(RECORDING_TOGGLE).await?;
-    let checkbox = driver.find_css(RECORDING_TOGGLE).await?;
-    if checkbox.is_selected().await? {
-        checkbox.click().await?;
-    }
-    zipeek_e2e::e2e_ensure!(driver.find_all_css(DRAGON).await?.is_empty());
-    driver.find_css(RECORDING_TOGGLE).await?.click().await?;
+    zipeek_e2e::e2e_ensure_eq!(
+        driver.find_all_css(RECORDING_TOGGLE).await?.len(),
+        1,
+        "Learning must have exactly one recording preference control"
+    );
+    zipeek_e2e::e2e_ensure!(
+        driver
+            .find_all_css(
+                "[data-personal-history-count-refresh], [data-personal-history-summary-refresh]"
+            )
+            .await?
+            .is_empty(),
+        "Activity counts and summaries belong to Statistics rather than Settings"
+    );
     driver.query_single(DRAGON).await?;
+    let dragon = driver.find_css(DRAGON).await?;
+    zipeek_e2e::e2e_ensure_eq!(
+        dragon.attr("data-evidence-state").await?.as_deref(),
+        Some("unavailable")
+    );
+    let checkbox = driver.find_css(RECORDING_TOGGLE).await?;
+    checkbox.click().await?;
+    driver.query_single(DRAGON).await?;
+    zipeek_e2e::e2e_ensure_eq!(
+        driver
+            .find_css(DRAGON)
+            .await?
+            .attr("data-evidence-state")
+            .await?
+            .as_deref(),
+        Some("unavailable"),
+    );
     ctx.open_route("/practice").await?;
     driver.query_single(DRAGON).await?;
-    driver.query_single("[data-component='app-header']").await?;
-    driver
-        .query_single("[data-component='navigation-drawer']")
-        .await?;
     driver.refresh().await?;
     driver.query_single(DRAGON).await?;
-    ctx.open_route("/settings?section=data").await?;
-    driver.find_css(RECORDING_TOGGLE).await?.click().await?;
-    zipeek_e2e::e2e_ensure!(driver.find_all_css(DRAGON).await?.is_empty());
-    ctx.checkpoint("dragon-follows-learning-recording").await?;
+    ctx.checkpoint("dragon-unassessed-independent-of-recording")
+        .await?;
     Ok(())
 }
 
@@ -117,7 +136,10 @@ async fn second_tab_presence_is_detected(ctx: ScenarioContext) -> HarnessResult<
 async fn learning_header_and_browser_tabs() -> HarnessResult<()> {
     let mut harness = Harness::start(SuiteKind::Root).await?;
     harness
-        .run("learning_dragon_pref", recording_dragon_follows_preference)
+        .run(
+            "learning_dragon_unassessed",
+            dragon_is_independent_of_recording_preference,
+        )
         .await?;
     harness
         .run(

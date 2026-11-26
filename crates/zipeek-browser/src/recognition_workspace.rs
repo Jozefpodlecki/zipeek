@@ -6,8 +6,8 @@ use js_sys::Function;
 use wasm_bindgen::{JsCast, JsValue, closure::Closure, prelude::*};
 use wasm_bindgen_futures::{JsFuture, spawn_local};
 use web_sys::{
-    CanvasRenderingContext2d, ClipboardEvent, Event, EventTarget, File, HtmlCanvasElement,
-    Document, HtmlImageElement, HtmlInputElement, PointerEvent, Url, Window,
+    CanvasRenderingContext2d, ClipboardEvent, Document, Event, EventTarget, File,
+    HtmlCanvasElement, HtmlImageElement, HtmlInputElement, PointerEvent, Url, Window,
 };
 
 #[wasm_bindgen(inline_js = r#"
@@ -68,9 +68,17 @@ impl fmt::Display for RecognitionWorkspaceError {
             Self::ThemeUnavailable => write!(formatter, "Canvas theme is unavailable"),
             Self::DocumentRootUnavailable => write!(formatter, "Document root is unavailable"),
             Self::EmptyInput => write!(formatter, "Add a drawing or image first"),
-            Self::UnsupportedImage => write!(formatter, "Use a nonempty PNG, JPEG or WebP image smaller than 5 MB"),
-            Self::InvalidImageDimensions => write!(formatter, "Image dimensions must be between 1 and 4096 pixels"),
-            Self::BrowserApi { operation, message } => write!(formatter, "{operation} failed: {message}"),
+            Self::UnsupportedImage => write!(
+                formatter,
+                "Use a nonempty PNG, JPEG or WebP image smaller than 5 MB"
+            ),
+            Self::InvalidImageDimensions => write!(
+                formatter,
+                "Image dimensions must be between 1 and 4096 pixels"
+            ),
+            Self::BrowserApi { operation, message } => {
+                write!(formatter, "{operation} failed: {message}")
+            }
         }
     }
 }
@@ -141,7 +149,9 @@ impl Drawing {
             .map_err(|error| RecognitionWorkspaceError::browser("Get canvas context", error))?
             .ok_or(RecognitionWorkspaceError::CanvasContextUnavailable)?
             .dyn_into::<CanvasRenderingContext2d>()
-            .map_err(|error| RecognitionWorkspaceError::browser("Convert canvas context", error.into()))?;
+            .map_err(|error| {
+                RecognitionWorkspaceError::browser("Convert canvas context", error.into())
+            })?;
         let width = f64::from(self.canvas.width());
         let height = f64::from(self.canvas.height());
         let style = self
@@ -162,14 +172,17 @@ impl Drawing {
                 let scale = (width / image_width).min(height / image_height);
                 let scaled_width = image_width * scale;
                 let scaled_height = image_height * scale;
-                context.draw_image_with_html_image_element_and_dw_and_dh(
-                    image,
-                    (width - scaled_width) / 2.0,
-                    (height - scaled_height) / 2.0,
-                    scaled_width,
-                    scaled_height,
-                )
-                .map_err(|error| RecognitionWorkspaceError::browser("Draw uploaded image", error))?;
+                context
+                    .draw_image_with_html_image_element_and_dw_and_dh(
+                        image,
+                        (width - scaled_width) / 2.0,
+                        (height - scaled_height) / 2.0,
+                        scaled_width,
+                        scaled_height,
+                    )
+                    .map_err(|error| {
+                        RecognitionWorkspaceError::browser("Draw uploaded image", error)
+                    })?;
             }
         }
         let stroke_color = style
@@ -198,9 +211,14 @@ impl Drawing {
     fn point(&self, event: &PointerEvent) -> Option<CanvasPoint> {
         let rect = self.canvas.get_bounding_client_rect();
         crate::recognition_state::canvas_point(
-            f64::from(event.client_x()), f64::from(event.client_y()),
-            rect.left(), rect.top(), rect.width(), rect.height(),
-            f64::from(self.canvas.width()), f64::from(self.canvas.height()),
+            f64::from(event.client_x()),
+            f64::from(event.client_y()),
+            rect.left(),
+            rect.top(),
+            rect.width(),
+            rect.height(),
+            f64::from(self.canvas.width()),
+            f64::from(self.canvas.height()),
         )
     }
 }
@@ -213,10 +231,9 @@ struct Listener {
 
 impl Drop for Listener {
     fn drop(&mut self) {
-        let _ = self.target.remove_event_listener_with_callback(
-            self.name,
-            self.callback.as_ref().unchecked_ref(),
-        );
+        let _ = self
+            .target
+            .remove_event_listener_with_callback(self.name, self.callback.as_ref().unchecked_ref());
     }
 }
 
@@ -234,13 +251,21 @@ fn listen(
     action: impl FnMut(Event) + 'static,
 ) -> Result<(), RecognitionWorkspaceError> {
     let callback = Closure::wrap(Box::new(action) as Box<dyn FnMut(Event)>);
-    target.add_event_listener_with_callback(name, callback.as_ref().unchecked_ref())
+    target
+        .add_event_listener_with_callback(name, callback.as_ref().unchecked_ref())
         .map_err(|error| RecognitionWorkspaceError::browser("Register event listener", error))?;
-    listeners.push(Listener { target: target.clone(), name, callback });
+    listeners.push(Listener {
+        target: target.clone(),
+        name,
+        callback,
+    });
     Ok(())
 }
 
-async fn install_image(drawing: Rc<RefCell<Drawing>>, file: File) -> Result<(), RecognitionWorkspaceError> {
+async fn install_image(
+    drawing: Rc<RefCell<Drawing>>,
+    file: File,
+) -> Result<(), RecognitionWorkspaceError> {
     let kind = file.type_();
     if !file.size().is_finite()
         || !crate::recognition_state::allowed_image(&kind, file.size() as u64)
@@ -250,9 +275,12 @@ async fn install_image(drawing: Rc<RefCell<Drawing>>, file: File) -> Result<(), 
     {
         let current = drawing.borrow();
         if (current.image.is_some() || !current.strokes.is_empty())
-            && !current.window
+            && !current
+                .window
                 .confirm_with_message("Replace the current image and drawing?")
-                .map_err(|error| RecognitionWorkspaceError::browser("Confirm image replacement", error))?
+                .map_err(|error| {
+                    RecognitionWorkspaceError::browser("Confirm image replacement", error)
+                })?
         {
             return Ok(());
         }
@@ -265,20 +293,29 @@ async fn install_image(drawing: Rc<RefCell<Drawing>>, file: File) -> Result<(), 
     let url = Url::create_object_url_with_blob(&file)
         .map_err(|error| RecognitionWorkspaceError::browser("Create image URL", error))?;
     let decoded = async {
-        let image = drawing.borrow().document.create_element("img")
+        let image = drawing
+            .borrow()
+            .document
+            .create_element("img")
             .map_err(|error| RecognitionWorkspaceError::browser("Create image element", error))?
             .dyn_into::<HtmlImageElement>()
-            .map_err(|error| RecognitionWorkspaceError::browser("Convert image element", error.into()))?;
+            .map_err(|error| {
+                RecognitionWorkspaceError::browser("Convert image element", error.into())
+            })?;
         image.set_src(&url);
-        JsFuture::from(image.decode()).await
+        JsFuture::from(image.decode())
+            .await
             .map_err(|error| RecognitionWorkspaceError::browser("Decode image", error))?;
-        if image.natural_width() == 0 || image.natural_height() == 0
-            || image.natural_width() > 4096 || image.natural_height() > 4096
+        if image.natural_width() == 0
+            || image.natural_height() == 0
+            || image.natural_width() > 4096
+            || image.natural_height() > 4096
         {
             return Err(RecognitionWorkspaceError::InvalidImageDimensions);
         }
         Ok(image)
-    }.await;
+    }
+    .await;
     let _ = Url::revoke_object_url(&url);
     let image = decoded?;
     let mut state = drawing.borrow_mut();
@@ -297,8 +334,10 @@ fn spawn_upload(drawing: Rc<RefCell<Drawing>>, file: File) {
     spawn_local(async move {
         if let Err(error) = install_image(drawing.clone(), file).await {
             let state = drawing.borrow();
-            if state.active && (state.revision == started_revision
-                || state.revision == started_revision.wrapping_add(1)) {
+            if state.active
+                && (state.revision == started_revision
+                    || state.revision == started_revision.wrapping_add(1))
+            {
                 state.error(error);
             }
         }
@@ -314,9 +353,15 @@ impl RecognitionWorkspace {
         on_event: RecognitionWorkspaceCallback,
     ) -> Result<Self, RecognitionWorkspaceError> {
         let drawing = Rc::new(RefCell::new(Drawing {
-            canvas: canvas.clone(), window: window.clone(), document: document.clone(),
-            image: None, strokes: Vec::new(),
-            pointer: None, revision: 0, active: true, on_event,
+            canvas: canvas.clone(),
+            window: window.clone(),
+            document: document.clone(),
+            image: None,
+            strokes: Vec::new(),
+            pointer: None,
+            revision: 0,
+            active: true,
+            on_event,
         }));
         drawing.borrow().repaint()?;
         drawing.borrow().notify();
@@ -327,36 +372,54 @@ impl RecognitionWorkspace {
 
         let down_state = drawing.clone();
         listen(&mut listeners, &target, "pointerdown", move |event| {
-            let Some(pointer) = event.dyn_ref::<PointerEvent>() else { return };
-            if pointer.pointer_type() == "mouse" && pointer.button() != 0 { return; }
+            let Some(pointer) = event.dyn_ref::<PointerEvent>() else {
+                return;
+            };
+            if pointer.pointer_type() == "mouse" && pointer.button() != 0 {
+                return;
+            }
             let mut state = down_state.borrow_mut();
-            if state.pointer.is_some() { return; }
+            if state.pointer.is_some() {
+                return;
+            }
             if let Some(point) = state.point(pointer) {
                 state.pointer = Some(pointer.pointer_id());
                 state.revision = state.revision.wrapping_add(1);
                 state.strokes.push(vec![point]);
                 let _ = state.canvas.focus();
                 let _ = state.canvas.set_pointer_capture(pointer.pointer_id());
-                if let Err(error) = state.repaint() { state.error(error); }
+                if let Err(error) = state.repaint() {
+                    state.error(error);
+                }
                 state.notify();
             }
         })?;
 
         let move_state = drawing.clone();
         listen(&mut listeners, &target, "pointermove", move |event| {
-            let Some(pointer) = event.dyn_ref::<PointerEvent>() else { return };
+            let Some(pointer) = event.dyn_ref::<PointerEvent>() else {
+                return;
+            };
             let mut state = move_state.borrow_mut();
-            if state.pointer != Some(pointer.pointer_id()) { return; }
+            if state.pointer != Some(pointer.pointer_id()) {
+                return;
+            }
             if let Some(point) = state.point(pointer) {
-                if let Some(stroke) = state.strokes.last_mut() { stroke.push(point); }
-                if let Err(error) = state.repaint() { state.error(error); }
+                if let Some(stroke) = state.strokes.last_mut() {
+                    stroke.push(point);
+                }
+                if let Err(error) = state.repaint() {
+                    state.error(error);
+                }
             }
         })?;
 
         for name in ["pointerup", "pointercancel"] {
             let up_state = drawing.clone();
             listen(&mut listeners, &target, name, move |event| {
-                let Some(pointer) = event.dyn_ref::<PointerEvent>() else { return };
+                let Some(pointer) = event.dyn_ref::<PointerEvent>() else {
+                    return;
+                };
                 let mut state = up_state.borrow_mut();
                 if state.pointer == Some(pointer.pointer_id()) {
                     state.pointer = None;
@@ -369,19 +432,34 @@ impl RecognitionWorkspace {
         listen(&mut listeners, &input_target, "change", move |_| {
             let file = file_input.files().and_then(|files| files.item(0));
             file_input.set_value("");
-            if let Some(file) = file { spawn_upload(upload_state.clone(), file); }
+            if let Some(file) = file {
+                spawn_upload(upload_state.clone(), file);
+            }
         })?;
 
         let paste_state = drawing.clone();
         let paste_document = document.clone();
         listen(&mut listeners, &window_target, "paste", move |event| {
-            let Some(clipboard) = event.dyn_ref::<ClipboardEvent>() else { return };
-            let focused = paste_document.active_element()
-                .and_then(|element| element.closest("[data-component='recognize-hanzi-page']").ok().flatten())
+            let Some(clipboard) = event.dyn_ref::<ClipboardEvent>() else {
+                return;
+            };
+            let focused = paste_document
+                .active_element()
+                .and_then(|element| {
+                    element
+                        .closest("[data-component='recognize-hanzi-page']")
+                        .ok()
+                        .flatten()
+                })
                 .is_some();
-            if !focused { return; }
-            let Some(files) = clipboard.clipboard_data().and_then(|data| data.files()) else { return };
-            let file = (0..files.length()).filter_map(|index| files.item(index))
+            if !focused {
+                return;
+            }
+            let Some(files) = clipboard.clipboard_data().and_then(|data| data.files()) else {
+                return;
+            };
+            let file = (0..files.length())
+                .filter_map(|index| files.item(index))
                 .find(|file| file.type_().starts_with("image/"));
             if let Some(file) = file {
                 clipboard.prevent_default();
@@ -393,18 +471,23 @@ impl RecognitionWorkspace {
         let theme_callback = Closure::wrap(Box::new(move || {
             let state = theme_state.borrow();
             if state.active {
-                if let Err(error) = state.repaint() { state.error(error); }
+                if let Err(error) = state.repaint() {
+                    state.error(error);
+                }
             }
         }) as Box<dyn FnMut()>);
-        let root = document.document_element()
+        let root = document
+            .document_element()
             .ok_or(RecognitionWorkspaceError::DocumentRootUnavailable)?;
-        let theme_cleanup = observe_recognition_theme(
-            &root,
-            window,
-            theme_callback.as_ref().unchecked_ref(),
-        )
-        .map_err(|error| RecognitionWorkspaceError::browser("Observe theme", error))?;
-        Ok(Self { drawing, listeners, theme_callback, theme_cleanup })
+        let theme_cleanup =
+            observe_recognition_theme(&root, window, theme_callback.as_ref().unchecked_ref())
+                .map_err(|error| RecognitionWorkspaceError::browser("Observe theme", error))?;
+        Ok(Self {
+            drawing,
+            listeners,
+            theme_callback,
+            theme_cleanup,
+        })
     }
 
     pub fn capture(&self) -> Result<String, RecognitionWorkspaceError> {
@@ -412,7 +495,9 @@ impl RecognitionWorkspace {
         if state.image.is_none() && state.strokes.is_empty() {
             return Err(RecognitionWorkspaceError::EmptyInput);
         }
-        state.canvas.to_data_url_with_type("image/png")
+        state
+            .canvas
+            .to_data_url_with_type("image/png")
             .map_err(|error| RecognitionWorkspaceError::browser("Capture canvas image", error))
     }
 
@@ -421,7 +506,9 @@ impl RecognitionWorkspace {
         if !state.strokes.is_empty() {
             state.revision = state.revision.wrapping_add(1);
             state.strokes.pop();
-            if let Err(error) = state.repaint() { state.error(error); }
+            if let Err(error) = state.repaint() {
+                state.error(error);
+            }
             state.notify();
         }
     }
@@ -432,7 +519,9 @@ impl RecognitionWorkspace {
         state.pointer = None;
         state.strokes.clear();
         state.image = None;
-        if let Err(error) = state.repaint() { state.error(error); }
+        if let Err(error) = state.repaint() {
+            state.error(error);
+        }
         state.notify();
     }
 }

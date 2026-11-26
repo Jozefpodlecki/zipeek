@@ -4,6 +4,7 @@
 
 pub mod curriculum;
 pub mod grammar;
+pub mod knowledge;
 
 mod calendar;
 mod clock;

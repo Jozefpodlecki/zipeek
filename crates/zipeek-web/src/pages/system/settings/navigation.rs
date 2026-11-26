@@ -1,14 +1,24 @@
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
-pub(super) fn is_valid_section(section: &str) -> bool {
+pub(super) fn is_valid_section(section: &str, is_tauri: bool) -> bool {
+    if section == "services" {
+        return is_tauri;
+    }
     matches!(
         section,
-        "appearance" | "characters" | "ai" | "images" | "practice" | "learning" | "speech"
+        "appearance"
+            | "characters"
+            | "ai"
+            | "images"
+            | "practice"
+            | "learning"
+            | "speech"
+            | "reset"
     )
 }
 
-pub(super) fn view(active_tab: &str, select_tab: Callback<String>) -> Html {
+pub(super) fn view(active_tab: &str, select_tab: Callback<String>, is_tauri: bool) -> Html {
     let tabs = [
         ("appearance", "Appearance", IconData::LUCIDE_SUN),
         (
@@ -20,7 +30,9 @@ pub(super) fn view(active_tab: &str, select_tab: Callback<String>) -> Html {
         ("images", "Image Generation", IconData::LUCIDE_IMAGE),
         ("practice", "Practice", IconData::LUCIDE_VOLUME_2),
         ("speech", "Speech", IconData::LUCIDE_VOLUME_2),
-        ("learning", "Learning Data", IconData::LUCIDE_BOOKMARK),
+        ("learning", "Learning", IconData::LUCIDE_BOOKMARK),
+        ("reset", "Reset app", IconData::LUCIDE_TRASH_2),
+        ("services", "Services", IconData::LUCIDE_SERVER),
     ];
     html! {
         <nav
@@ -28,7 +40,7 @@ pub(super) fn view(active_tab: &str, select_tab: Callback<String>) -> Html {
             data-settings-tabs=""
             class="flex flex-wrap content-start gap-1 rounded-2xl border border-line bg-surface p-3 lg:flex-col"
         >
-            {for tabs.into_iter().map(|(name, label, icon)| {
+            {for tabs.into_iter().filter(|(name, _, _)| is_tauri || *name != "services").map(|(name, label, icon)| {
                 let select_tab = select_tab.clone();
                 let on_select_tab = Callback::from(move |_| select_tab.emit(name.to_owned()));
                 let element_classes_1 = classes!(
@@ -67,5 +79,18 @@ pub(super) fn view(active_tab: &str, select_tab: Callback<String>) -> Html {
                 }
             })}
         </nav>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_valid_section;
+
+    #[test]
+    fn services_section_is_desktop_only() {
+        assert!(is_valid_section("services", true));
+        assert!(!is_valid_section("services", false));
+        assert!(is_valid_section("speech", false));
+        assert!(!is_valid_section("unknown", true));
     }
 }

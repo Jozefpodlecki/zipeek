@@ -41,9 +41,11 @@ pub(super) fn replay_median_path(stroke: &Stroke) -> Option<String> {
 
 fn preview_endpoint(stroke: &Stroke, fraction: f64) -> Option<zipeek_hanzi_writing::Point> {
     let first = stroke.points.first()?;
-    let total = stroke.points.windows(2).map(|pair| {
-        (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y)
-    }).sum::<f64>();
+    let total = stroke
+        .points
+        .windows(2)
+        .map(|pair| (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y))
+        .sum::<f64>();
     if total <= f64::EPSILON {
         return None;
     }
@@ -58,7 +60,8 @@ fn preview_endpoint(stroke: &Stroke, fraction: f64) -> Option<zipeek_hanzi_writi
             return zipeek_hanzi_writing::Point::new(
                 pair[0].x + (pair[1].x - pair[0].x) * ratio,
                 pair[0].y + (pair[1].y - pair[0].y) * ratio,
-            ).ok();
+            )
+            .ok();
         }
         remaining -= distance;
     }
@@ -67,14 +70,20 @@ fn preview_endpoint(stroke: &Stroke, fraction: f64) -> Option<zipeek_hanzi_writi
 
 pub(super) fn partial_stroke_path(stroke: &Stroke, fraction: f64) -> Option<String> {
     let first = stroke.points.first()?;
-    let total = stroke.points.windows(2).map(|pair| {
-        (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y)
-    }).sum::<f64>();
+    let total = stroke
+        .points
+        .windows(2)
+        .map(|pair| (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y))
+        .sum::<f64>();
     if total <= f64::EPSILON {
         return None;
     }
     let mut remaining = total * fraction.clamp(0.0, 0.5);
-    let mut path = format!("M {:.2} {:.2}", first.x * VIEWBOX_SIDE, first.y * VIEWBOX_SIDE);
+    let mut path = format!(
+        "M {:.2} {:.2}",
+        first.x * VIEWBOX_SIDE,
+        first.y * VIEWBOX_SIDE
+    );
     for pair in stroke.points.windows(2) {
         let distance = (pair[1].x - pair[0].x).hypot(pair[1].y - pair[0].y);
         if distance <= f64::EPSILON {
@@ -83,7 +92,11 @@ pub(super) fn partial_stroke_path(stroke: &Stroke, fraction: f64) -> Option<Stri
         let ratio = (remaining / distance).min(1.0);
         let x = pair[0].x + (pair[1].x - pair[0].x) * ratio;
         let y = pair[0].y + (pair[1].y - pair[0].y) * ratio;
-        path.push_str(&format!(" L {:.2} {:.2}", x * VIEWBOX_SIDE, y * VIEWBOX_SIDE));
+        path.push_str(&format!(
+            " L {:.2} {:.2}",
+            x * VIEWBOX_SIDE,
+            y * VIEWBOX_SIDE
+        ));
         remaining -= distance * ratio;
         if remaining <= f64::EPSILON {
             break;
@@ -194,16 +207,23 @@ mod tests {
             Point::new(0.1, 0.2).unwrap(),
             Point::new(0.5, 0.2).unwrap(),
             Point::new(0.5, 0.6).unwrap(),
-        ]).unwrap();
-        assert_eq!(partial_stroke_path(&stroke, 0.25).as_deref(),
-            Some("M 102.40 204.80 L 307.20 204.80"));
-        assert_eq!(partial_stroke_path(&stroke, 0.5).as_deref(),
-            Some("M 102.40 204.80 L 512.00 204.80"));
+        ])
+        .unwrap();
+        assert_eq!(
+            partial_stroke_path(&stroke, 0.25).as_deref(),
+            Some("M 102.40 204.80 L 307.20 204.80")
+        );
+        assert_eq!(
+            partial_stroke_path(&stroke, 0.5).as_deref(),
+            Some("M 102.40 204.80 L 512.00 204.80")
+        );
     }
 
     #[test]
     fn preview_rejects_zero_length_reference() {
-        let stroke = Stroke { points: vec![Point::new(0.3, 0.3).unwrap()] };
+        let stroke = Stroke {
+            points: vec![Point::new(0.3, 0.3).unwrap()],
+        };
         assert_eq!(partial_stroke_path(&stroke, 0.25), None);
     }
 

@@ -1,4 +1,3 @@
-
 pub(crate) async fn complete(
     endpoint: &str,
     model: &str,
@@ -23,8 +22,8 @@ pub(crate) async fn complete_recognition(
     model: &str,
     messages: Vec<serde_json::Value>,
 ) -> Result<String, String> {
-    let client = zipeek_ai_client::AiClient::new(endpoint, model)
-        .map_err(|error| error.to_string())?;
+    let client =
+        zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
     client
         .complete_with_budget(messages, &api_key_for_request(), None, Some(1024), |_| {})
         .await
@@ -376,4 +375,11 @@ mod structured_fallback_tests {
         assert!(!structured_request_rejected("HTTP 429"));
         assert!(!structured_request_rejected("timed out"));
     }
+}
+
+
+pub(crate) async fn discover_models(url: &str) -> Result<Vec<String>, String> {
+    zipeek_ai_client::discover_models(url, &api_key_for_request())
+        .await
+        .map_err(|error| error.to_string())
 }

@@ -195,7 +195,9 @@ mod tests {
             "architecture/architecture.md",
             BASE,
         );
-        assert!(html.contains("href=\"#/docs/project-management~tasks.md?heading=e2e-evidence-verification\""));
+        assert!(html.contains(
+            "href=\"#/docs/project-management~tasks.md?heading=e2e-evidence-verification\""
+        ));
     }
 
     #[test]

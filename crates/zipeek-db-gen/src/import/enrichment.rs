@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
 
-use duckdb_neo::{Parameters, connection::Connection};
+use duckdb_neo::{Parameters, QueryParameter, connection::Connection};
 use sha2::{Digest, Sha256};
 use zipeek_core::Word;
 
-use super::storage::report_progress;
+use super::storage::{BULK_ROWS, bulk_sql, report_progress};
 use super::{CharacterReading, ImportError, SourceSense};
 
 fn insert_error(source: duckdb_neo::Error) -> ImportError {
@@ -25,27 +25,11 @@ pub(super) fn enrich_dictionary(
     senses: &[SourceSense],
     readings: &[CharacterReading],
 ) -> Result<(), ImportError> {
-    let character_insert = connection
-        .prepare(
-            "INSERT INTO characters (character, unicode_scalar) VALUES ($1, $2)",
-            true,
-        )
-        .map_err(insert_error)?;
-    let occurrence_insert = connection
-        .prepare(
-            "INSERT INTO word_characters (word_id, character_position, character) VALUES ($1, $2, $3)",
-            true,
-        )
-        .map_err(insert_error)?;
-    let candidate_insert = connection
-        .prepare(
-            "INSERT INTO vocabulary_identities (word_id, reading_key, candidate_key, identity_status) VALUES ($1, $2, $3, 'unresolved')",
-            true,
-        )
-        .map_err(insert_error)?;
+    let mut occurrences: Vec<(i32, i32, String)> = Vec::new();
+    let mut candidates: Vec<(i32, String, String)> = Vec::with_capacity(words.len());
     let mut characters = BTreeSet::new();
     let mut fingerprint = Sha256::new();
-    for (index, word) in words.iter().enumerate() {
+    for word in words {
         let word_id = word.id.as_i32();
         digest_field(&mut fingerprint, &word.simplified);
         digest_field(&mut fingerprint, &word.pinyin);
@@ -61,18 +45,9 @@ pub(super) fn enrich_dictionary(
         digest_field(&mut fingerprint, &format!("{:?}", word.frequency));
         for (index, character) in word.simplified.chars().enumerate() {
             let text = character.to_string();
-            let scalar = character as u32 as i32;
-            if characters.insert(character) {
-                character_insert
-                    .execute(Parameters::Positional(&[&text, &scalar]))
-                    .and_then(|mut result| result.drain())
-                    .map_err(insert_error)?;
-            }
+            characters.insert(character);
             let position = (index + 1) as i32;
-            occurrence_insert
-                .execute(Parameters::Positional(&[&word_id, &position, &text]))
-                .and_then(|mut result| result.drain())
-                .map_err(insert_error)?;
+            occurrences.push((word_id, position, text));
         }
         let reading = word.pinyin_numeric.as_deref().unwrap_or(&word.pinyin);
         let candidate_key = format!(
@@ -81,15 +56,67 @@ pub(super) fn enrich_dictionary(
             word.simplified,
             reading
         );
-        candidate_insert
-            .execute(Parameters::Positional(&[
-                &word_id,
-                &reading,
-                &candidate_key,
-            ]))
+        candidates.push((word_id, reading.to_owned(), candidate_key));
+    }
+    let chars: Vec<(String, i32)> = characters
+        .iter()
+        .map(|character| (character.to_string(), *character as u32 as i32))
+        .collect();
+    for chunk in chars.chunks(BULK_ROWS) {
+        let sql = bulk_sql(
+            "INSERT INTO characters (character, unicode_scalar)",
+            2,
+            chunk.len(),
+        );
+        let stmt = connection.prepare(&sql, true).map_err(insert_error)?;
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 2);
+        for row in chunk {
+            params.extend_from_slice(&[&row.0, &row.1]);
+        }
+        stmt.execute(Parameters::Positional(&params))
             .and_then(|mut result| result.drain())
             .map_err(insert_error)?;
-        report_progress("enrichment", index + 1, words.len());
+    }
+    for (index, chunk) in occurrences.chunks(BULK_ROWS).enumerate() {
+        let sql = bulk_sql(
+            "INSERT INTO word_characters (word_id, character_position, character)",
+            3,
+            chunk.len(),
+        );
+        let stmt = connection.prepare(&sql, true).map_err(insert_error)?;
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 3);
+        for row in chunk {
+            params.extend_from_slice(&[&row.0, &row.1, &row.2]);
+        }
+        stmt.execute(Parameters::Positional(&params))
+            .and_then(|mut result| result.drain())
+            .map_err(insert_error)?;
+        report_progress(
+            "character occurrences",
+            ((index + 1) * BULK_ROWS).min(occurrences.len()),
+            occurrences.len(),
+        );
+    }
+    for (index, chunk) in candidates.chunks(BULK_ROWS).enumerate() {
+        let sql = bulk_sql(
+            "INSERT INTO vocabulary_identities (word_id, reading_key, candidate_key, identity_status)",
+            4,
+            chunk.len(),
+        );
+        let status = "unresolved";
+        let stmt = connection.prepare(&sql, true).map_err(insert_error)?;
+        let mut params: Vec<&dyn QueryParameter> = Vec::with_capacity(chunk.len() * 4);
+        for row in chunk {
+            params.extend_from_slice(&[&row.0, &row.1, &row.2, &status]);
+        }
+        stmt.execute(Parameters::Positional(&params))
+            .and_then(|mut result| result.drain())
+            .map_err(insert_error)?;
+        report_progress(
+            "enrichment",
+            ((index + 1) * BULK_ROWS).min(candidates.len()),
+            candidates.len(),
+        );
     }
     for sense in senses {
         digest_field(&mut fingerprint, &sense.word_id.as_i32().to_string());
@@ -105,6 +132,26 @@ pub(super) fn enrich_dictionary(
         digest_field(&mut fingerprint, &reading.pinyin_numeric);
         digest_field(&mut fingerprint, &reading.source_line.to_string());
     }
+    connection
+        .execute(
+            "INSERT INTO pinyin_syllable_candidates (pinyin_numeric, attested_character_count) \
+         SELECT pinyin_numeric, COUNT(DISTINCT character) \
+         FROM character_readings WHERE trim(pinyin_numeric) <> '' GROUP BY pinyin_numeric",
+            Parameters::None,
+        )
+        .map_err(insert_error)?;
+    connection.execute(
+        "INSERT INTO character_gloss_candidates (character, source_word_id, sense_order, gloss) \
+         SELECT w.simplified, w.id, s.sense_order, s.gloss \
+         FROM words w JOIN word_senses s ON s.word_id = w.id \
+         JOIN characters c ON c.character = w.simplified \
+         WHERE length(w.simplified) = 1",
+        Parameters::None,
+    ).map_err(insert_error)?;
+    digest_field(
+        &mut fingerprint,
+        include_str!("../../data/relationships.csv"),
+    );
     let snapshot_fingerprint = hex::encode(fingerprint.finalize());
     let word_count = words.len() as i32;
     let sense_count = senses.len() as i32;

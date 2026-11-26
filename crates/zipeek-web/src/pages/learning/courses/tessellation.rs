@@ -40,7 +40,10 @@ pub(super) fn voronoi(sites: &[Point]) -> Vec<Vec<Point>> {
             let mut polygon = vec![
                 Point { x: 0.0, y: 0.0 },
                 Point { x: WIDTH, y: 0.0 },
-                Point { x: WIDTH, y: HEIGHT },
+                Point {
+                    x: WIDTH,
+                    y: HEIGHT,
+                },
                 Point { x: 0.0, y: HEIGHT },
             ];
             for (other_index, other) in sites.iter().enumerate() {
@@ -125,11 +128,12 @@ mod tests {
 
     #[test]
     fn clipping_covers_the_canvas() {
-        let polygons = voronoi(&[
-            Point { x: 150.0, y: 300.0 },
-            Point { x: 850.0, y: 300.0 },
-        ]);
+        let polygons = voronoi(&[Point { x: 150.0, y: 300.0 }, Point { x: 850.0, y: 300.0 }]);
         assert_eq!(polygons.len(), 2);
-        assert!(polygons.iter().all(|polygon| curved_path(polygon).contains(" Q ")));
+        assert!(
+            polygons
+                .iter()
+                .all(|polygon| curved_path(polygon).contains(" Q "))
+        );
     }
 }

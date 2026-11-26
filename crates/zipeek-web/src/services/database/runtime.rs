@@ -5,13 +5,8 @@ use zipeek_db::wasm::{BaseBundle, DuckDb};
 
 use super::DbError;
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
-pub struct DatabaseInfo {
-    pub engine: String,
-    pub native_engine: String,
-    pub storage_compatibility: String,
-    pub row_count: u32,
-}
+use super::backend::{self, DatabaseBackend};
+pub use zipeek_db::contracts::DatabaseInfo;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct StorageStatistics {
@@ -47,8 +42,12 @@ enum DatabaseHandle {
 }
 
 impl Database {
-    pub async fn open(document: &Document, is_tauri: bool) -> Result<Self, DbError> {
-        if is_tauri {
+    pub async fn open(document: &Document) -> Result<Self, DbError> {
+        if backend::selected().map_err(|message| DbError::Operation {
+            operation: "Selecting dictionary backend",
+            message,
+        })? == DatabaseBackend::Native
+        {
             let info = tauri_database::open()
                 .await
                 .map_err(|message| DbError::Operation {
@@ -159,6 +158,7 @@ fn adapt_error(error: zipeek_db::wasm::DbError) -> DbError {
             DbError::Operation { operation, message }
         }
         zipeek_db::wasm::DbError::Decode(message) => DbError::Decode(message),
+        zipeek_db::wasm::DbError::Evidence(error) => DbError::Decode(error.to_string()),
         zipeek_db::wasm::DbError::DuckDb(error) => DbError::Operation {
             operation: "DuckDB operation",
             message: error.to_string(),

@@ -3,10 +3,7 @@ mod exercise_tile;
 use crate::reducers::practice_setup_flow::QUICK_EXERCISES;
 use yew::prelude::*;
 use yew_icons::IconData;
-use zipeek_exercises::{
-    definition::required_external_services,
-    practice_draft::PracticeDraft,
-};
+use zipeek_exercises::{definition::required_external_services, practice_draft::PracticeDraft};
 
 use self::exercise_tile::ExerciseTile;
 

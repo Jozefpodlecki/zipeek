@@ -164,10 +164,13 @@ body {
 
 [data-creature-orientation="horizontal"] .practice-creature-frame {
   max-height: 100%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 3%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 3%, #000 90%, transparent 100%);
 }
 
 [data-creature-orientation="horizontal"] .practice-creature-underlay {
-  opacity: .38;
+  opacity: .56;
+  filter: grayscale(1) saturate(.4) brightness(1.05);
 }
 
 .practice-creature-illuminated {

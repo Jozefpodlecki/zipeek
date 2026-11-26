@@ -102,7 +102,9 @@ pub const GRAMMAR_REGION_PLAN: [&str; 100] = [
 ];
 
 pub fn planned_title(region: usize) -> Option<&'static str> {
-    region.checked_sub(1).and_then(|index| GRAMMAR_REGION_PLAN.get(index).copied())
+    region
+        .checked_sub(1)
+        .and_then(|index| GRAMMAR_REGION_PLAN.get(index).copied())
 }
 
 #[cfg(test)]
@@ -118,8 +120,7 @@ mod tests {
         let mut total = 0;
         for region in 1..=100 {
             let course = if region <= 5 {
-                super::super::curriculum::authored_grammar_region(region)
-                    .map(|(course, _)| course)
+                super::super::curriculum::authored_grammar_region(region).map(|(course, _)| course)
             } else {
                 super::super::expansion::expanded_course(region)
             }
@@ -127,8 +128,16 @@ mod tests {
             assert_eq!(course.id, format!("grammar-{region}"));
             for point in course.points {
                 total += 1;
-                assert!(labels.insert(point.label), "Duplicate pattern label: {}", point.label);
-                assert!(examples.insert(point.example), "Duplicate example: {}", point.example);
+                assert!(
+                    labels.insert(point.label),
+                    "Duplicate pattern label: {}",
+                    point.label
+                );
+                assert!(
+                    examples.insert(point.example),
+                    "Duplicate example: {}",
+                    point.example
+                );
                 assert!(!point.explanation.is_empty());
                 assert!(!point.translation.is_empty());
             }

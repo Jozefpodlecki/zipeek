@@ -2,8 +2,8 @@ mod answer;
 mod hunt;
 mod listening;
 mod matching;
-mod translation;
 mod transformation;
+mod translation;
 mod writing;
 
 use yew::prelude::*;
@@ -11,8 +11,9 @@ use yew::prelude::*;
 use crate::reducers::practice_setup_flow::{PracticeSetupAction, PracticeSetupFlow};
 
 use self::{
-    answer::AnswerSettings, hunt::HuntSettings, listening::ListeningSettings, matching::MatchingSettings,
-    translation::TranslationSettings, transformation::TransformationSettings, writing::WritingSettings,
+    answer::AnswerSettings, hunt::HuntSettings, listening::ListeningSettings,
+    matching::MatchingSettings, transformation::TransformationSettings,
+    translation::TranslationSettings, writing::WritingSettings,
 };
 
 #[derive(Properties, PartialEq)]
@@ -49,7 +50,10 @@ pub(crate) fn practice_exercise_settings(props: &PracticeExerciseSettingsProps) 
     match flow.active_tab {
         "matching" | "multiple-choice" => html! {
             <MatchingSettings draft={flow.draft.clone()} family={flow.active_tab}
-                pair_count={flow.exercise_options.matching_pairs} on_action={on_action} />
+                pair_count={flow.exercise_options.matching_pairs}
+                ai_generated={flow.exercise_options.matching_ai_generated}
+                show_pinyin={flow.exercise_options.matching_show_pinyin}
+                on_action={on_action} />
         },
         "character-builder" | "type-pinyin" => {
             flow.exercise_options.for_exercise(flow.active_tab)

@@ -1,0 +1,145 @@
+use std::{env, net::TcpStream, path::PathBuf, process::{Command, Stdio}, thread, time::{Duration, Instant}};
+use super::{NativeServices, ServiceError, registry::{ServiceKey, ManagedProcess}, health::{health_ready, HEALTH_TIMEOUT}};
+
+const STARTUP_INTERVAL: Duration = Duration::from_millis(200);
+
+impl NativeServices {
+    pub(super) fn binary_path(kind: ServiceKey) -> Result<PathBuf, ServiceError> {
+        if let Some(path) = env::var_os(kind.override_variable()) {
+            let path = PathBuf::from(path);
+            if !path.is_absolute() {
+                return Err(ServiceError::InvalidExecutablePath(format!(
+                    "{} must be an absolute path",
+                    kind.override_variable()
+                )));
+            }
+            return Ok(path);
+        }
+        let mut path = env::current_exe().map_err(|error| {
+            ServiceError::ProcessFailure(format!("Cannot locate application executable: {error}"))
+        })?;
+        path.set_file_name(format!("{}{}", kind.binary(), env::consts::EXE_SUFFIX));
+        Ok(path)
+    }
+
+    pub(super) fn launch(&self, kind: ServiceKey) -> Result<(), ServiceError> {
+        if TcpStream::connect_timeout(&kind.address(), HEALTH_TIMEOUT).is_ok() {
+            return Err(ServiceError::PortOccupied(format!(
+                "Port {} is already occupied by an external process. Zipeek will not claim it.",
+                kind.address()
+            )));
+        }
+        let path = Self::binary_path(kind)?;
+        if !path.is_file() {
+            return Err(ServiceError::ExecutableMissing(format!(
+                "Executable missing: {}. Build desktop sidecars or set {}.",
+                path.display(),
+                kind.override_variable()
+            )));
+        }
+        let mut command = Command::new(&path);
+        match kind {
+            ServiceKey("ai") => {
+                command.args(["--bind", "127.0.0.1:1430"]);
+            }
+            ServiceKey("image") => {
+                command.env("ZIPEEK_IMAGE_BIND", "127.0.0.1:1431");
+            }
+            ServiceKey("speech") => {
+                command.env("ZIPEEK_SPEECH_PORT", "8799");
+            }
+            _ => unreachable!("validated service key"),
+        }
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x0800_0000);
+        }
+        let child = command
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .map_err(|error| {
+                ServiceError::ProcessFailure(format!(
+                    "Cannot launch {} ({}): {error}",
+                    kind.binary(),
+                    path.display()
+                ))
+            })?;
+        self.lock()?
+            .processes
+            .insert(kind, ManagedProcess { child });
+
+        let start = Instant::now();
+        loop {
+            {
+                let mut registry = self.lock()?;
+                let Some(process) = registry.processes.get_mut(&kind) else {
+                    return Err(ServiceError::ProcessFailure(
+                        "Managed process disappeared during startup".into(),
+                    ));
+                };
+                if let Some(exit) = process
+                    .child
+                    .try_wait()
+                    .map_err(|error| ServiceError::ProcessFailure(error.to_string()))?
+                {
+                    registry.processes.remove(&kind);
+                    return Err(ServiceError::ProcessFailure(format!(
+                        "{} exited before readiness: {exit}{}",
+                        kind.binary(),
+                        if kind.name() == "ai" { " (configure a GGUF model in models/ai or ZIPEEK_AI_MODEL_PATH)" } else { "" }
+                    )));
+                }
+            }
+            if health_ready(kind) {
+                return Ok(());
+            }
+            if start.elapsed() >= kind.startup_timeout() {
+                self.terminate(kind)?;
+                return Err(ServiceError::StartupTimeout(format!(
+                    "{} did not become healthy at http://{}/health within {} seconds",
+                    kind.binary(),
+                    kind.address(),
+                    kind.startup_timeout().as_secs()
+                )));
+            }
+            thread::sleep(STARTUP_INTERVAL);
+        }
+    }
+
+    pub(super) fn terminate(&self, kind: ServiceKey) -> Result<(), ServiceError> {
+        let mut registry = self.lock()?;
+        if let Some(process) = registry.processes.get_mut(&kind) {
+            if process
+                .child
+                .try_wait()
+                .map_err(|error| ServiceError::ProcessFailure(error.to_string()))?
+                .is_none()
+            {
+                process.child.kill().map_err(|error| {
+                    ServiceError::ProcessFailure(format!(
+                        "Unable to terminate owned process: {error}"
+                    ))
+                })?;
+            }
+            process.child.wait().map_err(|error| {
+                ServiceError::ProcessFailure(format!("Unable to reap owned process: {error}"))
+            })?;
+            registry.processes.remove(&kind);
+        }
+        Ok(())
+    }
+
+    pub fn shutdown(&self) {
+        if let Ok(mut registry) = self.lock() {
+            for (_, mut process) in registry.processes.drain() {
+                let _ = process.child.kill();
+                let _ = process.child.wait();
+            }
+            registry.launching.clear();
+            registry.stopping.clear();
+        }
+    }
+}

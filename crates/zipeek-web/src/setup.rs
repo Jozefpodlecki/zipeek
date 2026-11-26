@@ -8,6 +8,14 @@ use crate::{
 };
 
 pub fn setup(environment: &AppEnvironment) {
+    match environment.window.location().origin() {
+        Ok(origin) => zipeek_browser::local_speech::configure_origin(&origin),
+        Err(error) => {
+            log::warn!("Could not determine local speech origin: {error:?}");
+            zipeek_browser::local_speech::configure_origin("");
+        }
+    }
+
     let storage = &environment.local_storage;
     let document = &environment.document;
 

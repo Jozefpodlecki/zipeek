@@ -1,8 +1,8 @@
 use super::super::curriculum::{authored_grammar_region, authored_grammar_slug};
 use super::super::curriculum_registry::{registry_course, registry_entry};
-use super::super::progress;
 use super::super::grammar_expansion::expanded_course;
 use super::super::grammar_plan::planned_title;
+use super::super::progress;
 use crate::route::Route;
 use yew::prelude::*;
 use yew_router::prelude::*;

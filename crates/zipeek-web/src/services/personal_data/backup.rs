@@ -65,10 +65,20 @@ pub fn validate(category: Category, value: &Value) -> Result<(), PersonalDataErr
             let entries = value
                 .as_array()
                 .ok_or_else(|| invalid("Exclusions must be an array"))?;
-            if entries.len() > 100_000 || entries.iter().any(|entry| {
-                !matches!(entry.as_i64(), Some(id) if (1..=i32::MAX as i64).contains(&id))
-            }) {
-                return Err(invalid("Invalid excluded word ID"));
+            if entries.len() > 100_000 {
+                return Err(invalid("Too many excluded word IDs"));
+            }
+            let mut unique = std::collections::HashSet::new();
+            for entry in entries {
+                let Some(id) = entry
+                    .as_i64()
+                    .filter(|id| (1..=i32::MAX as i64).contains(id))
+                else {
+                    return Err(invalid("Invalid excluded word ID"));
+                };
+                if !unique.insert(id) {
+                    return Err(invalid("Duplicate excluded word ID"));
+                }
             }
         }
     }
@@ -137,6 +147,12 @@ mod tests {
             parse(r#"{"format":"zipeek-personal-backup","version":1,"data":{"course_progress":["tones"]}}"#)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn rejects_duplicate_excluded_word_ids() {
+        assert!(validate(Category::Exclusions, &serde_json::json!([17, 17])).is_err());
+        assert!(validate(Category::Exclusions, &serde_json::json!([17, 18])).is_ok());
     }
 
     #[test]

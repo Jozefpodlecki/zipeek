@@ -5,13 +5,23 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 fn validate_example(text: String) -> Result<String, String> {
-    let lines: Vec<&str> = text.lines().map(str::trim).filter(|line| !line.is_empty()).collect();
-    if text.chars().count() > 600 || lines.len() != 3
-        || !lines[0].chars().any(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch))
+    let lines: Vec<&str> = text
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect();
+    if text.chars().count() > 600
+        || lines.len() != 3
+        || !lines[0]
+            .chars()
+            .any(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch))
         || !lines[1].chars().any(|ch| ch.is_ascii_alphabetic())
         || !lines[2].chars().any(|ch| ch.is_ascii_alphabetic())
     {
-        return Err("The AI response must contain a Chinese sentence, Pinyin and English on three lines".to_owned());
+        return Err(
+            "The AI response must contain a Chinese sentence, Pinyin and English on three lines"
+                .to_owned(),
+        );
     }
     Ok(lines.join("\n"))
 }
@@ -50,9 +60,13 @@ pub fn grammar_ai_example(props: &GrammarAiExampleProps) -> Html {
         let explanation = props.explanation.clone();
         let example = props.example.clone();
         Callback::from(move |_: MouseEvent| {
-            if *busy { return; }
+            if *busy {
+                return;
+            }
             let config = ai::configuration();
-            if config.model.trim().is_empty() { return; }
+            if config.model.trim().is_empty() {
+                return;
+            }
             let request_id = {
                 let mut id = generation.borrow_mut();
                 *id += 1;
@@ -72,7 +86,8 @@ pub fn grammar_ai_example(props: &GrammarAiExampleProps) -> Html {
                     serde_json::json!({"role":"user","content":format!("Pattern: {pattern}\nExplanation: {explanation}\nExisting sentence: {example}\nGenerate a DIFFERENT example.")}),
                 ];
                 let reply = ai::complete(&config.url, &config.model, messages)
-                    .await.and_then(validate_example);
+                    .await
+                    .and_then(validate_example);
                 if *generation.borrow() == request_id {
                     result.set(Some(reply));
                     busy.set(false);
@@ -120,7 +135,10 @@ mod tests {
     use super::*;
     #[test]
     fn ai_example_requires_three_useful_lines() {
-        assert!(validate_example("她读一本书。\nTā dú yì běn shū.\nShe reads a book.".to_owned()).is_ok());
+        assert!(
+            validate_example("她读一本书。\nTā dú yì běn shū.\nShe reads a book.".to_owned())
+                .is_ok()
+        );
         assert!(validate_example("Only one line".to_owned()).is_err());
         assert!(validate_example("She reads a book.\nPinyin\nEnglish".to_owned()).is_err());
     }

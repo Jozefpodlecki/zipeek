@@ -112,65 +112,73 @@ pub fn word_sets_page() -> Html {
                 </p>},
                 Some(Ok(words)) => {
                     let query = search.trim().to_lowercase();
-                    let filtered: Vec<_> = words.iter().filter(|word| {
-                        query.is_empty()
-                            || word.simplified.contains(query.as_str())
-                            || word.pinyin.to_lowercase().contains(&query)
-                            || word.english.as_deref().unwrap_or_default().to_lowercase().contains(&query)
-                    }).collect();
+                    let filtered: Vec<_> = words
+                        .iter()
+                        .filter(|word| {
+                            query.is_empty()
+                                || word.simplified.contains(query.as_str())
+                                || word.pinyin.to_lowercase().contains(&query)
+                                || word
+                                    .english
+                                    .as_deref()
+                                    .unwrap_or_default()
+                                    .to_lowercase()
+                                    .contains(&query)
+                        })
+                        .collect();
                     if filtered.is_empty() {
                         html! { <p role="status" class="py-6 text-sm text-muted">{"No words match your search."}</p> }
                     } else {
-                    html! {
-                    <ul
-                        class="divide-y divide-line"
-                    >
-                        {for filtered.into_iter().map(|word| {
-                            let id = word.id.as_i32();
-                            let remove = remove.clone();
-                            let on_remove_word = Callback::from(move |_| remove.emit(id));
-                            html! {
-                                <li
-                                    key={id}
-                                    class="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 sm:flex-nowrap" data-word-set-word-id={id.to_string()}
-                                >
-                                    <strong
-                                        lang="zh-Hans"
-                                        class="shrink-0 text-lg"
+                        html! {
+                        <ul
+                            class="divide-y divide-line"
+                        >
+                            {for filtered.into_iter().map(|word| {
+                                let id = word.id.as_i32();
+                                let remove = remove.clone();
+                                let on_remove_word = Callback::from(move |_| remove.emit(id));
+                                html! {
+                                    <li
+                                        key={id}
+                                        class="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 sm:flex-nowrap" data-word-set-word-id={id.to_string()}
                                     >
-                                        {&word.simplified}
-                                    </strong>
-                                    <span
-                                        class="shrink-0 text-sm text-accent"
-                                    >
-                                        {&word.pinyin}
-                                    </span>
-                                    <p
-                                        class="min-w-[10rem] flex-1 text-sm leading-relaxed text-muted"
-                                    >
-                                        {word.english.as_deref().unwrap_or("Meaning unavailable").replace('|', " · ")}
-                                    </p>
-                                    <ListenButton
-                                        hanzi={word.simplified.clone()}
-                                        compact={true}
-                                    />
-                                    <button
-                                        type="button"
-                                        class="grid size-9 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-red-500/10 hover:text-red-500 focus-visible:bg-raised"
-                                        data-remove-word-id={id.to_string()}
-                                        aria-label={format!("Remove {} from this Word Set", word.simplified)}
-                                        title="Remove word"
-                                        onclick={on_remove_word}
-                                    >
-                                        <Icon data={IconData::LUCIDE_TRASH_2} width="17px" height="17px" />
-                                    </button>
-                                </li>
-                            }
-                        })}
-                    </ul>
+                                        <strong
+                                            lang="zh-Hans"
+                                            class="shrink-0 text-lg"
+                                        >
+                                            {&word.simplified}
+                                        </strong>
+                                        <span
+                                            class="shrink-0 text-sm text-accent"
+                                        >
+                                            {&word.pinyin}
+                                        </span>
+                                        <p
+                                            class="min-w-[10rem] flex-1 text-sm leading-relaxed text-muted"
+                                        >
+                                            {word.english.as_deref().unwrap_or("Meaning unavailable").replace('|', " · ")}
+                                        </p>
+                                        <ListenButton
+                                            hanzi={word.simplified.clone()}
+                                            compact={true}
+                                        />
+                                        <button
+                                            type="button"
+                                            class="grid size-9 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-red-500/10 hover:text-red-500 focus-visible:bg-raised"
+                                            data-remove-word-id={id.to_string()}
+                                            aria-label={format!("Remove {} from this Word Set", word.simplified)}
+                                            title="Remove word"
+                                            onclick={on_remove_word}
+                                        >
+                                            <Icon data={IconData::LUCIDE_TRASH_2} width="17px" height="17px" />
+                                        </button>
+                                    </li>
+                                }
+                            })}
+                        </ul>
+                        }
                     }
-                    }
-                },
+                }
             }
         }
     };

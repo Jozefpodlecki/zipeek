@@ -3,7 +3,6 @@ use thirtyfour::prelude::*;
 
 pub const DRAWER: &str = "[data-component='navigation-drawer']";
 pub const HEADER: &str = "[data-component='app-header']";
-pub const TITLE: &str = "[data-centered-route-title]";
 pub const SKIP: &str = "[data-skip-link]";
 
 pub async fn visit(driver: &WebDriver, path: &str) -> crate::HarnessResult<()> {
@@ -43,25 +42,17 @@ pub async fn has_horizontal_overflow(driver: &WebDriver) -> WebDriverResult<bool
 }
 
 pub async fn wait_for_title(driver: &WebDriver, expected: &str) -> crate::HarnessResult<()> {
+    let expected_title = format!("{expected} · Zipeek");
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(10);
     loop {
-        let titles = driver.find_all_css(TITLE).await?;
-        if titles.len() == 1 {
-            let title = &titles[0];
-            if title.text().await? == expected {
-                return Ok(());
-            }
+        let current = driver.title().await?;
+        if current == expected_title {
+            return Ok(());
         }
         if tokio::time::Instant::now() >= deadline {
-            let current = match titles.first() {
-                Some(title) => title.text().await?,
-                None => "not rendered".to_owned(),
-            };
-            return Err(format!(
-                "Expected one page header {expected:?}, found {} (first: {current:?})",
-                titles.len()
-            )
-            .into());
+            return Err(
+                format!("Expected document title {expected_title:?}, found {current:?}").into(),
+            );
         }
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     }

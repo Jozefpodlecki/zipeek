@@ -113,7 +113,9 @@ impl DuckDb {
         )
         .await?;
         if let Err(error) = session.connection.query("INSTALL AND LOAD fts;").await {
-            log::warn!("DuckDB FTS extension unavailable; English relevance search will report an error: {error:?}");
+            log::warn!(
+                "DuckDB FTS extension unavailable; English relevance search will report an error: {error:?}"
+            );
         }
         let rows = session
             .connection

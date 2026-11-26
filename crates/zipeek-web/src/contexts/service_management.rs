@@ -75,12 +75,19 @@ pub(crate) fn notify_configuration_changed() {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ServiceOperation {
+    Starting,
+    Stopping,
+}
+
 #[derive(Clone, PartialEq)]
 pub struct ServiceHandle {
     pub name: &'static str,
     pub status: Option<ServiceStatus>,
     pub availability: ServiceAvailability,
     pub busy: bool,
+    pub operation: Option<ServiceOperation>,
     pub error: Option<String>,
     pub managed: bool,
     pub start: Callback<()>,
@@ -116,6 +123,7 @@ impl ServiceHandle {
 pub struct ServiceContext {
     pub ai: ServiceHandle,
     pub image: ServiceHandle,
+    pub speech: ServiceHandle,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -129,6 +137,7 @@ struct MonitorState {
     availability: ServiceAvailability,
     error: Option<String>,
     busy: bool,
+    operation: Option<ServiceOperation>,
     refresh_epoch: u64,
 }
 
@@ -139,6 +148,7 @@ impl Default for MonitorState {
             availability: ServiceAvailability::Checking,
             error: None,
             busy: false,
+            operation: None,
             refresh_epoch: 0,
         }
     }
@@ -149,7 +159,7 @@ enum MonitorAction {
     Checking,
     NativeStatus(Result<ServiceStatus, String>),
     BrowserStatus(Result<(), probe::ProbeError>),
-    BeginManagement,
+    BeginManagement(ServiceOperation),
     FinishManagement(Result<ServiceStatus, String>),
 }
 
@@ -160,6 +170,8 @@ impl Reducible for MonitorState {
         let mut next = (*self).clone();
         match action {
             MonitorAction::Refresh => {
+                next.availability = ServiceAvailability::Checking;
+                next.error = None;
                 next.refresh_epoch = next.refresh_epoch.wrapping_add(1);
             }
             MonitorAction::Checking => {
@@ -190,12 +202,14 @@ impl Reducible for MonitorState {
                     Err(probe::ProbeError::Failed(message)) => ServiceAvailability::Failed(message),
                 };
             }
-            MonitorAction::BeginManagement => {
+            MonitorAction::BeginManagement(operation) => {
                 next.busy = true;
+                next.operation = Some(operation);
                 next.error = None;
             }
             MonitorAction::FinishManagement(result) => {
                 next.busy = false;
+                next.operation = None;
                 match result {
                     Ok(status) => {
                         next.status = Some(status);
@@ -245,7 +259,10 @@ fn use_service_handle(
                     let next_poll_tick = next_poll_tick.clone();
                     let failures = failures.clone();
                     move || {
-                        if !active.get() || ticks.get() < next_poll_tick.get() || in_flight.replace(true) {
+                        if !active.get()
+                            || ticks.get() < next_poll_tick.get()
+                            || in_flight.replace(true)
+                        {
                             return;
                         }
                         let active = active.clone();
@@ -267,14 +284,24 @@ fn use_service_handle(
                                         if active.get() {
                                             let succeeded = result.is_ok();
                                             state.dispatch(MonitorAction::NativeStatus(result));
-                                            schedule_next_probe(succeeded, &failures, &next_poll_tick, &ticks);
+                                            schedule_next_probe(
+                                                succeeded,
+                                                &failures,
+                                                &next_poll_tick,
+                                                &ticks,
+                                            );
                                         }
                                     } else {
                                         let result = probe::check(name, &endpoint).await;
                                         if active.get() {
                                             let succeeded = result.is_ok();
                                             state.dispatch(MonitorAction::BrowserStatus(result));
-                                            schedule_next_probe(succeeded, &failures, &next_poll_tick, &ticks);
+                                            schedule_next_probe(
+                                                succeeded,
+                                                &failures,
+                                                &next_poll_tick,
+                                                &ticks,
+                                            );
                                         }
                                     }
                                 },
@@ -308,7 +335,11 @@ fn use_service_handle(
             if !managed || state.busy {
                 return;
             }
-            state.dispatch(MonitorAction::BeginManagement);
+            state.dispatch(MonitorAction::BeginManagement(if start {
+                ServiceOperation::Starting
+            } else {
+                ServiceOperation::Stopping
+            }));
             let state = state.clone();
             spawn_local(async move {
                 let result = if start {
@@ -326,6 +357,7 @@ fn use_service_handle(
         status: state.status.clone(),
         availability: state.availability.clone(),
         busy: state.busy,
+        operation: state.operation,
         error: state.error.clone(),
         managed,
         start: action(true),
@@ -362,7 +394,13 @@ pub fn service_provider(props: &ServiceProviderProps) -> Html {
         image_generation::read_api_url(&environment.local_storage),
         *config_epoch,
     );
-    let context = ServiceContext { ai, image };
+    let speech = use_service_handle(
+        "speech",
+        environment.is_tauri,
+        "http://127.0.0.1:8799".to_owned(),
+        *config_epoch,
+    );
+    let context = ServiceContext { ai, image, speech };
 
     html! {
         <ContextProvider<ServiceContext> context={context}>
@@ -394,6 +432,7 @@ mod tests {
                 ServiceAvailability::Unavailable
             },
             busy: false,
+            operation: None,
             error: None,
             managed,
             start: Callback::from(|()| {}),
@@ -407,12 +446,15 @@ mod tests {
         let state = Rc::new(MonitorState::default());
         let state = state.reduce(MonitorAction::Refresh);
         assert_eq!(state.refresh_epoch, 1);
-        let state = state.reduce(MonitorAction::BeginManagement);
+        assert_eq!(state.availability, ServiceAvailability::Checking);
+        let state = state.reduce(MonitorAction::BeginManagement(ServiceOperation::Starting));
         assert!(state.busy);
+        assert_eq!(state.operation, Some(ServiceOperation::Starting));
         let state = state.reduce(MonitorAction::FinishManagement(Err(
             "start failed".to_owned()
         )));
         assert!(!state.busy);
+        assert_eq!(state.operation, None);
         assert_eq!(state.refresh_epoch, 2);
         assert_eq!(state.error.as_deref(), Some("start failed"));
         let state = state.reduce(MonitorAction::Checking);

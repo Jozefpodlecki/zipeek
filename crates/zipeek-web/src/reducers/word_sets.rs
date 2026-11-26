@@ -26,10 +26,7 @@ pub(crate) enum WordSetsAction {
     Removed(Vec<UserWordSet>, String),
 }
 
-fn preferred_target(
-    sets: &[UserWordSet],
-    preferred: Option<&WordSetId>,
-) -> Option<WordSetId> {
+fn preferred_target(sets: &[UserWordSet], preferred: Option<&WordSetId>) -> Option<WordSetId> {
     preferred
         .filter(|id| find(sets, id).is_some())
         .cloned()
@@ -80,7 +77,9 @@ impl Reducible for WordSetsState {
             }
             WordSetsAction::Select(target) => {
                 if target.as_ref().is_none_or(|id| {
-                    next.sets.as_ref().is_ok_and(|sets| find(sets, id).is_some())
+                    next.sets
+                        .as_ref()
+                        .is_ok_and(|sets| find(sets, id).is_some())
                 }) {
                     next.target = target;
                 }
@@ -143,9 +142,13 @@ mod tests {
             feedback: None,
             course_feedback: None,
         });
-        let source = CourseWordSetSource { region_id: 5, set_index: 2 };
+        let source = CourseWordSetSource {
+            region_id: 5,
+            set_index: 2,
+        };
         let acquired = state.reduce(WordSetsAction::CourseFeedback(
-            source.clone(), WordSetsFeedback::Success("Acquired".to_owned()),
+            source.clone(),
+            WordSetsFeedback::Success("Acquired".to_owned()),
         ));
         assert!(matches!(&acquired.course_feedback,
             Some((actual, WordSetsFeedback::Success(_))) if actual == &source));

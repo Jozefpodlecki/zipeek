@@ -32,7 +32,9 @@ pub(super) enum CrosswordAction {
         col: usize,
         tile: usize,
     },
-    Reset { history: CrosswordRotation },
+    Reset {
+        history: CrosswordRotation,
+    },
 }
 
 impl CrosswordState {
@@ -108,7 +110,11 @@ impl Reducible for CrosswordState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut next = (*self).clone();
         match action {
-            CrosswordAction::Start { vocabulary, bands, history } => {
+            CrosswordAction::Start {
+                vocabulary,
+                bands,
+                history,
+            } => {
                 let session_id = storage::new_session_id();
                 let seed = storage::seed_from_session_id(&session_id);
                 let game = history.generate(seed, &vocabulary);

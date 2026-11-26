@@ -39,3 +39,12 @@ Twelve historical review pages were reduced to references linking the preserved 
 - Align the E2E coverage matrix with executable Rust scenarios and run strict evidence capture on the supported browser environment.
 
 One link in a frozen completed record still targets a removed source-contract script. Preserve that historical record; treat its warning separately from maintained-document validation.
+
+
+## Release-review prevention and canonical-document workflow
+
+A release must update the existing subject owner before treating a new design or implementation narrative as current documentation. Root-level R-numbered working notes and R-numbered reviews under `docs/engineering/` are not allowed as ongoing subject documentation. If a genuinely new subject lacks an owner, create a lowercase-kebab-case maintained article under the appropriate existing category and link it from `docs/README.md`.
+
+Release-specific implementation narratives are reconciled into (a) current product/architecture/testing contracts, (b) still-open stable tasks/debt, and (c) a single historical review archive or release history. Date-specific checks and compiler/test claims remain historical and must never be promoted to current verification by relocation. Before removing old files, update maintained links, Docs index and browser-route fixtures. New `R...` Markdown documents under `docs/engineering/` require historical classification instead of creating a parallel authority.
+
+The R610 documentation consolidation placed release-review source text into [one historical collection](../archive-history/audits/release-engineering-review-history.md) and linked the new [knowledge specification](../learning-practice/pedagogy/knowledge-points.md) and [scoring architecture](../architecture/modules/knowledge-scoring.md). This is an editorial ownership change only; no Rust tests or behavioural acceptance follow from it.

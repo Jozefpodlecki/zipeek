@@ -64,3 +64,28 @@ animation briefly retains green before settling to a muted solid surface. Wrong 
 for 400 ms, with a 200 ms shake. Reduced motion removes both animations and settles
 matched cards instantly. Listen controls do not select a card. Insufficient
 distinct words show the approved filter/reset explanation and Back to setup.
+
+### Local quiz Matching stability
+
+The local quiz uses one stable matching grid and a compact progress footer.
+Keep the Continue button mounted in the same footer position throughout the
+round. It is disabled until all pairs match and enabled immediately at completion.
+Do not insert a `Completed` heading or a new in-flow action when completion
+occurs. Matching errors change card styling and the text of a permanently
+mounted, visually hidden accessible status node; errors never add a new flow
+child or move the board. Preserve the existing Tailwind v4 design system.
+
+Horizontal progress-creature artwork in the Midnight and Maple practice themes
+has a finite source-image edge. Feather that horizontal boundary at the existing
+progress frame rather than changing page heights or clipping the rail.
+
+### Audio matching preparation feedback
+
+While audio is being prepared, show a compact activity indicator, a completed count
+and a bounded progress bar. Do not expose the selected Chinese words during
+preparation, since they are the answers to Audio to Hanzi matching. On failure,
+show a concise error, the failing word and its position, and the selected words
+for that round so the learner can identify problematic vocabulary before retrying.
+Keep raw network and acoustic-model diagnostics in development logs rather than
+in visible UI. A synthesis request that exhausts acoustic frames without EOS
+is an inference failure, not a connectivity or vocabulary-selection failure.

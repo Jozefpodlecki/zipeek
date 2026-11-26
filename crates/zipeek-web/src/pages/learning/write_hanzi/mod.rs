@@ -14,7 +14,7 @@ use yew::prelude::*;
 use yew_router::prelude::use_location;
 use zipeek_core::Word;
 
-use results::{visible_words, VocabularyResults};
+use results::{VocabularyResults, visible_words};
 use state::{WriteHanziAction, WriteHanziState};
 use workspace::WritingWorkspace;
 
@@ -92,7 +92,12 @@ pub fn write_hanzi_page() -> Html {
         let dictionary = dictionary.clone();
         let state = state.clone();
         use_effect_with(
-            (state.mode, state.selected_set.clone(), ids, state.submitted.clone()),
+            (
+                state.mode,
+                state.selected_set.clone(),
+                ids,
+                state.submitted.clone(),
+            ),
             move |(mode, selected_set, ids, submitted)| {
                 let alive = Rc::new(Cell::new(true));
                 let pending = alive.clone();
@@ -151,40 +156,40 @@ pub fn write_hanzi_page() -> Html {
 
     let on_search_keydown = {
         let state = state.clone();
-        Callback::from(move |event: KeyboardEvent| {
-            match event.key().as_str() {
-                "ArrowDown" => {
-                    event.prevent_default();
-                    state.dispatch(WriteHanziAction::MoveHighlight(1));
-                }
-                "ArrowUp" => {
-                    event.prevent_default();
-                    state.dispatch(WriteHanziAction::MoveHighlight(-1));
-                }
-                "Escape" => state.dispatch(WriteHanziAction::CloseSuggestions),
-                "Enter" => {
-                    if !state.suggestions_open { return; }
-                    let props = results::VocabularyResultsProps {
-                        results: state.results.clone(),
-                        mode: state.mode.as_str().to_owned(),
-                        query: state.query.clone(),
-                        submitted: state.submitted.clone(),
-                        selected: state.chosen.clone(),
-                        expanded: state.suggestions_open,
-                        highlighted: state.highlighted,
-                        visible_count: state.visible_count,
-                        on_more: Callback::noop(),
-                        on_select: Callback::noop(),
-                        on_open: Callback::noop(),
-                    };
-                    let matches = visible_words(&props);
-                    if let Some(word) = matches.get(state.highlighted) {
-                        event.prevent_default();
-                        state.dispatch(WriteHanziAction::ChooseWord(word.clone()));
-                    }
-                }
-                _ => {}
+        Callback::from(move |event: KeyboardEvent| match event.key().as_str() {
+            "ArrowDown" => {
+                event.prevent_default();
+                state.dispatch(WriteHanziAction::MoveHighlight(1));
             }
+            "ArrowUp" => {
+                event.prevent_default();
+                state.dispatch(WriteHanziAction::MoveHighlight(-1));
+            }
+            "Escape" => state.dispatch(WriteHanziAction::CloseSuggestions),
+            "Enter" => {
+                if !state.suggestions_open {
+                    return;
+                }
+                let props = results::VocabularyResultsProps {
+                    results: state.results.clone(),
+                    mode: state.mode.as_str().to_owned(),
+                    query: state.query.clone(),
+                    submitted: state.submitted.clone(),
+                    selected: state.chosen.clone(),
+                    expanded: state.suggestions_open,
+                    highlighted: state.highlighted,
+                    visible_count: state.visible_count,
+                    on_more: Callback::noop(),
+                    on_select: Callback::noop(),
+                    on_open: Callback::noop(),
+                };
+                let matches = visible_words(&props);
+                if let Some(word) = matches.get(state.highlighted) {
+                    event.prevent_default();
+                    state.dispatch(WriteHanziAction::ChooseWord(word.clone()));
+                }
+            }
+            _ => {}
         })
     };
     let on_search_focus = {
@@ -345,9 +350,12 @@ fn vocabulary_source_controls(props: &VocabularySourceControlsProps) -> Html {
     };
     let search_progress_indicator = if props.mode == state::VocabularyMode::Search
         && (props.query.trim() != props.submitted.trim()
-            || props.loading && !props.query.trim().is_empty()) {
+            || props.loading && !props.query.trim().is_empty())
+    {
         html! {<span role="status" aria-label="Searching" class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />}
-    } else { Html::default() };
+    } else {
+        Html::default()
+    };
     html! {
         <>
                     <div

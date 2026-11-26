@@ -17,7 +17,11 @@ pub struct CourseTrackNavigationProps {
 #[function_component(CourseTrackNavigation)]
 pub fn course_track_navigation(props: &CourseTrackNavigationProps) -> Html {
     let tracks = [
-        (CourseTrack::Vocabulary, Route::VocabularyCourse, "Vocabulary"),
+        (
+            CourseTrack::Vocabulary,
+            Route::VocabularyCourse,
+            "Vocabulary",
+        ),
         (CourseTrack::Grammar, Route::GrammarCourse, "Grammar"),
         (CourseTrack::Pinyin, Route::PinyinCourse, "Pinyin"),
     ];

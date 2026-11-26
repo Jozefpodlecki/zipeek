@@ -26,3 +26,8 @@ Animate only meaningful progress changes and occasional stage transitions, never
 ## Verification
 
 Test actual artwork at the target desktop header width, intermediate breakpoints and narrow mobile layouts. Verify detail panel mouse/keyboard/focus behavior, persistent evidence consistency, theme contrast, reduced-motion behavior and loading/error states. Compare the rendered implementation to the approved mockup and actual app screenshots; do not claim visual fidelity from a source-code inspection alone.
+
+
+## Implemented unassessed state and future scoring
+
+The current header source uses `components/shell/app_shell/header/dragon.rs` and the unassessed artwork at `static/practice/header-dragon-unassessed.webp`. The illustration is shown independently of the Practice recording preference and explicitly reports unavailable/unassessed evidence, not a completion percentage. The diagnostic pedagogy worker and optional Practice outcome records do not authorize a dragon progress projection. Connect only validated, durable, policy-approved R608 scoring after the evidence journal, canonical denominator, access and UI states are established. Visual fidelity, responsive and reduced-motion acceptance remain open.

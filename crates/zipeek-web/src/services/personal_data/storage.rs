@@ -31,13 +31,14 @@ impl PersonalStorage {
             backup::validate(category, &value)?;
             data.insert(category.name().to_owned(), value);
         }
-        serde_json::to_string_pretty(&Backup {
+        let exported = serde_json::to_string_pretty(&Backup {
             format: backup::FORMAT.to_owned(),
             version: backup::VERSION,
             exported_at: Some(exported_at),
             data,
         })
-        .map_err(|e| PersonalDataError::InvalidBackup(e.to_string()))
+        .map_err(|e| PersonalDataError::InvalidBackup(e.to_string()))?;
+        validate_export_size(exported)
     }
 
     pub fn import(&self, raw: &str) -> Result<String, PersonalDataError> {
@@ -120,5 +121,25 @@ impl PersonalStorage {
             }
         }
         Ok(())
+    }
+}
+
+fn validate_export_size(encoded: String) -> Result<String, PersonalDataError> {
+    if encoded.len() > backup::MAX_IMPORT_BYTES {
+        return Err(PersonalDataError::InvalidBackup(
+            "Export exceeds the 2 MB backup import limit".into(),
+        ));
+    }
+    Ok(encoded)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exported_backup_must_fit_its_own_import_limit() {
+        assert!(validate_export_size("small".to_owned()).is_ok());
+        assert!(validate_export_size("x".repeat(backup::MAX_IMPORT_BYTES + 1)).is_err());
     }
 }

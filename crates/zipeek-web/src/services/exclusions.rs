@@ -16,6 +16,10 @@ pub(crate) fn read_saved(storage: &Storage) -> BTreeSet<WordId> {
 }
 
 fn parse_saved(value: &str) -> BTreeSet<WordId> {
+    if value.len() > 2 * 1024 * 1024 {
+        log::warn!("Saved exclusions exceed the supported size limit");
+        return BTreeSet::new();
+    }
     let Ok(serde_json::Value::Array(values)) = serde_json::from_str(value) else {
         if cfg!(debug_assertions) {
             log::warn!("Saved exclusions must be a JSON array of WordIds");
@@ -50,6 +54,7 @@ mod tests {
             ids.into_iter().map(|id| id.as_i32()).collect::<Vec<_>>(),
             vec![1, 2]
         );
+        assert!(parse_saved(&"[1,".repeat(800_000)).is_empty());
         for invalid in ["{}", "null", "not json", r#""1""#] {
             assert!(parse_saved(invalid).is_empty());
         }

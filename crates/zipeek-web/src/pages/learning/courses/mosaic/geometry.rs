@@ -37,10 +37,8 @@ fn sites() -> Vec<Point> {
                 continue;
             }
             points.push(Point {
-                x: (col as f64 + 0.5) * VIEW_WIDTH / COLUMNS as f64
-                    + 11.0 * jitter(row, col, 7),
-                y: (row as f64 + 0.5) * VIEW_HEIGHT / ROWS as f64
-                    + 7.0 * jitter(row, col, 11),
+                x: (col as f64 + 0.5) * VIEW_WIDTH / COLUMNS as f64 + 11.0 * jitter(row, col, 7),
+                y: (row as f64 + 0.5) * VIEW_HEIGHT / ROWS as f64 + 7.0 * jitter(row, col, 11),
             });
         }
     }
@@ -80,15 +78,26 @@ mod tests {
         let items = regions();
         assert_eq!(items.len(), GRAMMAR_COUNT);
         assert_eq!(items[0].id, "grammar-1");
-        assert_eq!(items.iter().map(|r| &r.id).collect::<BTreeSet<_>>().len(), 100);
-        assert!(items.iter().all(|r| r.path.contains(" Q ") && r.path.ends_with(" Z")));
+        assert_eq!(
+            items.iter().map(|r| &r.id).collect::<BTreeSet<_>>().len(),
+            100
+        );
+        assert!(
+            items
+                .iter()
+                .all(|r| r.path.contains(" Q ") && r.path.ends_with(" Z"))
+        );
     }
 
     #[test]
     fn regions_are_distinct_and_cover_canvas_without_gaps() {
         let polygons = tessellation::voronoi(&sites());
         assert_eq!(polygons.len(), GRAMMAR_COUNT);
-        assert!(polygons.iter().all(|polygon| polygon.len() >= 3 && area(polygon) > 100.0));
+        assert!(
+            polygons
+                .iter()
+                .all(|polygon| polygon.len() >= 3 && area(polygon) > 100.0)
+        );
         let sum = polygons.iter().map(|polygon| area(polygon)).sum::<f64>();
         assert!((sum - VIEW_WIDTH * VIEW_HEIGHT).abs() < 1e-4);
     }

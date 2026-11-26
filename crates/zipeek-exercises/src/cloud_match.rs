@@ -102,12 +102,13 @@ pub fn eligible_pairs(
         let (a, b) = pair.labels(mode);
         let a = normalize(a);
         let b = normalize(b);
-        if pair.id <= 0 || a.is_empty() || b.is_empty() || !ids.insert(pair.id) {
+        if pair.id <= 0 || a.is_empty() || b.is_empty() || ids.contains(&pair.id) {
             continue;
         }
         if left.contains(&a) || right.contains(&b) {
             continue;
         }
+        ids.insert(pair.id);
         left.insert(a);
         right.insert(b);
         accepted.push(pair);
@@ -565,6 +566,27 @@ mod tests {
             })
             .collect()
     }
+    #[test]
+    fn rejected_candidate_does_not_reserve_its_identifier() {
+        let candidates = vec![
+            CloudPair {
+                id: 1,
+                hanzi: "".into(),
+                pinyin: "a".into(),
+                meaning: "one".into(),
+            },
+            CloudPair {
+                id: 1,
+                hanzi: "一".into(),
+                pinyin: "yi".into(),
+                meaning: "one".into(),
+            },
+        ];
+        let result = eligible_pairs(candidates, MatchMode::HanziMeaning);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].hanzi, "一");
+    }
+
     #[test]
     fn continuous_replenishment_preserves_unmatched_pair_ids_and_lanes() {
         let mut game = CloudGame::new_with_spawn_mode(

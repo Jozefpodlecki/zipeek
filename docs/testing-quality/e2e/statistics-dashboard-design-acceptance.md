@@ -82,3 +82,85 @@ Fixtures are fixed-seed, reproducible and include multi-session overlaps, duplic
 **Stage C:** full fixture matrix including 5,000+ items, visual review, keyboard/mobile, high contrast, reduced motion and both deployment base paths. Document measured performance and correct acceptance failures before any live data integration.
 
 **Separate production evidence gate:** approved assessor thresholds, timezone, retention/consent, stable identities, durable write/readback and qualified observation projections must exist before using real learner metrics. This milestone authorizes no production schema changes or proficiency inference.
+
+## R573 source-contract regression scenarios
+
+- Simulate a source response whose `offset`, `limit`, `total` or number of returned records disagrees with the request. Expect a recoverable query error with Retry, not a misleading range or partial success.
+- Simulate a populated page that disappears after a backend filter or dataset change. The explorer must navigate to the last valid page and requery it; a total of zero must display an honest empty range.
+- Request Select all matching twice in rapid succession, change the search while a request is pending, and Clear before completion. Only the current matching scope may affect the selection; no stale request may restore cleared IDs.
+- Check all seven tabs after the R572 Windows delimiter failure is corrected. Passing static source checks or ZIP integrity is not a substitute for compiling and running the browser scenario.
+
+## R575 implementation evidence and outstanding gates
+
+The source adds a twenty-entry typed optional tile registry alongside four core Overview metrics. Reducer tests cover visibility, order transitions, preset replacement, reset and preview-close reset. Aggregation tests verify total sessions and Practice/Games and scored/unscored partitions over the fixture. The Stats E2E scenario now exercises visibility reflected on Overview and move controls, but the browser test has **not** run in the packaging environment. The acceptance gate ST2-022 remains pending Windows WASM/browser confirmation, light/dark/mobile keyboard review and 5,000/10,000-record measurement. Local source-level assertions are not performance measurements.
+
+The vocabulary and grammar selection columns now reserve an explicit 56px width with padding for the 36px hit target, to prevent overlap with adjacent row labels. Inspect both table widths in a real browser.
+
+## R576 source implementation and verification targets
+
+The source adds a reducer regression for History view switching and date-search pagination reset, and a query regression asserting that a selected date restricts session rows while preserving the seven-day summary. The History UI exposes `data-stats-history-view="timeline"` and `data-stats-history-view="table"` for browser assertions, plus `aria-pressed` on both view controls and seven-day date buttons. Verify that both modes show the same session counts, that a selected date filters the list without hiding other days from the chart, that clearing the date preserves the selected display mode, and that unscored Practice activities show **Not scored** in the table.
+
+Skills must be inspected for distinct activity, review, missing-record and assessed-unavailable explanations. Insights must link the four required competency gap categories and the review category to the appropriate vocabulary query. All coverage figures remain illustrative, not graded outcomes. These are authored source contracts only, not completed browser tests. ST2-019, ST2-020, ST2-021 and the full Stage C quality gates are still unverified.
+
+### R577 Grammar disclosure test supplement
+
+- With the mock Grammar tab loaded, activate a pattern's Inspect control using mouse, Enter and Space; verify `aria-expanded` and the detail row, sample sentence, course category, illustrative attempts and explicit unavailable canonical/assessed identities.
+- Expand one pattern, switch pages or search, and verify the disclosure closes without losing selected patterns. Reopen a record and verify its stable preview identity.
+- Review selected grammar patterns and confirm the independent Practice link says it does not carry the selection. No Word Set, learner ledger or session writes may occur from this demo flow.
+- A production adapter must independently verify canonical grammar/course identifiers and assessed provenance before presenting those fields as authoritative. This is not satisfied by fixture labels.
+
+### R578 density, timestamp and fixture acceptance (pending execution)
+
+- Confirm every Timeline row and History Table row displays a UTC time and fictional duration, not merely a date; UTC must be explicitly identified until the approved local-time formatter exists. Confirm descending full-timestamp order and tie-breaking identities.
+- Confirm the 156-session fixture includes all 16 registered Practice types and eight demo Games, with Practice/Games interleaved on the newest page. Scored and unscored activities must retain their original assessment contract.
+- Confirm Overview chart's weekly buckets agree with the optional compact Practice/Games breakdown; `Weekly breakdown` should be collapsed by default, have a visible keyboard focus treatment, meaningful headers and no raw unstyled debug table.
+- Confirm Insights and Skills no longer repeat long evidence-policy disclaimers. One Demo indicator plus specific metric labels and tooltips is sufficient; absence of recorded activity still cannot be presented as failure or proficiency.
+- Check long tables at 768px laptop height, 375px and 425px widths, and both themes. Primary selection actions and pagination remain available; overflow must not obscure Chinese content or column headings.
+- Validate source query behavior with timestamp search, date filter, zero matches and async page changes. Check the seven-day activity summary remains independent of the paged History records and returns the appropriate count per category, and that every daily stacked segment adds up to the daily total.
+- Re-run `cargo fmt --all -- --check`, `cargo test --locked -p zipeek-web`, `cargo check --locked --target wasm32-unknown-unknown -p zipeek-web`, and the existing Statistics E2E on Windows. This list is acceptance work, not completed test evidence.
+
+## R580 added acceptance scenarios
+
+- When opening Statistics preview, the header exposes a named icon control, without duplicating a Demo badge in the page body.
+- Selecting the first row keeps the explorer controls and table position stable. Clear and Review remain keyboard reachable with accessible names.
+- Select-all-matching is above the table and limited to at most 250 identities. Queries above that bound cannot be bulk selected.
+- Vocabulary sorting from Hanzi and Seen column headers reverses the corresponding ordering, exposes `aria-sort` and keeps identity tie-breakers deterministic.
+- The Grammar query source returns 550 unique records from the maintained teaching index. Check a non-first page, source-backed search suggestions, editorial status in details, and no invented assessed attempts.
+- Overview's two primary cards align in height at desktop widths. History search and category filters remain usable at laptop and narrow viewports.
+- Measure, do not assume, light/dark, keyboard, reduced-motion, screen-reader, 5,000/10,000 identities and both root/deployment routes.
+
+## R581 Grammar query acceptance (not yet executed in browser)
+
+- Verify region filters All, 1-20, 21-40, 41-60, 61-80 and 81-100 are accurately reflected in total counts and result IDs. The 81-100 fixture range contains 100 teaching entries.
+- Sort Pattern twice to reverse order; sort Attempts twice to reverse numerical order. Check `aria-sort`, identity tie-breakers and first-page reset without losing intentionally selected IDs.
+- Change Rows to 25, 50 and 100; inspect page count, the last short page, zero results and first-page reset.
+- Search while on a later Grammar page and verify the suggestions come from a separate source query, never only that later page; inspect keyboard focus and menu dismissal behavior.
+- Verify all-matching selection respects the active region and search and declines totals above 250; Clear must invalidate an in-flight bulk operation.
+- Run locked Windows Rust native/WASM builds and the Statistics Chrome E2E; authored tests do not certify browser acceptance.
+
+## R583 Grammar and overlay scenarios (awaiting browser execution)
+
+- Grammar table and cards display the same bounded paginated source records and identical matched totals. Switching mode does not reset search, region, sort, page, page size or deliberate selection.
+- Selecting a Grammar pattern and opening its inspector leaves the table row geometry unchanged. The inspector uses only the selected page record and does not manufacture translations, course IDs or assessment counts.
+- Opening selection review after selecting across multiple pages does not append a long panel below pagination. Returning closes it without losing selection.
+- Opening Overview's weekly breakdown keeps the To review card at its original height, and accessible table totals match its chart projection.
+- Insights ranks evidence gaps by count, using a deterministic tie-breaker, and its per-row actions open correctly filtered Vocabulary views.
+- Chrome acceptance still requires Escape behavior, focus containment/return, small-screen and screen-reader tests, keyboard switch between Grammar layouts and responsive layout snapshots in both themes. Authored E2E assertions are not execution evidence.
+
+## R584 acceptance additions (not executed)
+
+1. Verify the default preview returns exactly 240 unique Vocabulary IDs and 292 session identities, that every session focus appears among the 240 words, and that Vocabulary sums of encounters and word-session appearances equal the History projection totals for the same fixed scenario.
+2. Verify distinct 5,000/10,000-entry lexical identities; stable seed produces identical records, a different seed changes the words, and source-backed queries honor 10/25/50/100 page sizes and selection limits. These are source unit tests until run on Windows.
+3. From Grammar, open Collection and Rows via keyboard and pointer, traverse with arrow/Home/End, select by Enter/Space, dismiss with Escape, Tab and click-away, verify focus returns after a selection, and test high zoom/mobile and both themes. Repeat Rows in Vocabulary. No success is claimed until Chrome and assistive-technology observation.
+4. Check compact desktop tables keep sticky headings and the pager visible while content is scrolled; on tablet/mobile avoid clipped actions and vertical scroll traps. Test Grammar card density and the Settings category-filter chips against 24 metric definitions.
+5. Assert preview entry/exit and Demo state remain unchanged, no fixture enters personal learner storage, and preview-generated text does not imply a verified course or assessed skill.
+
+## R585 screenshot-driven browser acceptance additions
+
+- At laptop widths, History search, activity categories and view toggle should share a coherent wrapping toolbar. Verify every icon action has an accessible name, title and keyboard focus treatment, and that the selected state is announced.
+- A scored History row displays a correct/attempted ratio and a proportionate bar; unscored rows show no bar. Confirm this is session correctness, not a mastery, proficiency or completion percentage.
+- Verify Vocabulary and Grammar paginate without competing 65vh internal scroll containers, including 10/25/50/100 rows and narrow touch viewports.
+- Verify Settings full-tile label clicks toggle the correct registry item, while up/down reorder buttons are distinct, keyboard-reachable controls.
+- Verify selected Vocabulary/Grammar records render actual preview names/meanings/examples, not raw IDs; removal and Clear all update reducer selection. Confirm no Practice navigation or Word Set write occurs from preview identities.
+- Exercise selection-dialog initial focus, Escape, Tab/Shift+Tab containment, close and return-to-trigger focus with keyboard and a screen reader. The R585 source does not yet claim that complete focus contract.
+- Current source-only delivery is **unverified** until the locked Rust/WASM tests and actual browser test matrix execute.

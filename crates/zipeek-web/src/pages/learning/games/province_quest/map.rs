@@ -46,7 +46,11 @@ pub(super) fn eligible_parent_regions(map: &GeoDataset) -> Vec<&MapRegion> {
         .collect()
 }
 
-fn selectable_regions<'a>(map: &'a GeoDataset, parent: Option<&str>, parent_picker: bool) -> Vec<&'a MapRegion> {
+fn selectable_regions<'a>(
+    map: &'a GeoDataset,
+    parent: Option<&str>,
+    parent_picker: bool,
+) -> Vec<&'a MapRegion> {
     match parent {
         Some(parent) => map.children_of(parent),
         None if parent_picker => eligible_parent_regions(map),
@@ -63,7 +67,12 @@ pub fn region_map(props: &RegionMapProps) -> Html {
         .and_then(|id| props.map.regions.iter().find(|region| region.id == id))
         .and_then(zoom_view_box)
         .unwrap_or_else(|| props.map.view_box.clone());
-    let base = ViewBox::parse(&base_view_box).unwrap_or(ViewBox { x: 0.0, y: 0.0, width: 1000.0, height: 600.0 });
+    let base = ViewBox::parse(&base_view_box).unwrap_or(ViewBox {
+        x: 0.0,
+        y: 0.0,
+        width: 1000.0,
+        height: 600.0,
+    });
     let viewport = use_state(move || MapViewport::new(base));
     let dragging = use_mut_ref(|| None::<DragGesture>);
     let suppress_click = use_mut_ref(|| false);
@@ -71,7 +80,11 @@ pub fn region_map(props: &RegionMapProps) -> Html {
         let viewport = viewport.clone();
         let dragging = dragging.clone();
         let suppress_click = suppress_click.clone();
-        let identity = (Rc::as_ptr(&props.map) as usize, props.parent_id.clone(), base_view_box.clone());
+        let identity = (
+            Rc::as_ptr(&props.map) as usize,
+            props.parent_id.clone(),
+            base_view_box.clone(),
+        );
         use_effect_with(identity, move |_| {
             viewport.set(MapViewport::new(base));
             *dragging.borrow_mut() = None;
@@ -103,7 +116,9 @@ pub fn region_map(props: &RegionMapProps) -> Html {
         let dragging = dragging.clone();
         let suppress_click = suppress_click.clone();
         Callback::from(move |event: PointerEvent| {
-            if event.button() != 0 || dragging.borrow().is_some() { return; }
+            if event.button() != 0 || dragging.borrow().is_some() {
+                return;
+            }
             let point = MapPoint {
                 x: f64::from(event.client_x()),
                 y: f64::from(event.client_y()),
@@ -119,17 +134,25 @@ pub fn region_map(props: &RegionMapProps) -> Html {
         let viewport = viewport.clone();
         Callback::from(move |event: PointerEvent| {
             let mut active = dragging.borrow_mut();
-            let Some(gesture) = active.as_mut() else { return; };
-            if gesture.pointer_id != event.pointer_id() { return; }
+            let Some(gesture) = active.as_mut() else {
+                return;
+            };
+            if gesture.pointer_id != event.pointer_id() {
+                return;
+            }
             let was_dragging = gesture.moved;
             let point = MapPoint {
                 x: f64::from(event.client_x()),
                 y: f64::from(event.client_y()),
             };
             let delta = gesture.advance(point);
-            if !gesture.moved { return; }
+            if !gesture.moved {
+                return;
+            }
             *suppress_click.borrow_mut() = true;
-            let Some(target) = event.current_target() else { return; };
+            let Some(target) = event.current_target() else {
+                return;
+            };
             let element: Element = target.unchecked_into();
             if !was_dragging {
                 let _ = element.set_pointer_capture(event.pointer_id());
@@ -143,7 +166,11 @@ pub fn region_map(props: &RegionMapProps) -> Html {
     let on_pointer_end = {
         let dragging = dragging.clone();
         Callback::from(move |event: PointerEvent| {
-            if dragging.borrow().as_ref().is_none_or(|active| active.pointer_id != event.pointer_id()) {
+            if dragging
+                .borrow()
+                .as_ref()
+                .is_none_or(|active| active.pointer_id != event.pointer_id())
+            {
                 return;
             }
             if let Some(target) = event.current_target() {
@@ -156,12 +183,20 @@ pub fn region_map(props: &RegionMapProps) -> Html {
     let on_wheel = {
         let viewport = viewport.clone();
         Callback::from(move |event: WheelEvent| {
-            let Some(target) = event.current_target() else { return; };
+            let Some(target) = event.current_target() else {
+                return;
+            };
             let element: Element = target.unchecked_into();
             let rect = element.get_bounding_client_rect();
-            if rect.width() <= 0.0 || rect.height() <= 0.0 { return; }
+            if rect.width() <= 0.0 || rect.height() <= 0.0 {
+                return;
+            }
             event.prevent_default();
-            let Some(delta) = wheel_delta_pixels(event.delta_y(), event.delta_mode(), rect.height()) else { return; };
+            let Some(delta) =
+                wheel_delta_pixels(event.delta_y(), event.delta_mode(), rect.height())
+            else {
+                return;
+            };
             let mut next = *viewport;
             let point = MapPoint {
                 x: f64::from(event.client_x()) - rect.left(),
@@ -184,32 +219,39 @@ pub fn region_map(props: &RegionMapProps) -> Html {
             }
         })
     };
-    let indices_by_id: HashMap<&str, usize> = props.map.regions.iter()
+    let indices_by_id: HashMap<&str, usize> = props
+        .map
+        .regions
+        .iter()
         .enumerate()
         .map(|(index, region)| (region.id.as_str(), index))
         .collect();
-    let paths = regions.into_iter().enumerate().filter_map(|(display_index, region)| {
-        let index = *indices_by_id.get(region.id.as_str())?;
-        let state = RegionVisualState::for_region(
-            props.correct_id.as_ref() == Some(&region.id),
-            props.selected_id.as_ref() == Some(&region.id),
-            props.highlighted,
-            props.reveal_names,
-        );
-        Some(html! {
-            <MapRegionPath
-                key={region.id.clone()}
-                dataset={props.map.clone()}
-                index={index}
-                display_index={display_index + 1}
-                state={state}
-                reveal_names={props.reveal_names}
-                disabled={props.disabled}
-                on_click_select={on_click_select.clone()}
-                on_keyboard_select={props.on_select.clone()}
-            />
+    let paths = regions
+        .into_iter()
+        .enumerate()
+        .filter_map(|(display_index, region)| {
+            let index = *indices_by_id.get(region.id.as_str())?;
+            let state = RegionVisualState::for_region(
+                props.correct_id.as_ref() == Some(&region.id),
+                props.selected_id.as_ref() == Some(&region.id),
+                props.highlighted,
+                props.reveal_names,
+            );
+            Some(html! {
+                <MapRegionPath
+                    key={region.id.clone()}
+                    dataset={props.map.clone()}
+                    index={index}
+                    display_index={display_index + 1}
+                    state={state}
+                    reveal_names={props.reveal_names}
+                    disabled={props.disabled}
+                    on_click_select={on_click_select.clone()}
+                    on_keyboard_select={props.on_select.clone()}
+                />
+            })
         })
-    }).collect::<Html>();
+        .collect::<Html>();
     html! {
         <section class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-surface p-2" data-province-map="">
             <div class="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
@@ -243,7 +285,6 @@ pub fn region_map(props: &RegionMapProps) -> Html {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,7 +312,11 @@ mod tests {
             version: String::new(),
             attribution: String::new(),
             view_box: "0 0 100 100".to_owned(),
-            regions: vec![region("44", None), region("82", None), region("4401", Some("44"))],
+            regions: vec![
+                region("44", None),
+                region("82", None),
+                region("4401", Some("44")),
+            ],
         };
         let available = eligible_parent_regions(&dataset);
         assert_eq!(available.len(), 1);

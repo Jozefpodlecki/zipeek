@@ -17,7 +17,6 @@ mod relations;
 pub(crate) use meaning_navigator::MeaningNavigator;
 use relations::relation_label;
 
-
 #[derive(Properties, PartialEq)]
 pub struct WordSpotlightProps {
     #[prop_or_default]

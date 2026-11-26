@@ -17,7 +17,7 @@ impl PracticeSession {
         self.current += 1;
         self.append_endless_step()?;
         self.queue_generation(2);
-        self.revision += 1;
+        self.revision = self.revision.saturating_add(1);
         Ok(())
     }
 
@@ -53,7 +53,7 @@ impl PracticeSession {
         self.current += 1;
         self.append_endless_step()?;
         self.queue_generation(2);
-        self.revision += 1;
+        self.revision = self.revision.saturating_add(1);
         Ok(())
     }
 
@@ -131,7 +131,7 @@ impl PracticeSession {
         }
         self.steps.truncate(self.current);
         self.endless_translation = false;
-        self.revision += 1;
+        self.revision = self.revision.saturating_add(1);
         self.validate()
     }
 }

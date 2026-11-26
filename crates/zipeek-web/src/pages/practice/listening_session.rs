@@ -55,16 +55,18 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
         let prepared = prepared.clone();
         let selected = selected.clone();
         let audio_error = audio_error.clone();
-        use_effect_with((props.vocabulary.clone(), props.seed), move |(vocabulary, seed)| {
-            let alive = Rc::new(Cell::new(true));
-            let pending = alive.clone();
-            let vocabulary = vocabulary.clone();
-            let seed = *seed;
-            prepared.set(None);
-            selected.set(None);
-            audio_error.set(String::new());
-            spawn_local(async move {
-                let result = load_words(&dictionary, &vocabulary, false)
+        use_effect_with(
+            (props.vocabulary.clone(), props.seed),
+            move |(vocabulary, seed)| {
+                let alive = Rc::new(Cell::new(true));
+                let pending = alive.clone();
+                let vocabulary = vocabulary.clone();
+                let seed = *seed;
+                prepared.set(None);
+                selected.set(None);
+                audio_error.set(String::new());
+                spawn_local(async move {
+                    let result = load_words(&dictionary, &vocabulary, false)
                     .await
                     .and_then(|words| {
                         let candidates = words
@@ -78,26 +80,32 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
                             .map(|question| ListeningPrompt { question, words })
                             .map_err(|error| format!("Cannot prepare listening choices: {error:?}. Select at least three distinct vocabulary words."))
                     });
-                if pending.get() {
-                    prepared.set(Some(result));
-                }
-            });
-            move || alive.set(false)
-        });
+                    if pending.get() {
+                        prepared.set(Some(result));
+                    }
+                });
+                move || alive.set(false)
+            },
+        );
     }
     {
         let speech = environment.speech.clone();
         let audio_error = audio_error.clone();
-        use_effect_with(((*prepared).clone(), props.options.autoplay), move |(prompt, autoplay)| {
-            if *autoplay {
-                if let Some(Ok(prompt)) = prompt {
-                    if let Err(error) = practice_audio::speak(&speech, &prompt.question.spoken_hanzi) {
-                        audio_error.set(format!("Automatic Mandarin playback unavailable: {error:?}. Use the speaker to try again."));
+        use_effect_with(
+            ((*prepared).clone(), props.options.autoplay),
+            move |(prompt, autoplay)| {
+                if *autoplay {
+                    if let Some(Ok(prompt)) = prompt {
+                        if let Err(error) =
+                            practice_audio::speak(&speech, &prompt.question.spoken_hanzi)
+                        {
+                            audio_error.set(format!("Automatic Mandarin playback unavailable: {error:?}. Use the speaker to try again."));
+                        }
                     }
                 }
-            }
-            || ()
-        });
+                || ()
+            },
+        );
     }
 
     let play = {

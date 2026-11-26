@@ -5,16 +5,16 @@
   "identifier": "com.jozef.zipeek",
   "build": {
     "beforeDevCommand": {
-      "script": "trunk serve --port 1421",
-      "cwd": "../zipeek-web",
+      "script": "cargo run --locked -p zipeek-cli -- desktop-frontend --serve",
+      "cwd": "../..",
       "wait": false
     },
     "beforeBuildCommand": {
-      "script": "trunk build --release",
-      "cwd": "../zipeek-web"
+      "script": "cargo run --locked -p zipeek-cli -- desktop-frontend --release",
+      "cwd": "../.."
     },
     "devUrl": "http://localhost:1421/",
-    "frontendDist": "../zipeek-web/dist"
+    "frontendDist": "../zipeek-web/dist-desktop"
   },
   "app": {
     "withGlobalTauri": true,
@@ -34,8 +34,8 @@
   "bundle": {
     "active": true,
     "resources": {
-      "../zipeek-web/static/hanzi.duckdb": "dictionary/hanzi.duckdb",
-      "binaries/duckdb.dll": "duckdb.dll"
+      "binaries/duckdb.dll": "duckdb.dll",
+      "binaries/dictionary/hanzi.duckdb": "dictionary/hanzi.duckdb"
     },
     "targets": [
       "nsis"
@@ -48,7 +48,8 @@
     ],
     "externalBin": [
       "binaries/zipeek-ai-server",
-      "binaries/zipeek-image-server"
+      "binaries/zipeek-image-server",
+      "binaries/zipeek-tts-stt"
     ]
   }
 }

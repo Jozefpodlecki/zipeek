@@ -79,3 +79,8 @@ For grammar visualization, the selected target rule is seven qualifying local da
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../../archive-history/audits/maintained-source-snapshots/learning-practice-practice-learning-evidence.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+
+## Prospective Knowledge Points policy supersession
+
+The older seven-day recognition/proficiency criteria described above are **legacy approved requirements**, not the new active scoring implementation. The later approved R608 [Knowledge Points specification](../pedagogy/knowledge-points.md) describes a prospective replacement model with five fixed 0.2 dimensions, distinct-context successes, debt, relapse and evaluator attribution. R608 is **not live**; the R609 pure-Rust module remains an uncompiled candidate. Until integration, distinguish historical policy, prospective design and actual saved Practice outcome history. Grammar scoring, exact numerical debt defaults and policy-day/identity boundaries remain undecided; do not silently reconcile them here.

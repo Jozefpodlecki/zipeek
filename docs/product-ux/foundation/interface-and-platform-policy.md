@@ -46,3 +46,7 @@ Zipeek is a publicly indexed application. Maintain descriptive titles and descri
 ## Engineering policy
 
 Rust implementation code has **no comments**, including explanatory comments, doc comments, TODO comments and lint-allowance justifications. Prefer clear identifiers, types and module boundaries; document architecture rationale here in maintained documents instead. Dependencies should prefer current stable releases, but **any** addition or update, including transitive updates through `cargo update`, requires explicit user approval. Keep the root lockfile and locked checks. Never perform dependency upgrades incidentally.
+
+## Reset app
+
+The user approved a Settings Reset app section on 2026-11-26. Its destructive action is labeled **Clear all data and start over**, explains permanent deletion and retained dictionary/model/exported files, and requires explicit confirmation. Reset must clear the browser/WebView and native personal stores that actually hold learner state; navigating to Home alone is insufficient. On full success, reload the deployment's landing page with onboarding restored. On partial failure, retain a visible error and Retry, without a success message or automatic transition to landing. Close other Zipeek tabs/windows before reset; active sessions block cleanup. See [personal storage](../../dictionary-data/personal/personal-data-storage.md#confirmed-app-reset-2026-11-26).

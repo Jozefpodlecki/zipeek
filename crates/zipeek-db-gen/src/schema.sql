@@ -44,11 +44,27 @@ CREATE TABLE character_readings (
     PRIMARY KEY (character, pinyin_numeric)
 );
 
+CREATE TABLE pinyin_syllable_candidates (
+    pinyin_numeric VARCHAR PRIMARY KEY,
+    attested_character_count INTEGER NOT NULL CHECK (attested_character_count > 0)
+);
+
 CREATE TABLE word_characters (
     word_id INTEGER NOT NULL REFERENCES words(id),
     character_position INTEGER NOT NULL CHECK (character_position > 0),
     character VARCHAR NOT NULL REFERENCES characters(character),
     PRIMARY KEY (word_id, character_position)
+);
+
+CREATE TABLE word_relations (
+    relation_id BIGINT PRIMARY KEY,
+    source_spelling VARCHAR NOT NULL,
+    relation_type VARCHAR NOT NULL,
+    target_spelling VARCHAR NOT NULL,
+    source_word_id INTEGER REFERENCES words(id),
+    target_word_id INTEGER REFERENCES words(id),
+    source_resolution VARCHAR NOT NULL CHECK (source_resolution IN ('resolved', 'missing', 'ambiguous')),
+    target_resolution VARCHAR NOT NULL CHECK (target_resolution IN ('resolved', 'missing', 'ambiguous'))
 );
 
 CREATE TABLE word_hsk_membership (
@@ -72,6 +88,15 @@ CREATE TABLE word_senses (
     source_ref INTEGER NOT NULL CHECK (source_ref > 0),
     source_gloss_order INTEGER NOT NULL CHECK (source_gloss_order > 0),
     PRIMARY KEY (word_id, sense_order)
+);
+
+CREATE TABLE character_gloss_candidates (
+    character VARCHAR NOT NULL REFERENCES characters(character),
+    source_word_id INTEGER NOT NULL REFERENCES words(id),
+    sense_order INTEGER NOT NULL,
+    gloss VARCHAR NOT NULL,
+    PRIMARY KEY (character, source_word_id, sense_order),
+    FOREIGN KEY (source_word_id, sense_order) REFERENCES word_senses(word_id, sense_order)
 );
 
 CREATE TABLE sense_display (

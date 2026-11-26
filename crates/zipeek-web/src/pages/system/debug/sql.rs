@@ -9,21 +9,13 @@ pub(super) fn bounded_select(sql: &str) -> Result<String, &'static str> {
         return Err("Enter a SELECT query of at most 2048 bytes");
     }
 
-    let normalized = trimmed.to_ascii_lowercase();
+    let statement = trimmed.strip_suffix(';').unwrap_or(trimmed).trim_end();
+    let normalized = statement.to_ascii_lowercase();
     if !normalized.starts_with("select ") && !normalized.starts_with("select\n") {
         return Err("Only SELECT statements are supported");
     }
     if normalized.contains(';') || normalized.contains("--") || normalized.contains("/*") {
         return Err("Multiple statements and SQL comments are not supported");
-    }
-
-    let permitted = [
-        " from words",
-        " from information_schema.tables",
-        " from pragma_database_size()",
-    ];
-    if !permitted.iter().any(|table| normalized.contains(table)) {
-        return Err("Query the words table, information_schema.tables or pragma_database_size()");
     }
 
     for token in [
@@ -39,13 +31,20 @@ pub(super) fn bounded_select(sql: &str) -> Result<String, &'static str> {
         "export ",
         "pragma ",
         " from read_",
+        "sqlite_scan",
+        "postgres_scan",
+        "mysql_scan",
+        "query_table",
+        "getenv(",
+        "current_setting(",
+        "secret",
     ] {
         if normalized.contains(token) {
             return Err("External I/O and administrative SQL are unavailable here");
         }
     }
     Ok(format!(
-        "SELECT * FROM ({trimmed}) AS debug_preview LIMIT {MAX_ROWS}"
+        "SELECT * FROM ({statement}) AS debug_preview LIMIT {MAX_ROWS}"
     ))
 }
 
@@ -105,6 +104,14 @@ mod tests {
                 .contains("LIMIT 100")
         );
         assert!(bounded_select("SELECT table_name FROM information_schema.tables").is_ok());
+        assert!(bounded_select("SELECT * FROM character_readings LIMIT 5;").is_ok());
+        assert!(bounded_select("SELECT 1").is_ok());
+        let relations = bounded_select(
+            "SELECT source_resolution, target_resolution, COUNT(*) AS total FROM word_relations GROUP BY 1, 2 ORDER BY total DESC;",
+        )
+        .unwrap();
+        assert!(relations.contains("FROM word_relations"));
+        assert!(!relations.contains("DESC;"));
     }
 
     #[test]
@@ -112,8 +119,8 @@ mod tests {
         for input in [
             "DELETE FROM words",
             "SELECT * FROM words; DROP TABLE words",
+            "SELECT * FROM word_relations;;",
             "SELECT * FROM read_csv('a')",
-            "SELECT 1",
             "SELECT * FROM words -- hi",
         ] {
             assert!(bounded_select(input).is_err(), "{input}");

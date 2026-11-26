@@ -3,7 +3,7 @@ pub(super) struct SqlExample {
     pub sql: &'static str,
 }
 
-pub(super) const EXAMPLES: [SqlExample; 20] = [
+pub(super) const EXAMPLES: [SqlExample; 21] = [
     SqlExample {
         label: "First 10 words",
         sql: "SELECT id, simplified, pinyin FROM words ORDER BY id LIMIT 10",
@@ -81,6 +81,10 @@ pub(super) const EXAMPLES: [SqlExample; 20] = [
         sql: "SELECT table_name FROM information_schema.tables ORDER BY table_name LIMIT 50",
     },
     SqlExample {
+        label: "Relationship resolution",
+        sql: "SELECT source_resolution, target_resolution, COUNT(*) AS total FROM word_relations GROUP BY 1, 2 ORDER BY total DESC",
+    },
+    SqlExample {
         label: "Database storage",
         sql: "SELECT database_size, block_size, total_blocks, used_blocks, wal_size FROM pragma_database_size()",
     },
@@ -94,7 +98,7 @@ mod tests {
     #[test]
     fn examples_are_unique_and_bounded() {
         let mut labels = std::collections::BTreeSet::new();
-        assert_eq!(EXAMPLES.len(), 20);
+        assert_eq!(EXAMPLES.len(), 21);
         for example in EXAMPLES {
             assert!(labels.insert(example.label));
             assert!(bounded_select(example.sql).is_ok(), "{}", example.label);

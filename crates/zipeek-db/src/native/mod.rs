@@ -1,4 +1,4 @@
-use duckdb_neo::{
+pub use duckdb_neo::{
     Parameters,
     connection::Connection,
     environment::{Environment, StorageLocation},

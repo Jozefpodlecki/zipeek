@@ -68,7 +68,10 @@ fn scattered_order() -> Vec<usize> {
     let mut indices: Vec<usize> = (0..REGION_COUNT).collect();
     indices.sort_by_key(|&index| {
         let value = index as u32 + 1;
-        (value.wrapping_mul(0x9e37_79b1) ^ (index as u32).wrapping_mul(0x85eb_ca6b), index)
+        (
+            value.wrapping_mul(0x9e37_79b1) ^ (index as u32).wrapping_mul(0x85eb_ca6b),
+            index,
+        )
     });
     indices
 }
@@ -77,9 +80,8 @@ fn base_layout(reading_counts: &[usize; REGION_COUNT]) -> [Rect; REGION_COUNT] {
     assert!(reading_counts.iter().all(|&count| count > 0));
     let indices = scattered_order();
     for floor in (110_u64..=400).step_by(10) {
-        let weights = reading_counts.map(|count| {
-            (((count as f64).sqrt() * 12.0).round() as u64).max(floor)
-        });
+        let weights =
+            reading_counts.map(|count| (((count as f64).sqrt() * 12.0).round() as u64).max(floor));
         let mut result = [Rect {
             x: 0.0,
             y: 0.0,
@@ -97,7 +99,10 @@ fn base_layout(reading_counts: &[usize; REGION_COUNT]) -> [Rect; REGION_COUNT] {
             },
             &mut result,
         );
-        if result.iter().all(|rect| rect.width >= MIN_EDGE && rect.height >= MIN_EDGE) {
+        if result
+            .iter()
+            .all(|rect| rect.width >= MIN_EDGE && rect.height >= MIN_EDGE)
+        {
             return result;
         }
     }
@@ -153,10 +158,22 @@ mod tests {
     fn every_region_is_selectable_and_has_a_minimum_bounding_size() {
         for polygon in polygons(&counts()) {
             assert!(polygon.len() >= 3);
-            let min_x = polygon.iter().map(|point| point.x).fold(f64::INFINITY, f64::min);
-            let max_x = polygon.iter().map(|point| point.x).fold(f64::NEG_INFINITY, f64::max);
-            let min_y = polygon.iter().map(|point| point.y).fold(f64::INFINITY, f64::min);
-            let max_y = polygon.iter().map(|point| point.y).fold(f64::NEG_INFINITY, f64::max);
+            let min_x = polygon
+                .iter()
+                .map(|point| point.x)
+                .fold(f64::INFINITY, f64::min);
+            let max_x = polygon
+                .iter()
+                .map(|point| point.x)
+                .fold(f64::NEG_INFINITY, f64::max);
+            let min_y = polygon
+                .iter()
+                .map(|point| point.y)
+                .fold(f64::INFINITY, f64::min);
+            let max_y = polygon
+                .iter()
+                .map(|point| point.y)
+                .fold(f64::NEG_INFINITY, f64::max);
             assert!(max_x - min_x >= MIN_EDGE);
             assert!(max_y - min_y >= MIN_EDGE);
         }
@@ -208,7 +225,17 @@ mod tests {
         let first = region_paths(&counts);
         assert_eq!(first, region_paths(&counts));
         assert_eq!(first.len(), REGION_COUNT);
-        assert_eq!(first.iter().collect::<std::collections::BTreeSet<_>>().len(), REGION_COUNT);
-        assert!(first.iter().all(|path| path.starts_with("M ") && path.ends_with(" Z")));
+        assert_eq!(
+            first
+                .iter()
+                .collect::<std::collections::BTreeSet<_>>()
+                .len(),
+            REGION_COUNT
+        );
+        assert!(
+            first
+                .iter()
+                .all(|path| path.starts_with("M ") && path.ends_with(" Z"))
+        );
     }
 }

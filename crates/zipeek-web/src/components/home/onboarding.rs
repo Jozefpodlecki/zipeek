@@ -146,7 +146,7 @@ pub(super) fn onboarding_form(props: &Props) -> Html {
                         onchange={on_recording_change} class="mt-1 size-5 shrink-0 accent-[var(--accent)]" />
                     <span class="flex flex-col gap-1">
                         <span class="font-semibold">{"Save completed Practice outcomes on this device"}</span>
-                        <span class="text-sm leading-relaxed text-muted">{"Off by default. Enabling this saves completed Practice sessions to your personal database. It does not assess proficiency, unlock Courses, or enable AI tracking. You can disable future recording in Settings → Learning Data."}</span>
+                        <span class="text-sm leading-relaxed text-muted">{"Off by default. Enabling this saves completed Practice sessions to your personal database. It does not assess proficiency, unlock Courses, or enable AI tracking. You can disable future recording in Settings → Learning."}</span>
                     </span>
                 </label>
             </fieldset>

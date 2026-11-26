@@ -118,42 +118,41 @@ fn create_english_fts(connection: &Connection) -> Result<(), ArtifactError> {
 }
 
 fn verify_english_fts(connection: &Connection) -> Result<(), ArtifactError> {
-    let mut result = connection
-        .query(
-            "SELECT count(*) FROM duckdb_schemas() WHERE database_name = current_database() AND schema_name = 'fts_main_words'",
-            Parameters::None,
-        )
-        .map_err(|source| ArtifactError::Query {
-            query: "verify English FTS schema".to_owned(),
+    {
+        let mut result = connection
+            .query(
+                "SELECT count(*) FROM duckdb_schemas() WHERE database_name = current_database() AND schema_name = 'fts_main_words'",
+                Parameters::None,
+            )
+            .map_err(|source| ArtifactError::Query {
+                query: "verify English FTS schema".to_owned(),
+                source,
+            })?;
+        let Some(chunk) = result.next_chunk().map_err(|source| ArtifactError::Query {
+            query: "read English FTS schema count".to_owned(),
+            source,
+        })?
+        else {
+            return Err(ArtifactError::LogicalMismatch {
+                stage: "FTS schema verification",
+            });
+        };
+        let vector = chunk
+            .get_vector_at::<i64>(0)
+            .map_err(|source| ArtifactError::Query {
+                query: "read English FTS schema vector".to_owned(),
+                source,
+            })?;
+        let reader = vector.reader().map_err(|source| ArtifactError::Query {
+            query: "read English FTS schema count value".to_owned(),
             source,
         })?;
-    let Some(chunk) = result.next_chunk().map_err(|source| ArtifactError::Query {
-        query: "read English FTS schema count".to_owned(),
-        source,
-    })?
-    else {
-        return Err(ArtifactError::LogicalMismatch {
-            stage: "FTS schema verification",
-        });
-    };
-    let vector = chunk
-        .get_vector_at::<i64>(0)
-        .map_err(|source| ArtifactError::Query {
-            query: "read English FTS schema vector".to_owned(),
-            source,
-        })?;
-    let reader = vector.reader().map_err(|source| ArtifactError::Query {
-        query: "read English FTS schema count value".to_owned(),
-        source,
-    })?;
-    if reader.iter().next().flatten().copied() != Some(1) {
-        return Err(ArtifactError::LogicalMismatch {
-            stage: "FTS schema verification",
-        });
+        if reader.iter().next().flatten().copied() != Some(1) {
+            return Err(ArtifactError::LogicalMismatch {
+                stage: "FTS schema verification",
+            });
+        }
     }
-    drop(reader);
-    drop(vector);
-    drop(result);
     let mut matches = connection
         .query(
             "SELECT count(*) FROM (SELECT fts_main_words.match_bm25(id, 'language') AS score FROM words) AS ranked WHERE score IS NOT NULL",
@@ -163,23 +162,33 @@ fn verify_english_fts(connection: &Connection) -> Result<(), ArtifactError> {
             query: "verify nonempty FTS BM25 results".to_owned(),
             source,
         })?;
-    let Some(chunk) = matches.next_chunk().map_err(|source| ArtifactError::Query {
-        query: "execute FTS BM25 result check".to_owned(),
-        source,
-    })? else {
+    let Some(chunk) = matches
+        .next_chunk()
+        .map_err(|source| ArtifactError::Query {
+            query: "execute FTS BM25 result check".to_owned(),
+            source,
+        })?
+    else {
         return Err(ArtifactError::LogicalMismatch {
             stage: "FTS result verification",
         });
     };
-    let scores = chunk.get_vector_at::<i64>(0).map_err(|source| ArtifactError::Query {
-        query: "read FTS result count".to_owned(),
-        source,
-    })?;
+    let scores = chunk
+        .get_vector_at::<i64>(0)
+        .map_err(|source| ArtifactError::Query {
+            query: "read FTS result count".to_owned(),
+            source,
+        })?;
     let values = scores.reader().map_err(|source| ArtifactError::Query {
         query: "read FTS result count value".to_owned(),
         source,
     })?;
-    if !values.iter().next().flatten().is_some_and(|count| *count > 0) {
+    if !values
+        .iter()
+        .next()
+        .flatten()
+        .is_some_and(|count| *count > 0)
+    {
         return Err(ArtifactError::LogicalMismatch {
             stage: "FTS result verification",
         });
@@ -192,11 +201,14 @@ const BULK_COPY_TABLES: &[&str] = &[
     "dictionary_versions",
     "characters",
     "character_readings",
+    "pinyin_syllable_candidates",
     "vocabulary_identities",
     "word_hsk_membership",
     "word_pos_membership",
     "word_senses",
+    "character_gloss_candidates",
     "word_characters",
+    "word_relations",
     "sense_display",
     "sense_qualifiers",
     "sense_relations",
@@ -252,6 +264,34 @@ mod tests {
                     .iter()
                     .position(|name| *name == "word_characters")
         );
+        let mut seen = std::collections::HashSet::new();
+        for table in BULK_COPY_TABLES {
+            assert!(seen.insert(table), "table copied twice: {table}");
+        }
+        let schema = include_str!("../schema.sql");
+        for definition in schema.split("CREATE TABLE ").skip(1) {
+            let (table, rest) = definition.split_once('(').expect("table definition");
+            let table = table.trim();
+            let body = rest.split_once(';').expect("table terminator").0;
+            if let Some(child_position) = BULK_COPY_TABLES.iter().position(|name| *name == table) {
+                for foreign_key in body.split("REFERENCES ").skip(1) {
+                    let parent = foreign_key
+                        .split(|character: char| {
+                            !character.is_ascii_alphanumeric() && character != '_'
+                        })
+                        .next()
+                        .expect("foreign key parent");
+                    if let Some(parent_position) =
+                        BULK_COPY_TABLES.iter().position(|name| *name == parent)
+                    {
+                        assert!(
+                            parent_position < child_position,
+                            "{table} copied before its referenced parent {parent}"
+                        );
+                    }
+                }
+            }
+        }
         assert!(!BULK_COPY_TABLES.contains(&"parts_of_speech"));
         assert!(!BULK_COPY_TABLES.contains(&"categories"));
     }

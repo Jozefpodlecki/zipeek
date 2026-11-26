@@ -185,3 +185,14 @@ These journeys do not provide evidence for Mandarin microphone transcription acc
 The E2E startup checks the installed `static/hanzi.manifest.json` and verifies that its single compressed DuckDB file exists with the declared positive byte size, before launching Trunk. Once Trunk completes, it checks the corresponding output file in `dist`. This is a fast presence/size gate, not a replacement for the separately maintained SHA-256 asset-integrity audit or browser dictionary initialization. Generated dictionary binaries remain excluded from source handoffs.
 
 Registered deep links wait for their route-specific marker; unregistered deep links retain the app-shell readiness fallback. Full-screen sessions and lessons need not render a global app shell. The Time Weaver entry route initially presents its setup screen, while gameplay tests separately assert the game marker.
+
+
+## Shared WebDriver driver and selector contract
+
+Import `zipeek_e2e::page_objects::WebDriverActions` at the call site to use `driver.click(css).await?` or `driver.element(css).await?`. These convenience methods preserve ordinary Thirtyfour `WebDriverResult` errors and `single()` element lookup. Shared selectors are in `zipeek_e2e::page_objects::selectors::{practice,image_review}`. The recorder-button contract includes required dispatch metadata; Image Review uses stable `data-image-review` markers on container, status, error and approval elements. Confirm these source contracts against the current Rust source before modifying driver APIs. Historical R310 validation totals (842 source contracts, 729 passes, 113 previously failing, and four focused passes) are **not current test results**; see [historical review](../../archive-history/audits/release-engineering-review-history.md).
+
+## Native speech server integration
+
+The native speech crate exports `server::SpeechServer`. An E2E caller binds `tokio::net::TcpListener` to `127.0.0.1:0`, then passes the owned listener and `Speech` configuration to `SpeechServer::start`. The server returns the assigned address and base URL. Use `shutdown().await` on successful completion; `Drop` aborts its task if a test unwinds or exits early. Graceful shutdown has a five-second bound and reports timeout as an error. The server rejects non-loopback listeners.
+
+`crates/zipeek-e2e/tests/speech_server_lifecycle.rs` verifies live HTTP health/capabilities and listener release without Chrome or downloaded weights. This is an in-process lifecycle contract test, not an executable launch test or evidence of neural inference. The separate real-binary speech HTTP suite remains the process-boundary check. The API does not change the browser fixture's default speech mode.

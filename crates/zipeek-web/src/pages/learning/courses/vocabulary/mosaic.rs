@@ -1,6 +1,6 @@
+use super::vocabulary_geometry;
 use yew::prelude::*;
 use zipeek_pedagogy::curriculum::VOCABULARY_REGIONS as COURSES;
-use super::vocabulary_geometry;
 
 #[derive(Properties, PartialEq)]
 pub struct MosaicProps {

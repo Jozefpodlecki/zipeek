@@ -1,4 +1,7 @@
-use crate::models::{CharacterBuilderOptions, TypePinyinOptions, VocabularyExerciseOptions, WriteHanziOptions, ListeningChoiceOptions};
+use crate::models::{
+    CharacterBuilderOptions, ListeningChoiceOptions, TypePinyinOptions, VocabularyExerciseOptions,
+    WriteHanziOptions,
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -33,6 +36,10 @@ pub(crate) enum ExerciseConfiguration {
         formats: Vec<String>,
         reverse_matching: bool,
         pair_count: u8,
+        #[serde(default)]
+        ai_generated: bool,
+        #[serde(default = "crate::models::default_matching_pinyin")]
+        show_pinyin: bool,
     },
     SentenceTranslation {
         direction: String,
@@ -52,15 +59,19 @@ impl ExerciseConfiguration {
                 formats: vec!["hanzi-eng".to_owned()],
                 reverse_matching: false,
                 pair_count: 4,
+                ai_generated: false,
+                show_pinyin: true,
             },
             "multiple-choice" => Self::Quiz {
                 formats: vec!["hanzi-to-meaning".to_owned()],
                 reverse_matching: false,
                 pair_count: 4,
+                ai_generated: false,
+                show_pinyin: true,
             },
-            "sentence-transformation" => Self::SentenceTransformation(
-                crate::models::SentenceTransformationOptions::default(),
-            ),
+            "sentence-transformation" => {
+                Self::SentenceTransformation(crate::models::SentenceTransformationOptions::default())
+            }
             "sentence-translation" => Self::SentenceTranslation {
                 direction: default_translation_direction(),
             },

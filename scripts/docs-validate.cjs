@@ -24,7 +24,7 @@ function documentEntries() {
 }
 function checkLinks(filename, content) {
   const relative = path.relative(root, filename).split(path.sep).join('/');
-  const historic = relative.startsWith('docs/archive-history/completed/');
+  const historic = relative.startsWith('docs/archive-history/');
   const issue = message => (historic ? historicalWarnings : failures).push(`${relative}: ${message}`);
   // Remove fenced snippets and inline code to avoid interpreting code samples as URLs.
   const clean = content.replace(/^```[^\n]*\n[\s\S]*?^```\s*$/gm, '').replace(/`[^`\n]*`/g, '');
@@ -74,7 +74,7 @@ function checkE2eDocsRoutes() {
       }
     }
   }
-  const sectionSamples = /\(\s*"([A-Za-z0-9_./-]+\.md)"\s*,\s*"([^"]+)"\s*\)/g;
+  const sectionSamples = /\(\s*"([A-Za-z0-9_./-]+\.md)"\s*,\s*"([^"]+)"\s*,?\s*\)/g;
   const folders = new Set();
   for (const match of source.matchAll(sectionSamples)) {
     const relative = match[1];

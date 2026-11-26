@@ -26,7 +26,10 @@ pub(super) fn listening_settings(props: &ListeningSettingsProps) -> Html {
     let on_pinyin = {
         let dispatch = props.on_action.clone();
         Callback::from(move |event: Event| {
-            if let Some(input) = event.target().and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok()) {
+            if let Some(input) = event
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok())
+            {
                 if let Some(value) = select_visibility(&input.value()) {
                     dispatch.emit(PracticeSetupAction::SetListeningPinyin(value));
                 }
@@ -36,7 +39,10 @@ pub(super) fn listening_settings(props: &ListeningSettingsProps) -> Html {
     let on_meaning = {
         let dispatch = props.on_action.clone();
         Callback::from(move |event: Event| {
-            if let Some(input) = event.target().and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok()) {
+            if let Some(input) = event
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok())
+            {
                 if let Some(value) = select_visibility(&input.value()) {
                     dispatch.emit(PracticeSetupAction::SetListeningMeaning(value));
                 }
@@ -46,7 +52,10 @@ pub(super) fn listening_settings(props: &ListeningSettingsProps) -> Html {
     let on_autoplay = {
         let dispatch = props.on_action.clone();
         Callback::from(move |event: Event| {
-            if let Some(input) = event.target().and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok()) {
+            if let Some(input) = event
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok())
+            {
                 dispatch.emit(PracticeSetupAction::SetListeningAutoplay(input.checked()));
             }
         })

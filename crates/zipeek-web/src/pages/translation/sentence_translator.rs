@@ -16,9 +16,14 @@ use state::{TranslationDirection, TranslatorAction, TranslatorState};
 
 fn actionable_translation_error(error: &str) -> String {
     let normalized = error.to_ascii_lowercase();
-    if ["failed to fetch", "connection refused", "networkerror", "network request failed"]
-        .iter()
-        .any(|indicator| normalized.contains(indicator))
+    if [
+        "failed to fetch",
+        "connection refused",
+        "networkerror",
+        "network request failed",
+    ]
+    .iter()
+    .any(|indicator| normalized.contains(indicator))
     {
         "Cannot reach the configured AI service. Check its address and connection in Settings, ensure the service is running, and try again.".to_owned()
     } else {
@@ -39,7 +44,10 @@ mod translation_error_tests {
 
     #[test]
     fn preserves_non_network_errors() {
-        assert_eq!(actionable_translation_error("Invalid translation response"), "Invalid translation response");
+        assert_eq!(
+            actionable_translation_error("Invalid translation response"),
+            "Invalid translation response"
+        );
     }
 }
 

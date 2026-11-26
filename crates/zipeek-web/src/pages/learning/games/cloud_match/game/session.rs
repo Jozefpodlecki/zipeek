@@ -35,8 +35,14 @@ impl Reducible for CloudSession {
                 next.incorrect_pairs.clear();
                 next.setup_error.clear();
             }
-            CloudAction::StartFailed(error) => next.setup_error = error,
+            CloudAction::StartFailed(error) => {
+                next.game = None;
+                next.feedback.clear();
+                next.incorrect_pairs.clear();
+                next.setup_error = error;
+            }
             CloudAction::ReturnToSetup => {
+                next.setup_error.clear();
                 next.game = None;
                 next.feedback.clear();
                 next.incorrect_pairs.clear();
@@ -118,6 +124,16 @@ mod tests {
         Rc::new(CloudSession::default()).reduce(CloudAction::Start(
             CloudGame::new(words, MatchMode::HanziMeaning, Difficulty::Normal, 7).unwrap(),
         ))
+    }
+
+    #[test]
+    fn failed_restart_discards_previous_game_state() {
+        let running = session();
+        let failed = running.reduce(CloudAction::StartFailed("no candidates".into()));
+        assert!(failed.game.is_none());
+        assert_eq!(failed.setup_error, "no candidates");
+        let reset = failed.reduce(CloudAction::ReturnToSetup);
+        assert!(reset.setup_error.is_empty());
     }
 
     #[test]

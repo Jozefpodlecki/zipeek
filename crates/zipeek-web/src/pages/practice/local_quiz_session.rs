@@ -1,12 +1,14 @@
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     collections::{BTreeSet, HashMap},
     rc::Rc,
 };
 
+use gloo::timers::callback::Timeout;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use zipeek_core::practice::ExerciseVariant;
+use zipeek_browser::local_speech::{self, MatchingAudio};
 use zipeek_exercises::local_quiz::{
     PairAttempt, QuizRound, QuizWord, prepare_for_format_with_count,
 };
@@ -29,6 +31,8 @@ pub struct LocalQuizSessionProps {
     pub quiz_format: String,
     pub reverse_matching: bool,
     pub pair_count: u8,
+    pub generated_words: Option<Vec<QuizWord>>,
+    pub show_pinyin: bool,
     pub on_completed: Callback<()>,
 }
 
@@ -50,6 +54,10 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
     let wrong_attempts = use_state(|| 0u32);
     let pairing_error = use_state(|| None::<String>);
     let last_incorrect = use_state(|| None::<(i32, i32)>);
+    let prepared_audio = use_state(|| None::<Result<Vec<MatchingAudio>, String>>);
+    let audio_progress = use_state(|| 0usize);
+    let audio_failed_word = use_state(|| None::<(usize, String)>);
+    let audio_retry = use_state(|| 0u32);
 
     {
         let dictionary = dictionary.clone();
@@ -66,11 +74,13 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                 props.mode,
                 props.quiz_format.clone(),
                 props.pair_count,
+                props.generated_words.clone(),
             ),
-            move |(vocabulary, seed, mode, token, pair_count)| {
+            move |(vocabulary, seed, mode, token, pair_count, generated_words)| {
                 let alive = Rc::new(Cell::new(true));
                 let pending = alive.clone();
                 let vocabulary = vocabulary.clone();
+                let generated_words = generated_words.clone();
                 let seed = *seed;
                 let pair_count = usize::from(*pair_count);
                 let format = selected_quiz_format(token, *mode);
@@ -81,7 +91,11 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                 pairing_error.set(None);
                 last_incorrect.set(None);
                 spawn_local(async move {
-                    let result = load_words(&dictionary, &vocabulary, true)
+                    let result = if let Some(words) = generated_words {
+                    format.and_then(|variant| prepare_for_format_with_count(&words, seed, variant, pair_count)
+                        .map_err(|error| format!("Cannot prepare generated matching pairs: {error:?}")))
+                } else {
+                    load_words(&dictionary, &vocabulary, true)
                     .await
                     .and_then(|words| {
                         let format = format?;
@@ -98,7 +112,8 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                         prepare_for_format_with_count(&candidates, seed, format, pair_count).map_err(|error| {
                             format!("Cannot prepare matching vocabulary: {error:?}. Choose enough distinct words with distinct meanings for the configured number of pairs.")
                         })
-                    });
+                    })
+                };
                     if pending.get() {
                         round.set(Some(result));
                     }
@@ -106,6 +121,83 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                 move || alive.set(false)
             },
         );
+    }
+
+    {
+        let prepared_audio = prepared_audio.clone();
+        let audio_progress = audio_progress.clone();
+        let audio_failed_word = audio_failed_word.clone();
+        let round = (*round).clone();
+        use_effect_with((props.quiz_format.clone(), round, *audio_retry), move |(token, round, _)| {
+            let alive = Rc::new(Cell::new(true));
+            let owned = Rc::new(RefCell::new(Vec::<MatchingAudio>::new()));
+            prepared_audio.set(None);
+            audio_progress.set(0);
+            audio_failed_word.set(None);
+            let is_audio = matches!(token.as_str(), "audio-hanzi" | "audio-meaning");
+            if is_audio {
+                if let Some(Ok(question)) = round {
+                    let words = question.words.clone();
+                    let pending = alive.clone();
+                    let prepared = owned.clone();
+                    let result_state = prepared_audio.clone();
+                    let progress = audio_progress.clone();
+                    let failed_word = audio_failed_word.clone();
+                    spawn_local(async move {
+                        let mut result = Ok(());
+                        if !local_speech::enabled() {
+                            result = Err("Enable Local Speech in Settings before starting an audio matching exercise.".to_owned());
+                        } else {
+                            for (index, word) in words.iter().enumerate() {
+                                if !pending.get() { break; }
+                                match local_speech::prepare_matching_audio(&word.hanzi).await {
+                                    Ok(audio) => {
+                                        if !pending.get() {
+                                            local_speech::dispose_matching_audio(&audio);
+                                            break;
+                                        }
+                                        prepared.borrow_mut().push(audio);
+                                        progress.set(index + 1);
+                                    }
+                                    Err(error) => {
+                                        let detail = error.as_string().unwrap_or_else(|| "Speech synthesis failed".to_owned());
+                                        log::error!("Audio matching TTS failed for word {} of {} ({}): {}", index + 1, words.len(), word.hanzi, detail);
+                                        if pending.get() {
+                                            failed_word.set(Some((index + 1, word.hanzi.clone())));
+                                        }
+                                        result = Err(if detail.contains("maximum acoustic frames without EOS") {
+                                            "Speech generation did not finish for this word. Try again or choose different vocabulary.".to_owned()
+                                        } else {
+                                            "Could not prepare this audio prompt. Check your speech service and try again.".to_owned()
+                                        });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if pending.get() {
+                            result_state.set(Some(result.map(|()| prepared.borrow().clone())));
+                        }
+                    });
+                }
+            }
+            move || {
+                alive.set(false);
+                if is_audio { local_speech::cancel(); }
+                for audio in owned.borrow().iter() { local_speech::dispose_matching_audio(audio); }
+            }
+        });
+    }
+
+    {
+        let last_incorrect = last_incorrect.clone();
+        use_effect_with(*last_incorrect, move |incorrect| {
+            let timeout = incorrect.map(|_| {
+                let last_incorrect = last_incorrect.clone();
+                Timeout::new(650, move || last_incorrect.set(None))
+            });
+            move || drop(timeout)
+        });
     }
 
     let on_pick_pair = {
@@ -215,28 +307,81 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                 }
             }
             LocalQuizMode::Matching => {
+                let audio_mode = matches!(props.quiz_format.as_str(), "audio-hanzi" | "audio-meaning");
+                let audio_hanzi = props.quiz_format == "audio-hanzi";
+                let reverse = props.reverse_matching && !audio_mode;
                 let all_matched = matched.len() == question.words.len();
-                let first_label = if props.reverse_matching {
+                let answer_order = if audio_mode {
+                    let offset = 1 + (props.seed as usize % (question.words.len() - 1));
+                    question.words.iter().cycle().skip(offset).take(question.words.len()).collect::<Vec<_>>()
+                } else {
+                    question.words.iter().rev().collect::<Vec<_>>()
+                };
+                let first_label = if reverse {
                     "Answers"
                 } else {
                     "Prompts"
                 };
-                let second_label = if props.reverse_matching {
+                let second_label = if reverse {
                     "Prompts"
                 } else {
                     "Answers"
                 };
+                if audio_mode && prepared_audio.is_none() {
+                    html! {
+                        <div class="mx-auto flex w-full max-w-md flex-col items-center gap-5 py-6 text-center" data-audio-preparing="" aria-busy="true">
+                            <span class="loading-spinner" aria-hidden="true" />
+                            <div class="space-y-2">
+                                <h2 class="text-lg font-semibold text-ink">{"Preparing..."}</h2>
+                                <p role="status" aria-live="polite" class="sr-only" data-audio-preparation-progress="">
+                                    {format!("{} of {} audio prompts ready", *audio_progress, question.words.len())}
+                                </p>
+                            </div>
+                            <div class="h-1.5 w-full overflow-hidden rounded-full bg-raised" role="progressbar"
+                                aria-label="Audio preparation" aria-valuemin="0"
+                                aria-valuemax={question.words.len().to_string()}
+                                aria-valuenow={audio_progress.to_string()}>
+                                <div class="h-full rounded-full bg-brand-action transition-[width] duration-300 motion-reduce:transition-none"
+                                    style={format!("width: {}%", *audio_progress * 100 / question.words.len().max(1))} />
+                            </div>
+                        </div>
+                    }
+                } else if audio_mode && prepared_audio.as_ref().is_some_and(Result::is_err) {
+                    let error = prepared_audio.as_ref().and_then(|v| v.as_ref().err()).cloned().unwrap_or_default();
+                    let on_retry = {
+                        let audio_retry = audio_retry.clone();
+                        Callback::from(move |_: MouseEvent| audio_retry.set(audio_retry.wrapping_add(1)))
+                    };
+                    let failed = (*audio_failed_word).clone();
+                    html! {
+                        <div class="mx-auto flex w-full max-w-lg flex-col gap-4 py-4" data-audio-preparation-failed="">
+                            <div class="space-y-1">
+                                <h2 class="text-lg font-semibold text-ink">{"Audio could not be prepared"}</h2>
+                                <p class="text-sm text-muted" role="alert">{error}</p>
+                                {if let Some((index, hanzi)) = failed {
+                                    html! { <p class="text-sm text-ink" data-audio-failed-word="">
+                                        {format!("Failed on word {index} of {}: {hanzi}", question.words.len())}
+                                    </p> }
+                                } else { Html::default() }}
+                            </div>
+                            <div class="rounded-lg border border-line bg-raised/50 px-4 py-3">
+                                <p class="mb-2 text-xs font-medium text-muted">{"Words selected for this round"}</p>
+                                <div class="flex flex-wrap gap-2" data-audio-selected-words="">
+                                    {for question.words.iter().map(|word| html! {
+                                        <span key={word.id} lang="zh" class="rounded-md border border-line px-2.5 py-1 text-sm font-[family-name:var(--hanzi-font)] text-ink">{&word.hanzi}</span>
+                                    })}
+                                </div>
+                            </div>
+                            <button type="button" class="inline-flex min-h-11 w-fit items-center rounded-lg bg-brand-action px-5 py-2 text-sm font-semibold text-white hover:bg-brand-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" onclick={on_retry}>
+                                {"Try again"}
+                            </button>
+                        </div>
+                    }
+                } else {
                 html! {
                     <div class="space-y-4">
-                        <p class="text-sm text-muted">{"Select the Chinese word, then choose its matching meaning."}</p>
-                        <p role="status" aria-live="polite" data-matching-selection="" class={classes!("min-h-10", "rounded-lg", "border", "px-3", "py-2", "text-sm", "font-medium", "transition-colors", "duration-150", "motion-reduce:transition-none", if selected.is_some() {"border-brand-action bg-accent-soft text-ink"} else {"border-line bg-raised text-muted"})}>
-                            {if let Some(selected_id) = *selected {
-                                question.words.iter().find(|word| word.id == selected_id).map(|word| format!("Selected: {}. Choose the matching answer.", if props.reverse_matching {question.option_for(word)} else {question.prompt_for(word)})).unwrap_or_default()
-                            } else if all_matched {
-                                "All pairs matched. Continue when you are ready.".to_owned()
-                            } else {
-                                "Choose a word to begin.".to_owned()
-                            }}
+                        <p role="status" aria-live="polite" data-matching-selection="" class="sr-only">
+                            {if all_matched { "All pairs matched".to_owned() } else if let Some(id) = *selected { format!("Prompt {id} selected. Choose the matching answer.") } else { "Choose a prompt to begin".to_owned() }}
                         </p>
                         <div data-matching-board="" class="grid grid-cols-2 gap-2 sm:gap-4">
                             <div role="group" aria-label={first_label} class="space-y-2">
@@ -249,14 +394,25 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                                     let disabled = matched.contains(&id);
                                     let was_wrong = (*last_incorrect).is_some_and(|(left, _)| left == id);
                                     let is_hanzi = match props.quiz_format.as_str() {
-                                        "hanzi-eng" => !props.reverse_matching,
-                                        "pinyin-hanzi" => props.reverse_matching,
+                                        "hanzi-eng" => !reverse,
+                                        "pinyin-hanzi" => reverse,
                                         _ => false,
                                     };
+                                    let playable = if audio_mode {
+                                        question.words.iter().position(|word| word.id == id)
+                                            .and_then(|index| prepared_audio.as_ref().and_then(|value| value.as_ref().ok()).and_then(|items| items.get(index))).cloned()
+                                    } else { None };
                                     let on_pick = Callback::from(move |_: MouseEvent| {
                                         selected_for_click.set(Some(id));
                                         error_for_click.set(None);
                                         last_incorrect_for_click.set(None);
+                                        if let Some(audio) = playable.clone() {
+                                            spawn_local(async move {
+                                                if let Err(error) = local_speech::play_matching_audio(&audio).await {
+                                                    log::warn!("Matching audio playback failed: {error:?}");
+                                                }
+                                            });
+                                        }
                                     });
                                     html! {
                                         <button
@@ -267,30 +423,49 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                                             data-matching-selected={is_selected.then_some("")}
                                             data-matching-matched={disabled.then_some("")}
                                             aria-pressed={is_selected.to_string()}
+                                            aria-label={if audio_mode { format!("Play audio prompt {} and select it", question.words.iter().position(|item| item.id == id).unwrap_or(0) + 1) } else { (if reverse {question.option_for(word)} else {question.prompt_for(word)}).to_owned() }}
                                             disabled={disabled}
                                             onclick={on_pick}
                                         >
-                                            <span lang={if is_hanzi {"zh"} else {"en"}} class={classes!("block", "text-center", "leading-snug", if is_hanzi {"font-[family-name:var(--hanzi-font)] text-2xl sm:text-3xl font-semibold tracking-wide"} else {"text-base"})}>{if props.reverse_matching { question.option_for(word) } else { question.prompt_for(word) }}</span>
-                                            {if disabled {html! {<span class="mt-1 block text-center text-xs font-semibold text-emerald-500">{"Matched"}</span>}} else if is_selected {html! {<span class="mt-1 block text-center text-xs font-semibold text-accent">{"Selected"}</span>}} else {Html::default()}}
+                                            {if audio_mode {
+                                                let index = question.words.iter().position(|item| item.id == id).unwrap_or(0);
+                                                let audio = prepared_audio.as_ref().and_then(|value| value.as_ref().ok()).and_then(|items| items.get(index)).cloned();
+                                                if let Some(audio) = audio {
+                                                    let peaks = audio.peaks.clone();
+                                                    html! { <span class="flex items-center justify-center gap-3" aria-hidden="true">
+                                                        <span class="text-xl">{"▶"}</span>
+                                                        <span class="flex h-9 flex-1 items-center justify-center gap-[2px]">
+                                                            {for peaks.iter().map(|peak| html! { <span class="w-[3px] rounded-full bg-sky-300" style={format!("height: {}%", (*peak * 85.0).max(12.0))}></span> })}
+                                                        </span>
+                                                        <span class="text-xs text-muted">{format!("{:.1}s", audio.duration_seconds)}</span>
+                                                    </span> }
+                                                } else { Html::default() }
+                                            } else {
+                                                let text = if reverse { question.option_for(word) } else { question.prompt_for(word) };
+                                                html! {<>
+                                                    <span lang={if is_hanzi {"zh"} else {"en"}} class={classes!("block", "text-center", "leading-snug", if is_hanzi {"font-[family-name:var(--hanzi-font)] text-2xl sm:text-3xl font-semibold tracking-wide"} else {"text-base"})}>{text}</span>
+                                                    {if is_hanzi && props.show_pinyin { html! {<span class="mt-1 block text-center text-sm text-muted">{&word.pinyin}</span>} } else { Html::default() }}
+                                                </>}
+                                            }}
                                         </button>
                                     }
                                 })}
                             </div>
                             <div role="group" aria-label={second_label} class="space-y-2">
-                                {for question.words.iter().rev().map(|word| {
+                                {for answer_order.into_iter().map(|word| {
                                     let id = word.id;
-                                    let label = if props.reverse_matching {
+                                    let label = if reverse {
                                         question.prompt_for(word)
                                     } else {
                                         question.option_for(word)
                                     }.to_owned();
                                     let disabled = matched.contains(&id);
                                     let was_wrong = (*last_incorrect).is_some_and(|(_, right)| right == id);
-                                    let is_hanzi = match props.quiz_format.as_str() {
-                                        "hanzi-eng" => props.reverse_matching,
-                                        "pinyin-hanzi" => !props.reverse_matching,
+                                    let is_hanzi = if audio_mode { audio_hanzi } else { match props.quiz_format.as_str() {
+                                        "hanzi-eng" => reverse,
+                                        "pinyin-hanzi" => !reverse,
                                         _ => false,
-                                    };
+                                    }};
                                     let on_pick_pair = on_pick_pair.clone();
                                     let on_pick = Callback::from(move |_: MouseEvent| on_pick_pair.emit(id));
                                     html! {
@@ -302,26 +477,25 @@ pub fn local_quiz_session(props: &LocalQuizSessionProps) -> Html {
                                             data-matching-matched={disabled.then_some("")}
                                             disabled={disabled}
                                             onclick={on_pick}
-                                        ><span lang={if is_hanzi {"zh"} else {"en"}} class={classes!("block", "text-center", "leading-snug", if is_hanzi {"font-[family-name:var(--hanzi-font)] text-2xl sm:text-3xl font-semibold tracking-wide"} else {"text-base"})}>{label}</span>{if disabled {html! {<span class="mt-1 block text-center text-xs font-semibold text-emerald-500">{"Matched"}</span>}} else {Html::default()}}</button>
+                                        ><span lang={if is_hanzi {"zh"} else {"en"}} class={classes!("block", "text-center", "leading-snug", if is_hanzi {"font-[family-name:var(--hanzi-font)] text-2xl sm:text-3xl font-semibold tracking-wide"} else {"text-base"})}>{label}</span>
+                                            {if is_hanzi && props.show_pinyin { html! {<span class="mt-1 block text-center text-sm text-muted">{&word.pinyin}</span>} } else { Html::default() }}</button>
                                     }
                                 })}
                             </div>
                         </div>
-                        <p role="status" class="text-sm font-medium text-ink">{format!("{} of {} pairs matched · {} incorrect attempts", matched.len(), question.words.len(), *wrong_attempts)}</p>
-                        {if let Some(error) = &*pairing_error {
-                            html! { <p role="alert" class="rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-400 motion-safe:animate-match-shake">{error}</p> }
-                        } else { Html::default() }}
-                        {if all_matched {
-                            html! {
-                                <button
-                                    type="button"
-                                    data-local-quiz-continue=""
-                                    class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white"
-                                    onclick={on_continue.clone()}
-                                >{"Continue"}</button>
-                            }
-                        } else { Html::default() }}
+                        <p data-matching-progress="" class="text-center text-sm font-medium text-muted" aria-label={format!("{} of {} pairs matched, {} incorrect attempts", matched.len(), question.words.len(), *wrong_attempts)}>{format!("{} / {} · {} mistakes", matched.len(), question.words.len(), *wrong_attempts)}</p>
+                        <p role="status" aria-live="polite" data-matching-feedback="" class="sr-only">
+                            {(*pairing_error).as_deref().unwrap_or("")}
+                        </p>
+                        <button
+                            type="button"
+                            data-local-quiz-continue=""
+                            class="block w-full rounded-lg bg-brand-action px-5 py-3 font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none"
+                            disabled={!all_matched}
+                            onclick={on_continue.clone()}
+                        >{"Continue"}</button>
                     </div>
+                }
                 }
             }
         },

@@ -245,7 +245,10 @@ mod tests {
         assert_eq!(session.completed(), 1);
         assert_eq!(session.assisted_strokes(), 1);
         assert_eq!(session.progress_scores(), &[None]);
-        assert!(matches!(session.apply(&a, MatchConfig::default()), StrokeOutcome::Accepted { .. }));
+        assert!(matches!(
+            session.apply(&a, MatchConfig::default()),
+            StrokeOutcome::Accepted { .. }
+        ));
         assert_eq!(session.assisted_strokes(), 1);
         assert!(!session.assist_next());
         assert!(session.undo());

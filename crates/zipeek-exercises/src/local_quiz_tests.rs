@@ -92,6 +92,8 @@ fn every_quiz_format_presents_the_approved_prompt_and_option_fields() {
             ExerciseVariant::MatchingEnglishPinyin => (&answer.meaning, &answer.pinyin),
             ExerciseVariant::MatchingPinyinHanzi => (&answer.pinyin, &answer.hanzi),
             ExerciseVariant::MatchingHanziMeaning => (&answer.hanzi, &answer.meaning),
+            ExerciseVariant::MatchingAudioHanzi => (&answer.hanzi, &answer.hanzi),
+            ExerciseVariant::MatchingAudioMeaning => (&answer.hanzi, &answer.meaning),
             ExerciseVariant::MultipleChoiceHanziMeaning => (&answer.hanzi, &answer.meaning),
             ExerciseVariant::MultipleChoiceMeaningHanzi => (&answer.meaning, &answer.hanzi),
             ExerciseVariant::MultipleChoiceMeaningPinyin => (&answer.meaning, &answer.pinyin),
@@ -195,4 +197,24 @@ fn matching_round_size_is_configurable_but_multiple_choice_is_four() {
         ),
         Err(QuizError::InvalidSelection)
     );
+}
+
+#[test]
+fn audio_matching_preserves_pair_identity_across_both_answer_modes() {
+    use zipeek_core::practice::ExerciseVariant;
+    for mode in [ExerciseVariant::MatchingAudioHanzi, ExerciseVariant::MatchingAudioMeaning] {
+        let first = prepare_for_format_with_count(&words(), 127, mode, 5).unwrap();
+        let second = prepare_for_format_with_count(&words(), 127, mode, 5).unwrap();
+        assert_eq!(first, second);
+        assert_eq!(first.words.len(), 5);
+        for word in &first.words {
+            assert_eq!(first.prompt_for(word), word.hanzi);
+            assert_eq!(first.pair_is_correct(word.id, word.id), Ok(true));
+            assert_eq!(first.option_for(word), if mode == ExerciseVariant::MatchingAudioHanzi {
+                word.hanzi.as_str()
+            } else {
+                word.meaning.as_str()
+            });
+        }
+    }
 }

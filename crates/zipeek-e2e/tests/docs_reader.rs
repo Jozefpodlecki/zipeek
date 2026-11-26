@@ -49,9 +49,7 @@ async fn docs_cross_document_heading(ctx: ScenarioContext) -> HarnessResult<()> 
     let heading = "e2e-evidence-verification";
     ctx.open_route("/docs/project-management~tasks.md?heading=e2e-evidence-verification")
         .await?;
-    driver
-        .query_single("#e2e-evidence-verification")
-        .await?;
+    driver.query_single("#e2e-evidence-verification").await?;
     let positioned = driver
         .execute(
             "const heading = document.getElementById('e2e-evidence-verification'); if (!heading) return false; const top = heading.getBoundingClientRect().top; return top >= -100 && top < window.innerHeight;",
@@ -65,9 +63,7 @@ async fn docs_cross_document_heading(ctx: ScenarioContext) -> HarnessResult<()> 
     );
     ctx.checkpoint("docs-deep-link-positioned").await?;
     driver.refresh().await?;
-    driver
-        .query_single("#e2e-evidence-verification")
-        .await?;
+    driver.query_single("#e2e-evidence-verification").await?;
     let positioned_after_reload = driver
         .execute(
             "const heading = document.getElementById('e2e-evidence-verification'); if (!heading) return false; const top = heading.getBoundingClientRect().top; return top >= -100 && top < window.innerHeight;",
@@ -110,16 +106,25 @@ async fn docs_all_sections_and_issue_images(ctx: ScenarioContext) -> HarnessResu
     let sections = [
         ("getting-started/README.md", "Getting started"),
         ("product-ux/product.md", "Product & UX"),
-        ("learning-practice/practice/practice-session-builder.md", "Learning & Practice"),
+        (
+            "learning-practice/practice/practice-session-builder.md",
+            "Learning & Practice",
+        ),
         ("games/sentence-relay.md", "Games"),
         ("dictionary-data/schema/db.md", "Dictionary & Data"),
         ("architecture/architecture.md", "Architecture"),
         ("engineering/coding-standards.md", "Engineering"),
-        ("testing-quality/e2e/e2e-architecture.md", "Testing & Quality"),
+        (
+            "testing-quality/e2e/e2e-architecture.md",
+            "Testing & Quality",
+        ),
         ("build-deployment/ci.md", "Build & Deployment"),
         ("project-management/tasks.md", "Project Management"),
         ("archive-history/RELEASE_HISTORY.md", "Archive & History"),
-        ("issues/practice/ISS-002-practice-path-layout-and-empty-guidance.md", "Issues"),
+        (
+            "issues/practice/ISS-002-practice-path-layout-and-empty-guidance.md",
+            "Issues",
+        ),
     ];
     for (path, section) in sections {
         ctx.open_route(&format!("/docs/{}", path.replace('/', "~")))
@@ -167,7 +172,9 @@ async fn docs_search_finds_current_article(ctx: ScenarioContext) -> HarnessResul
     let driver = &ctx.driver;
     ctx.open_route("/docs/README.md").await?;
     let search = driver.query_single("[data-docs-search]").await?;
-    search.send_keys("Nonblocking vocabulary eligibility").await?;
+    search
+        .send_keys("Nonblocking vocabulary eligibility")
+        .await?;
     let article_link = driver
         .query_single("a[href*='dictionary-data~vocabulary~eligibility-counting.md']")
         .await?;
@@ -179,7 +186,10 @@ async fn docs_search_finds_current_article(ctx: ScenarioContext) -> HarnessResul
     article_link.click().await?;
     let article = driver.query_single("[data-docs-markdown]").await?;
     zipeek_e2e::e2e_ensure!(
-        article.text().await?.contains("Nonblocking vocabulary eligibility"),
+        article
+            .text()
+            .await?
+            .contains("Nonblocking vocabulary eligibility"),
         "Docs search result must open the matching article"
     );
     ctx.checkpoint("docs-search-navigation").await?;

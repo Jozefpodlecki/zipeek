@@ -93,7 +93,13 @@ mod tests {
         };
         let raw = serde_json::to_string(&options).unwrap();
         assert_eq!(serde_json::from_str::<GameOptions>(&raw).unwrap(), options);
-        assert!(!GameOptions { question_count: 11, ..options }.valid());
+        assert!(
+            !GameOptions {
+                question_count: 11,
+                ..options
+            }
+            .valid()
+        );
         assert!(serde_json::from_str::<GameOptions>("{\"question_count\":0}").is_err());
     }
 }

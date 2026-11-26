@@ -70,7 +70,10 @@ mod tests {
         );
         assert_eq!(diagnostics.len(), 2);
         assert_eq!(diagnostics[0].detail, "duplicate");
-        assert_eq!(diagnostics[1].kind, ImportDiagnosticKind::GlossPipeReplacement);
+        assert_eq!(
+            diagnostics[1].kind,
+            ImportDiagnosticKind::GlossPipeReplacement
+        );
         assert_eq!(diagnostics[1].detail, "normalized separator");
     }
 }

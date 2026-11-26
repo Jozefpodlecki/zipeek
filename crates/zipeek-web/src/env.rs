@@ -30,6 +30,9 @@ pub struct AppEnvironment {
 
 #[derive(Debug, Error)]
 pub enum AppEnvironmentError {
+    #[error("Database backend setup failed: {0}")]
+    DatabaseBackend(String),
+
     #[error("Window object not found")]
     NoWindow,
 
@@ -106,6 +109,23 @@ impl AppEnvironment {
         let speech = SpeechService::new(window.clone(), mode);
 
         let is_tauri = Self::detect_tauri(&window)?;
+        let desktop_assets = document
+            .query_selector("meta[name=zipeek-platform][content=desktop]")
+            .ok()
+            .flatten()
+            .is_some();
+        if desktop_assets && !is_tauri {
+            return Err(AppEnvironmentError::DatabaseBackend(
+                "Desktop assets require native Tauri IPC".into(),
+            ));
+        }
+        let backend = if is_tauri {
+            crate::services::database::backend::DatabaseBackend::Native
+        } else {
+            crate::services::database::backend::DatabaseBackend::Browser
+        };
+        crate::services::database::backend::initialize(backend)
+            .map_err(AppEnvironmentError::DatabaseBackend)?;
 
         Ok(Self {
             root,
@@ -122,7 +142,7 @@ impl AppEnvironment {
         })
     }
 
-    fn detect_tauri(window: &Window) -> Result<bool, AppEnvironmentError> {
+    pub(crate) fn detect_tauri(window: &Window) -> Result<bool, AppEnvironmentError> {
         let tauri =
             Reflect::get(window.as_ref(), &JsValue::from_str("__TAURI__")).map_err(|error| {
                 AppEnvironmentError::Inspection {

@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-const SERVERS: [&str; 2] = ["zipeek-ai-server", "zipeek-image-server"];
+const SERVERS: [&str; 3] = ["zipeek-ai-server", "zipeek-image-server", "zipeek-tts-stt"];
 
 fn host_triple(output: &str) -> io::Result<&str> {
     output
@@ -24,7 +24,7 @@ fn host_triple(output: &str) -> io::Result<&str> {
         })
 }
 
-fn stage_paths(root: &Path, release: bool, triple: &str) -> [(PathBuf, PathBuf); 2] {
+fn stage_paths(root: &Path, release: bool, triple: &str) -> [(PathBuf, PathBuf); 3] {
     let profile = if release { "release" } else { "debug" };
     let exe = std::env::consts::EXE_SUFFIX;
     let source_dir = root.join("target").join(profile);
@@ -49,16 +49,8 @@ pub fn stage(root: &Path, release: bool) -> io::Result<()> {
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
     let triple = host_triple(&output)?;
     let paths = stage_paths(root, release, triple);
-    let dictionary = root.join("crates/zipeek-web/static/hanzi.duckdb");
-    if !dictionary.is_file() || fs::metadata(&dictionary)?.len() == 0 {
-        return Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            format!(
-                "Native desktop dictionary missing: {}. Generate and install it with cargo make db-full before desktop packaging.",
-                dictionary.display()
-            ),
-        ));
-    }
+    let dictionary = crate::database::installed_native_dictionary(root)
+        .map_err(|error| io::Error::other(error.to_string()))?;
     for (source, _) in &paths {
         let metadata = fs::metadata(source).map_err(|error| {
             io::Error::new(
@@ -77,6 +69,18 @@ pub fn stage(root: &Path, release: bool) -> io::Result<()> {
         }
     }
     fs::create_dir_all(root.join("crates/zipeek-app/binaries"))?;
+    let dictionary_dir = root.join("crates/zipeek-app/binaries/dictionary");
+    fs::create_dir_all(&dictionary_dir)?;
+    let staged = dictionary_dir.join("hanzi.duckdb.staging");
+    fs::copy(&dictionary.path, &staged)?;
+    let staged_hash =
+        crate::database::hash_file(&staged).map_err(|error| io::Error::other(error.to_string()))?;
+    if staged_hash.0 != dictionary.size_bytes || staged_hash.1 != dictionary.sha256 {
+        return Err(io::Error::other(
+            "Staged native dictionary checksum mismatch",
+        ));
+    }
+    fs::rename(&staged, dictionary_dir.join("hanzi.duckdb"))?;
     for (source, destination) in paths {
         fs::copy(&source, &destination)?;
         println!("Staged {} -> {}", source.display(), destination.display());
@@ -129,6 +133,9 @@ mod tests {
                 .1
                 .to_string_lossy()
                 .contains("zipeek-ai-server-x86_64-pc-windows-msvc")
+        );
+        assert!(
+            paths[2].1.to_string_lossy().contains("zipeek-tts-stt-x86_64-pc-windows-msvc")
         );
         assert!(
             paths[1]

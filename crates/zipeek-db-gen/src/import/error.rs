@@ -27,6 +27,10 @@ pub enum ImportError {
     IdOverflow { row: usize },
     #[error("required verified source {name:?} is missing from the manifest")]
     MissingSource { name: &'static str },
+    #[error("relationship import row count mismatch: expected {expected}, imported {actual}")]
+    RelationshipCountMismatch { expected: usize, actual: usize },
+    #[error("relationship import produced no valid verification totals")]
+    RelationshipVerification,
     #[error("HSK insertion failed at word {word_id:?}: {source}")]
     Insert {
         word_id: Option<i32>,

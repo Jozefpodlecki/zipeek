@@ -46,7 +46,11 @@ pub fn configuration() -> AiConfiguration {
         .map(|(_, document)| {
             let url = setting(&document, "ai_url");
             (
-                if url.is_empty() { DEFAULT_URL.to_owned() } else { url },
+                if url.is_empty() {
+                    DEFAULT_URL.to_owned()
+                } else {
+                    url
+                },
                 setting(&document, "ai_model"),
             )
         })
@@ -72,10 +76,18 @@ pub fn save_configuration(url: &str, model: &str, key: &str) -> Result<(), Strin
     }
     let (storage, document) = settings()
         .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?;
-    Reflect::set(&document, &JsValue::from_str("ai_url"), &JsValue::from_str(&parsed.href()))
-        .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?;
-    Reflect::set(&document, &JsValue::from_str("ai_model"), &JsValue::from_str(model))
-        .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?;
+    Reflect::set(
+        &document,
+        &JsValue::from_str("ai_url"),
+        &JsValue::from_str(&parsed.href()),
+    )
+    .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?;
+    Reflect::set(
+        &document,
+        &JsValue::from_str("ai_model"),
+        &JsValue::from_str(model),
+    )
+    .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?;
     let serialized = JSON::stringify(&document)
         .map_err(|_| "Browser storage unavailable; settings could not be saved".to_owned())?
         .as_string()

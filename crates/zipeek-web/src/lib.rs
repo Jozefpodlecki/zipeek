@@ -22,4 +22,7 @@ pub mod theme;
 
 pub use app::*;
 pub use env::*;
+pub use services::app_reset::{
+    acquire_app_storage_session, mount_if_requested as mount_reset_if_requested,
+};
 pub use setup::{setup, show_fatal_error};

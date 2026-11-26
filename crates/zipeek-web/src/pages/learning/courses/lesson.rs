@@ -4,8 +4,8 @@ use super::progress;
 use crate::components::ListenButton;
 use crate::route::Route;
 use yew::prelude::*;
-use yew_router::prelude::*;
 use yew_icons::{Icon, IconData};
+use yew_router::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct CourseLessonProps {
@@ -13,12 +13,19 @@ pub struct CourseLessonProps {
 }
 
 pub(super) fn chinese_characters(example: &str) -> String {
-    example.chars().filter(|character| ('\u{3400}'..='\u{9fff}').contains(character)).collect()
+    example
+        .chars()
+        .filter(|character| ('\u{3400}'..='\u{9fff}').contains(character))
+        .collect()
 }
 
 #[function_component(CourseLessonPage)]
 pub fn course_lesson_page(props: &CourseLessonProps) -> Html {
-    let Some((index, _)) = PINYIN_LESSONS.iter().enumerate().find(|(_, lesson)| lesson.slug == props.lesson) else {
+    let Some((index, _)) = PINYIN_LESSONS
+        .iter()
+        .enumerate()
+        .find(|(_, lesson)| lesson.slug == props.lesson)
+    else {
         return html! {
             <section role="alert" class="mx-auto max-w-3xl p-6">
                 <h1 class="text-2xl font-bold">{"Pinyin lesson not found"}</h1>
@@ -39,7 +46,9 @@ fn pinyin_lesson_content(props: &PinyinLessonContentProps) -> Html {
     let index = props.index;
     {
         use_effect_with(index, move |_| {
-            if let Some(window) = web_sys::window() { window.scroll_to_with_x_and_y(0.0, 0.0); }
+            if let Some(window) = web_sys::window() {
+                window.scroll_to_with_x_and_y(0.0, 0.0);
+            }
         });
     }
     let lesson = &PINYIN_LESSONS[index];
@@ -47,7 +56,9 @@ fn pinyin_lesson_content(props: &PinyinLessonContentProps) -> Html {
     let checking = use_state(|| false);
     let submitted = use_state(|| false);
     let error = use_state(|| None::<String>);
-    let completed = progress::load().ok().is_some_and(|saved| saved.pinyin_passed.contains(lesson.slug));
+    let completed = progress::load()
+        .ok()
+        .is_some_and(|saved| saved.pinyin_passed.contains(lesson.slug));
     let begin_check = {
         let checking = checking.clone();
         Callback::from(move |_: MouseEvent| checking.set(true))
@@ -71,7 +82,8 @@ fn pinyin_lesson_content(props: &PinyinLessonContentProps) -> Html {
         Callback::from(move |_: MouseEvent| {
             if let Some(score) = grade(index, &answers) {
                 if score == 2 {
-                    if let Err(message) = progress::update(|saved| saved.mark_pinyin_passed(&slug)) {
+                    if let Err(message) = progress::update(|saved| saved.mark_pinyin_passed(&slug))
+                    {
                         error.set(Some(message));
                     } else {
                         error.set(None);

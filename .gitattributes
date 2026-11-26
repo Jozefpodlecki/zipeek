@@ -3,14 +3,12 @@
 /crates/zipeek-db-gen/data/HSK-LICENSE.txt -text
 /crates/zipeek-db-gen/data/HSK-SOURCE-README.txt -text
 /crates/zipeek-db-gen/data/CC-BY-SA-4.0.txt -text
-
 # Preserve checksum-identified fallback fixture bytes.
 /crates/zipeek-db-gen/tests/fixtures/fallback/hsk.json -text
 /crates/zipeek-db-gen/tests/fixtures/fallback/cedict.u8 -text
 /crates/zipeek-db-gen/tests/fixtures/fallback/NOTICE.txt -text
-
 /crates/zipeek-web/static/** -text
 /crates/zipeek-web/static/hanzi.duckdb binary
-
 /crates/zipeek-db-gen/tests/fixtures/artifact-empty/hsk.json -text
 /crates/zipeek-db-gen/tests/fixtures/artifact-empty/NOTICE.txt -text
+crates/zipeek-web/static/hanzi-*.duckdb.gz filter=lfs diff=lfs merge=lfs -text

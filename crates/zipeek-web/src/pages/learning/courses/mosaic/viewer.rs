@@ -1,13 +1,10 @@
-use yew_icons::{Icon, IconData};
 use super::super::curriculum::authored_grammar_region;
 use super::super::grammar_expansion::expanded_course;
 use super::super::grammar_plan::planned_title;
-use super::{
-    details::CourseDetails,
-    geometry,
-};
-use yew::prelude::*;
 use super::super::workspace::CourseWorkspace;
+use super::{details::CourseDetails, geometry};
+use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 
 #[function_component(CourseMosaic)]
 pub fn course_mosaic() -> Html {

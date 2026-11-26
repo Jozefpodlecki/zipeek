@@ -1,4 +1,4 @@
-use crate::{components::Footer, contexts::SearchContext, models::Social};
+use crate::contexts::SearchContext;
 use gloo::timers::callback::Timeout;
 use wasm_bindgen::JsCast;
 use web_sys::HtmlInputElement;
@@ -97,7 +97,6 @@ pub struct Props {
 
 #[function_component(Layout)]
 pub fn layout(props: &Props) -> Html {
-    let social = use_context::<Social>();
     let search_context = use_context::<SearchContext>();
 
     let on_search: Callback<String> = {
@@ -143,9 +142,6 @@ pub fn layout(props: &Props) -> Html {
             >
                 { for props.children.iter() }
             </main>
-            { if let Some(social) = social {  html! { <Footer
-                social={social}
-            /> } } else { html!{} } }
         </article>
     }
 }

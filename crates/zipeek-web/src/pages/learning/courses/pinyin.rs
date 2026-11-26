@@ -1,7 +1,7 @@
-use super::{catalog::PINYIN_LESSONS, progress, track_navigation::CourseTrackNavigation};
-use crate::route::Route;
-use crate::components::ListenButton;
 use super::workspace::CourseWorkspace;
+use super::{catalog::PINYIN_LESSONS, progress, track_navigation::CourseTrackNavigation};
+use crate::components::ListenButton;
+use crate::route::Route;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -21,8 +21,15 @@ pub fn pinyin_course_page() -> Html {
     let lessons = &PINYIN_LESSONS[module_start..module_start + 2];
     let lesson = &lessons[0];
     let saved = progress::load();
-    let completed = |slug: &str| saved.as_ref().is_ok_and(|state| state.pinyin_passed.contains(slug));
-    let next_module = lessons.iter().find(|item| !completed(item.slug)).unwrap_or(lesson);
+    let completed = |slug: &str| {
+        saved
+            .as_ref()
+            .is_ok_and(|state| state.pinyin_passed.contains(slug))
+    };
+    let next_module = lessons
+        .iter()
+        .find(|item| !completed(item.slug))
+        .unwrap_or(lesson);
 
     html! {
         <section data-component="pinyin-course" class="mx-auto flex w-full max-w-[1500px] flex-col gap-3 py-1 lg:h-full lg:min-h-0 lg:overflow-hidden">

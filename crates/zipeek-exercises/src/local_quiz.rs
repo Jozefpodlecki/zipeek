@@ -1,7 +1,9 @@
 use std::collections::BTreeSet;
+use serde::{Deserialize, Serialize};
 use zipeek_core::practice::ExerciseVariant;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct QuizWord {
     pub id: i32,
     pub hanzi: String,
@@ -105,7 +107,7 @@ fn prompt_text(word: &QuizWord, format: ExerciseVariant) -> &str {
         | ExerciseVariant::MultipleChoiceMeaningHanzi
         | ExerciseVariant::MultipleChoiceMeaningPinyin => &word.meaning,
         ExerciseVariant::MatchingPinyinHanzi => &word.pinyin,
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
+        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
             &word.hanzi
         }
     }
@@ -116,10 +118,10 @@ fn option_text(word: &QuizWord, format: ExerciseVariant) -> &str {
         ExerciseVariant::MatchingEnglishPinyin | ExerciseVariant::MultipleChoiceMeaningPinyin => {
             &word.pinyin
         }
-        ExerciseVariant::MatchingPinyinHanzi | ExerciseVariant::MultipleChoiceMeaningHanzi => {
+        ExerciseVariant::MatchingPinyinHanzi | ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MultipleChoiceMeaningHanzi => {
             &word.hanzi
         }
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
+        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
             &word.meaning
         }
     }

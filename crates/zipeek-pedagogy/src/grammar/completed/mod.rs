@@ -28,7 +28,10 @@ mod tests {
         for region in 21..=100 {
             let course = completed_course(region).unwrap();
             assert_eq!(course.id, format!("grammar-{region}"));
-            assert_eq!(course.title, super::super::plan::planned_title(region).unwrap());
+            assert_eq!(
+                course.title,
+                super::super::plan::planned_title(region).unwrap()
+            );
             assert!((5..=6).contains(&course.points.len()));
             for point in course.points {
                 total += 1;
@@ -36,7 +39,12 @@ mod tests {
                 assert!(examples.insert(point.example));
                 assert!(!point.explanation.is_empty());
                 assert!(!point.translation.is_empty());
-                assert!(point.example.chars().any(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch)));
+                assert!(
+                    point
+                        .example
+                        .chars()
+                        .any(|ch| ('\u{3400}'..='\u{9fff}').contains(&ch))
+                );
             }
         }
         assert_eq!(total, 451);

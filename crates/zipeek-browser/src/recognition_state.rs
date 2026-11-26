@@ -14,8 +14,7 @@ pub fn input_kind(has_image: bool, stroke_count: usize) -> &'static str {
 }
 
 pub fn allowed_image(mime: &str, size: u64) -> bool {
-    matches!(mime, "image/png" | "image/jpeg" | "image/webp")
-        && (1..=5_000_000).contains(&size)
+    matches!(mime, "image/png" | "image/jpeg" | "image/webp") && (1..=5_000_000).contains(&size)
 }
 
 pub fn canvas_point(
@@ -28,9 +27,12 @@ pub fn canvas_point(
     canvas_width: f64,
     canvas_height: f64,
 ) -> Option<CanvasPoint> {
-    if !rect_width.is_finite() || !rect_height.is_finite()
-        || rect_width <= 0.0 || rect_height <= 0.0
-        || !client_x.is_finite() || !client_y.is_finite()
+    if !rect_width.is_finite()
+        || !rect_height.is_finite()
+        || rect_width <= 0.0
+        || rect_height <= 0.0
+        || !client_x.is_finite()
+        || !client_y.is_finite()
     {
         return None;
     }
@@ -64,9 +66,18 @@ mod tests {
 
     #[test]
     fn points_scale_with_responsive_canvas() {
-        assert_eq!(canvas_point(60.0, 45.0, 10.0, 5.0, 100.0, 80.0, 400.0, 160.0), Some(CanvasPoint { x: 200.0, y: 80.0 }));
-        assert_eq!(canvas_point(60.0, 45.0, 10.0, 5.0, 0.0, 80.0, 400.0, 160.0), None);
-        assert_eq!(canvas_point(f64::NAN, 45.0, 10.0, 5.0, 100.0, 80.0, 400.0, 160.0), None);
+        assert_eq!(
+            canvas_point(60.0, 45.0, 10.0, 5.0, 100.0, 80.0, 400.0, 160.0),
+            Some(CanvasPoint { x: 200.0, y: 80.0 })
+        );
+        assert_eq!(
+            canvas_point(60.0, 45.0, 10.0, 5.0, 0.0, 80.0, 400.0, 160.0),
+            None
+        );
+        assert_eq!(
+            canvas_point(f64::NAN, 45.0, 10.0, 5.0, 100.0, 80.0, 400.0, 160.0),
+            None
+        );
         assert_eq!(
             canvas_point(110.0, 85.0, 10.0, 5.0, 100.0, 80.0, 400.0, 160.0),
             Some(CanvasPoint { x: 400.0, y: 160.0 })

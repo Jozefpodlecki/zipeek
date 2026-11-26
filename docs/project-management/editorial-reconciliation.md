@@ -70,3 +70,19 @@ Of those files, **12** are historical reviews that now point to their appropriat
 - The records in the historical audit collection are frozen source evidence. Historical tests and release claims do not count as current passing verification.
 - The maintained source-archive naming specification necessarily includes an abstract filename pattern. It does not cite a past numbered release as product behavior.
 - Documentation validation checks link targets and the generated search index, but not Rust compilation, browser rendering, pedagogical correctness or licensing.
+
+
+## R610 documentation ownership consolidation
+
+Source baseline: R609 full-source WIP. This is editorial classification and source reconciliation, not a compiler or browser acceptance result.
+
+| Former standalone location | Maintained owner / disposition |
+| --- | --- |
+| Root `R596-LEARNING-DATA-REVIEW.md` | [Settings workspace](../learning-practice/practice/settings-workspace.md), [learning evidence](../learning-practice/practice/learning-evidence.md) and [dragon contract](../product-ux/foundation/header-and-dragon.md); original retained in historical review collection |
+| Root `R600-REFACTOR-CANDIDATES.md` | [Technical debt](technical-debt.md) and [Practice session storage](../architecture/modules/practice-session-storage.md); original shortlist and original paths retained as historical evidence |
+| `archive-history/R310-E2E-DRIVER-REFINEMENT-WIP.md` | [E2E architecture](../testing-quality/e2e/e2e-architecture.md); historical verification counts retained in review collection |
+| Engineering R592-R607 numbered reviews | Consolidated current facts into relevant [speech](../architecture/modules/tts-stt.md), [header](../product-ux/foundation/header-and-dragon.md), [Practice](../architecture/modules/practice-session-storage.md), [AI](../architecture/modules/ai-client.md), [translation](../architecture/modules/sentence-exercises.md) and [technical debt](technical-debt.md) owners; full source snapshots in historical collection |
+| Engineering `r608-knowledge-points-specification.md` | [Prospective Knowledge Points specification](../learning-practice/pedagogy/knowledge-points.md) is the normative design owner; existing legacy learning-evidence guide explicitly distinguishes proposed vs current behaviour |
+| Engineering `r609-knowledge-engine-review.md` | [Knowledge scoring architecture](../architecture/modules/knowledge-scoring.md); original review retained in historical collection |
+
+The single [historical review collection](../archive-history/audits/release-engineering-review-history.md) preserves all fifteen source-review documents. Historical review text is not current product authority. No disputed scoring rule was decided in this pass. The Docs index must be regenerated after changing owned documents.

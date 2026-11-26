@@ -47,7 +47,11 @@ pub(crate) fn read_ticket(
             let generation = generation
                 .parse::<u64>()
                 .map_err(|_| TicketQueryError::InvalidGeneration)?;
-            if instance_id.is_empty() || instance_id.chars().any(char::is_control) {
+            if instance_id.is_empty()
+                || instance_id.len() > 256
+                || instance_id.trim() != instance_id
+                || instance_id.chars().any(char::is_control)
+            {
                 return Err(TicketQueryError::EmptyInstance);
             }
             Ok(Some(PlannedRoundTicket {
@@ -116,6 +120,16 @@ mod tests {
         );
         query.insert(GENERATION.into(), "2".into());
         query.insert(INSTANCE.into(), "\n".into());
+        assert_eq!(
+            read_ticket(&query, "matching"),
+            Err(TicketQueryError::EmptyInstance)
+        );
+        query.insert(INSTANCE.into(), format!("{}x", "a".repeat(256)));
+        assert_eq!(
+            read_ticket(&query, "matching"),
+            Err(TicketQueryError::EmptyInstance)
+        );
+        query.insert(INSTANCE.into(), " planned ".into());
         assert_eq!(
             read_ticket(&query, "matching"),
             Err(TicketQueryError::EmptyInstance)

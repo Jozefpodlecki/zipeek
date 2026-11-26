@@ -296,7 +296,9 @@ impl ScenarioContext {
 
     async fn prepare_firefox(&self) -> HarnessResult<()> {
         let driver = &self.driver;
-        driver.goto(&self.base_url).await?;
+        driver
+            .goto(format!("{}/", self.base_url.trim_end_matches('/')))
+            .await?;
         let preference = include_str!("../../fixtures/preferences-default.json");
         driver
             .execute(
@@ -362,7 +364,9 @@ impl ScenarioContext {
             .get("identifier")
             .and_then(|identifier| identifier.as_str())
             .ok_or("CDP did not return the returning-user fixture script identifier")?;
-        let first_navigation = driver.goto(&self.base_url).await;
+        let first_navigation = driver
+            .goto(format!("{}/", self.base_url.trim_end_matches('/')))
+            .await;
         ChromeDevTools::new(&driver)
             .remove_init_script(BTreeMap::from([("identifier", script_id)]))
             .await?;

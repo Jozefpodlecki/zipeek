@@ -85,13 +85,18 @@ async fn matching_session_is_focused_and_interactive(ctx: ScenarioContext) -> Ha
         .await?;
     zipeek_e2e::e2e_ensure_eq!(first_column.len(), 2);
     zipeek_e2e::e2e_ensure_eq!(second_column.len(), 2);
+    driver
+        .query_single("[data-local-quiz-continue][disabled]")
+        .await?;
+    driver
+        .query_single("[data-matching-feedback]")
+        .await?;
     first_column[0].click().await?;
     zipeek_e2e::e2e_ensure_eq!(
         first_column[0].attr("aria-pressed").await?.as_deref(),
         Some("true")
     );
-    driver.query_single("[data-matching-selected]").await?;
-    zipeek_e2e::e2e_ensure!(quiz.text().await?.contains("Selected:"));
+    driver.query_single("[data-matching-selection]").await?;
     let mut successful_pair = false;
     for answer in &second_column {
         answer.click().await?;
@@ -106,7 +111,25 @@ async fn matching_session_is_focused_and_interactive(ctx: ScenarioContext) -> Ha
         first_column[0].click().await?;
     }
     zipeek_e2e::e2e_ensure!(successful_pair);
-    zipeek_e2e::e2e_ensure!(quiz.text().await?.contains("1 of 2 pairs matched"));
+    zipeek_e2e::e2e_ensure!(quiz.text().await?.contains("1 / 2"));
+    driver
+        .query_single("[data-local-quiz-continue][disabled]")
+        .await?;
+    let remaining_prompt = driver
+        .query_single("[aria-label='Prompts'] button:not([disabled])")
+        .await?;
+    let remaining_answer = driver
+        .query_single("[aria-label='Answers'] button:not([disabled])")
+        .await?;
+    remaining_prompt.click().await?;
+    remaining_answer.click().await?;
+    driver
+        .query_single("[data-local-quiz-continue]:not([disabled])")
+        .await?;
+    zipeek_e2e::e2e_ensure!(
+        driver.find_all_css("[data-local-quiz] h2").await?.is_empty(),
+        "Completing a matching round must not insert a heading above the board"
+    );
     driver
         .query_single("a[href*='/practice']:not([href*='/session/'])")
         .await?;

@@ -32,35 +32,43 @@ pub enum ExerciseVariant {
     MatchingEnglishPinyin,
     MatchingPinyinHanzi,
     MatchingHanziMeaning,
+    MatchingAudioHanzi,
+    MatchingAudioMeaning,
     MultipleChoiceHanziMeaning,
     MultipleChoiceMeaningHanzi,
     MultipleChoiceMeaningPinyin,
 }
 
 impl ExerciseVariant {
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 8] = [
         Self::MatchingEnglishPinyin,
         Self::MatchingPinyinHanzi,
         Self::MatchingHanziMeaning,
+        Self::MatchingAudioHanzi,
+        Self::MatchingAudioMeaning,
         Self::MultipleChoiceHanziMeaning,
         Self::MultipleChoiceMeaningHanzi,
         Self::MultipleChoiceMeaningPinyin,
     ];
 
-    pub const CANONICAL: [Self; 6] = [
+    pub const CANONICAL: [Self; 8] = [
         Self::MultipleChoiceHanziMeaning,
         Self::MultipleChoiceMeaningHanzi,
         Self::MultipleChoiceMeaningPinyin,
         Self::MatchingEnglishPinyin,
         Self::MatchingPinyinHanzi,
         Self::MatchingHanziMeaning,
+        Self::MatchingAudioHanzi,
+        Self::MatchingAudioMeaning,
     ];
 
     pub const fn mechanic(self) -> ExerciseMechanic {
         match self {
             Self::MatchingEnglishPinyin
             | Self::MatchingPinyinHanzi
-            | Self::MatchingHanziMeaning => ExerciseMechanic::Matching,
+            | Self::MatchingHanziMeaning
+            | Self::MatchingAudioHanzi
+            | Self::MatchingAudioMeaning => ExerciseMechanic::Matching,
             Self::MultipleChoiceHanziMeaning
             | Self::MultipleChoiceMeaningHanzi
             | Self::MultipleChoiceMeaningPinyin => ExerciseMechanic::MultipleChoice,
@@ -71,7 +79,7 @@ impl ExerciseVariant {
         match self {
             Self::MatchingEnglishPinyin => QuestionFormat::EnglishToPinyin,
             Self::MatchingPinyinHanzi => QuestionFormat::PinyinToHanzi,
-            Self::MatchingHanziMeaning | Self::MultipleChoiceHanziMeaning => {
+            Self::MatchingHanziMeaning | Self::MatchingAudioHanzi | Self::MatchingAudioMeaning | Self::MultipleChoiceHanziMeaning => {
                 QuestionFormat::HanziToMeaning
             }
             Self::MultipleChoiceMeaningHanzi => QuestionFormat::MeaningToHanzi,
@@ -80,7 +88,11 @@ impl ExerciseVariant {
     }
 
     pub const fn label(self) -> &'static str {
-        self.format().label()
+        match self {
+            Self::MatchingAudioHanzi => "Audio → Hanzi",
+            Self::MatchingAudioMeaning => "Audio → Meaning",
+            _ => self.format().label(),
+        }
     }
 
     pub const fn seed_token(self) -> &'static str {
@@ -88,6 +100,8 @@ impl ExerciseVariant {
             Self::MatchingEnglishPinyin => "eng-pinyin",
             Self::MatchingPinyinHanzi => "pinyin-hanzi",
             Self::MatchingHanziMeaning => "hanzi-eng",
+            Self::MatchingAudioHanzi => "audio-hanzi",
+            Self::MatchingAudioMeaning => "audio-meaning",
             Self::MultipleChoiceHanziMeaning => "hanzi-to-meaning",
             Self::MultipleChoiceMeaningHanzi => "meaning-to-hanzi",
             Self::MultipleChoiceMeaningPinyin => "meaning-to-pinyin",

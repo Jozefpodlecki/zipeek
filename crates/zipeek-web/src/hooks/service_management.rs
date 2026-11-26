@@ -15,3 +15,10 @@ pub fn use_image_service() -> ServiceHandle {
         .expect("ServiceProvider must wrap the application")
         .image
 }
+
+#[hook]
+pub fn use_speech_service() -> ServiceHandle {
+    use_context::<ServiceContext>()
+        .expect("ServiceProvider must wrap the application")
+        .speech
+}

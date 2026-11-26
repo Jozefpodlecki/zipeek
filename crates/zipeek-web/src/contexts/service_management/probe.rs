@@ -30,7 +30,7 @@ pub(super) fn health_url(service: &str, endpoint: &str) -> Result<String, ProbeE
     }
     let path = match service {
         "ai" => "models",
-        "image" => "health",
+        "image" | "speech" => "health",
         _ => return Err(ProbeError::Failed("Unknown service".to_owned())),
     };
     Ok(format!("{endpoint}/{path}"))
@@ -86,12 +86,16 @@ mod tests {
             health_url("image", "http://localhost:1431").unwrap(),
             "http://localhost:1431/health"
         );
+        assert_eq!(
+            health_url("speech", "http://127.0.0.1:8799").unwrap(),
+            "http://127.0.0.1:8799/health"
+        );
     }
 
     #[test]
     fn rejects_unsafe_or_unknown_endpoints() {
         assert!(health_url("ai", "http://user:secret@localhost/v1").is_err());
         assert!(health_url("image", "file:///etc").is_err());
-        assert!(health_url("speech", "http://localhost").is_err());
+        assert!(health_url("unknown", "http://localhost").is_err());
     }
 }

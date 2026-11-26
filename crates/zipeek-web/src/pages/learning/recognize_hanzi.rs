@@ -5,13 +5,16 @@ mod state;
 mod workspace;
 
 use serde_json::json;
+use web_sys::{HtmlCanvasElement, HtmlInputElement};
+use yew::prelude::*;
 use zipeek_browser::recognition_workspace::{
     RecognitionWorkspace, RecognitionWorkspaceCallback, RecognitionWorkspaceEvent,
 };
-use web_sys::{HtmlCanvasElement, HtmlInputElement};
-use yew::prelude::*;
 
-use crate::{hooks::{use_app_environment, use_dictionary}, services::ai};
+use crate::{
+    hooks::{use_app_environment, use_dictionary},
+    services::ai,
+};
 use controls::RecognitionControls;
 use response::parse_candidates;
 use results::RecognitionResults;
@@ -53,15 +56,22 @@ pub fn recognize_hanzi_page() -> Html {
         let state = state.clone();
         use_effect_with((), move |_| {
             *active.borrow_mut() = true;
-            let nodes = canvas.cast::<HtmlCanvasElement>().zip(file_input.cast::<HtmlInputElement>());
+            let nodes = canvas
+                .cast::<HtmlCanvasElement>()
+                .zip(file_input.cast::<HtmlInputElement>());
             if nodes.is_none() {
-                log::error!("Hanzi recognition workspace initialization failed: missing canvas or file input node");
-                state.dispatch(RecognitionAction::InputFailed("Drawing workspace is unavailable: required page elements are missing".to_owned()));
+                log::error!(
+                    "Hanzi recognition workspace initialization failed: missing canvas or file input node"
+                );
+                state.dispatch(RecognitionAction::InputFailed(
+                    "Drawing workspace is unavailable: required page elements are missing"
+                        .to_owned(),
+                ));
             }
             let _ = nodes.and_then(|(canvas, file)| {
                 let state_events = state.clone();
-                let on_event: RecognitionWorkspaceCallback = std::rc::Rc::new(move |event| {
-                    match event {
+                let on_event: RecognitionWorkspaceCallback =
+                    std::rc::Rc::new(move |event| match event {
                         RecognitionWorkspaceEvent::InputChanged(input) => {
                             state_events.dispatch(RecognitionAction::InputChanged {
                                 input: InputKind::from_browser(input.kind),
@@ -70,20 +80,24 @@ pub fn recognize_hanzi_page() -> Html {
                         }
                         RecognitionWorkspaceEvent::Error(error) => {
                             log::warn!("Hanzi recognition workspace operation failed: {error}");
-                            state_events.dispatch(RecognitionAction::InputFailed(error.to_string()));
+                            state_events
+                                .dispatch(RecognitionAction::InputFailed(error.to_string()));
                         }
-                    }
-                });
-                let mounted = match RecognitionWorkspace::mount(
-                    &canvas, &file, &window, &document, on_event,
-                ) {
-                    Ok(mounted) => mounted,
-                    Err(error) => {
-                        log::error!("Hanzi recognition workspace initialization failed: {error}");
-                        state.dispatch(RecognitionAction::InputFailed(format!("Drawing workspace could not start: {error}")));
-                        return None;
-                    }
-                };
+                    });
+                let mounted =
+                    match RecognitionWorkspace::mount(&canvas, &file, &window, &document, on_event)
+                    {
+                        Ok(mounted) => mounted,
+                        Err(error) => {
+                            log::error!(
+                                "Hanzi recognition workspace initialization failed: {error}"
+                            );
+                            state.dispatch(RecognitionAction::InputFailed(format!(
+                                "Drawing workspace could not start: {error}"
+                            )));
+                            return None;
+                        }
+                    };
                 *workspace.borrow_mut() = Some(mounted);
                 Some(())
             });
@@ -115,19 +129,25 @@ pub fn recognize_hanzi_page() -> Html {
     let on_upload = {
         let file_input = file_input.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Some(input) = file_input.cast::<HtmlInputElement>() { input.click(); }
+            if let Some(input) = file_input.cast::<HtmlInputElement>() {
+                input.click();
+            }
         })
     };
     let on_undo = {
         let workspace = workspace.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Some(workspace) = workspace.borrow().as_ref() { workspace.undo(); }
+            if let Some(workspace) = workspace.borrow().as_ref() {
+                workspace.undo();
+            }
         })
     };
     let on_clear = {
         let workspace = workspace.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Some(workspace) = workspace.borrow().as_ref() { workspace.clear(); }
+            if let Some(workspace) = workspace.borrow().as_ref() {
+                workspace.clear();
+            }
         })
     };
     let on_recognize = {
@@ -136,13 +156,20 @@ pub fn recognize_hanzi_page() -> Html {
         let active = active.clone();
         let dictionary = dictionary.clone();
         Callback::from(move |_: MouseEvent| {
-            if state.busy || !state.input.has_input() { return; }
-            let image = workspace.borrow().as_ref()
+            if state.busy || !state.input.has_input() {
+                return;
+            }
+            let image = workspace
+                .borrow()
+                .as_ref()
                 .ok_or_else(|| "Drawing workspace is not ready".to_owned())
                 .and_then(|workspace| workspace.capture().map_err(|error| error.to_string()));
             let image = match image {
                 Ok(image) => image,
-                Err(error) => { state.dispatch(RecognitionAction::InputFailed(error)); return; }
+                Err(error) => {
+                    state.dispatch(RecognitionAction::InputFailed(error));
+                    return;
+                }
             };
             let generation = state.generation.wrapping_add(1);
             state.dispatch(RecognitionAction::Begin);
@@ -159,30 +186,46 @@ pub fn recognize_hanzi_page() -> Html {
                     ]}),
                 ];
                 let outcome = async {
-                    let raw = ai::complete_recognition(&config.url, &config.model, messages).await?;
+                    let raw =
+                        ai::complete_recognition(&config.url, &config.model, messages).await?;
                     let candidates: Vec<String> = parse_candidates(&raw)?;
                     let database = dictionary.database().map_err(|error| error.to_string())?;
                     let mut hits = Vec::new();
                     for candidate in candidates {
-                        let words = database.write_hanzi_unified_search(&candidate, "", 20)
-                            .await.map_err(|error| error.to_string())?;
-                        let dictionary = words.into_iter()
-                            .find(|word| word.simplified == candidate || word.traditional.as_deref() == Some(candidate.as_str()))
+                        let words = database
+                            .write_hanzi_unified_search(&candidate, "", 20)
+                            .await
+                            .map_err(|error| error.to_string())?;
+                        let dictionary = words
+                            .into_iter()
+                            .find(|word| {
+                                word.simplified == candidate
+                                    || word.traditional.as_deref() == Some(candidate.as_str())
+                            })
                             .map(|word| DictionaryMatch {
                                 id: word.id.as_i32(),
                                 pinyin: word.pinyin,
                                 english: word.english.unwrap_or_default(),
                             });
-                        hits.push(RecognitionHit { candidate, dictionary });
+                        hits.push(RecognitionHit {
+                            candidate,
+                            dictionary,
+                        });
                     }
                     Ok::<_, String>(hits)
-                }.await;
-                if !*active.borrow() { return; }
+                }
+                .await;
+                if !*active.borrow() {
+                    return;
+                }
                 match outcome {
                     Ok(hits) => state.dispatch(RecognitionAction::Completed { generation, hits }),
                     Err(error) => {
                         log::warn!("Hanzi recognition failed: {error}");
-                        state.dispatch(RecognitionAction::Failed { generation, reason: error });
+                        state.dispatch(RecognitionAction::Failed {
+                            generation,
+                            reason: error,
+                        });
                     }
                 }
             });

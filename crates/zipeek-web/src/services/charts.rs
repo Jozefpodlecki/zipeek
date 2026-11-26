@@ -105,7 +105,8 @@ async fn create(
     canvas: &HtmlCanvasElement,
     configuration: serde_json::Value,
 ) -> Result<ChartInstance, JsValue> {
-    let configuration = configuration.serialize(&serde_wasm_bindgen::Serializer::json_compatible())
+    let configuration = configuration
+        .serialize(&serde_wasm_bindgen::Serializer::json_compatible())
         .map_err(|error| JsValue::from_str(&format!("Invalid chart config: {error}")))?;
     ChartInstance::create(canvas, &configuration).await
 }

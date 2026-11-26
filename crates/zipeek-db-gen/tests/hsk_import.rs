@@ -698,11 +698,17 @@ fn character_readings_bulk_insert_preserves_all_rows_across_chunks()
         .collect();
     insert_character_readings(connection, &rows)?;
     assert_eq!(
-        scalar(connection, "SELECT count(*)::VARCHAR FROM character_readings")?,
+        scalar(
+            connection,
+            "SELECT count(*)::VARCHAR FROM character_readings"
+        )?,
         "513"
     );
     assert_eq!(
-        scalar(connection, "SELECT max(source_line)::VARCHAR FROM character_readings")?,
+        scalar(
+            connection,
+            "SELECT max(source_line)::VARCHAR FROM character_readings"
+        )?,
         "513"
     );
     Ok(())
@@ -759,24 +765,40 @@ fn generated_sense_kinds_preserve_usage_references_but_exclude_them_from_practic
     let connection = database.connection();
     create_schema(connection)?;
     insert_dictionary(connection, &imported.words, &senses)?;
-    for (sense, kind) in senses.iter().take(3).zip(["usage_reference", "usage_reference", "lexical"]) {
+    for (sense, kind) in
+        senses
+            .iter()
+            .take(3)
+            .zip(["usage_reference", "usage_reference", "lexical"])
+    {
         assert_eq!(
-            scalar(connection, &format!(
-                "SELECT sense_kind FROM sense_display WHERE word_id = {} AND sense_order = {}",
-                sense.word_id.as_i32(), sense.sense_order
-            ))?,
+            scalar(
+                connection,
+                &format!(
+                    "SELECT sense_kind FROM sense_display WHERE word_id = {} AND sense_order = {}",
+                    sense.word_id.as_i32(),
+                    sense.sense_order
+                )
+            )?,
             kind
         );
         assert_eq!(
-            scalar(connection, &format!(
-                "SELECT gloss FROM word_senses WHERE word_id = {} AND sense_order = {}",
-                sense.word_id.as_i32(), sense.sense_order
-            ))?,
+            scalar(
+                connection,
+                &format!(
+                    "SELECT gloss FROM word_senses WHERE word_id = {} AND sense_order = {}",
+                    sense.word_id.as_i32(),
+                    sense.sense_order
+                )
+            )?,
             sense.gloss
         );
     }
     assert_eq!(
-        scalar(connection, "SELECT count(*)::VARCHAR FROM sense_display WHERE sense_kind = 'usage_reference'")?,
+        scalar(
+            connection,
+            "SELECT count(*)::VARCHAR FROM sense_display WHERE sense_kind = 'usage_reference'"
+        )?,
         "2"
     );
     Ok(())
@@ -785,26 +807,38 @@ fn generated_sense_kinds_preserve_usage_references_but_exclude_them_from_practic
 #[test]
 fn two_readings_of_shang_keep_reference_data_but_only_lexical_reading_is_playable()
 -> Result<(), Box<dyn std::error::Error>> {
-    let input = br#"[{"simplified":"上","radical":"一","level":["new-1","old-1"],"frequency":29,"pos":["f","v","g"],"forms":[{"traditional":"上","transcriptions":{"pinyin":"shǎng","numeric":"shang3"},"meanings":["used in 上声"]},{"traditional":"上","transcriptions":{"pinyin":"shàng","numeric":"shang4"},"meanings":["(bound form) up; upper; above; previous","to climb; to get onto; to go up"]}]}]"#;
+    let input = r#"[{"simplified":"上","radical":"一","level":["new-1","old-1"],"frequency":29,"pos":["f","v","g"],"forms":[{"traditional":"上","transcriptions":{"pinyin":"shǎng","numeric":"shang3"},"meanings":["used in 上声"]},{"traditional":"上","transcriptions":{"pinyin":"shàng","numeric":"shang4"},"meanings":["(bound form) up; upper; above; previous","to climb; to get onto; to go up"]}]}]"#.as_bytes();
     let imported = parse_hsk(input)?;
     let database = GeneratorDatabase::open()?;
     let connection = database.connection();
     create_schema(connection)?;
     insert_dictionary(connection, &imported.words, &imported.senses)?;
     assert_eq!(
-        scalar(connection, "SELECT sense_kind FROM word_senses AS s JOIN sense_display AS d USING (word_id, sense_order) JOIN words AS w ON w.id = s.word_id WHERE w.simplified = '上' AND w.pinyin_numeric = 'shang3'")?,
+        scalar(
+            connection,
+            "SELECT sense_kind FROM word_senses AS s JOIN sense_display AS d USING (word_id, sense_order) JOIN words AS w ON w.id = s.word_id WHERE w.simplified = '上' AND w.pinyin_numeric = 'shang3'"
+        )?,
         "usage_reference"
     );
     assert_eq!(
-        scalar(connection, "SELECT sense_kind FROM word_senses AS s JOIN sense_display AS d USING (word_id, sense_order) JOIN words AS w ON w.id = s.word_id WHERE w.simplified = '上' AND w.pinyin_numeric = 'shang4' AND s.sense_order = 1")?,
+        scalar(
+            connection,
+            "SELECT sense_kind FROM word_senses AS s JOIN sense_display AS d USING (word_id, sense_order) JOIN words AS w ON w.id = s.word_id WHERE w.simplified = '上' AND w.pinyin_numeric = 'shang4' AND s.sense_order = 1"
+        )?,
         "lexical"
     );
     assert_eq!(
-        scalar(connection, "SELECT count(*)::VARCHAR FROM words AS w WHERE w.simplified = '上' AND EXISTS (SELECT 1 FROM sense_display AS d WHERE d.word_id = w.id AND d.sense_kind = 'lexical' AND d.definition IS NOT NULL)")?,
+        scalar(
+            connection,
+            "SELECT count(*)::VARCHAR FROM words AS w WHERE w.simplified = '上' AND EXISTS (SELECT 1 FROM sense_display AS d WHERE d.word_id = w.id AND d.sense_kind = 'lexical' AND d.definition IS NOT NULL)"
+        )?,
         "1"
     );
     assert_eq!(
-        scalar(connection, "SELECT gloss FROM word_senses AS s JOIN words AS w ON w.id = s.word_id WHERE w.pinyin_numeric = 'shang3'")?,
+        scalar(
+            connection,
+            "SELECT gloss FROM word_senses AS s JOIN words AS w ON w.id = s.word_id WHERE w.pinyin_numeric = 'shang3'"
+        )?,
         "used in 上声"
     );
     Ok(())

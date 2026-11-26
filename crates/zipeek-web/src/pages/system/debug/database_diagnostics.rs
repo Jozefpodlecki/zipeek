@@ -1,3 +1,4 @@
+use gloo::timers::callback::Interval;
 use std::{cell::Cell, rc::Rc};
 use yew::prelude::*;
 
@@ -142,7 +143,170 @@ pub(super) fn database_diagnostics() -> Html {
             {if let Some(Err(error)) = &*probe { html! {
                 <p role="alert" class="mt-2 break-words text-sm text-red-300">{format!("WASM storage check failed: {error}")}</p>
             }} else { Html::default() }}
+            <PersistenceSimulator document={environment.document.clone()} disabled={environment.is_tauri} />
         </section>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+struct PersistenceSimulatorProps {
+    document: web_sys::Document,
+    disabled: bool,
+}
+
+#[function_component(PersistenceSimulator)]
+fn persistence_simulator(props: &PersistenceSimulatorProps) -> Html {
+    let running = use_state(|| false);
+    let run_id = use_state(String::new);
+    let completed = use_state(|| 0_u32);
+    let logs = use_state(Vec::<String>::new);
+    let latest = use_state(|| None::<Result<String, String>>);
+    let busy = use_state(|| false);
+    let started_at = use_state(js_sys::Date::now);
+    {
+        let running = running.clone();
+        let completed = completed.clone();
+        let logs = logs.clone();
+        let busy = busy.clone();
+        let document = props.document.clone();
+        let started_at = *started_at;
+        let run_id = (*run_id).clone();
+        use_effect_with(
+            (*running, *completed, run_id.clone()),
+            move |(active, count, _)| {
+                let alive = Rc::new(Cell::new(true));
+                let in_flight = Rc::new(Cell::new(false));
+                let interval = if *active && *count < 10 && !run_id.is_empty() {
+                    let alive_for_tick = alive.clone();
+                    let in_flight_for_tick = in_flight.clone();
+                    let running = running.clone();
+                    let completed = completed.clone();
+                    let logs = logs.clone();
+                    let busy = busy.clone();
+                    let document = document.clone();
+                    let cycle = *count + 1;
+                    Some(Interval::new(5_000, move || {
+                        if !alive_for_tick.get() || in_flight_for_tick.get() {
+                            return;
+                        }
+                        in_flight_for_tick.set(true);
+                        busy.set(true);
+                        let started = js_sys::Date::now();
+                        let running = running.clone();
+                        let completed = completed.clone();
+                        let logs = logs.clone();
+                        let busy = busy.clone();
+                        let document = document.clone();
+                        let run_id = run_id.clone();
+                        let alive = alive_for_tick.clone();
+                        let in_flight = in_flight_for_tick.clone();
+                        wasm_bindgen_futures::spawn_local(async move {
+                            let result =
+                                zipeek_db::wasm::PersonalPersistenceSimulator::save_and_verify(
+                                    &document, &run_id, cycle,
+                                )
+                                .await;
+                            in_flight.set(false);
+                            if !alive.get() {
+                                busy.set(false);
+                                return;
+                            }
+                            let elapsed = js_sys::Date::now() - started;
+                            let total_elapsed = js_sys::Date::now() - started_at;
+                            let entry = match result {
+                                Ok(checkpoint) => format!(
+                                    "Cycle {cycle}/10: revision {} saved, reopened and verified (operation {elapsed:.0} ms; total {total_elapsed:.0} ms)",
+                                    checkpoint.revision
+                                ),
+                                Err(error) => {
+                                    running.set(false);
+                                    format!("Cycle {cycle}/10 FAILED: {error}")
+                                }
+                            };
+                            let successful = entry.contains("saved, reopened and verified");
+                            let mut updated = (*logs).clone();
+                            updated.push(entry);
+                            logs.set(updated);
+                            busy.set(false);
+                            if successful {
+                                completed.set(cycle);
+                                if cycle == 10 {
+                                    running.set(false);
+                                }
+                            }
+                        });
+                    }))
+                } else {
+                    None
+                };
+                move || {
+                    alive.set(false);
+                    drop(interval);
+                }
+            },
+        );
+    }
+    let on_start = {
+        let running = running.clone();
+        let run_id = run_id.clone();
+        let completed = completed.clone();
+        let logs = logs.clone();
+        let latest = latest.clone();
+        let started_at = started_at.clone();
+        Callback::from(move |_: MouseEvent| {
+            started_at.set(js_sys::Date::now());
+            run_id.set(uuid::Uuid::now_v7().to_string());
+            completed.set(0);
+            logs.set(Vec::new());
+            latest.set(None);
+            running.set(true);
+        })
+    };
+    let on_stop = {
+        let running = running.clone();
+        Callback::from(move |_: MouseEvent| running.set(false))
+    };
+    let on_verify = {
+        let document = props.document.clone();
+        let latest = latest.clone();
+        Callback::from(move |_: MouseEvent| {
+            let document = document.clone();
+            let latest = latest.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let result =
+                    zipeek_db::wasm::PersonalPersistenceSimulator::verify_latest(&document)
+                        .await
+                        .map(|record| match record {
+                            Some(value) => format!(
+                                "Persisted run {} restored at revision {}/10",
+                                value.run_id, value.revision
+                            ),
+                            None => "No simulator checkpoint has been saved".to_owned(),
+                        })
+                        .map_err(|error| error.to_string());
+                latest.set(Some(result));
+            });
+        })
+    };
+    html! {
+        <div class="mt-5 border-t border-line pt-4" data-persistence-simulator="">
+            <h4 class="font-semibold">{"Personal DuckDB / OPFS persistence simulator"}</h4>
+            <p class="mt-1 text-xs text-muted">{"Development-only. Writes an isolated synthetic session every 5 seconds, up to 10 cycles, using the existing personal database and exclusive Web Lock. Each cycle closes and reopens the database to verify its revision. No learner scores are changed."}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button type="button" class="rounded-lg bg-accent px-3 py-2 text-sm text-white disabled:opacity-50" onclick={on_start} disabled={props.disabled || *running || *busy}>{"Start simulation"}</button>
+                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" onclick={on_stop} disabled={!*running}>{"Stop"}</button>
+                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" disabled={props.disabled || *running || *busy} onclick={on_verify}>{"Verify saved state after reload"}</button>
+            </div>
+            <p class="mt-2 text-sm" role="status">{format!("{} | {} of 10 completed", if *running { "Running" } else { "Stopped" }, *completed)}</p>
+            <ul class="mt-2 space-y-1 text-xs" aria-label="Persistence simulation results">
+                {for (*logs).iter().map(|entry| html! { <li class="break-words">{entry}</li> })}
+            </ul>
+            {match &*latest {
+                Some(Ok(message)) => html! { <p class="mt-2 text-sm" role="status">{message}</p> },
+                Some(Err(message)) => html! { <p class="mt-2 text-sm text-red-300" role="alert">{format!("Persistence verification failed: {message}")}</p> },
+                None => Html::default(),
+            }}
+        </div>
     }
 }
 

@@ -61,8 +61,9 @@ async fn all_exercise_types_are_selectable_and_configurable(
         "Advanced Practice must expose every registered exercise type"
     );
     zipeek_e2e::e2e_ensure!(
-        driver.execute(
-            r#"
+        driver
+            .execute(
+                r#"
             const main = document.querySelector('[data-component="main-content"]');
             const scroller = document.querySelector('[data-practice-exercise-scroll]');
             const last = document.querySelector('[data-practice-exercise="image-vocabulary"]');
@@ -80,17 +81,28 @@ async fn all_exercise_types_are_selectable_and_configurable(
                 tile.bottom <= boundary.bottom + 2 && tile.top >= boundary.top - 2 &&
                 main.scrollTop === 0;
             "#,
-            vec![],
-        ).await?.convert::<bool>()?,
+                vec![],
+            )
+            .await?
+            .convert::<bool>()?,
         "Advanced exercise grid must scroll to the final tile inside its own panel while the main viewport stays fixed"
     );
     driver.query_single("[data-practice-exercise='sentence-translation'][data-external-services='ai'] [data-exercise-service='ai']").await?;
     driver.query_single("[data-practice-exercise='image-vocabulary'][data-external-services='ai,image-generation'] [data-exercise-service='image-generation']").await?;
-    for id in ["fill-blank", "sentence-builder", "sentence-transformation", "spot-mistake"] {
+    for id in [
+        "fill-blank",
+        "sentence-builder",
+        "sentence-transformation",
+        "spot-mistake",
+    ] {
         driver.query_single(&format!("[data-practice-exercise='{id}'][data-external-services='ai'] [data-exercise-service='ai']")).await?;
     }
-    driver.query_single("[data-practice-exercise='speaking']").await?;
-    driver.query_single("[data-practice-exercise='matching'][data-external-services='none']").await?;
+    driver
+        .query_single("[data-practice-exercise='speaking']")
+        .await?;
+    driver
+        .query_single("[data-practice-exercise='matching'][data-external-services='none']")
+        .await?;
     for (id, tab) in EXERCISE_TABS {
         let tile = driver
             .query_single(&format!("[data-practice-exercise='{id}']"))

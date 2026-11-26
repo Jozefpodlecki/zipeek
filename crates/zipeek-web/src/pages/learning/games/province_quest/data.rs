@@ -17,10 +17,7 @@ pub async fn load_map(difficulty_is_hard: bool) -> Result<GeoDataset, String> {
             response.status()
         ));
     }
-    let content_type = response
-        .headers()
-        .get("content-type")
-        .unwrap_or_default();
+    let content_type = response.headers().get("content-type").unwrap_or_default();
     let body = response
         .text()
         .await
@@ -38,7 +35,9 @@ fn decode_map_asset(file_name: &str, content_type: &str, body: &str) -> Result<G
         ));
     }
     if body.trim().is_empty() {
-        return Err(format!("Map asset {file_name} is empty. Regenerate the Province Quest geography assets."));
+        return Err(format!(
+            "Map asset {file_name} is empty. Regenerate the Province Quest geography assets."
+        ));
     }
     serde_json::from_str(body).map_err(|error| {
         format!("Map asset {file_name} has an invalid JSON schema: {error}. Regenerate the pinned geography assets.")
@@ -51,20 +50,30 @@ mod tests {
 
     #[test]
     fn html_fallback_is_not_reported_as_a_json_schema_failure() {
-        let error = decode_map_asset("provinces.json", "text/html", "<!doctype html><html></html>").err().unwrap();
+        let error = decode_map_asset(
+            "provinces.json",
+            "text/html",
+            "<!doctype html><html></html>",
+        )
+        .err()
+        .unwrap();
         assert!(error.contains("returned HTML"));
         assert!(error.contains("provinces.json"));
     }
 
     #[test]
     fn empty_map_asset_has_actionable_error() {
-        let error = decode_map_asset("provinces.json", "application/json", "  ").err().unwrap();
+        let error = decode_map_asset("provinces.json", "application/json", "  ")
+            .err()
+            .unwrap();
         assert!(error.contains("is empty"));
     }
 
     #[test]
     fn malformed_json_is_reported_distinctly() {
-        let error = decode_map_asset("provinces.json", "application/json", "not json").err().unwrap();
+        let error = decode_map_asset("provinces.json", "application/json", "not json")
+            .err()
+            .unwrap();
         assert!(error.contains("invalid JSON schema"));
     }
 }

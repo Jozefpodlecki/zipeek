@@ -5,10 +5,8 @@ use zipeek_core::Word;
 use zipeek_hanzi_writing::hanzi_characters;
 
 use crate::{
-    components::audio::listen_button::ListenButton,
-    hooks::use_dictionary,
-    models::WriteHanziOptions,
-    pages::learning::hanzi_writing::HanziWriting,
+    components::audio::listen_button::ListenButton, hooks::use_dictionary,
+    models::WriteHanziOptions, pages::learning::hanzi_writing::HanziWriting,
 };
 
 use super::vocabulary_exercises::load_words;

@@ -50,8 +50,10 @@ fn write_zip(root: &Path, archive: &Path, files: &[PathBuf]) -> Result<()> {
 
 fn compression_method(file: &Path) -> CompressionMethod {
     match file.extension().and_then(|extension| extension.to_str()) {
-        Some("png" | "jpg" | "jpeg" | "webp" | "gif" | "gz" | "zst" | "zip" | "pdf"
-        | "mp3" | "mp4" | "wasm") => CompressionMethod::Stored,
+        Some(
+            "png" | "jpg" | "jpeg" | "webp" | "gif" | "gz" | "zst" | "zip" | "pdf" | "mp3" | "mp4"
+            | "wasm",
+        ) => CompressionMethod::Stored,
         _ => CompressionMethod::Deflated,
     }
 }
@@ -63,10 +65,16 @@ mod tests {
     #[test]
     fn already_compressed_assets_are_stored_without_recompression() {
         for name in ["image.png", "image.webp", "archive.zip", "dictionary.gz"] {
-            assert_eq!(compression_method(Path::new(name)), CompressionMethod::Stored);
+            assert_eq!(
+                compression_method(Path::new(name)),
+                CompressionMethod::Stored
+            );
         }
         for name in ["source.rs", "characters.json", "README.md"] {
-            assert_eq!(compression_method(Path::new(name)), CompressionMethod::Deflated);
+            assert_eq!(
+                compression_method(Path::new(name)),
+                CompressionMethod::Deflated
+            );
         }
     }
 }

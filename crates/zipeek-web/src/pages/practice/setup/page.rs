@@ -1,5 +1,8 @@
 use super::route_source;
-use std::collections::HashMap;
+use std::{cell::Cell, collections::HashMap, rc::Rc};
+
+use wasm_bindgen_futures::spawn_local;
+use zipeek_browser::local_speech;
 
 use yew::prelude::*;
 use yew_router::prelude::{use_location, use_navigator};
@@ -119,6 +122,37 @@ pub fn practice_setup() -> Html {
         })
     };
     let selected_variants = draft.active_formats();
+    let needs_tts = super::validation::needs_local_tts(&selected_variants);
+    let speech_status = use_state(|| None::<Result<(), String>>);
+    let speech_revision = use_state(|| 0_u64);
+    let local_enabled = local_speech::enabled();
+    {
+        let speech_status = speech_status.clone();
+        use_effect_with((needs_tts, local_enabled, *speech_revision), move |(requires_tts, enabled, _revision)| {
+            let live = Rc::new(Cell::new(true));
+            if !requires_tts {
+                speech_status.set(Some(Ok(())));
+            } else if !enabled {
+                speech_status.set(Some(Err(
+                    "Enable Local Mandarin speech in Settings to use audio matching.".to_owned(),
+                )));
+            } else {
+                speech_status.set(None);
+                let live_task = live.clone();
+                spawn_local(async move {
+                    let status = match local_speech::service_capabilities().await {
+                        Ok(value) if value.synthesis => Ok(()),
+                        Ok(_) => Err("Local speech is running, but neural TTS is unavailable.".to_owned()),
+                        Err(_) => Err("Cannot reach the local speech server at 127.0.0.1:8799.".to_owned()),
+                    };
+                    if live_task.get() {
+                        speech_status.set(Some(status));
+                    }
+                });
+            }
+            move || live.set(false)
+        });
+    }
     let personal_reference = match &draft.vocabulary {
         VocabularySource::PersonalSet { reference } => reference.as_str(),
         VocabularySource::Dictionary(_) => "",
@@ -146,8 +180,25 @@ pub fn practice_setup() -> Html {
         session_creation_blocked,
         super::validation::ai_model_configured(),
     );
-    let can_start = eligibility.can_start;
-    let start_gate_message = eligibility.message;
+    let speech_ready = !needs_tts || matches!(&*speech_status, Some(Ok(())));
+    let can_start = eligibility.can_start && speech_ready;
+    let start_gate_message = if !eligibility.can_start {
+        eligibility.message.to_owned()
+    } else if needs_tts {
+        match &*speech_status {
+            None => "Checking local speech readiness...".to_owned(),
+            Some(Err(error)) => error.clone(),
+            Some(Ok(())) => String::new(),
+        }
+    } else {
+        String::new()
+    };
+    let on_retry_speech = {
+        let revision = speech_revision.clone();
+        Callback::from(move |_: MouseEvent| {
+            revision.set((*revision).wrapping_add(1));
+        })
+    };
     let on_start_any = super::launch::start(
         navigator.clone(),
         (*draft).clone(),
@@ -155,6 +206,7 @@ pub fn practice_setup() -> Html {
         environment.local_storage.clone(),
         flow.exercise_options,
         can_start,
+        needs_tts,
         flow.clone(),
     );
     let on_length = {
@@ -201,7 +253,7 @@ pub fn practice_setup() -> Html {
                 plan_rounds={draft.length.resumable_rounds()}
                 can_start={can_start}
                 start_failed={flow.start_failed}
-                gate_message={start_gate_message.to_owned()}
+                gate_message={start_gate_message.clone()}
                 on_length={on_length.clone()}
                 on_count={on_count.clone()}
                 on_start={on_start_any.clone()}
@@ -290,6 +342,13 @@ pub fn practice_setup() -> Html {
                 {practice_step_footer}
                 <div class="min-h-0">
                     {active_panel}
+                    if flow.step == PracticeStep::Summary && needs_tts && local_enabled && matches!(&*speech_status, Some(Err(_))) {
+                        <button type="button" data-speech-setup-retry=""
+                            class="mt-3 min-h-11 rounded-lg border border-line bg-surface px-4 font-semibold text-ink hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                            onclick={on_retry_speech}>
+                            {"Retry speech connection"}
+                        </button>
+                    }
                 </div>
             }
             {if flow.step != PracticeStep::Summary {

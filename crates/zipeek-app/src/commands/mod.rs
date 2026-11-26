@@ -1,4 +1,5 @@
 mod database;
+mod error;
 mod services;
 
 pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
@@ -12,5 +13,6 @@ pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + 
         database::history_commit,
         database::history_rows,
         database::history_erase,
+        database::personal_data_reset,
     ]
 }

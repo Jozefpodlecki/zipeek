@@ -35,7 +35,10 @@ pub(super) fn writing_settings(props: &WritingSettingsProps) -> Html {
     let on_assistance = {
         let on_action = props.on_action.clone();
         Callback::from(move |event: Event| {
-            let Some(input) = event.target().and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok()) else {
+            let Some(input) = event
+                .target()
+                .and_then(|target| target.dyn_into::<web_sys::HtmlInputElement>().ok())
+            else {
                 return;
             };
             let assistance = match input.value().as_str() {
@@ -58,9 +61,18 @@ pub(super) fn writing_settings(props: &WritingSettingsProps) -> Html {
             }
         })
     };
-    let on_pinyin = toggle_setting(props.on_action.clone(), PracticeSetupAction::SetWritingPinyin);
-    let on_meaning = toggle_setting(props.on_action.clone(), PracticeSetupAction::SetWritingMeaning);
-    let on_audio = toggle_setting(props.on_action.clone(), PracticeSetupAction::SetWritingAudio);
+    let on_pinyin = toggle_setting(
+        props.on_action.clone(),
+        PracticeSetupAction::SetWritingPinyin,
+    );
+    let on_meaning = toggle_setting(
+        props.on_action.clone(),
+        PracticeSetupAction::SetWritingMeaning,
+    );
+    let on_audio = toggle_setting(
+        props.on_action.clone(),
+        PracticeSetupAction::SetWritingAudio,
+    );
     let selected = props.options.guidance;
     let selected_key = match selected {
         WritingGuidance::None => "none",

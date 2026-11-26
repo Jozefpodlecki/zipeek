@@ -93,10 +93,25 @@ impl Reducible for RecorderState {
         match action {
             RecorderAction::Initialized => next.initialized = true,
             RecorderAction::Disposed => next.initialized = false,
-            RecorderAction::LevelsChanged(levels) => next.levels = levels,
+            RecorderAction::LevelsChanged(levels) => {
+                next.levels = levels
+                    .into_iter()
+                    .take(128)
+                    .map(|level| {
+                        if level.is_finite() {
+                            level.clamp(0.0, 1.0)
+                        } else {
+                            0.0
+                        }
+                    })
+                    .collect();
+            }
             RecorderAction::PhaseChanged(phase) => next.phase = phase,
             RecorderAction::RecordingFinished(url) => next.audio_url = url,
-            RecorderAction::Failed(message) => next.error = message,
+            RecorderAction::Failed(message) => {
+                next.phase = RecordingPhase::Error;
+                next.error = message;
+            }
             RecorderAction::StartRequested => {
                 next.action_count = next.action_count.wrapping_add(1);
                 next.audio_url.clear();
@@ -114,6 +129,13 @@ impl Reducible for RecorderState {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn audio_levels_are_finite_bounded_and_limited() {
+        let state = Rc::new(RecorderState::default());
+        let adjusted = state.reduce(RecorderAction::LevelsChanged(vec![f32::NAN, -1.0, 3.0]));
+        assert_eq!(adjusted.levels, vec![0.0, 0.0, 1.0]);
+    }
 
     #[test]
     fn starting_and_discarding_clear_previous_recording() {
