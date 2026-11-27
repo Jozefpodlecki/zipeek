@@ -40,3 +40,7 @@ Word mosaics is an interactive Chinese-to-meaning matching exercise. This sectio
 - **Shared design:** Preserve the application's existing dark-violet card and immersive Practice view. Reuse shared selection, progress, feedback and actions conventions where possible, while keeping pair logic in the Word mosaics component. Avoid putting a separate custom header or redundant Exit practice control in this exercise.
 
 An actual browser run is required to verify timings, semantic hints, screen-reader announcements, input handling, persistence and result scoring. Screenshot evidence of the current generic message does not establish that these requirements are implemented.
+
+## R704 typed-outcome integration status
+
+The persisted `ExerciseOutcome::Assessed(ExerciseAssessment)` shape now supports explicit `Correct`, `PartiallyCorrect` and `Incorrect` verdicts, cumulative attempts/mistakes/hints and an assistance flag. `Completed` remains unassessed, and old `Scored { earned, possible }` values remain readable for existing saved sessions. The session summary uses a stacked verdict bar based only on assessed outcomes, with completed-but-unassessed outcomes reported separately rather than classified as correct. Binary generated evaluators supply a minimum one-attempt assessment; they cannot infer partial correctness, prior retries or hint use. Migrating every exercise to report full evidence remains outstanding and requires actual evaluator integration and browser acceptance.

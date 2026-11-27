@@ -7,6 +7,7 @@ use super::{
     resolve::{SelectedItem, resolve_selection},
     row::SelectedItemRow,
 };
+use crate::hooks::use_app_environment;
 use web_sys::KeyboardEvent;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -14,6 +15,7 @@ use yew_icons::{Icon, IconData};
 #[function_component(SelectionReview)]
 pub(crate) fn selection_review() -> Html {
     let dashboard = use_stats_ui().0;
+    let environment = use_app_environment();
     let close_ref = use_node_ref();
     let done_ref = use_node_ref();
     use_dialog_initial_focus(close_ref.clone());
@@ -27,8 +29,9 @@ pub(crate) fn selection_review() -> Html {
         let dashboard = dashboard.clone();
         let first = close_ref.clone();
         let last = done_ref.clone();
+        let document = environment.document.clone();
         Callback::from(move |event: KeyboardEvent| {
-            trap_tab(&event, &first, &last);
+            trap_tab(&document, &event, &first, &last);
             if event.key() == "Escape" {
                 event.prevent_default();
                 dashboard.dispatch(DashboardAction::ReviewSelection(false));

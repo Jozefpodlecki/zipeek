@@ -1,3 +1,26 @@
+mod tauri_ai;
+
+async fn native_or_web_complete<M: serde::Serialize>(
+    endpoint: &str,
+    model: &str,
+    messages: Vec<M>,
+) -> Result<String, String> {
+    if tauri_ai::enabled() {
+        let values =
+            serde_json::to_value(&messages).map_err(|_| "Invalid native AI messages".to_owned())?;
+        let values: Vec<serde_json::Value> =
+            serde_json::from_value(values).map_err(|_| "Invalid native AI messages".to_owned())?;
+        return tauri_ai::complete(endpoint, model, values, &api_key_for_request(), None, None)
+            .await;
+    }
+    let client =
+        zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
+    client
+        .complete(messages, &api_key_for_request())
+        .await
+        .map_err(|error| error.to_string())
+}
+
 pub(crate) async fn complete(
     endpoint: &str,
     model: &str,
@@ -9,12 +32,7 @@ pub(crate) async fn complete(
     if messages.is_empty() {
         return Err("AI generation requires a request".to_owned());
     }
-    let client =
-        zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
-    client
-        .complete(messages, &api_key_for_request())
-        .await
-        .map_err(|error| error.to_string())
+    native_or_web_complete(endpoint, model, messages).await
 }
 
 pub(crate) async fn complete_recognition(
@@ -22,6 +40,17 @@ pub(crate) async fn complete_recognition(
     model: &str,
     messages: Vec<serde_json::Value>,
 ) -> Result<String, String> {
+    if tauri_ai::enabled() {
+        return tauri_ai::complete(
+            endpoint,
+            model,
+            messages,
+            &api_key_for_request(),
+            None,
+            Some(1024),
+        )
+        .await;
+    }
     let client =
         zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
     client
@@ -64,6 +93,16 @@ pub(crate) async fn translate(source: &str, direction: &str) -> Result<String, S
         .map_err(|error| error.to_string())?;
     let direction = zipeek_ai_client::TranslationDirection::try_from(direction)
         .map_err(|error| error.to_string())?;
+    if tauri_ai::enabled() {
+        let source =
+            zipeek_ai_client::validate_source(source).map_err(|error| error.to_string())?;
+        return native_or_web_complete(
+            &configured.url,
+            &configured.model,
+            zipeek_ai_client::translation_messages(source, direction),
+        )
+        .await;
+    }
     client
         .translate(source, direction, &api_key_for_request())
         .await
@@ -71,6 +110,18 @@ pub(crate) async fn translate(source: &str, direction: &str) -> Result<String, S
 }
 
 pub(crate) async fn test_connection(url: &str, model: &str) -> Result<String, String> {
+    if tauri_ai::enabled() {
+        let text = native_or_web_complete(
+            url,
+            model,
+            vec![serde_json::json!({"role":"user","content":"Respond with one short greeting."})],
+        )
+        .await?;
+        return Ok(format!(
+            "Model responded ({} characters)",
+            text.chars().count()
+        ));
+    }
     let client = zipeek_ai_client::AiClient::new(url, model).map_err(|error| error.to_string())?;
     client
         .test_connection(&api_key_for_request())
@@ -98,6 +149,12 @@ pub(crate) async fn complete_with_updates<F>(
 where
     F: FnMut(zipeek_ai_client::StreamUpdate),
 {
+    if tauri_ai::enabled() {
+        let text = native_or_web_complete(endpoint, model, messages).await?;
+        let mut on_update = on_update;
+        on_update(zipeek_ai_client::StreamUpdate::Content(text.clone()));
+        return Ok(text);
+    }
     let client =
         zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
     client
@@ -115,6 +172,12 @@ pub(crate) async fn complete_with_progress<F>(
 where
     F: FnMut(&str),
 {
+    if tauri_ai::enabled() {
+        let text = native_or_web_complete(endpoint, model, messages).await?;
+        let mut on_delta = on_delta;
+        on_delta(&text);
+        return Ok(text);
+    }
     let client =
         zipeek_ai_client::AiClient::new(endpoint, model).map_err(|error| error.to_string())?;
     client
@@ -139,6 +202,11 @@ where
     let mut chars = 0_usize;
     let mut previous = 0_usize;
     let mut reasoning_report = 0_usize;
+    if tauri_ai::enabled() {
+        let text = native_or_web_complete(&configured.url, &configured.model, messages).await?;
+        on_progress("Generating plain translation", text.chars().count());
+        return Ok(text);
+    }
     let client = zipeek_ai_client::AiClient::new(&configured.url, &configured.model)
         .map_err(|error| error.to_string())?;
     client
@@ -191,39 +259,59 @@ where
         "sentence_analysis",
         zipeek_ai_protocol::sentence_analysis::json_schema(),
     );
-    let raw = match client
-        .complete_with_format(
-            messages.clone(),
-            &api_key_for_request(),
-            Some(&schema),
-            |update| match update {
-                zipeek_ai_client::StreamUpdate::Content(delta) => {
-                    count += delta.chars().count();
-                    if count.saturating_sub(last_report) >= 128 {
-                        last_report = count;
-                        on_progress("Generating translation and analysis", count);
-                    }
-                }
-                zipeek_ai_client::StreamUpdate::Reasoning { received_chars } => {
-                    if count == 0 && received_chars.saturating_sub(last_reasoning_report) >= 128 {
-                        last_reasoning_report = received_chars;
-                        on_progress("Model reasoning (preparing response)", received_chars);
-                    }
-                }
-            },
+    let native_result = if tauri_ai::enabled() {
+        Some(
+            tauri_ai::complete(
+                &configured.url,
+                &configured.model,
+                messages.clone(),
+                &api_key_for_request(),
+                serde_json::to_value(&schema).ok(),
+                None,
+            )
+            .await,
         )
-        .await
-        .map_err(|error| error.to_string())
+    } else {
+        None
+    };
+    let raw = match async {
+        if let Some(result) = native_result {
+            return result;
+        }
+        client
+            .complete_with_format(
+                messages.clone(),
+                &api_key_for_request(),
+                Some(&schema),
+                |update| match update {
+                    zipeek_ai_client::StreamUpdate::Content(delta) => {
+                        count += delta.chars().count();
+                        if count.saturating_sub(last_report) >= 128 {
+                            last_report = count;
+                            on_progress("Generating translation and analysis", count);
+                        }
+                    }
+                    zipeek_ai_client::StreamUpdate::Reasoning { received_chars } => {
+                        if count == 0 && received_chars.saturating_sub(last_reasoning_report) >= 128
+                        {
+                            last_reasoning_report = received_chars;
+                            on_progress("Model reasoning (preparing response)", received_chars);
+                        }
+                    }
+                },
+            )
+            .await
+            .map_err(|error| error.to_string())
+    }
+    .await
     {
         Ok(raw) => raw,
         Err(error) if structured_request_rejected(&error) => {
             on_progress("Retrying analysis without provider-enforced schema", 0);
-            match client
-                .complete(messages.clone(), &api_key_for_request())
-                .await
+            match native_or_web_complete(&configured.url, &configured.model, messages.clone()).await
             {
                 Ok(raw) => raw,
-                Err(fallback_error) if structured_request_rejected(&fallback_error.to_string()) => {
+                Err(fallback_error) if structured_request_rejected(&fallback_error) => {
                     on_progress("Trying plain translation", 0);
                     let text = plain_translation_with_progress(
                         &configured,
@@ -240,7 +328,7 @@ where
                         )),
                     });
                 }
-                Err(fallback_error) => return Err(fallback_error.to_string()),
+                Err(fallback_error) => return Err(fallback_error),
             }
         }
         Err(error) => return Err(error),
@@ -354,6 +442,19 @@ pub(crate) async fn test_connection_details(
     url: &str,
     model: &str,
 ) -> Result<AiConnectionTrace, String> {
+    if tauri_ai::enabled() {
+        let messages = vec![serde_json::json!({"role":"user","content":"Say hello briefly."})];
+        let reply = native_or_web_complete(url, model, messages.clone()).await?;
+        return Ok(AiConnectionTrace {
+            model: model.to_owned(),
+            messages: vec![AiTraceMessage {
+                role: "user".into(),
+                content: "Say hello briefly.".into(),
+            }],
+            truncated: reply.chars().count() > 600,
+            reply: reply.chars().take(600).collect(),
+        });
+    }
     let client = zipeek_ai_client::AiClient::new(url, model).map_err(|error| error.to_string())?;
     let text = client
         .connection_details(&api_key_for_request())
@@ -377,8 +478,10 @@ mod structured_fallback_tests {
     }
 }
 
-
 pub(crate) async fn discover_models(url: &str) -> Result<Vec<String>, String> {
+    if tauri_ai::enabled() {
+        return tauri_ai::models(url, &api_key_for_request()).await;
+    }
     zipeek_ai_client::discover_models(url, &api_key_for_request())
         .await
         .map_err(|error| error.to_string())

@@ -4,6 +4,7 @@ use super::grammar_learning_flow::{self, LearningPhase, PracticeAction, Practice
 use super::grammar_lesson_scaffold::GrammarLessonScaffold;
 use super::progress;
 use crate::components::ListenButton;
+use crate::hooks::use_app_environment;
 use crate::route::Route;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -32,6 +33,7 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
     let Some(course) = expanded_course(props.region) else {
         return Html::default();
     };
+    let environment = use_app_environment();
     let total_steps = grammar_learning_flow::step_count(course.points.len());
     let initial = progress::load()
         .ok()
@@ -43,10 +45,9 @@ fn expanded_lesson_content(props: &ExpandedLessonContentProps) -> Html {
     let save_error = use_state(|| None::<String>);
     let current = *step;
     {
+        let window = environment.window.clone();
         use_effect_with(current, move |_| {
-            if let Some(window) = web_sys::window() {
-                window.scroll_to_with_x_and_y(0.0, 0.0);
-            }
+            window.scroll_to_with_x_and_y(0.0, 0.0);
         });
     }
     let previous = {

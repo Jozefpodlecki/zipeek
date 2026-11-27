@@ -1,4 +1,4 @@
-use js_sys::{Array, ArrayBuffer, Function, Object, Promise, Reflect};
+use js_sys::{Array, ArrayBuffer, Function, Object, Promise, Reflect, Uint8Array};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 
@@ -47,6 +47,9 @@ pub(super) async fn fetch(
     data: Option<&JsValue>,
     controller: Option<&JsValue>,
 ) -> Result<JsValue, JsValue> {
+    if tauri_available() {
+        return native_speech_response(path, method, data).await;
+    }
     let options = Object::new();
     assign(&options, "method", &JsValue::from_str(method))?;
     assign(&options, "mode", &JsValue::from_str("cors"))?;
@@ -131,4 +134,59 @@ pub(super) async fn decode_audio(data: ArrayBuffer) -> Result<Vec<u8>, JsValue> 
         let _ = wait(promise).await;
     }
     result
+}
+
+pub(super) fn tauri_available() -> bool {
+    property(&js_sys::global(), "__TAURI__")
+        .ok()
+        .is_some_and(|value| value.is_object() && !value.is_null())
+}
+
+async fn native_speech_response(
+    path: &str,
+    method: &str,
+    data: Option<&JsValue>,
+) -> Result<JsValue, JsValue> {
+    let operation = match (method, path) {
+        ("GET", "/v1/capabilities") => "capabilities",
+        ("POST", "/v1/tts") => "tts",
+        ("POST", "/v1/stt") => "stt",
+        _ => return Err(JsValue::from_str("Unsupported native speech operation")),
+    };
+    let bytes = match (operation, data) {
+        ("capabilities", _) => Array::new(),
+        ("tts", Some(value)) => {
+            let text = value
+                .as_string()
+                .ok_or_else(|| JsValue::from_str("TTS text expected"))?;
+            {
+                let result = Array::new();
+                for byte in text.as_bytes() {
+                    result.push(&JsValue::from_f64(f64::from(*byte)));
+                }
+                result
+            }
+        }
+        ("stt", Some(value)) => Array::from(&Uint8Array::new(value)),
+        _ => return Err(JsValue::from_str("Speech body missing")),
+    };
+    let args = Object::new();
+    assign(&args, "operation", &JsValue::from_str(operation))?;
+    assign(&args, "bytes", &bytes.into())?;
+    let tauri = property(&js_sys::global(), "__TAURI__")?;
+    let core = property(&tauri, "core")?;
+    let reply = wait(invoke(
+        &core,
+        "invoke",
+        &[JsValue::from_str("speech_request"), args.into()],
+    )?)
+    .await?;
+    let response_bytes = property(&reply, "bytes")?;
+    let body = Uint8Array::new(&response_bytes);
+    let headers = Object::new();
+    assign(&headers, "Content-Type", &property(&reply, "content_type")?)?;
+    let options = Object::new();
+    assign(&options, "status", &JsValue::from_f64(200.0))?;
+    assign(&options, "headers", &headers.into())?;
+    new_object("Response", &[body.into(), options.into()])
 }

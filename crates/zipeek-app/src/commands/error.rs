@@ -9,6 +9,13 @@ use crate::services::ServiceError;
 pub enum CommandError {
     #[error(transparent)]
     Service(#[from] ServiceError),
+
+    #[error("{0}")]
+    Image(String),
+    #[error("{0}")]
+    Speech(String),
+    #[error("{0}")]
+    Ai(String),
     #[error(transparent)]
     Database(#[from] DatabaseError),
 }

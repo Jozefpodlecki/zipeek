@@ -3,7 +3,9 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
 pub(super) fn status(state: &AiSettingsState) -> Html {
-    if state.message.is_empty() || state.test_busy() { return Html::default(); }
+    if state.message.is_empty() || state.test_busy() {
+        return Html::default();
+    }
     let failed = state.test_ok == Some(false);
     html! {
         <div data-ai-diagnostic-status="" role={if failed {"alert"} else {"status"}}

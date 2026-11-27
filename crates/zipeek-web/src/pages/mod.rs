@@ -1,19 +1,20 @@
 mod explore;
 mod home;
-mod record;
 pub mod learning;
 pub mod practice;
+mod profile;
+mod record;
 mod system;
 pub mod translation;
 
 pub use explore::{browse, random, word_sets};
 pub use home::{Home, SentencesPage};
-pub use record::RecordPage;
 pub use learning::courses;
 pub use learning::crossword;
 pub use learning::games;
 pub use learning::hanzi_writing;
 pub use learning::write_hanzi;
+pub use record::RecordPage;
 pub use system::{debug, docs, error, not_found, settings, stats, themes};
 pub use translation::{sentence_practice, sentence_translator, speaking};
 
@@ -34,6 +35,7 @@ pub use games::{
 pub use hanzi_writing::HanziWriting;
 pub use not_found::NotFound;
 pub use practice::setup::PracticeSetup;
+pub use profile::ProfilePage;
 pub use random::Random;
 pub use sentence_practice::SentencePracticePage;
 pub use sentence_translator::SentenceTranslatorPage;

@@ -7,12 +7,10 @@ use std::{
     time::Instant,
 };
 
-use tokio::sync::{mpsc, oneshot, OwnedSemaphorePermit};
+use tokio::sync::{OwnedSemaphorePermit, mpsc, oneshot};
 
 use crate::{
-    candle_stt::inference::QwenAsrEngine,
-    candle_tts::qwen::QwenTtsEngine,
-    speech::SpeechError,
+    candle_stt::inference::QwenAsrEngine, candle_tts::qwen::QwenTtsEngine, speech::SpeechError,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -95,7 +93,8 @@ impl Status {
 
     fn fail(&self, kind: u8) {
         self.failure.store(kind, Ordering::Release);
-        self.state.store(EngineStatus::Failed as u8, Ordering::Release);
+        self.state
+            .store(EngineStatus::Failed as u8, Ordering::Release);
     }
 
     fn failure_code(&self) -> &'static str {
@@ -178,17 +177,28 @@ impl TtsWorker {
                             let started = Instant::now();
                             let result = initialize(&mut engine, true);
                             if result.is_ok() {
-                                tracing::info!(elapsed_ms = started.elapsed().as_millis(), "Qwen3-TTS ready after neural warm-up");
+                                tracing::info!(
+                                    elapsed_ms = started.elapsed().as_millis(),
+                                    "Qwen3-TTS ready after neural warm-up"
+                                );
                             }
                             let _ = reply.send(result);
                         }
-                        TtsRequest::Generate { text, cancelled, permit: _permit, reply } => {
+                        TtsRequest::Generate {
+                            text,
+                            cancelled,
+                            permit: _permit,
+                            reply,
+                        } => {
                             let started = !cancelled.load(Ordering::Relaxed);
                             let result = if !started {
                                 Err(SpeechError::Cancelled)
                             } else {
                                 initialize(&mut engine, false).and_then(|()| {
-                                    engine.as_mut().unwrap().synthesize_with_cancel(&text, &cancelled, |_| {})
+                                    engine
+                                        .as_mut()
+                                        .unwrap()
+                                        .synthesize_with_cancel(&text, &cancelled, |_| {})
                                         .map_err(|error| {
                                             if cancelled.load(Ordering::Relaxed) {
                                                 SpeechError::Cancelled
@@ -223,9 +233,13 @@ impl TtsWorker {
         Self { sender, status }
     }
 
-    pub fn status(&self) -> EngineStatus { self.status.get() }
+    pub fn status(&self) -> EngineStatus {
+        self.status.get()
+    }
 
-    pub fn failure_code(&self) -> &'static str { self.status.failure_code() }
+    pub fn failure_code(&self) -> &'static str {
+        self.status.failure_code()
+    }
 
     pub async fn shutdown(&self) -> Result<(), SpeechError> {
         if self.status() == EngineStatus::Stopped {
@@ -235,22 +249,45 @@ impl TtsWorker {
         if self.sender.send(TtsRequest::Shutdown(reply)).await.is_err() {
             return Ok(());
         }
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-TTS shutdown interrupted"))
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-TTS shutdown interrupted"))
     }
 
     pub async fn warm(&self) -> Result<(), SpeechError> {
         let (reply, receiver) = oneshot::channel();
-        self.sender.send(TtsRequest::Warm(reply)).await.map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker has shut down"))?;
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker stopped during warm-up"))?
+        self.sender
+            .send(TtsRequest::Warm(reply))
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker has shut down"))?;
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker stopped during warm-up"))?
     }
 
-    pub async fn generate(&self, text: String, cancelled: Arc<AtomicBool>, permit: OwnedSemaphorePermit) -> Result<Vec<u8>, SpeechError> {
+    pub async fn generate(
+        &self,
+        text: String,
+        cancelled: Arc<AtomicBool>,
+        permit: OwnedSemaphorePermit,
+    ) -> Result<Vec<u8>, SpeechError> {
         let (reply, receiver) = oneshot::channel();
-        self.sender.try_send(TtsRequest::Generate { text, cancelled, permit, reply }).map_err(|error| match error {
-            mpsc::error::TrySendError::Full(_) => SpeechError::Busy,
-            mpsc::error::TrySendError::Closed(_) => SpeechError::Unavailable("Qwen3-TTS worker has shut down"),
-        })?;
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker stopped"))?
+        self.sender
+            .try_send(TtsRequest::Generate {
+                text,
+                cancelled,
+                permit,
+                reply,
+            })
+            .map_err(|error| match error {
+                mpsc::error::TrySendError::Full(_) => SpeechError::Busy,
+                mpsc::error::TrySendError::Closed(_) => {
+                    SpeechError::Unavailable("Qwen3-TTS worker has shut down")
+                }
+            })?;
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker stopped"))?
     }
 }
 
@@ -278,7 +315,8 @@ impl SttWorker {
                                     .map_err(|error| format!("Qwen3-ASR CUDA device: {error}")),
                                 ComputeDevice::Cpu => Ok(candle_core::Device::Cpu),
                             };
-                            let loaded = device.and_then(|device| QwenAsrEngine::load(&model, &device));
+                            let loaded =
+                                device.and_then(|device| QwenAsrEngine::load(&model, &device));
                             match loaded {
                                 Ok(loaded) => *engine = Some(loaded),
                                 Err(error) => {
@@ -301,17 +339,28 @@ impl SttWorker {
                             let started = Instant::now();
                             let result = initialize(&mut engine);
                             if result.is_ok() {
-                                tracing::info!(elapsed_ms = started.elapsed().as_millis(), "Qwen3-ASR weights preloaded");
+                                tracing::info!(
+                                    elapsed_ms = started.elapsed().as_millis(),
+                                    "Qwen3-ASR weights preloaded"
+                                );
                             }
                             let _ = reply.send(result);
                         }
-                        SttRequest::Recognize { samples, cancelled, permit: _permit, reply } => {
+                        SttRequest::Recognize {
+                            samples,
+                            cancelled,
+                            permit: _permit,
+                            reply,
+                        } => {
                             let started = !cancelled.load(Ordering::Relaxed);
                             let result = if !started {
                                 Err(SpeechError::Cancelled)
                             } else {
                                 initialize(&mut engine).and_then(|()| {
-                                    engine.as_mut().unwrap().transcribe_with_cancel(&samples, &cancelled)
+                                    engine
+                                        .as_mut()
+                                        .unwrap()
+                                        .transcribe_with_cancel(&samples, &cancelled)
                                         .map_err(|error| {
                                             if cancelled.load(Ordering::Relaxed) {
                                                 SpeechError::Cancelled
@@ -346,9 +395,13 @@ impl SttWorker {
         Self { sender, status }
     }
 
-    pub fn status(&self) -> EngineStatus { self.status.get() }
+    pub fn status(&self) -> EngineStatus {
+        self.status.get()
+    }
 
-    pub fn failure_code(&self) -> &'static str { self.status.failure_code() }
+    pub fn failure_code(&self) -> &'static str {
+        self.status.failure_code()
+    }
 
     pub async fn shutdown(&self) -> Result<(), SpeechError> {
         if self.status() == EngineStatus::Stopped {
@@ -358,22 +411,45 @@ impl SttWorker {
         if self.sender.send(SttRequest::Shutdown(reply)).await.is_err() {
             return Ok(());
         }
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-ASR shutdown interrupted"))
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-ASR shutdown interrupted"))
     }
 
     pub async fn warm(&self) -> Result<(), SpeechError> {
         let (reply, receiver) = oneshot::channel();
-        self.sender.send(SttRequest::Warm(reply)).await.map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker has shut down"))?;
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker stopped during preload"))?
+        self.sender
+            .send(SttRequest::Warm(reply))
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker has shut down"))?;
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker stopped during preload"))?
     }
 
-    pub async fn recognize(&self, samples: Vec<f32>, cancelled: Arc<AtomicBool>, permit: OwnedSemaphorePermit) -> Result<String, SpeechError> {
+    pub async fn recognize(
+        &self,
+        samples: Vec<f32>,
+        cancelled: Arc<AtomicBool>,
+        permit: OwnedSemaphorePermit,
+    ) -> Result<String, SpeechError> {
         let (reply, receiver) = oneshot::channel();
-        self.sender.try_send(SttRequest::Recognize { samples, cancelled, permit, reply }).map_err(|error| match error {
-            mpsc::error::TrySendError::Full(_) => SpeechError::Busy,
-            mpsc::error::TrySendError::Closed(_) => SpeechError::Unavailable("Qwen3-ASR worker has shut down"),
-        })?;
-        receiver.await.map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker stopped"))?
+        self.sender
+            .try_send(SttRequest::Recognize {
+                samples,
+                cancelled,
+                permit,
+                reply,
+            })
+            .map_err(|error| match error {
+                mpsc::error::TrySendError::Full(_) => SpeechError::Busy,
+                mpsc::error::TrySendError::Closed(_) => {
+                    SpeechError::Unavailable("Qwen3-ASR worker has shut down")
+                }
+            })?;
+        receiver
+            .await
+            .map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker stopped"))?
     }
 }
 
@@ -402,7 +478,11 @@ mod tests {
 
     #[tokio::test]
     async fn missing_asr_checkpoint_fails_without_claiming_readiness() {
-        let worker = SttWorker::start(PathBuf::from("missing-asr-model.safetensors"), ComputeDevice::Cpu, true);
+        let worker = SttWorker::start(
+            PathBuf::from("missing-asr-model.safetensors"),
+            ComputeDevice::Cpu,
+            true,
+        );
         assert_eq!(worker.status(), EngineStatus::Installed);
         assert!(worker.warm().await.is_err());
         assert_eq!(worker.status(), EngineStatus::Failed);
@@ -447,8 +527,12 @@ mod tests {
     async fn cancelled_before_inference_keeps_stt_worker_usable() {
         let worker = SttWorker::start(PathBuf::from("missing-asr-model"), ComputeDevice::Cpu, true);
         let permit = Arc::new(tokio::sync::Semaphore::new(1))
-            .acquire_owned().await.unwrap();
-        let result = worker.recognize(vec![0.2], Arc::new(AtomicBool::new(true)), permit).await;
+            .acquire_owned()
+            .await
+            .unwrap();
+        let result = worker
+            .recognize(vec![0.2], Arc::new(AtomicBool::new(true)), permit)
+            .await;
         assert!(matches!(result, Err(SpeechError::Cancelled)));
         assert_eq!(worker.status(), EngineStatus::Installed);
     }
@@ -476,7 +560,10 @@ mod tests {
     async fn bounded_worker_queue_rejects_excess_requests() {
         let (sender, _receiver) = mpsc::channel::<u8>(1);
         assert!(sender.try_send(1).is_ok());
-        assert!(matches!(sender.try_send(2), Err(mpsc::error::TrySendError::Full(2))));
+        assert!(matches!(
+            sender.try_send(2),
+            Err(mpsc::error::TrySendError::Full(2))
+        ));
     }
 
     #[tokio::test]
@@ -491,5 +578,4 @@ mod tests {
         assert!(matches!(tts.warm().await, Err(SpeechError::Unavailable(_))));
         assert!(matches!(stt.warm().await, Err(SpeechError::Unavailable(_))));
     }
-
 }

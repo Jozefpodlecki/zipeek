@@ -1,3 +1,8 @@
+use super::super::{
+    feedback::{ExercisePrimaryAction, ExerciseReview, FeedbackVerdict},
+    instruction::InstructionIcon,
+    surface::ExerciseSurface,
+};
 use crate::services::practice_generated::GeneratedImageChoice;
 use std::collections::BTreeSet;
 use yew::prelude::*;
@@ -86,9 +91,8 @@ pub(super) fn image_practice(props: &ImagePracticeProps) -> Html {
                     Html::default()
                 }
             }
-            <div class="mx-auto w-full max-w-2xl space-y-3 rounded-xl border border-line bg-surface p-4 shadow-lg">
+            <ExerciseSurface icon={InstructionIcon::Choose} instruction="Choose the Chinese words shown in the picture.">
                 <div class="space-y-1">
-                    <h2 class="text-base font-semibold">{"Which Chinese words match the picture?"}</h2>
                     <p class="text-sm text-muted">
                         {if correct_ids.len() == 1 {
                             "Choose the one word depicted in the image."
@@ -114,26 +118,22 @@ pub(super) fn image_practice(props: &ImagePracticeProps) -> Html {
                     })}
                 </div>
                 {if *checked {
-                    html! { <div role="status" class="space-y-3">
-                        <p class="font-semibold">{if correct {"Correct!"} else {"Not quite — review the expected words."}}</p>
-                        <p class="text-sm">{format!("Expected: {}", choices.iter()
-                            .filter(|choice| correct_ids.contains(&choice.id))
-                            .map(|choice| choice.hanzi.as_str()).collect::<Vec<_>>().join(", "))}</p>
-                        <button type="button" class="rounded-lg bg-brand-action px-5 py-3 text-white"
-                            onclick={on_continue.clone()}>{"Continue"}</button>
+                    html! { <div class="space-y-3">
+                        <ExerciseReview verdict={if correct { FeedbackVerdict::Correct } else { FeedbackVerdict::Incorrect }} on_continue={on_continue.clone()}>
+                            <p class="text-sm">{format!("Expected: {}", choices.iter()
+                                .filter(|choice| correct_ids.contains(&choice.id))
+                                .map(|choice| choice.hanzi.as_str()).collect::<Vec<_>>().join(", "))}</p>
+                        </ExerciseReview>
                     </div> }
                 } else {
-                    html! { <button type="button"
-                        class="rounded-lg bg-brand-action px-5 py-3 text-white"
-                        disabled={selected.is_empty() || *image_status != ImageLoadStatus::Ready}
-                        onclick={check}>{"Check answer"}</button> }
+                    html! { <ExercisePrimaryAction label="Check answer" on_activate={check} disabled={selected.is_empty() || *image_status != ImageLoadStatus::Ready} /> }
                 }}
                 <details class="text-sm text-muted">
                     <summary class="cursor-pointer">{"Image quality and generation details"}</summary>
                     <p class="mt-2">{"If the illustration does not match the intended subjects, return to Practice and generate another. An unsuitable image should not be treated as a knowledge assessment."}</p>
                     <p class="mt-2">{scene}</p>
                 </details>
-            </div>
+            </ExerciseSurface>
         </div>
     }
 }

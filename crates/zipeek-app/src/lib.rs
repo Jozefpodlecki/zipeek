@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 #![allow(private_interfaces)]
+#![allow(unused_imports)]
 
 mod commands;
 mod database;
@@ -16,8 +17,7 @@ pub fn run() {
         .run(|app, event| {
             if matches!(event, tauri::RunEvent::Exit) {
                 use tauri::Manager;
-                app.state::<services::NativeServices>()
-                    .shutdown();
+                app.state::<services::NativeServices>().shutdown();
             }
         });
 }

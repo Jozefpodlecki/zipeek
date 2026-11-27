@@ -1,7 +1,12 @@
 use yew::prelude::*;
 use zipeek_exercises::speaking::PREVIEW_TARGETS;
 
-use crate::components::SpeakingRecorder;
+use crate::{
+    components::SpeakingRecorder,
+    pages::practice::{
+        feedback::ContinueExercise, instruction::InstructionIcon, surface::ExerciseSurface,
+    },
+};
 
 #[derive(Properties, PartialEq)]
 pub struct SpeakingPracticeProps {
@@ -21,6 +26,7 @@ pub fn speaking() -> Html {
 
 #[function_component(SpeakingPractice)]
 pub fn speaking_practice(props: &SpeakingPracticeProps) -> Html {
+    let in_session = props.on_completed.is_some();
     let initial = props.seed as usize % PREVIEW_TARGETS.len();
     let selected = use_state(move || initial);
     let target = &PREVIEW_TARGETS[*selected];
@@ -36,25 +42,8 @@ pub fn speaking_practice(props: &SpeakingPracticeProps) -> Html {
         })
     };
 
-    html! {
-        <main
-            data-component="speaking-page"
-            class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-5"
-        >
-            <header
-                class="space-y-2"
-            >
-                <h1
-                    class="text-3xl font-bold"
-                >
-                    {"Pronunciation Practice"}
-                </h1>
-                <p
-                    class="text-muted"
-                >
-                    {"Choose a Mandarin sentence, then record and replay your pronunciation in context."}
-                </p>
-            </header>
+    let body = html! {
+        <>
             <section
                 data-component="speaking-target-selector"
                 class="space-y-3"
@@ -140,19 +129,37 @@ pub fn speaking_practice(props: &SpeakingPracticeProps) -> Html {
             {
                 if props.on_completed.is_some() {
                     html! {
-                        <button
-                            type="button"
-                            data-speaking-session-continue=""
-                            class="rounded-lg bg-brand-action px-4 py-2 font-semibold text-white"
-                            onclick={on_continue}
-                        >
-                            {"Continue without a score"}
-                        </button>
+                        <ContinueExercise
+                            on_continue={on_continue}
+                            label={Some(AttrValue::from("Continue without a score"))}
+                            speaking=true
+                        />
                     }
                 } else {
                     Html::default()
                 }
             }
-        </main>
+        </>
+    };
+    html! {
+        <section data-component="speaking-page" class="mx-auto w-full max-w-3xl">
+            {if in_session {
+                html! {
+                    <ExerciseSurface icon={InstructionIcon::Speak} instruction="Read the sentence aloud, then listen to your recording.">
+                        {body}
+                    </ExerciseSurface>
+                }
+            } else {
+                html! {
+                    <div class="space-y-6 p-5">
+                        <header class="space-y-2">
+                            <h1 class="text-3xl font-bold">{"Pronunciation Practice"}</h1>
+                            <p class="text-muted">{"Choose a Mandarin sentence, then record and replay your pronunciation in context."}</p>
+                        </header>
+                        {body}
+                    </div>
+                }
+            }}
+        </section>
     }
 }

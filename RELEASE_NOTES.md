@@ -1,116 +1,93 @@
-## R697 WIP: Debug workspace and SQL result tabs (2026-11-26)
+## R706 WIP — Real image generation readiness
 
-- Stabilized Development diagnostics at a consistent maximum width and desktop minimum height, so switching Overview, DuckDB, SQL and OPFS does not shift the outer panel.
-- Added Yew/Lucide icons for the diagnostic tabs, using the provided `crates/zipeek-web/public/duckdb.webp` image for DuckDB.
-- Removed redundant SQL-terminal and SQL-query headings.
-- Replaced the long flat SQL example selector with a collapsed, grouped query-example menu.
-- Added bounded, closable SQL result tabs, each retaining its own query output or error. An execution opens a new result tab. Eight recent result tabs are retained; the oldest is evicted after that limit.
-- Kept the SQL editor and results grid visible as a stable workspace, with CSV export per selected result.
-- Preserved the debug-only route guard, single SELECT validation, 100-row output cap and existing OPFS read-only inspector.
+- Fixed the default image backend silently selecting SVG placeholder images. Default startup now requests SDXL; missing model files cause explicit startup failure instead of a misleading successful image preview.
+- Settings health checks distinguish an inference-ready SDXL backend from a reachable preview-only placeholder. Browser generation checks backend readiness before submitting, and desktop Tauri image commands reject preview-only generation.
+- Improved image sidecar startup diagnostics and documented model installation and CUDA requirements. Added regression coverage for backend selection and preview rejection.
+- Does not bundle model weights or guarantee GPU availability. Existing explicitly configured preview-only backend remains useful for protocol tests.
 
-Validation: static source assertions and archive-content checks only. Rust/WASM and browser testing pending.
+R706 WIP UI refinement (2026-11-27): Replaced the exact-Hanzi exclusion form with a bounded dictionary autocomplete for Hanzi, pinyin and English. Suggestions identify individual Word IDs and show Chinese, reading and meaning, with keyboard navigation and direct add/remove. Profile and Word Sets remove redundant instructional labels; drawer configuration uses the existing navigation icons in a compact grid. Saved-session recovery uses a single heading, finite progress bar, Play/Resume and icon Delete. The global saved-session notice no longer duplicates the Practice setup recovery screen. The header dragon image is contained at a compact width instead of being cropped across the header. No schema or scoring changes. Build and interaction tests not run.
 
-# R696 WIP: Debug OPFS inspector and SQL scope
+R706 WIP build correction: Browse word-card saved-word navigation now links to Profile instead of the removed WordSets route.
 
-Archive: `zipeek-R696-WIP-debug-opfs-sql-inspector-20261126-213905.zip`. Packaging date: 2026-11-26 UTC. Baseline: corrected R695 full-source archive.
+# R706 WIP — Profile configuration hub (2026-11-27)
 
-## Changes
+- Added `#/profile`, replacing the standalone Word Sets drawer route with a user-icon Profile entry. Profile exposes Word Sets, Excluded Words, and Drawer Menu tabs; no avatar or account data is introduced.
+- Reused the existing Word Sets provider, management panel, vocabulary list and persistence; the create button is now a `+` icon with accessible name and tooltip.
+- Added an excluded-word manager that reads existing saved Word IDs, resolves dictionary labels, supports searching, exclusion by exact Hanzi spelling, and one-click removal. Uses the same exclusion storage key and respects the dictionary database boundary.
+- Added configurable drawer visibility using the existing Preferences document and centralized navigation registry, with same-tab and cross-tab refresh. Profile and Settings are always available, and existing preferences remain default-visible.
+- Added regression tests for persistent visibility and essential navigation. No new dependencies, user profiles, account system or data migrations.
+- Source/ZIP integrity only. Rust/WASM build and browser interaction acceptance remain unverified; R706 is WIP, not an accepted major release. Existing R705 pedagogical and Endless outstanding work remains open.
 
-- Added a separate OPFS tab in the existing debug-only diagnostics route. It reads root directory names and types through `navigator.storage.getDirectory()` and an asynchronous iterator, with bounded 500-entry output, alphabetical ordering, Refresh, and loading, empty and error states. No OPFS files are opened or modified.
-- Removed the hardcoded `words` / `word_relations` / `information_schema.tables` / `pragma_database_size()` SQL allowlist so ordinary read-only SELECT queries may address additional dictionary relations. The validator still restricts statements to a single SELECT with a 2 KiB input cap, rejects known external I/O and administrative expressions, and wraps results in a 100-row limit.
-- Preserved existing Yew icons, browser-local data boundaries and debug-only route guard.
-- No new dependencies or lockfile changes.
+# R705 WIP - Typed Tauri bridge and native service adapters (2026-11-27)
 
-## Verification
+Complete source handoff `zipeek-R705-WIP-typed-tauri-transport-20261127-190200.zip`: one frontend Tauri transport under `services/tauri/mod.rs` with explicit `error.rs`, `invoke.rs`, `commands.rs` and `events.rs`; typed error classifications, cached successful bridge initialization, typed invoke/command selection and listener ownership. Migrated native database, history, service controls, AI and image generation; centralized Tauri detection. Removed redundant IPC error module. Added command-contract tests and kept the existing native Rust command names, data models, per-service fallbacks and no-`.unpack-backups` pack/unpack contract unchanged.
 
-Static source assertions, ZIP integrity and Unicode/case-insensitive collision checks performed. Rust compilation, actual DuckDB SQL and browser OPFS enumeration were not run in this environment. Run `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-web --target wasm32-unknown-unknown`, `cargo test --locked -p zipeek-web` and check both app base paths.
+Source review and archive verification only. Rust compilation, WASM tests and Tauri runtime acceptance not run; user should check the WASM build and desktop service interactions. No dependencies changed. The durable KnowledgeLedger processor and lossless unlimited Endless session persistence remain open.
 
----
+R705 WIP - 2026-11-27 - Compact Practice exercises, Character Builder dragging and Mandarin playback recovery
 
-# R695 WIP: Debug SQL terminal UX and relationship query correction
+- Removed redundant Practice exercise-position and vocabulary round/mistake counters from the learner-facing workspace; assessment counters and saved outcomes are retained internally.
+- Removed the extra vocabulary card wrapper in resumed sessions; shared ExerciseSurface is the sole card and omits the instruction chrome for Character Builder's self-explanatory task.
+- Added slot-aware Character Builder drag placement and reordering using the same answer-selection reducer, with native HTML drag/drop for mouse and pointer-drop handling for touch. Kept click-based add/remove and keyboard-operable buttons. Added pure placement regression tests.
+- Added centralized native Mandarin playback fallback to an explicitly Mandarin-capable browser voice with 60-second native retry throttling, request-identity cancellation guards, developer logging, and one-time non-blocking notifications through the existing ToastProvider. No generic non-Mandarin voice is used as silent fallback.
+- No Knowledge Points scoring rules, no-.unpack-backups behavior, dependency versions, or session persistence format changed.
+- Source/ZIP integrity checks only; Rust/WASM compilation and interactive mouse/touch browser acceptance not run. This remains an R705 WIP source candidate.
 
-Packaging date: 2026-11-26 UTC. Source baseline: user-provided `zipeek-source-0.1.0-20261126-203949.zip`.
+R705 WIP - 2026-11-27 - Desktop storage diagnostics and compact dragon status
 
-## Changes
+- Reduced the dragon progress message to a small anchored status panel with click-outside and Escape dismissal, preserving the existing unassessed status until verified knowledge projections exist.
+- Reused Tauri NativeDatabase's actual app-local personal DB path for native diagnostics. Added path, exists/size metadata, refresh, and platform file-manager reveal commands; retained browser OPFS inspection.
+- Kept the existing Word Sets navigation route until the planned Profile configuration page is implemented. The existing navigation registry remains centralized and can later support configurable visibility.
+- Preserved all R705 vocabulary evidence work, scoring contracts, session semantics, and no-.unpack-backups behavior.
+- Source-level checks and ZIP integrity only; Rust, WASM and desktop UI builds not executed in this environment.
 
-- Enlarged the debug SQL editor to 12 rows with a 18rem minimum height, explicit resize support, and a wider SQL panel.
-- Removed debug-only disclaimers and the unrelated AI testing note from the debug screen.
-- Replaced the Run SELECT label with an accessible Yew/Lucide play icon and an in-flight spinner.
-- Allowed one optional trailing SQL semicolon while still rejecting multiple statements and comments.
-- Enabled read-only queries against `word_relations` and provided an example that groups `source_resolution` and `target_resolution`, matching the user's failing query.
-- Reduced redundant query-error instructions while preserving the actual error text.
-- Preserved the debug-build route guard, bounded 100-row results, and existing CSV export.
+## R705 WIP candidate: Target-level vocabulary observations (2026-11-27)
 
-## Verification
+- Implemented per-target Type Pinyin reading assessment with attempts, mistakes and exposure of the answer in the hint placeholder recorded as assisted evidence. This is a reading-input capability, not automatically Knowledge Points.
+- Added pair-specific error provenance in Word Mosaics, with individual target outcomes. A wrong match marks both participating pairs as corrected/partial; other pairs can retain clean independent matches. The aggregate result is partial if any mistakes occurred.
+- Carried hint/assistance and partial item verdicts to the multi-round aggregate instead of treating a corrected or assisted completion as an unqualified clean success.
+- Raised the item evidence limit to 160 and the per-observation bound to 64 KiB to retain 20 rounds of 8 word matches without silently dropping evidence. The 1,000-step Endless ceiling is unchanged.
+- Preserved exact existing Knowledge Points rules, one-click delete and temporary unpack rollback, with no `.unpack-backups`.
+- Unverified R705 release candidate: this milestone does not satisfy the approved major-release 20-qualifying-Rust-path gate; Rust and WASM builds and browser tests were unavailable in the packaging environment.
 
-Source assertions and ZIP integrity checks executed in this environment. Cargo, rustfmt, WASM compilation, DuckDB execution and browser interaction were unavailable; this remains an unverified source candidate. On Windows run `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-web --target wasm32-unknown-unknown`, `cargo test --locked -p zipeek-web`, then retry the relationship-resolution SQL in Debug > SQL terminal.
+R704 WIP (2026-11-27): Corrected a duplicate ExerciseReviewProps/ExerciseReview declaration in pages/practice/feedback.rs that prevented the wasm32 frontend build (E0428/E0119/E0592/E0277). Preserved the existing shared review markup, props, and behavior by removing only the identical second copy. Build verification remains pending.
 
----
+## R704 WIP: Library warnings and durable observation inbox boundaries (2026-11-27)
 
-# Settings Reset app source snapshot
+- Kept R704 WIP. Based on the user-formatted 17:18 source archive, with no dependency or scoring-policy changes.
+- Normalized explicit unused and unused-import crate allowances across all 22 library roots. The native pedagogy worker now excludes its wasm-only implementation modules instead of compiling dead worker code.
+- Refactored consented Practice observations into separate event model, persisted inbox storage, orchestration and tests. Added an ordered inbox reader for future processing, strict step and timestamp checks and evaluator evidence validation at the persistence boundary.
+- Preserved existing direct delete, no persistent `.unpack-backups`, Endless selection, construction-only observational semantics and established Knowledge Points thresholds.
+- No `KnowledgeLedger` mastery projection is claimed: authorized target manifests and transactionally persisted processed IDs are still required. The 1,000-step Endless limit also remains.
+- Archive/source checks only. Rust compile, WASM build, native tests, browser acceptance and Windows pack/unpack benchmarks were not run in this environment.
 
-Archive: `zipeek-source-0.1.0-20261126-203236.zip`. This is an unnumbered full-source snapshot, not an accepted installer release. Existing concurrent AI/speech workspace changes and their notes below are preserved; only the stated reset/integration checks were performed for this task.
+## R704 WIP | Character-sequence assessment evidence contract | 2026-11-27
 
-Settings now has Reset app with an explicit destructive confirmation and **Clear all data and start over**. An isolated reload removes Zipeek-owned local/session storage, personal OPFS files and native personal DuckDB/WAL before returning to fresh landing/onboarding. Dictionary files, models, exported backups and unrelated origin data are retained. A dedicated confirmed native IPC command closes database connections before bounded deletion. Other open app sessions block reset, and partial errors remain visible with Retry. No dependencies were added or changed for reset.
+- Moved the shared evaluator verdict, assessed outcome, and item-evidence types into an independent assessment module in `practice_session_store`.
+- Character Builder now reports the actual Chinese target and a distinct character-sequence-construction capability, together with correct/partial/incorrect verdict and full attempt and mistake counts. A correct answer after mistakes remains a partial item-level performance instead of independent clean success.
+- Vocabulary rounds retain item-level evidence across rounds, then send it through the existing assessed outcome and idempotent Practice-observation journal. Type Pinyin and Word Mosaics keep their genuine aggregate results without fabricated item targets.
+- The saved observation carries the step activation timestamp separately from completion; this is not a verified first-pixel presentation-time measurement.
+- Increased the per-observation storage bound to accommodate a full 20-round item-evidence record. Added validation and serialization regression coverage.
+- Construction evidence remains observational and does **not** award Hanzi recognition, handwriting, or other Knowledge Points. The durable validated KnowledgeLedger processor, true presentation timing, and item-level coverage for other exercise adapters still require implementation.
+- No scoring-policy, dependency, release-number, exercise UX, or `.unpack-backups` changes. Rust/WASM compilation and browser acceptance were not run in this environment.
 
-Passed: locked offline WASM check, all 20 native library tests including reset fixtures, one ownership-policy test, and all eight managed Chrome reset scenarios at `/` and `/zipeek/` (confirmation/cancellation, deletion/onboarding, direct URL protection, another active tab and native failure/retry). Videos, screenshots and assertions were validated. Native filesystem tests used temporary fixtures; actual reset in an installed Tauri WebView was not run. The Pages harness initial URL now includes its required trailing slash; the test's reinjected silent-speech flag is accounted for without weakening user-data deletion checks.
+## R704 WIP: Cross-exercise Endless setup and per-step observations (2026-11-27)
 
-Strict Clippy is not clean: dependency linting stops in existing core/pedagogy/database code; focused `--no-deps` runs report 96 web and four native lint errors outside the reset implementation. No reset-module lint references were reported. These unrelated lint changes were not folded into reset. Formatting and focused runtime tests passed.
+Source handoff: `zipeek-R704-WIP-endless-setup-observations-20261127-164816.zip` (complete source archive; integrity checked; Rust compilation and browser checks not run).
 
-Documentation validation still reports unrelated long dash punctuation in the existing AI-server document and the existing raw JSON key-order index comparison, plus frozen-history link warnings. A separate semantic index check is used after regeneration. Full CLI/workspace/model suites were not rerun for reset; earlier documented CLI failures and current AI/speech warnings were not repaired in this scope. The source ZIP excludes generated dictionaries, sidecars, vendor/model assets and build/evidence output; use the existing setup and desktop commands to prepare them.
+- Practice setup exposes Endless for single or mixed selections of every registered resumable exercise, with fixed 5/10/20 choices. Translation-only setup now shares the same `SessionLength` launch decision; its 20-sentence choice is supported.
+- Added opt-in step-keyed observation recording immediately after session progress persistence. This is deduplicated, repaired on session restoration, and erased alongside saved Practice history. It records assessed and unassessed outcomes but does not award Hanzi/vocabulary mastery without qualifying target evidence. Recording remains off by default.
+- Migrated generated Sentence Translation and the Sentence Builder non-retry review path to the shared `ExerciseReview` component without altering scoring or retry rules.
+- Added reducer and exercise-registry tests for the new mode availability and translation count synchronization, plus an observation encoding test. Browser storage, WASM compile and runtime behavior have not been verified here.
+- This is **R704 WIP**, not a new numbered release. The existing 1,000-step Endless ceiling, lossless chunked finalization, target-level KnowledgeLedger attribution, native MSVC link conflict, and browser acceptance remain unresolved. No dependencies or pack/unpack behavior changed. `.unpack-backups` remains unused.
 
-The separate desktop-dev speed/log review made no build-system changes. Recommended follow-up is unchanged-artifact staging, no-op Docs/asset writes and quieter child-tool success logs. Removing unused direct server dependencies from the shell requires explicit dependency approval. No speedup has been benchmarked.
+R704 WIP (2026-11-27): Working source now exposes Endless for all registered exercises, uses session length as the launch authority, records consented step outcomes in a deduplicated observation journal, and migrates generated translation and builder reviews into `ExerciseReview`. These are unverified source changes. The current 1,000-step Endless limit still exists; bounded chunked history and qualified knowledge-target updates remain open. Rust/WASM/browser acceptance is pending on the user's toolchain.
 
----
 
-# R694 WIP: AI provider Settings interaction redesign
+### R705 WIP: Character Builder drag compilation and target safety (2026-11-27)
 
-Packaging date: 2026-11-26 UTC. This source handoff updates the R693 AI provider settings presentation only; it does not replace the Llama.cpp inference backend or LM Studio client.
-
-## Implemented
-
-- Present Local Llama and LM Studio as restrained, keyboard-accessible provider cards. The selected provider uses a subtle violet border/background, with **no checkmark overlay** or duplicate connected badge.
-- Display only fields applicable to the chosen provider; keep optional API-key controls collapsed, and move manual model entry into progressive disclosure when discovery returns models.
-- Show discovery progress in the discovery control and display inline, retryable errors without a full-width alert panel.
-- Give the real model-test action an explicit in-progress spinner and dismiss action; show a compact outcome after completion, with detailed request/response inspection collapsed.
-- Keep Save and Test together at the bottom of a stable-height settings panel. Preserve the Tauri-only Local AI option and separate desktop process controls under Settings > Services.
-- Preserve an existing tab-memory API key when saving an unchanged key field; avoid treating an empty replacement field as removal.
-- Add reducer regressions for stale model discovery, discovery failure and manual model choice.
-
-## Verification
-
-- Source structure and focused static assertions checked in this workspace. Cargo, rustfmt, WASM compile, native Tauri WebView and actual Llama/LM Studio inference were not run because the Rust toolchain is unavailable.
-- Verify locally: `cargo fmt --all -- --check`; `cargo check --locked -p zipeek-web --target wasm32-unknown-unknown`; `cargo test --locked -p zipeek-web`.
-- In Tauri, switch providers, discover LM Studio models, test both healthy and failing endpoints, confirm the result is inline, verify no selected-provider check icons, and ensure Start/Stop still appears only in Settings > Services. Test small windows and keyboard focus.
-- R693 limitations remain: LM Studio WebView CORS, local GGUF acceptance, the optional GGUF picker and Tauri HTTP proxy are still outstanding.
-
----
-
-# R693 WIP: Local Llama.cpp and LM Studio provider selection
-
-Packaging date: 2026-11-26 UTC. Full-source handoff archive: `zipeek-R693-WIP-local-llama-lmstudio-providers-20261126-154639.zip` (the actual archive name contains its packaging timestamp).
-
-## Changes
-
-- Replaced the production `zipeek-ai-server` fixture-only entry point with actual GGUF-backed llama.cpp inference, using the existing `llama-cpp-2` dependency. The executable starts only with a valid model and loopback bind.
-- Added a bounded streaming token generation backend, context and output controls, model-native chat template formatting, temperature sampling, request cancellation, and error propagation through the existing generation trait.
-- Retained deterministic fixture backend for `#[cfg(test)]` HTTP unit tests only; executable fixture mode no longer exists. Updated its process lifecycle test to check missing-model failure.
-- Changed the Tauri sidecar to start the real service with `--bind` and granted AI model cold-loading the existing extended startup allowance.
-- Replaced the AI test-server label with Local AI in the desktop Services panel; Start/Stop remain there rather than being duplicated.
-- Added provider selection in Yew Settings > AI: Zipeek Local AI on port 1430 (Tauri only) versus editable OpenAI-compatible/LM Studio endpoint, initially `http://192.168.1.148:1234/v1/`.
-- Added model discovery through bounded `/v1/models` requests and a selectable model list; preserved manual model ID entry.
-- Provider switching resets stale diagnostics and clears tab-memory API keys when switching to local inference. No new Rust dependencies or lockfile modifications.
-- Added model-installation and runtime documentation in `docs/architecture/modules/ai-server.md` and `models/ai/README.md`.
-
-## Known constraints
-
-- The local GGUF checkpoint must be supplied by the user and is not bundled. The default local inference GPU-layer count is zero unless `ZIPEEK_AI_GPU_LAYERS` is configured. Native llama.cpp startup and CUDA execution have not been tested here.
-- LM Studio requests from Yew still use the existing WASM HTTP client and therefore depend on CORS permission from the configured endpoint. A native Tauri HTTP proxy and arbitrary-model file picker are deferred.
-- The production executable no longer supports the old `--fixture` CLI mode. Tests/e2e scripts that launch that mode need updating to use their in-process or explicit test-only provider; this is an intentional development-time breaking change.
-- The local model endpoint does not natively enforce JSON Schema; the existing translation fallback remains necessary.
-- `cargo make desktop-sidecars` can reuse old binaries. Use `cargo make desktop-sidecars-rebuild` after installing this WIP. The model should not be added to the source ZIP.
-
-## Verification
-
-- Source inspection and static contract checks performed in this environment. There is no Rust toolchain, so Cargo, rustfmt, native WebView, CUDA and real GGUF inference were **not run**. The handoff remains an unverified WIP candidate.
-- Windows acceptance: `cargo fmt --all -- --check`; `cargo check --locked -p zipeek-ai-server -p zipeek-app`; `cargo test --locked -p zipeek-ai-server -p zipeek-ai-client`; `cargo check --locked -p zipeek-web --target wasm32-unknown-unknown`; rebuild sidecars; manually test both provider modes and Service start/stop/health.
+- Fixed Yew closure ownership in Character Builder: use separate reducer and selection handles for click removal and slot drops; share the drag-over callback by cloning it before markup consumes it. Addresses the three user-reported E0382 errors.
+- Kept empty answer slots valid HTML drop targets while preventing meaningless click/keyboard actions on empty slots; suppresses unintended click after a completed native drop.
+- Corrected shared ExerciseSurface conditional instruction markup and kept the empty-instruction path quiet.
+- Extended deterministic tile-position regression tests for dropping into empty slots, reordering, capacity, and removing tiles.
+- Compilation, WASM acceptance and drag-device testing are not run in this environment.

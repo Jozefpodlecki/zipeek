@@ -2,10 +2,20 @@ use crate::services::practice_session_store::{
     ExerciseOutcome, PracticeSession, PracticeSessionError, PracticeSessionStore,
 };
 
+pub(super) fn is_current_step(session: &PracticeSession, step_id: &str) -> bool {
+    session
+        .current_step()
+        .is_some_and(|step| step.id == step_id)
+}
+
 pub(super) fn retry_generation(
     store: &PracticeSessionStore,
     session: &PracticeSession,
+    expected_step_id: &str,
 ) -> Result<PracticeSession, PracticeSessionError> {
+    if !is_current_step(session, expected_step_id) {
+        return Err(PracticeSessionError::WrongSession);
+    }
     let mut updated = session.clone();
     let step_id = updated
         .current_step()
@@ -19,15 +29,19 @@ pub(super) fn retry_generation(
 pub(super) fn complete_step(
     store: &PracticeSessionStore,
     session: &PracticeSession,
+    expected_step_id: &str,
     outcome: ExerciseOutcome,
 ) -> Result<PracticeSession, PracticeSessionError> {
+    if !is_current_step(session, expected_step_id) {
+        return Err(PracticeSessionError::WrongSession);
+    }
     let mut updated = session.clone();
     let step_id = updated
         .current_step()
         .ok_or(PracticeSessionError::AlreadyFinished)?
         .id
         .clone();
-    updated.complete(&step_id, outcome)?;
+    updated.complete(expected_step_id, outcome)?;
     if updated.is_completed() {
         updated.stamp_completed_at(chrono::Utc::now().timestamp_millis() as u64)?;
     } else {
@@ -41,7 +55,7 @@ pub(super) fn finish_endless(
     session: &PracticeSession,
 ) -> Result<PracticeSession, PracticeSessionError> {
     let mut updated = session.clone();
-    updated.finish_endless_translation()?;
+    updated.finish_endless()?;
     updated.stamp_completed_at(chrono::Utc::now().timestamp_millis() as u64)?;
     persist_or_reload_progress(store, session, updated)
 }

@@ -6,6 +6,9 @@ rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
 
+[features]
+fixture-backend = []
+
 [dependencies]
 axum = { workspace = true, features = ["json"] }
 tokio = { workspace = true }

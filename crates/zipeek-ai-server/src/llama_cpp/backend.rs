@@ -32,7 +32,11 @@ impl LocalModelConfig {
         if !(512..=131_072).contains(&context_tokens) {
             return Err("ZIPEEK_AI_CONTEXT must be between 512 and 131072".into());
         }
-        Ok(Self { path, gpu_layers, context_tokens })
+        Ok(Self {
+            path,
+            gpu_layers,
+            context_tokens,
+        })
     }
 }
 
@@ -44,7 +48,9 @@ fn number_from_env(name: &str, default: u32) -> Result<u32, String> {
 
 fn find_model_in_directory() -> Result<PathBuf, String> {
     let cwd = std::env::current_dir().map_err(|error| error.to_string())?;
-    let executable_directory = std::env::current_exe().ok().and_then(|path| path.parent().map(PathBuf::from));
+    let executable_directory = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(PathBuf::from));
     let path = [
         Some(cwd.join("models/ai")),
         executable_directory.map(|directory| directory.join("models/ai")),
@@ -53,10 +59,17 @@ fn find_model_in_directory() -> Result<PathBuf, String> {
     .flatten()
     .find(|candidate| candidate.is_dir())
     .ok_or("Configure ZIPEEK_AI_MODEL_PATH or install one GGUF in models/ai")?;
-    let mut models = std::fs::read_dir(&path).map_err(|error| error.to_string())?
+    let mut models = std::fs::read_dir(&path)
+        .map_err(|error| error.to_string())?
         .filter_map(Result::ok)
         .map(|entry| entry.path())
-        .filter(|candidate| candidate.is_file() && candidate.extension().and_then(|extension| extension.to_str()) == Some("gguf"));
+        .filter(|candidate| {
+            candidate.is_file()
+                && candidate
+                    .extension()
+                    .and_then(|extension| extension.to_str())
+                    == Some("gguf")
+        });
     let model = models.next().ok_or("No GGUF model found in models/ai")?;
     if models.next().is_some() {
         return Err("Multiple GGUF files found; set ZIPEEK_AI_MODEL_PATH explicitly".into());
@@ -89,20 +102,31 @@ impl LocalLlama {
     }
 }
 
-fn prompt_for_model(model: &LlamaModel, request: &GenerationRequest) -> Result<String, GenerationError> {
-    let template = model.chat_template(None)
-        .map_err(|error| GenerationError::Backend(format!("GGUF chat template unavailable: {error}")))?;
-    let messages = request.messages.iter().map(|message| {
-        let role = match message.role {
-            ChatRole::System => "system",
-            ChatRole::User => "user",
-            ChatRole::Assistant => "assistant",
-        };
-        LlamaChatMessage::new(role.to_owned(), message.content.clone())
-            .map_err(|error| GenerationError::Backend(error.to_string()))
-    }).collect::<Result<Vec<_>, _>>()?;
-    model.apply_chat_template(&template, &messages, true)
-        .map_err(|error| GenerationError::Backend(format!("Cannot render model chat template: {error}")))
+fn prompt_for_model(
+    model: &LlamaModel,
+    request: &GenerationRequest,
+) -> Result<String, GenerationError> {
+    let template = model.chat_template(None).map_err(|error| {
+        GenerationError::Backend(format!("GGUF chat template unavailable: {error}"))
+    })?;
+    let messages = request
+        .messages
+        .iter()
+        .map(|message| {
+            let role = match message.role {
+                ChatRole::System => "system",
+                ChatRole::User => "user",
+                ChatRole::Assistant => "assistant",
+            };
+            LlamaChatMessage::new(role.to_owned(), message.content.clone())
+                .map_err(|error| GenerationError::Backend(error.to_string()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    model
+        .apply_chat_template(&template, &messages, true)
+        .map_err(|error| {
+            GenerationError::Backend(format!("Cannot render model chat template: {error}"))
+        })
 }
 
 fn produce(
@@ -115,14 +139,18 @@ fn produce(
     let context_params = LlamaContextParams::default()
         .with_n_ctx(NonZeroU32::new(engine.context_tokens))
         .with_n_batch(512);
-    let mut context = engine.model.new_context(&engine.backend, context_params)
+    let mut context = engine
+        .model
+        .new_context(&engine.backend, context_params)
         .map_err(|error| GenerationError::Backend(error.to_string()))?;
     let prompt = prompt_for_model(&engine.model, &request)?;
     let tokens = engine.model.vocab().tokenize(prompt.as_bytes(), true, true);
     let output_limit = request.options.max_output_tokens;
     let prompt_limit = engine.context_tokens.saturating_sub(output_limit);
     if tokens.is_empty() || tokens.len() as u32 > prompt_limit {
-        return Err(GenerationError::InvalidRequest("prompt exceeds configured context budget"));
+        return Err(GenerationError::InvalidRequest(
+            "prompt exceeds configured context budget",
+        ));
     }
     let mut position = 0_i32;
     for chunk in tokens.chunks(512) {
@@ -132,20 +160,25 @@ fn produce(
         let mut batch = LlamaBatch::new(512, 1);
         for (index, token) in chunk.iter().enumerate() {
             let last = position as usize + index + 1 == tokens.len();
-            batch.add(*token, position + index as i32, &[0], last)
+            batch
+                .add(*token, position + index as i32, &[0], last)
                 .map_err(|error| GenerationError::Backend(error.to_string()))?;
         }
-        context.decode(&mut batch)
+        context
+            .decode(&mut batch)
             .map_err(|error| GenerationError::Backend(error.to_string()))?;
         position += chunk.len() as i32;
     }
     let mut sampler = if request.options.temperature <= 0.0 {
         LlamaSampler::greedy()
     } else {
-        LlamaSampler::chain([
-            LlamaSampler::temp(request.options.temperature),
-            LlamaSampler::dist(42),
-        ], false)
+        LlamaSampler::chain(
+            [
+                LlamaSampler::temp(request.options.temperature),
+                LlamaSampler::dist(42),
+            ],
+            false,
+        )
     };
     let mut pending = Vec::<u8>::new();
     for _ in 0..output_limit {
@@ -159,17 +192,25 @@ fn produce(
         }
         pending.extend(engine.model.vocab().token_to_piece(token, false, None));
         if let Ok(text) = std::str::from_utf8(&pending) {
-            if !text.is_empty() && sender.blocking_send(GenerationEvent::Content(text.to_owned())).is_err() {
+            if !text.is_empty()
+                && sender
+                    .blocking_send(GenerationEvent::Content(text.to_owned()))
+                    .is_err()
+            {
                 return Err(GenerationError::Cancelled);
             }
             pending.clear();
         } else if pending.len() > 8_192 {
-            return Err(GenerationError::Backend("Invalid model UTF-8 output".into()));
+            return Err(GenerationError::Backend(
+                "Invalid model UTF-8 output".into(),
+            ));
         }
         let mut batch = LlamaBatch::new(1, 1);
-        batch.add(token, position, &[0], true)
+        batch
+            .add(token, position, &[0], true)
             .map_err(|error| GenerationError::Backend(error.to_string()))?;
-        context.decode(&mut batch)
+        context
+            .decode(&mut batch)
             .map_err(|error| GenerationError::Backend(error.to_string()))?;
         position += 1;
     }

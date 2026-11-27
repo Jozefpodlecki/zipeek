@@ -37,11 +37,15 @@ pub(super) fn matching_settings(props: &MatchingSettingsProps) -> Html {
     };
     let on_source = {
         let on_action = props.on_action.clone();
-        Callback::from(move |enabled: bool| on_action.emit(PracticeSetupAction::SetMatchingAiGenerated(enabled)))
+        Callback::from(move |enabled: bool| {
+            on_action.emit(PracticeSetupAction::SetMatchingAiGenerated(enabled))
+        })
     };
     let on_pinyin = {
         let on_action = props.on_action.clone();
-        Callback::from(move |enabled: bool| on_action.emit(PracticeSetupAction::SetMatchingShowPinyin(enabled)))
+        Callback::from(move |enabled: bool| {
+            on_action.emit(PracticeSetupAction::SetMatchingShowPinyin(enabled))
+        })
     };
     html! { <div class="space-y-4">
         {if props.family == "matching" { html! {

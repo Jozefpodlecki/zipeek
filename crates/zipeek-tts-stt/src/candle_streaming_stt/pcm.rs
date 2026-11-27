@@ -13,7 +13,10 @@ pub struct PcmChunkBuffer {
 
 impl PcmChunkBuffer {
     pub fn new(chunk_samples: usize, max_buffer_samples: usize) -> Result<Self, String> {
-        if chunk_samples == 0 || chunk_samples > max_buffer_samples || max_buffer_samples > SAMPLE_RATE * 30 {
+        if chunk_samples == 0
+            || chunk_samples > max_buffer_samples
+            || max_buffer_samples > SAMPLE_RATE * 30
+        {
             return Err("invalid streaming PCM buffer configuration".into());
         }
         Ok(Self {
@@ -29,7 +32,10 @@ impl PcmChunkBuffer {
         if self.finished {
             return Err("stream is already finalized".into());
         }
-        if samples.iter().any(|value| !value.is_finite() || value.abs() > 1.0) {
+        if samples
+            .iter()
+            .any(|value| !value.is_finite() || value.abs() > 1.0)
+        {
             return Err("streaming PCM must contain finite normalized samples".into());
         }
         if self.queued.len().saturating_add(samples.len()) > self.max_buffer_samples {

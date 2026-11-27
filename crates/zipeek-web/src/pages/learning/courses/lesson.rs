@@ -2,6 +2,7 @@ use super::catalog::PINYIN_LESSONS;
 use super::pinyin_practice::{PINYIN_CHECKS, grade};
 use super::progress;
 use crate::components::ListenButton;
+use crate::hooks::use_app_environment;
 use crate::route::Route;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -43,12 +44,12 @@ struct PinyinLessonContentProps {
 
 #[function_component(PinyinLessonContent)]
 fn pinyin_lesson_content(props: &PinyinLessonContentProps) -> Html {
+    let environment = use_app_environment();
     let index = props.index;
     {
+        let window = environment.window.clone();
         use_effect_with(index, move |_| {
-            if let Some(window) = web_sys::window() {
-                window.scroll_to_with_x_and_y(0.0, 0.0);
-            }
+            window.scroll_to_with_x_and_y(0.0, 0.0);
         });
     }
     let lesson = &PINYIN_LESSONS[index];

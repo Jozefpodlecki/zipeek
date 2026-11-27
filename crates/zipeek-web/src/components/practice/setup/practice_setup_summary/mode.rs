@@ -27,17 +27,17 @@ pub(super) fn render(props: &PracticeSetupSummaryProps) -> Html {
     }
 }
 
-fn allows_endless_session(props: &PracticeSetupSummaryProps) -> bool {
-    props.draft.translation_session_only()
-}
-
 fn translation_modes(props: &PracticeSetupSummaryProps) -> Html {
     html! {
         <div class="flex flex-wrap gap-2" data-translation-setup-count="">
-            {for [(0_u16, "Endless"), (5, "5 sentences"), (10, "10 sentences")]
+            {for [(0_u16, "∞ Endless"), (5, "5 sentences"), (10, "10 sentences"), (20, "20 sentences")]
                 .into_iter()
                 .map(|(count, label)| {
-                    let selected = props.draft.translation_count == count;
+                    let selected = match (&props.draft.length, count) {
+                        (SessionLength::Endless, 0) => true,
+                        (SessionLength::Fixed(current), target) => *current == target,
+                        _ => false,
+                    };
                     let on_count = props.on_count.clone();
                     let on_select_count = Callback::from(move |_| on_count.emit(count));
                     html! {
@@ -61,9 +61,8 @@ fn fixed_session_modes(props: &PracticeSetupSummaryProps) -> Html {
                 <div
                     class="flex flex-wrap gap-2"
                 >
-                    {for [(Some(5_u16), "Fixed 5"), (Some(10), "Fixed 10"), (Some(20), "Fixed 20"), (None, "Endless")]
+                    {for [(Some(5_u16), "Fixed 5"), (Some(10), "Fixed 10"), (Some(20), "Fixed 20"), (None, "∞ Endless")]
                         .into_iter()
-                        .filter(|(count, _)| allows_endless_session(props) || count.is_some())
                         .map(|(count, label)| {
                             let selected = match (&props.draft.length, count) {
                                 (SessionLength::Endless, None) => true,

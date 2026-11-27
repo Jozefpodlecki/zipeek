@@ -1,4 +1,5 @@
 mod image;
+mod narrative;
 mod order;
 mod translation;
 
@@ -20,7 +21,18 @@ pub fn generated_practice(props: &GeneratedPracticeProps) -> Html {
         Err(error) => {
             html! { <p role="alert">{format!("This generated exercise is invalid: {error}")}</p> }
         }
-        Ok(GeneratedInstance::Matching { .. }) => html! { <p role="alert">{"Matching content must be opened with the Matching exercise renderer."}</p> },
+        Ok(GeneratedInstance::StoryBuilder { content }) => html! {
+            <narrative::StoryPractice key={props.raw.clone()} content={content} on_scored={props.on_scored.clone()} />
+        },
+        Ok(GeneratedInstance::ReadingComprehension { content }) => html! {
+            <narrative::ReadingPractice key={props.raw.clone()} content={content} on_scored={props.on_scored.clone()} />
+        },
+        Ok(GeneratedInstance::ConversationPractice { content }) => html! {
+            <narrative::ConversationPracticeView key={props.raw.clone()} content={content} on_scored={props.on_scored.clone()} />
+        },
+        Ok(GeneratedInstance::Matching { .. }) => {
+            html! { <p role="alert">{"Matching content must be opened with the Matching exercise renderer."}</p> }
+        }
         Ok(GeneratedInstance::SentenceTranslation { sentence }) => html! {
             <translation::TranslationPractice
                 key={format!("{}:{}", props.seed, props.raw)}

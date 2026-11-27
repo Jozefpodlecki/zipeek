@@ -1,4 +1,5 @@
 mod database_diagnostics;
+mod native_storage;
 mod opfs;
 mod sql;
 mod sql_examples;
@@ -36,6 +37,7 @@ pub fn debug_page() -> Html {
     }
     let tab = use_state(|| DebugTab::Overview);
     let environment = use_app_environment();
+    let desktop = environment.is_tauri;
     let config = ai::configuration();
     let storage = &environment.local_storage;
     let preferences = PreferencesStore::new(storage).read();
@@ -50,7 +52,7 @@ pub fn debug_page() -> Html {
     html! {
         <section
             data-component="debug-page"
-            class={classes!("mx-auto", "w-full", "max-w-5xl", "min-h-[48rem]", "space-y-5", "rounded-xl", "border", "border-line", "bg-surface", "p-6")}
+            class={classes!("mx-auto", "w-full", "max-w-5xl", "min-h-[36rem]", "space-y-4", "md:h-[calc(100dvh-7rem)]", "md:overflow-hidden", "rounded-xl", "border", "border-line", "bg-surface", "p-6")}
         >
             <h2
                 class="flex items-center gap-2 text-2xl font-bold"
@@ -67,7 +69,7 @@ pub fn debug_page() -> Html {
                     (DebugTab::Overview, "Overview", IconData::LUCIDE_INFO),
                     (DebugTab::Database, "DuckDB", IconData::LUCIDE_DATABASE),
                     (DebugTab::Sql, "SQL terminal", IconData::LUCIDE_TERMINAL),
-                    (DebugTab::Opfs, "OPFS", IconData::LUCIDE_FOLDER),
+                    (DebugTab::Opfs, if desktop { "Personal files" } else { "OPFS" }, IconData::LUCIDE_FOLDER),
                 ].into_iter().map(|(choice, label, icon)| {
                     let active = *tab == choice;
                     let tab = tab.clone();
@@ -156,7 +158,7 @@ pub fn debug_page() -> Html {
             } } else { Html::default() }}
             {if *tab == DebugTab::Database { html! { <DatabaseDiagnostics /> } } else { Html::default() }}
             {if *tab == DebugTab::Sql { html! { <sql_terminal::SqlTerminal /> } } else { Html::default() }}
-            {if *tab == DebugTab::Opfs { html! { <opfs::OpfsInspector /> } } else { Html::default() }}
+            {if *tab == DebugTab::Opfs { if desktop { html! { <native_storage::NativeStorageInspector /> } } else { html! { <opfs::OpfsInspector /> } } } else { Html::default() }}
         </section>
     }
 }

@@ -130,19 +130,40 @@ mod tests {
         };
         let chunk = Tensor::zeros((1, 4), candle_core::DType::F32, &Device::Cpu).unwrap();
         let cancel = AtomicBool::new(false);
-        assert_eq!(session.consume_encoded(&chunk, &mut predictor, &cancel).unwrap(), &[1, 2]);
-        assert_eq!(session.consume_encoded(&chunk, &mut predictor, &cancel).unwrap(), &[1, 2, 3]);
+        assert_eq!(
+            session
+                .consume_encoded(&chunk, &mut predictor, &cancel)
+                .unwrap(),
+            &[1, 2]
+        );
+        assert_eq!(
+            session
+                .consume_encoded(&chunk, &mut predictor, &cancel)
+                .unwrap(),
+            &[1, 2, 3]
+        );
         assert_eq!(session.processed_frames(), 2);
         assert_eq!(session.finish(), &[1, 2, 3]);
-        assert!(session.consume_encoded(&chunk, &mut predictor, &cancel).is_err());
+        assert!(
+            session
+                .consume_encoded(&chunk, &mut predictor, &cancel)
+                .is_err()
+        );
     }
 
     #[test]
     fn cancelled_session_does_not_consume_frames() {
         let mut session = StreamingDecoderSession::new(config()).unwrap();
-        let mut predictor = PredictSequence { sequence: vec![1], cursor: 0 };
+        let mut predictor = PredictSequence {
+            sequence: vec![1],
+            cursor: 0,
+        };
         let chunk = Tensor::zeros((1, 4), candle_core::DType::F32, &Device::Cpu).unwrap();
-        assert!(session.consume_encoded(&chunk, &mut predictor, &AtomicBool::new(true)).is_err());
+        assert!(
+            session
+                .consume_encoded(&chunk, &mut predictor, &AtomicBool::new(true))
+                .is_err()
+        );
         assert_eq!(session.processed_frames(), 0);
     }
 }

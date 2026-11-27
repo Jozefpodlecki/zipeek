@@ -1,3 +1,196 @@
+## R706: Image generation readiness
+
+- [x] Stop silently treating the preview-only backend as generated artwork; default to SDXL and distinguish readiness from health.
+- [x] Reject placeholder image generation in both desktop and browser clients; explain required SDXL files.
+- [ ] Validate SDXL startup/inference on Windows CUDA with actual model weights; run locked native and WASM checks.
+
+## R706: Profile and saved-session UX refinement (2026-11-27)
+
+- [x] Dictionary-backed custom exclusion autocomplete (Hanzi, pinyin, English) with exact Word ID selection and keyboard controls.
+- [x] Remove repeated Profile/Word Sets/Drawer instructional labels and show navigation icons.
+- [x] Compact saved-session resume with progress bar, Play icon and direct delete; suppress duplicate reminder on Practice setup.
+- [ ] Compile WASM and test desktop/browser interaction, keyboard focus, fast typing, persistence and session recovery.
+
+## R706: Profile configuration hub (2026-11-27)
+
+- [x] Add `#/profile` with explicit `pages/profile/mod.rs` and separate excluded-word and drawer modules; replace Word Sets drawer link with Profile user icon.
+- [x] Reuse existing Word Sets provider and data, with an icon-only create action.
+- [x] Read and update existing excluded-word IDs through the shared exclusion service; display resolved vocabulary, search, add dictionary-backed Hanzi/pinyin/English autocomplete and direct removal.
+- [x] Add persisted drawer item visibility using existing preferences and centralized navigation definitions; Profile and Settings cannot be hidden. Refresh same-tab and across tabs.
+- [ ] Run locked wasm32 compile and browser acceptance for tabs, word sets, exclusion add/removal, menu toggles, persistence and multiple tabs.
+- [ ] Verify R706 numbered-major release gate separately; this source is a WIP checkpoint.
+
+## R705: Native bridge consolidation (2026-11-27)
+
+- [x] Introduce explicit `services/tauri/mod.rs` module with typed `TauriService`, structured `TauriError`, command contracts and separately owned event subscriptions.
+- [x] Migrate database/history, service controls, native AI, and image IPC to one bridge implementation; centralize desktop capability detection and remove redundant per-service reflection.
+- [x] Add command naming, argument encoding and native storage-response tests without changing native commands or adding dependencies.
+- [ ] Verify `cargo check -p zipeek-web --target wasm32-unknown-unknown --locked`, `cargo test -p zipeek-web --target wasm32-unknown-unknown --locked` where supported, and actual Tauri database/service/AI/image/event runtime behavior. No native event consumer has been migrated because none currently exists.
+
+## R705: Practice UX and speech resilience (2026-11-27)
+
+- [x] Remove redundant round/mistake and session-position counters from exercise gameplay; retain metrics in persisted assessments.
+- [x] Remove redundant vocabulary card nesting and Character Builder instructional prompt.
+- [x] Add slot-aware mouse and touch drag/reorder with click and keyboard-operable fallback, plus placement unit tests.
+- [x] Add native Mandarin speech fallback with browser voice gating, backoff, stale-request guards, one-time notice and developer logging.
+- [ ] Validate WASM compilation, browser touch/mouse dragging, pronunciation voice availability and notification behavior using the user's toolchain.
+
+## R705: Per-target vocabulary assessment and truthful partial outcomes (2026-11-27)
+
+- [x] Emit observational target-specific evidence for Type Pinyin, including visible-answer assistance and retry counts, without altering Knowledge Points.
+- [x] Preserve Word Mosaics pair identities and the two targets involved in a wrong match, and emit qualified clean/partial per-pair outcomes.
+- [x] Preserve up to 20 eight-item mosaic rounds in the assessed evidence and observation journal; align aggregate verdicts with mistakes and assistance.
+- [ ] Run WASM compilation and browser acceptance for Type Pinyin hint-enabled/disabled, retry, Word Mosaics wrong-pair tracking and 20-round persistence.
+- [ ] Connect authorized knowledge manifests and validated pedagogical events to a durable transactional KnowledgeLedger processor; current capabilities do not automatically grant points.
+- [ ] Complete full lossless Endless ledger/reader and remove 1,000-step limit only when verified.
+- [ ] Satisfy the numbered major-release 20-qualifying-Rust-file acceptance gate without unrelated filler changes, or keep R705 as an unverified candidate.
+
+## R704: Library warnings and durable observation inbox modularity (2026-11-27)
+
+- [x] Apply explicit `allow(unused)` and `allow(unused_imports)` to all 22 crate library roots; do not hide unrelated compiler errors.
+- [x] Gate the pedagogy-worker implementation modules behind `wasm32` so native builds do not compile unused WASM-only worker internals.
+- [x] Split the existing consented Practice observation journal into event-model validation, deterministic inbox reading, storage and reconciliation modules, preserving step-keyed deduplication and history erasure.
+- [x] Test observation round trips, unassessed routing, invalid identity, inverted timestamps and contradictory evaluator evidence.
+- [ ] Connect independently qualified catalog targets, signed-off manifests and modality to `KnowledgeLedger`, with atomic durable apply receipts. The observation inbox alone never awards Knowledge Points.
+- [ ] Build on Windows and wasm32, check any remaining binary-only warnings and verify two-tab/out-of-storage race behavior.
+
+## R704: Cross-exercise Endless selection, observation recording and review integration (2026-11-27)
+
+- [x] Expose Endless beside fixed lengths for all 19 registered exercise IDs and any supported combination. Make translation-only count selection update `SessionLength` and ensure launch uses `SessionLength` as the only mode/count authority; allow a 20-sentence translation session.
+- [x] Add an opt-in, step-identified, immutable Practice observation journal. Persist evidence after an exercise result is committed, reconcile on resume, reject conflicting rewrites and erase it with saved Practice history. Do not falsely promote exercise verdicts into target-level knowledge mastery.
+- [x] Migrate generated Sentence Translation and the non-retry Sentence Builder review branch to shared `ExerciseReview`, preserving existing gameplay and selectors.
+- [ ] Replace the hard 1,000-step limit with a bounded session window and lossless chunked evidence ledger, including history readers and completion summary. Local-storage observations alone are not a substitute for that redesign.
+- [ ] Connect qualifying per-item assessments to the real pedagogy `KnowledgeLedger` using validated target identity, modality, context and independence, plus durable projection readback. No new unqualified mastery updates are allowed.
+- [ ] Validate WASM compilation, generated translation review, Sentence Builder retry, all exercise setup modes, consent-off recording, out-of-date observation reconciliation, storage quota failures, history erasure and two-tab races in the user's environment.
+
+## R704: Atomic Endless-session progression (2026-11-27)
+
+- [x] Preflight deterministic Endless scheduling before mutating the current exercise; keep completed outcomes and revision unchanged on scheduler failure.
+- [x] Make replenishment all-or-nothing and reject revision overflow before advancing or finishing sessions.
+- [x] Add regression tests for invalid quiz configuration, invalid scheduling inputs and revision saturation.
+- [ ] Replace the existing 1,000-step ceiling with a lossless, bounded evidence ledger and reader; this milestone does not change the persisted data format.
+- [ ] Verify with `cargo test --locked --target wasm32-unknown-unknown -p zipeek-web` and the browser session flow.
+
+## R704: Source pack safety and I/O performance (2026-11-27)
+
+- [x] Exclude nested destination archives from source collection, prevent failed packs from overwriting a previous archive, clean temporary output, and skip recompressing common binary media/fonts and uppercase extensions.
+- [x] Add targeted regression tests for nested-output pack, failure preservation and compression selection.
+- [ ] Verify locked CLI archive tests and benchmark repeated Windows pack/unpack cycles; check no `.unpack-backups` or successful staging leftovers.
+
+## R704: No persistent unpack backups (2026-11-27)
+
+- [x] Source unpack uses a temporary rollback area under `target/zipeek-unpack/rollback` and removes it on success or successful rollback; no `.unpack-backups` directory is created.
+- [x] Refuses a new unpack if an incomplete rollback area remains, preserving recoverable files instead of deleting them.
+- [ ] Run `cargo test -p zipeek-cli --locked` on Windows and verify no rollback artifacts after successful unpack.
+
+## R704: Source packaging and assessed-evidence compatibility (2026-11-27)
+
+- [x] Use buffered streams for source packing and reject lossy Unicode path encoding; install extracted files by same-volume moves, preserving prior contents temporarily for rollback without leaving backup artifacts, and clean successful extraction staging.
+- [x] Update the database learning-history summary parser for typed assessed outcomes, including partial verdicts and trusted attempt validation.
+- [ ] Run `cargo test -p zipeek-cli -p zipeek-db --locked` and measure source archive unpack throughput and filesystem churn on Windows; no benchmarks have been run.
+- [ ] Implement lossless Endless history checkpointing before lifting the 1,000-step cap; preserve granular attempt evidence with a durable bounded session and a versioned/history-reader-compatible evidence ledger.
+
+## R704: Mixed Endless and target verification (2026-11-27)
+
+- [x] Implement deterministic mixed-exercise Endless replenishment and selected quiz/AI settings with regression tests. The existing 1,000-step limit is retained.
+- [x] Isolate the browser-only `zipeek-web` modules from native `cargo test --workspace` compilation; browser-specific code and tests must be built for wasm32.
+- [ ] Remove the Endless step/history cap through an approved bounded evidence persistence design, with reader and finalization changes together; do not discard or silently truncate completed outcomes.
+- [ ] Run `cargo fmt --all -- --check`, `cargo test -p zipeek-exercises --locked`, and `cargo check -p zipeek-web --locked --target wasm32-unknown-unknown` on the user toolchain.
+- [ ] Resolve the separate MSVC runtime clash in E2E (`llama-cpp-sys-2` vs `esaxx-rs`) after a native dependency-feature/CRT review; no dependency or lockfile change was made in this milestone.
+
+## R704: Review lifecycle and stale callbacks (2026-11-27)
+
+- [x] Centralize feedback and Continue through `ExerciseReview` for the directly reviewed authored, listening, image, transformation, spot-mistake, multiple-choice and vocabulary exercise components, without re-scoring or changing gameplay.
+- [x] Scope exercise outcome/retry callbacks to the rendered step to protect against late asynchronous signals crossing an `animato` transition.
+- [ ] Extend common review lifecycle to conditional retry and generated feedback flows; verify selectors and focus on mobile and desktop browsers.
+- [ ] Build `zipeek-web` for wasm32 and run browser/regression acceptance; the source and archive checks are not compilation verification.
+
+## R704: Evaluator outcome adoption (2026-11-27)
+
+- [x] Add assessed outcome callbacks in Fill Blank, Audio Dictation, Spot Mistake (including partial), Sentence Transformation and Listening Choice; preserve non-hosted completion callbacks and allow assessed storage/restore for those IDs.
+- [ ] Verify all five new outcome callbacks in the browser and on the wasm32 target before claiming acceptance.
+
+## R704 Practice UI acceptance
+
+- [ ] Build and visually verify the new shared `ExerciseSurface` across all 19 registered exercise IDs at desktop/mobile widths, in both fixed and Endless sessions, including focus/Enter, animated step swaps, audio/canvas/grid sizing, and existing selector compatibility. The shared surface is not yet verified by Rust or browser tests.
+- [x] Establish typed `ExerciseAssessment` and `ExerciseVerdict` at the registry boundary, with attempt/mistake/hint/assistance fields, validation, session persistence, legacy-score deserialization, and honest verdict counts in the session summary (source-level implementation; pending build/browser verification).
+- [ ] Complete the remaining exercise-family evaluators (authored/listening/transformation, quiz/builder, and all three vocabulary IDs now emit real assessments); do not fabricate verdicts for completion-only callbacks. Finish shared feedback/action lifecycle ownership and per-exercise retry/hint evidence collection.
+
+- [ ] Run WASM compilation and browser checks for Docs article links, table of contents, source browsing, and Statistics dialog focus trapping/restoration after AppEnvironment injection.
+
+- [ ] Compile and verify typed registry outcome callbacks, binary true/false conversion, explicit partial verdict/attempt evidence propagation and unscored completion across hosted exercises.
+- [ ] Verify rolling pre-generation in browser: next translation ready before Continue, slow/failed AI generation, leaving and resuming, and Finish while a future step is generating. Verify fixed-session prefetch as well.
+- [ ] Extend `SessionMode::Endless` beyond translation only after approving a deterministic next-step policy for multi-exercise playlists and bounded storage/history, removing the automatic 1,000-step finish. Preserve progress evidence and explicitly define zero-completion Finish semantics.
+- [ ] Verify the new in-panel Finish session confirmation, Keep practicing cancellation, persisted summary, and Leave Practice/resume distinction in Chrome and Tauri. Verify reducer snapshot restore, error, generation, and completion behavior.
+
+
+- [ ] Compile and verify extracted registry adapter modules, `ExerciseFrame` session-position announcements, and the single in-session Leave control for Type Pinyin, Character Builder and Word Mosaics.
+- [ ] Verify generated narrative instruction/action presentation, conversation reducer end-of-turn scoring, keyboard interaction and repeat-submit behavior in browser.
+- [ ] Verify shared primary Check and form Submit controls in generated Image Vocabulary, Sentence Translation, Spot Mistake, Sentence Transformation, Fill Blank/Audio Dictation, Character Builder and Type Pinyin, including Enter-key composition handling, disabled states and preserved selectors.
+- [ ] Continue migration beyond Spot Mistake, Sentence Transformation, Fill Blank, Audio Dictation, Sentence Builder, Local Quiz, generated Image Vocabulary, generated Sentence Translation, Type Pinyin, Word Mosaics, Character Builder, Listening Choice and Write Hanzi to shared instructional, feedback and action ownership; keep gameplay-specific layouts and typed outcome evidence intact.
+- [ ] Verify the first shared feedback/action adapter and elapsed-time transition under correct/partial/incorrect results, retries, back-to-back navigation, reduced motion and screen-reader announcements. Confirm focus arrives after the new exercise DOM render and confirm finish confirmation resets on advancement.
+
+- [ ] Compile and verify trait-based exercise registry coverage and configuration-failure fallbacks across all supported IDs; check component identity on resumed steps.
+
+- [ ] Compile and exercise Diagnostics simulator reducer transitions, including Stop during an in-flight write and verification after reload.
+- [ ] Compile and exercise Local Quiz reducer for MCQ, matching, wrong-pair highlighting, retries, audio preparation and completion.
+- [ ] Verify AppEnvironment-based header dragon and SQL examples menu at hosted `/zipeek/` and local `/` deployment.
+
+- [ ] Run `cargo fmt --all -- --check`, `cargo test --locked -p zipeek-exercises`, `cargo test --locked -p zipeek-web` and locked WASM compilation after unpack.
+- [ ] Verify drag-and-drop from word bank and between selected positions, touch/click and keyboard reorder, and multi-step prompt uniqueness.
+- [ ] Verify automatic check and retry combinations persist in resumed sessions, including wrong answers and accepted alternate orders.
+- [ ] Check the top creature/progress in every theme, portrait and landscape, compact desktop windows and reduced-motion mode.
+- [ ] Consider separately approved vocabulary-conditioned/AI-generated Sentence Builder content and broader shared Practice component primitives after acceptance.
+
+## R703 AI narrative Practice acceptance
+
+- [ ] Run `cargo test --locked -p zipeek-exercises` and `cargo test --locked -p zipeek-web`; fix any compilation and test failures.
+- [ ] Build `zipeek-web` for `wasm32-unknown-unknown`; test each 5–10 sentence setting and the independent 5–10 conversation-turn setting.
+- [ ] Test real generation on local GGUF and LM Studio, including malformed content, retry, slow model and cancellation.
+- [ ] Implement adaptive conversation turns with server-generated follow-up based on the selected reply and persistent mid-dialogue state.
+- [ ] Add in-exercise answer review, expanded grammar-pattern selection and human evaluation of generated Mandarin content.
+
+## R702 image transport acceptance
+
+- [ ] Windows: compile `zipeek-app` and `zipeek-web` for wasm32; run the native image command tests.
+- [ ] Start the Image service in Tauri, verify native health and actual test image generation show no WebView CORS request; verify PNG/SVG preview and URL cleanup.
+- [ ] Test browser mode against the configured HTTP image endpoint at `/` and `/zipeek/`; confirm desktop asset URL opened outside Tauri fails with an explicit message.
+- [ ] Validate image generation during Picture Vocabulary and after a service restart; ensure saved/serialized blob URLs are not mistaken for durable image assets.
+
+## R701 Practice activity and UI acceptance
+
+- [x] Preview correct Character Builder answers in creature progress before Continue, retaining persisted completion only on Continue.
+- [x] Remove duplicate builder title, hide completed-session Leave navigation and use Yew icons for completion and review actions.
+- [x] Add read-only, bounded real Practice activity to Statistics using browser OPFS/native Tauri evidence, kept separate from demo dashboard and mastery.
+- [x] Correct reqwest public `rustls` feature configuration and keep existing lockfile.
+- [ ] Run `cargo fmt --all -- --check`, `cargo check --locked -p zipeek-ai-client -p zipeek-app`, `cargo check --locked -p zipeek-web --target wasm32-unknown-unknown` and relevant Rust/E2E tests on Windows.
+- [ ] Verify browser and Tauri saved outcome recording, Statistics refresh, empty/disabled/error cases and themed creature progress.
+- [ ] Later: a full real Statistics projection replacing the separate demo dashboard requires qualified pedagogical evidence and validated query contracts.
+
+## R700 native desktop transport acceptance
+
+- [ ] Verify Tauri native IPC AI speech, local AI, LM Studio and generated image rendering under Windows.
+- [ ] Verify WebSocket handshake for Tauri dev and packaged origins; check no arbitrary origins pass.
+- [ ] Evaluate cancellable streamed AI updates, HTTPS remote providers and object-URL lifecycle separately, retaining existing HTTP browser access.
+
+## R699 Tauri image transport and Settings (WIP)
+
+- [x] Use native Tauri IPC for image health and generation in desktop builds, with fixed-loopback and bounded response checks.
+- [x] Keep hosted browser image URL configuration, remove editable URL from Tauri Image Settings, and show backend-aware health and test generation feedback.
+- [x] Make Local AI endpoint discoverable, change Speech Settings navigation to a microphone, and simplify inactive pedagogical status.
+- [x] Keep Tauri process lifecycle in the Services section and preserve image practice URL contracts.
+- [ ] Run locked `zipeek-app` and WASM compilation plus native command unit tests on Windows.
+- [ ] Verify desktop WebView health, test generation and picture vocabulary without CORS; verify hosted image URL settings and `/` / `/zipeek/` browser journeys.
+
+## R698 SQL query workspace and header layout (WIP)
+
+- [x] Put editor and result in each closable SQL query tab instead of separate stacked result tabs.
+- [x] Close example picker on outside pointer input, Escape and example selection.
+- [x] Reduce unnecessary desktop page height while keeping result data scrollable inside its panel.
+- [x] Widen the header dragon without stretching the artwork.
+- [ ] Verify locked WASM compilation and web tests on Windows.
+- [ ] Verify diagnostics layout, keyboard/pointer interactions and dragon crop at `/` and `/zipeek/` in Chrome/Tauri.
+
 ## R697 Development diagnostics workspace UX (WIP)
 
 - [x] Stabilize diagnostics width and minimum height across Overview, DuckDB, SQL and OPFS tabs.
@@ -1156,3 +1349,6 @@ The historical acceptance backlog remains preserved in the [legacy acceptance le
 - [ ] Run model-backed Windows test and listen to audio; MP3 encoding requires separate dependency approval.
 
 - [ ] R676 WIP: Run Windows wasm32 check, browser crate tests and Chrome microphone/no-speech and waveform-hover acceptance before signoff.
+
+- [ ] R704: Implement durable, atomic KnowledgeLedger evidence processor with validated target authorization and replay-safe reconciliation; Character Builder construction observations are intentionally not KP-scored.
+- [ ] R704: Add exact visible-presentation timestamp instrumentation and authoritative item-level evidence adapters beyond Character Builder.

@@ -101,11 +101,7 @@ impl CandleTransducerHead {
         })
     }
 
-    pub fn next_token(
-        &self,
-        encoder_frame: &Tensor,
-        recent_tokens: &[u32],
-    ) -> Result<u32> {
+    pub fn next_token(&self, encoder_frame: &Tensor, recent_tokens: &[u32]) -> Result<u32> {
         let decoder_state = self
             .decoder
             .forward(recent_tokens, encoder_frame.device())?;

@@ -293,7 +293,7 @@ mod tests {
         assert_eq!(total_sessions as usize, sessions.len());
         assert_eq!(
             total_encounters,
-            sessions.iter().map(|session| session.observed).sum()
+            sessions.iter().map(|session| session.observed).sum::<u32>()
         );
         assert!(words.iter().all(|word| word.sessions > 0 && word.days > 0));
         let identities = words

@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use zipeek_core::practice::ExerciseVariant;
 use zipeek_exercises::practice_queue::{Preparation, schedule};
 
+mod assessment;
 mod generation;
 mod model;
 mod transitions;
@@ -24,9 +25,12 @@ pub(crate) fn session_storage_key(id: &str) -> Result<String, PracticeSessionErr
     Ok(format!("{SESSION_KEY_PREFIX}{id}"))
 }
 
+pub(crate) use assessment::{
+    AssessmentCapability, AssessmentEvidence, ExerciseAssessment, ExerciseOutcome, ExerciseVerdict,
+};
 pub(crate) use model::{
-    ExerciseConfiguration, ExerciseOutcome, ExerciseReadiness, PracticeSession,
-    PracticeSessionError, PracticeStep,
+    ExerciseConfiguration, ExerciseReadiness, PracticeSession, PracticeSessionError, PracticeStep,
+    SessionMode,
 };
 use model::{resumable_scores_supported, valid_translation_direction};
 
@@ -93,12 +97,12 @@ impl PracticeSession {
                 .collect(),
             created_at: chrono::Utc::now(),
             started_at: None,
-            endless_translation: false,
+            session_mode: SessionMode::Fixed,
             scheduling_seed: seed,
             completed_at: None,
             steps,
         };
-        session.queue_generation(2);
+        session.queue_generation(3);
         Ok(session)
     }
 

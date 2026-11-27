@@ -1,5 +1,6 @@
+use crate::hooks::use_app_environment;
 use wasm_bindgen::{JsCast, JsValue};
-use web_sys::{HtmlElement, KeyboardEvent};
+use web_sys::{Document, HtmlElement, KeyboardEvent};
 use yew::prelude::*;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -18,7 +19,12 @@ fn tab_wrap_target(shift: bool, at_first: bool, at_last: bool) -> Option<WrapTar
     }
 }
 
-pub(super) fn trap_tab(event: &KeyboardEvent, first: &NodeRef, last: &NodeRef) {
+pub(super) fn trap_tab(
+    document: &Document,
+    event: &KeyboardEvent,
+    first: &NodeRef,
+    last: &NodeRef,
+) {
     if event.key() != "Tab" {
         return;
     }
@@ -28,9 +34,7 @@ pub(super) fn trap_tab(event: &KeyboardEvent, first: &NodeRef, last: &NodeRef) {
     let Some(last) = last.cast::<HtmlElement>() else {
         return;
     };
-    let current = web_sys::window()
-        .and_then(|window| window.document())
-        .and_then(|document| document.active_element());
+    let current = document.active_element();
     let at_first = current
         .as_ref()
         .is_some_and(|element| JsValue::from(element.clone()) == JsValue::from(first.clone()));
@@ -52,10 +56,11 @@ pub(super) fn trap_tab(event: &KeyboardEvent, first: &NodeRef, last: &NodeRef) {
 
 #[hook]
 pub(super) fn use_dialog_initial_focus(first: NodeRef) {
+    let environment = use_app_environment();
+    let document = environment.document.clone();
     use_effect_with((), move |_| {
-        let previous = web_sys::window()
-            .and_then(|window| window.document())
-            .and_then(|document| document.active_element())
+        let previous = document
+            .active_element()
             .and_then(|element| element.dyn_into::<HtmlElement>().ok());
         if let Some(element) = first.cast::<HtmlElement>() {
             let _ = element.focus();

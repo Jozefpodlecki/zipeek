@@ -7,36 +7,30 @@ use yew_icons::{Icon, IconData};
 use yew_router::prelude::Link;
 
 use crate::{
-    appearance::Appearance,
     hooks::{use_app_environment, use_dictionary},
     route::Route,
     services::practice_generated,
-    services::practice_session_store::{
-        ExerciseOutcome, ExerciseReadiness, PracticeSession, PracticeSessionError,
-        PracticeSessionStore,
-    },
+    services::practice_session_store::{ExerciseOutcome, ExerciseReadiness, PracticeSessionStore},
 };
 
-use super::super::creature_progress::{
-    CreatureOrientation, CreatureProgress, creature_orientation,
-};
+use super::super::creature_progress::CreatureProgress;
 
 use super::{
     LocalPracticeSessionProps, exercise, generation, history, persistence,
     progress::{HanziCompletionPreview, preview_progress},
-    restore, summary,
+    restore,
+    state::{SessionAction, SessionState},
+    summary,
+    transition::ExerciseTransition,
 };
 
 #[function_component(LocalPracticeSessionPage)]
 pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> Html {
     let environment = use_app_environment();
-    let appearance =
-        use_context::<Appearance>().expect("Appearance provider missing from Practice session");
-    let horizontal_progress =
-        creature_orientation(appearance.preset) == CreatureOrientation::Horizontal;
+
     let dictionary = use_dictionary();
     let storage = environment.local_storage.clone();
-    let session = use_state(|| None::<Result<PracticeSession, PracticeSessionError>>);
+    let session = use_reducer_eq(SessionState::default);
     let hanzi_ready_preview = use_state(|| None::<HanziCompletionPreview>);
     let history_retry = use_state(|| 0_u32);
     let restore_retry = use_state(|| 0_u32);
@@ -53,7 +47,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
         let storage = storage.clone();
         use_effect_with((props.id.clone(), *restore_retry), move |(id, _)| {
             let result = restore::restore_session(&PracticeSessionStore::new(storage.clone()), id);
-            session.set(Some(result));
+            session.dispatch(SessionAction::Replace(Some(result)));
         });
     }
 
@@ -67,7 +61,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
         let restore_retry = restore_retry.clone();
         let session = session.clone();
         Callback::from(move |_: MouseEvent| {
-            session.set(None);
+            session.dispatch(SessionAction::Replace(None));
             restore_retry.set(restore_retry.wrapping_add(1));
         })
     };
@@ -83,7 +77,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
         let dictionary = dictionary.clone();
         let mounted = mounted.clone();
         let active_session_id = active_session_id.clone();
-        use_effect_with((*session).clone(), move |snapshot| {
+        use_effect_with(session.snapshot.clone(), move |snapshot| {
             if let Some(Ok(saved)) = snapshot {
                 let already_generating = saved
                     .steps
@@ -98,9 +92,9 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                         if let Ok(attempt) = started.start_generation(&step_id) {
                             let store = PracticeSessionStore::new(storage.clone());
                             if let Err(error) = store.save(&started) {
-                                state.set(Some(Err(error)));
+                                state.dispatch(SessionAction::Replace(Some(Err(error))));
                             } else {
-                                state.set(Some(Ok(started.clone())));
+                                state.dispatch(SessionAction::Replace(Some(Ok(started.clone()))));
                                 let state = state.clone();
                                 let storage = storage.clone();
                                 let dictionary = dictionary.clone();
@@ -123,6 +117,12 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                                             crate::services::practice_session_store::ExerciseConfiguration::Quiz { pair_count, .. } => Some(*pair_count),
                                             _ => None,
                                         });
+                                    let narrative = started.exercise_configurations.get(&exercise_id)
+                                        .and_then(|config| match config {
+                                            crate::services::practice_session_store::ExerciseConfiguration::Narrative(settings) => Some(*settings),
+                                            _ => None,
+                                        })
+                                        .unwrap_or_default();
                                     let result = practice_generated::prepare(
                                         &exercise_id,
                                         &vocabulary,
@@ -130,6 +130,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                                         started.translation_direction(),
                                         translation_ordinal,
                                         matching_pairs,
+                                        narrative,
                                         &dictionary,
                                         &storage,
                                     )
@@ -148,7 +149,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                                         attempt,
                                         result,
                                     ) {
-                                        state.set(Some(result));
+                                        state.dispatch(SessionAction::Replace(Some(result)));
                                     }
                                 });
                             }
@@ -159,63 +160,20 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
         });
     }
 
-    let on_retry = {
-        let session = session.clone();
-        let storage = storage.clone();
-        Callback::from(move |_: MouseEvent| {
-            let Some(Ok(current)) = &*session else {
-                return;
-            };
-            session.set(Some(persistence::retry_generation(
-                &PracticeSessionStore::new(storage.clone()),
-                current,
-            )));
-        })
-    };
-
-    let on_advance = {
-        let session = session.clone();
-        let storage = storage.clone();
-        Callback::from(move |outcome: ExerciseOutcome| {
-            let Some(Ok(current)) = &*session else {
-                return;
-            };
-            session.set(Some(persistence::complete_step(
-                &PracticeSessionStore::new(storage.clone()),
-                current,
-                outcome,
-            )));
-        })
-    };
-    let on_finish = {
-        let on_advance = on_advance.clone();
-        Callback::from(move |()| {
-            on_advance.emit(ExerciseOutcome::Completed);
-        })
-    };
-    let on_scored = {
-        let on_advance = on_advance.clone();
-        Callback::from(move |correct: bool| {
-            on_advance.emit(ExerciseOutcome::Scored {
-                earned: u16::from(correct),
-                possible: 1,
-            });
-        })
-    };
     let on_finish_endless = {
         let storage = storage.clone();
         let session = session.clone();
         Callback::from(move |_: MouseEvent| {
-            let Some(Ok(current)) = &*session else {
+            let Some(Ok(current)) = &session.snapshot else {
                 return;
             };
-            session.set(Some(persistence::finish_endless(
+            session.dispatch(SessionAction::Replace(Some(persistence::finish_endless(
                 &PracticeSessionStore::new(storage.clone()),
                 current,
-            )));
+            ))));
         })
     };
-    let content = match &*session {
+    let content = match &session.snapshot {
         None => html! {
             <section role="status" aria-live="polite"
                 class="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-line bg-surface p-8 text-center">
@@ -240,7 +198,6 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                 .map(|(key, value)| (key.clone(), value.clone()))
                 .collect::<HashMap<_, _>>();
             query.insert("rounds".to_owned(), "1".to_owned());
-            let on_finish = on_finish.clone();
             let on_hanzi_ready_change = {
                 let hanzi_ready_preview = hanzi_ready_preview.clone();
                 let step_id = step.id.clone();
@@ -254,13 +211,52 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                     }
                 })
             };
+            // Bind the callbacks to the rendered step. An outgoing exercise can
+            // finish an async action after the session has already advanced; that
+            // must never complete or retry the next step.
+            let on_advance = {
+                let session = session.clone();
+                let storage = storage.clone();
+                let step_id = step.id.clone();
+                Callback::from(move |outcome: ExerciseOutcome| {
+                    let Some(Ok(current)) = &session.snapshot else {
+                        return;
+                    };
+                    if !persistence::is_current_step(current, &step_id) {
+                        return;
+                    }
+                    session.dispatch(SessionAction::Replace(Some(persistence::complete_step(
+                        &PracticeSessionStore::new(storage.clone()),
+                        current,
+                        &step_id,
+                        outcome,
+                    ))));
+                })
+            };
+            let on_retry = {
+                let session = session.clone();
+                let storage = storage.clone();
+                let step_id = step.id.clone();
+                Callback::from(move |_: MouseEvent| {
+                    let Some(Ok(current)) = &session.snapshot else {
+                        return;
+                    };
+                    if !persistence::is_current_step(current, &step_id) {
+                        return;
+                    }
+                    session.dispatch(SessionAction::Replace(Some(persistence::retry_generation(
+                        &PracticeSessionStore::new(storage.clone()),
+                        current,
+                        &step_id,
+                    ))));
+                })
+            };
             let exercise_content = exercise::render_exercise(
                 saved,
                 step,
                 &query,
-                on_finish.clone(),
-                on_scored.clone(),
-                on_retry.clone(),
+                on_advance,
+                on_retry,
                 on_hanzi_ready_change,
             );
             let is_preparing = matches!(
@@ -278,15 +274,7 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
                 }
             } else {
                 html! {
-                    <section class={if matches!(&step.readiness, ExerciseReadiness::Failed(_)) {"flex min-h-[50dvh] flex-col items-center justify-center gap-4"} else {"space-y-6"}} data-practice-local-session="">
-                        {if saved.endless_translation && saved.current > 0 {
-                            html! { <button type="button"
-                                class="rounded-lg border border-line px-4 py-2 text-sm"
-                                onclick={on_finish_endless.clone()}
-                                data-practice-finish-endless="">
-                                {"Finish practice"}
-                            </button> }
-                        } else { Html::default() }}
+                    <section key={step.id.clone()} class={if matches!(&step.readiness, ExerciseReadiness::Failed(_)) {"practice-round flex min-h-[50dvh] flex-col items-center justify-center gap-4"} else {"practice-round space-y-6"}} data-practice-local-session="">
                         {exercise_content}
                     </section>
                 }
@@ -294,45 +282,77 @@ pub(super) fn local_practice_session_page(props: &LocalPracticeSessionProps) -> 
         }
     };
 
-    let progress = match &*session {
+    let progress = match &session.snapshot {
         Some(Ok(saved)) => {
-            let active_hanzi_id = saved
-                .current_step()
-                .and_then(|step| (step.exercise_id == "write-hanzi").then_some(step.id.as_str()));
+            let active_hanzi_id = saved.current_step().and_then(|step| {
+                matches!(
+                    step.exercise_id.as_str(),
+                    "write-hanzi" | "character-builder"
+                )
+                .then_some(step.id.as_str())
+            });
             let completed = preview_progress(
                 saved.current,
                 active_hanzi_id,
                 (*hanzi_ready_preview).as_ref(),
             );
-            Some((completed, saved.steps.len(), saved.endless_translation))
+            Some((
+                completed,
+                saved.steps.len(),
+                saved.session_mode.is_endless(),
+            ))
         }
         _ => None,
     };
-    let layout_classes = if horizontal_progress {
-        "flex w-full flex-1 flex-col items-center justify-start gap-3 sm:gap-4"
-    } else {
-        "flex min-h-0 flex-1 flex-row items-stretch gap-2 sm:gap-6 lg:gap-10"
-    };
-    let content_classes = if horizontal_progress {
-        "order-1 flex w-full flex-none flex-col justify-center py-2 sm:py-4"
-    } else {
-        "flex min-h-0 min-w-0 flex-1 flex-col justify-center overflow-y-auto py-4 sm:py-6"
+    let layout_classes = "flex min-h-0 w-full flex-1 flex-col items-center gap-3 sm:gap-4";
+    let content_classes = "flex min-h-0 w-full flex-1 flex-col justify-center py-2 sm:py-4";
+    let transition_step = match &session.snapshot {
+        Some(Ok(saved)) if !saved.is_completed() => saved
+            .current_step()
+            .map(|step| step.id.clone())
+            .unwrap_or_else(|| "completed".to_owned()),
+        Some(Ok(_)) => "completed".to_owned(),
+        Some(Err(_)) => "unavailable".to_owned(),
+        None => "restoring".to_owned(),
     };
     html! {
         <main class="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-2 pb-6 pt-12 sm:px-5 sm:pb-8 sm:pt-10">
             <span data-practice-leave="">
+            {if !matches!(&session.snapshot, Some(Ok(saved)) if saved.is_completed()) { html! {
                 <Link<Route> to={Route::PracticeSetup}
                     classes="fixed right-4 top-4 z-30 inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface/95 text-ink shadow-lg backdrop-blur-md transition-[background-color,border-color,transform] duration-200 hover:-translate-x-0.5 hover:border-brand-action hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent motion-reduce:transition-none">
                     <Icon data={IconData::LUCIDE_ARROW_LEFT} width="22" height="22" />
                     <span class="sr-only">{"Leave session"}</span>
                 </Link<Route>>
+            } } else { Html::default() }}
             </span>
-            <div class={layout_classes} data-practice-progress-layout={if horizontal_progress {"horizontal"} else {"vertical"}}>
+            <div class={layout_classes} data-practice-progress-layout="top">
                 {if let Some((completed, total, endless)) = progress {
                     html! { <CreatureProgress {completed} {total} {endless} /> }
                 } else { Html::default() }}
                 <div class={content_classes}>
-                    {content}
+                    <div class="practice-round mx-auto w-full max-w-4xl" data-practice-exercise-workspace="">
+                        <ExerciseTransition step_id={transition_step}>
+                            {if let Some(Ok(saved)) = &session.snapshot {
+                                if saved.is_completed() {
+                                    content.clone()
+                                } else {
+                                    html! {
+                                        <super::frame::ExerciseFrame
+                                            position={saved.current + 1}
+                                            total={saved.steps.len()}
+                                            endless={saved.session_mode.is_endless()}
+                                            on_finish_endless={if saved.session_mode.is_endless() && saved.current > 0 { Some(on_finish_endless.clone()) } else { None }}
+                                        >
+                                            {content.clone()}
+                                        </super::frame::ExerciseFrame>
+                                    }
+                                }
+                            } else {
+                                content.clone()
+                            }}
+                        </ExerciseTransition>
+                    </div>
                 </div>
             </div>
         </main>

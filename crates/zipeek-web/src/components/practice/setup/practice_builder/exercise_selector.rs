@@ -15,7 +15,7 @@ struct ExerciseConfig {
     tab: &'static str,
 }
 
-const EXERCISES: [ExerciseConfig; 16] = [
+const EXERCISES: [ExerciseConfig; 19] = [
     ExerciseConfig {
         id: "write-hanzi",
         title: "Write Hanzi",
@@ -43,6 +43,27 @@ const EXERCISES: [ExerciseConfig; 16] = [
         description: "Translate generated sentences with a word bank.",
         icon: IconData::LUCIDE_BOOK_OPEN,
         tab: "translation",
+    },
+    ExerciseConfig {
+        id: "story-builder",
+        title: "Story Builder",
+        description: "Complete gaps in a 5 to 10 sentence AI-generated story.",
+        icon: IconData::LUCIDE_BOOK_OPEN,
+        tab: "story-builder",
+    },
+    ExerciseConfig {
+        id: "reading-comprehension",
+        title: "Reading Comprehension",
+        description: "Read 5 to 10 sentences and answer a contextual question.",
+        icon: IconData::LUCIDE_BOOK_OPEN,
+        tab: "reading-comprehension",
+    },
+    ExerciseConfig {
+        id: "conversation-practice",
+        title: "Conversation Practice",
+        description: "Choose replies in a 5 to 10 turn AI-generated dialogue.",
+        icon: IconData::LUCIDE_MESSAGE_CIRCLE,
+        tab: "conversation-practice",
     },
     ExerciseConfig {
         id: "speaking",
@@ -206,7 +227,7 @@ mod tests {
 
     #[test]
     fn every_exercise_is_available_from_practice_selection() {
-        assert_eq!(EXERCISES.len(), 16);
+        assert_eq!(EXERCISES.len(), 19);
         assert!(
             EXERCISES
                 .iter()

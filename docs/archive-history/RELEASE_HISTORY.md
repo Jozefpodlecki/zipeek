@@ -1,3 +1,7 @@
+## R704 WIP: Practice interaction and top creature layout (2026-11-26)
+
+Expanded the Sentence Builder authored corpus, added replayable setup-selected automatic answer checking/retries, draggable and keyboard-reorderable tiles, replaced verbose controls with Yew icons, and moved theme-specific creature progress to the top of the common Practice workspace. Source prepared; Rust/WASM/browser acceptance pending. See the canonical root RELEASE_NOTES.md.
+
 ## R683 WIP: Streaming Zipformer checkpoint-head parity (2026-11-26)
 
 Corrected the real checkpoint's bias-free decoder convolution, added deterministic ONNX-versus-Candle decoder/joiner parity tooling, and atomic validation/replacement of all 74 streaming state outputs. Source packaged but real model parity and Rust execution remain pending. See root RELEASE_NOTES.md and docs/architecture/native-streaming-asr.md.
@@ -1229,3 +1233,7 @@ Source-level editorial pass only: merged root R596 Learning Data and R600 candid
 - R691 WIP (2026-11-26): Desktop Services settings status and action feedback, centered Settings, removed general application footer. Windows verification pending.
 
 - R695 WIP (2026-11-26): Debug SQL UI simplification, enlarged editor, icon-only Run feedback, and single-trailing-semicolon/`word_relations` support. Source checks only; WASM and runtime database verification pending.
+
+- R699 WIP (2026-11-26): Tauri native image-health/generation IPC, provider-aware image settings, visible local AI endpoint, speech microphone icon, and simplified inactive pedagogical assessment. Windows Rust/WASM and WebView acceptance pending.
+
+- R700 WIP (2026-11-26): native Tauri AI/speech request isolation, image bytes, WebSocket Tauri origin handling. Windows acceptance pending.

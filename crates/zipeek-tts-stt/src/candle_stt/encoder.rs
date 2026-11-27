@@ -189,7 +189,10 @@ mod tests {
             .unwrap()
             .matmul(&v.contiguous().unwrap())
             .unwrap();
-        assert_eq!(attended.dims(), &[AUDIO_ATTENTION_HEADS, tokens, AUDIO_HEAD_DIM]);
+        assert_eq!(
+            attended.dims(),
+            &[AUDIO_ATTENTION_HEADS, tokens, AUDIO_HEAD_DIM]
+        );
     }
 
     #[test]

@@ -230,7 +230,7 @@ impl<'a> TranslationPage<'a> {
             || saved["steps"]
                 .as_array()
                 .is_none_or(|steps| steps.len() != expected_steps)
-            || saved["endless_translation"] != (count == 0)
+            || saved["session_mode"] != (if count == 0 { "endless" } else { "fixed" })
         {
             return Err(format!(
                 "Practice did not persist the selected direction and count: {saved}"

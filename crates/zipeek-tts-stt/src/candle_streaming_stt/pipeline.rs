@@ -10,7 +10,8 @@ use super::{
 };
 
 pub trait StreamingFeatureEncoder {
-    fn accept_features(&mut self, frames: &[[f32; FEATURE_BINS]]) -> Result<Option<Tensor>, String>;
+    fn accept_features(&mut self, frames: &[[f32; FEATURE_BINS]])
+    -> Result<Option<Tensor>, String>;
 }
 
 pub struct StreamingAsrPipeline<E, P> {
@@ -55,7 +56,8 @@ impl<E: StreamingFeatureEncoder, P: TokenPredictor> StreamingAsrPipeline<E, P> {
             let frames = self.features.accept(&chunk)?;
             if !frames.is_empty() {
                 if let Some(encoded) = self.encoder.accept_features(&frames)? {
-                    self.decoder.consume_encoded(&encoded, &mut self.predictor, cancelled)?;
+                    self.decoder
+                        .consume_encoded(&encoded, &mut self.predictor, cancelled)?;
                 }
             }
         }
@@ -73,7 +75,8 @@ impl<E: StreamingFeatureEncoder, P: TokenPredictor> StreamingAsrPipeline<E, P> {
         let last_features = self.features.accept(&last_samples)?;
         if !last_features.is_empty() {
             if let Some(encoded) = self.encoder.accept_features(&last_features)? {
-                self.decoder.consume_encoded(&encoded, &mut self.predictor, cancelled)?;
+                self.decoder
+                    .consume_encoded(&encoded, &mut self.predictor, cancelled)?;
             }
         }
         self.features.finish()?;
@@ -103,7 +106,10 @@ mod tests {
     struct ShapeOnlyEncoder;
 
     impl StreamingFeatureEncoder for ShapeOnlyEncoder {
-        fn accept_features(&mut self, frames: &[[f32; FEATURE_BINS]]) -> Result<Option<Tensor>, String> {
+        fn accept_features(
+            &mut self,
+            frames: &[[f32; FEATURE_BINS]],
+        ) -> Result<Option<Tensor>, String> {
             let data = vec![0f32; frames.len() * 4];
             Tensor::from_vec(data, (frames.len(), 4), &Device::Cpu)
                 .map(Some)
@@ -135,7 +141,9 @@ mod tests {
     #[test]
     fn packet_splitting_does_not_change_encoder_frame_counts() {
         let cancel = AtomicBool::new(false);
-        let mut stream = StreamingAsrPipeline::new(config(), ShapeOnlyEncoder, BlankPredictor, 320, 640).unwrap();
+        let mut stream =
+            StreamingAsrPipeline::new(config(), ShapeOnlyEncoder, BlankPredictor, 320, 640)
+                .unwrap();
         let pcm = vec![0.0; 1600];
         for packet in pcm.chunks(97) {
             assert!(stream.push_pcm(packet, &cancel).unwrap().is_empty());
@@ -149,7 +157,9 @@ mod tests {
     #[test]
     fn cancelled_packet_cannot_enter_buffer() {
         let cancelled = AtomicBool::new(true);
-        let mut stream = StreamingAsrPipeline::new(config(), ShapeOnlyEncoder, BlankPredictor, 320, 640).unwrap();
+        let mut stream =
+            StreamingAsrPipeline::new(config(), ShapeOnlyEncoder, BlankPredictor, 320, 640)
+                .unwrap();
         assert!(stream.push_pcm(&[0.0; 320], &cancelled).is_err());
         assert_eq!(stream.received_samples(), 0);
     }

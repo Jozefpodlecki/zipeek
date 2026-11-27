@@ -1,6 +1,6 @@
 mod browser_api;
-mod vad;
 pub mod live;
+mod vad;
 
 use std::{
     cell::{Cell, RefCell},
@@ -43,14 +43,12 @@ fn rejected(message: &str) -> JsValue {
 fn valid_origin(origin: &str) -> bool {
     matches!(
         origin,
-        "http://localhost:1420"
-            | "http://localhost.:1420"
-            | "http://127.0.0.1:1420"
+        "http://localhost:1420" | "http://localhost.:1420" | "http://127.0.0.1:1420"
     )
 }
 
 pub fn configure_origin(origin: &str) {
-    let trusted = valid_origin(origin);
+    let trusted = valid_origin(origin) || browser_api::tauri_available();
     if !trusted {
         cancel();
     }
@@ -165,26 +163,46 @@ pub fn seek_playback(fraction: f64) -> bool {
     let Some(audio) = LOCAL.with(|cell| cell.borrow().audio.clone()) else {
         return false;
     };
-    let Some(duration) = property(&audio, "duration").ok().and_then(|value| value.as_f64()) else {
+    let Some(duration) = property(&audio, "duration")
+        .ok()
+        .and_then(|value| value.as_f64())
+    else {
         return false;
     };
     if !duration.is_finite() || duration <= 0.0 {
         return false;
     }
-    assign(&audio, "currentTime", &JsValue::from_f64(fraction.clamp(0.0, 1.0) * duration)).is_ok()
+    assign(
+        &audio,
+        "currentTime",
+        &JsValue::from_f64(fraction.clamp(0.0, 1.0) * duration),
+    )
+    .is_ok()
 }
 
 pub fn microphone_auto_stop_tick() -> bool {
     let analyser = LOCAL.with(|cell| {
         let state = cell.borrow();
-        if !state.recording || state.recording_stop.is_none() || state.capture_finishing || state.vad.is_none() {
+        if !state.recording
+            || state.recording_stop.is_none()
+            || state.capture_finishing
+            || state.vad.is_none()
+        {
             return None;
         }
         state.analyser.clone()
     });
-    let Some(analyser) = analyser else { return false; };
+    let Some(analyser) = analyser else {
+        return false;
+    };
     let samples = Float32Array::new_with_length(512);
-    if invoke(&analyser, "getFloatTimeDomainData", &[samples.clone().into()]).is_err() {
+    if invoke(
+        &analyser,
+        "getFloatTimeDomainData",
+        &[samples.clone().into()],
+    )
+    .is_err()
+    {
         return false;
     }
     let now_ms = property(&js_sys::global(), "performance")
@@ -194,7 +212,10 @@ pub fn microphone_auto_stop_tick() -> bool {
         .unwrap_or_else(js_sys::Date::now);
     let should_stop = LOCAL.with(|cell| {
         let mut state = cell.borrow_mut();
-        state.vad.as_mut().is_some_and(|vad| vad.observe(&samples.to_vec(), now_ms))
+        state
+            .vad
+            .as_mut()
+            .is_some_and(|vad| vad.observe(&samples.to_vec(), now_ms))
     });
     should_stop && finish_microphone_recording()
 }
@@ -209,7 +230,12 @@ impl AutoStopMode {
     fn settings(self) -> (i32, VadConfig) {
         match self {
             Self::HskWord => (9_000, VadConfig { silence_ms: 900.0 }),
-            Self::CustomSentence => (28_000, VadConfig { silence_ms: 1_500.0 }),
+            Self::CustomSentence => (
+                28_000,
+                VadConfig {
+                    silence_ms: 1_500.0,
+                },
+            ),
         }
     }
 }
@@ -230,7 +256,12 @@ pub fn microphone_level() -> Option<f32> {
 pub fn microphone_waveform() -> Option<Vec<f32>> {
     let analyser = LOCAL.with(|cell| cell.borrow().analyser.clone())?;
     let samples = Float32Array::new_with_length(512);
-    invoke(&analyser, "getFloatTimeDomainData", &[samples.clone().into()]).ok()?;
+    invoke(
+        &analyser,
+        "getFloatTimeDomainData",
+        &[samples.clone().into()],
+    )
+    .ok()?;
     Some(microphone_rms_peaks(&samples.to_vec(), 32))
 }
 
@@ -241,11 +272,17 @@ pub fn recorded_wav_waveform(wav: &[u8]) -> Vec<f32> {
     let Some(offset) = wav.windows(4).position(|bytes| bytes == b"data") else {
         return Vec::new();
     };
-    if offset + 8 > wav.len() { return Vec::new(); }
-    let declared = u32::from_le_bytes(wav[offset + 4..offset + 8].try_into().unwrap_or([0; 4])) as usize;
+    if offset + 8 > wav.len() {
+        return Vec::new();
+    }
+    let declared =
+        u32::from_le_bytes(wav[offset + 4..offset + 8].try_into().unwrap_or([0; 4])) as usize;
     let end = (offset + 8).saturating_add(declared).min(wav.len());
-    if end <= offset + 8 || end - offset - 8 > 8_000_000 { return Vec::new(); }
-    let pcm: Vec<f32> = wav[offset + 8..end].chunks_exact(2)
+    if end <= offset + 8 || end - offset - 8 > 8_000_000 {
+        return Vec::new();
+    }
+    let pcm: Vec<f32> = wav[offset + 8..end]
+        .chunks_exact(2)
         .map(|bytes| i16::from_le_bytes([bytes[0], bytes[1]]) as f32 / 32768.0)
         .collect();
     waveform_peaks(&pcm, 32)
@@ -314,8 +351,10 @@ pub struct LocalSpeechCapabilities {
 pub async fn service_capabilities() -> Result<LocalSpeechCapabilities, JsValue> {
     require_enabled()?;
     let response = fetch("/v1/capabilities", "GET", None, None, None).await?;
-    let body = wait(invoke(&response, "text", &[])?).await?
-        .as_string().unwrap_or_default();
+    let body = wait(invoke(&response, "text", &[])?)
+        .await?
+        .as_string()
+        .unwrap_or_default();
     Ok(LocalSpeechCapabilities {
         synthesis: body.lines().any(|line| line == "synthesis=true"),
         recognition: body.lines().any(|line| line == "recognition=true"),
@@ -326,8 +365,16 @@ pub async fn capabilities() -> Result<String, JsValue> {
     let state = service_capabilities().await?;
     Ok(format!(
         "Local service: voice {}, microphone {}",
-        if state.synthesis { "available" } else { "unavailable" },
-        if state.recognition { "available" } else { "unavailable" },
+        if state.synthesis {
+            "available"
+        } else {
+            "unavailable"
+        },
+        if state.recognition {
+            "available"
+        } else {
+            "unavailable"
+        },
     ))
 }
 
@@ -455,12 +502,16 @@ pub async fn play_with_waveform(
                 if let Ok(context) = new_object("AudioContext", &[]) {
                     let peaks = async {
                         let decoded = wait(invoke(&context, "decodeAudioData", &[buffer])?).await?;
-                        let channel = invoke(&decoded, "getChannelData", &[JsValue::from_f64(0.0)])?;
+                        let channel =
+                            invoke(&decoded, "getChannelData", &[JsValue::from_f64(0.0)])?;
                         Ok::<_, JsValue>(waveform_peaks(&Float32Array::new(&channel).to_vec(), 32))
-                    }.await;
+                    }
+                    .await;
                     let _ = invoke(&context, "close", &[]);
                     if active(generation) {
-                        if let Ok(peaks) = peaks { on_waveform(peaks); }
+                        if let Ok(peaks) = peaks {
+                            on_waveform(peaks);
+                        }
                     }
                 }
             }
@@ -476,7 +527,12 @@ pub async fn play_with_waveform(
 }
 
 pub fn download_recorded_wav(wav: &[u8]) -> Result<(), JsValue> {
-    if !allowed() || wav.len() < 44 || wav.len() > 8_000_000 || &wav[..4] != b"RIFF" || &wav[8..12] != b"WAVE" {
+    if !allowed()
+        || wav.len() < 44
+        || wav.len() > 8_000_000
+        || &wav[..4] != b"RIFF"
+        || &wav[8..12] != b"WAVE"
+    {
         return Err(rejected("No valid locally recorded WAV to download"));
     }
     let parts = Array::new();
@@ -486,12 +542,17 @@ pub fn download_recorded_wav(wav: &[u8]) -> Result<(), JsValue> {
     let blob = new_object("Blob", &[parts.into(), options.into()])?;
     let url_api = property(&js_sys::global(), "URL")?;
     let url = invoke(&url_api, "createObjectURL", &[blob])?
-        .as_string().ok_or_else(|| rejected("Could not create WAV download URL"))?;
+        .as_string()
+        .ok_or_else(|| rejected("Could not create WAV download URL"))?;
     let result = (|| {
         let document = property(&js_sys::global(), "document")?;
         let anchor = invoke(&document, "createElement", &[JsValue::from_str("a")])?;
         assign(&anchor, "href", &JsValue::from_str(&url))?;
-        assign(&anchor, "download", &JsValue::from_str("zipeek-recording.wav"))?;
+        assign(
+            &anchor,
+            "download",
+            &JsValue::from_str("zipeek-recording.wav"),
+        )?;
         let body = property(&document, "body")?;
         invoke(&body, "appendChild", &[anchor.clone()])?;
         let clicked = invoke(&anchor, "click", &[]);
@@ -502,7 +563,13 @@ pub fn download_recorded_wav(wav: &[u8]) -> Result<(), JsValue> {
     if result.is_ok() {
         let cleanup_url = url.clone();
         let cleanup = Closure::once_into_js(move || revoke(&cleanup_url));
-        if invoke(&js_sys::global(), "setTimeout", &[cleanup, JsValue::from_f64(1000.0)]).is_err() {
+        if invoke(
+            &js_sys::global(),
+            "setTimeout",
+            &[cleanup, JsValue::from_f64(1000.0)],
+        )
+        .is_err()
+        {
             revoke(&url);
         }
     } else {
@@ -552,15 +619,20 @@ pub async fn transcribe_microphone_with_audio() -> Result<RecordedTranscription,
     result
 }
 
-pub async fn transcribe_microphone_with_auto_stop(mode: AutoStopMode) -> Result<RecordedTranscription, JsValue> {
+pub async fn transcribe_microphone_with_auto_stop(
+    mode: AutoStopMode,
+) -> Result<RecordedTranscription, JsValue> {
     let (generation, abort) = begin(true)?;
     let (maximum_ms, detector) = mode.settings();
     let result = async {
         let wav = capture(generation, maximum_ms, Some(detector)).await?;
         let transcript = send_audio(&wav, generation, &abort).await;
         Ok(RecordedTranscription { wav, transcript })
-    }.await;
-    if active(generation) { cancel(); }
+    }
+    .await;
+    if active(generation) {
+        cancel();
+    }
     result
 }
 
@@ -627,7 +699,11 @@ pub async fn transcribe_microphone() -> Result<String, JsValue> {
     transcribe_microphone_with_audio().await?.transcript
 }
 
-async fn capture(generation: u64, maximum_ms: i32, vad_config: Option<VadConfig>) -> Result<Vec<u8>, JsValue> {
+async fn capture(
+    generation: u64,
+    maximum_ms: i32,
+    vad_config: Option<VadConfig>,
+) -> Result<Vec<u8>, JsValue> {
     let navigator = property(&js_sys::global(), "navigator")?;
     let devices = property(&navigator, "mediaDevices")?;
     if devices.is_null() || devices.is_undefined() {
@@ -791,10 +867,17 @@ fn microphone_rms_peaks(samples: &[f32], columns: usize) -> Vec<f32> {
     (0..columns)
         .map(|column| {
             let start = column * samples.len() / columns;
-            let end = ((column + 1) * samples.len() / columns).max(start + 1).min(samples.len());
+            let end = ((column + 1) * samples.len() / columns)
+                .max(start + 1)
+                .min(samples.len());
             let window = &samples[start..end];
-            let power = window.iter().copied().filter(|sample| sample.is_finite())
-                .map(|sample| sample * sample).sum::<f32>() / window.len() as f32;
+            let power = window
+                .iter()
+                .copied()
+                .filter(|sample| sample.is_finite())
+                .map(|sample| sample * sample)
+                .sum::<f32>()
+                / window.len() as f32;
             ((power.sqrt() - 0.012).max(0.0) * 6.0).clamp(0.0, 1.0)
         })
         .collect()
@@ -804,12 +887,20 @@ fn waveform_peaks(samples: &[f32], columns: usize) -> Vec<f32> {
     if samples.is_empty() || columns == 0 {
         return Vec::new();
     }
-    let mut peaks = (0..columns).map(|column| {
-        let start = column * samples.len() / columns;
-        let end = ((column + 1) * samples.len() / columns).max(start + 1).min(samples.len());
-        samples[start..end].iter().copied().filter(|value| value.is_finite())
-            .map(f32::abs).fold(0.0_f32, f32::max)
-    }).collect::<Vec<_>>();
+    let mut peaks = (0..columns)
+        .map(|column| {
+            let start = column * samples.len() / columns;
+            let end = ((column + 1) * samples.len() / columns)
+                .max(start + 1)
+                .min(samples.len());
+            samples[start..end]
+                .iter()
+                .copied()
+                .filter(|value| value.is_finite())
+                .map(f32::abs)
+                .fold(0.0_f32, f32::max)
+        })
+        .collect::<Vec<_>>();
     let maximum = peaks.iter().copied().fold(0.0_f32, f32::max);
     if maximum > 0.0 {
         for peak in &mut peaks {
@@ -830,7 +921,11 @@ pub async fn prepare_record_reference_audio(text: &str) -> Result<MatchingAudio,
     prepare_audio_with_limit(text, 4096, 90.0).await
 }
 
-async fn prepare_audio_with_limit(text: &str, limit: usize, max_duration: f64) -> Result<MatchingAudio, JsValue> {
+async fn prepare_audio_with_limit(
+    text: &str,
+    limit: usize,
+    max_duration: f64,
+) -> Result<MatchingAudio, JsValue> {
     require_enabled()?;
     if text.trim().is_empty() || text.len() > limit || text.chars().any(char::is_control) {
         return Err(rejected("Invalid matching audio text"));
@@ -853,9 +948,14 @@ async fn prepare_audio_with_limit(text: &str, limit: usize, max_duration: f64) -
         let copy = invoke(&raw, "slice", &[JsValue::from_f64(0.0)])?;
         let audio = wait(invoke(&context, "decodeAudioData", &[copy])?).await?;
         let duration = property(&audio, "duration")?.as_f64().unwrap_or(0.0);
-        let channels = property(&audio, "numberOfChannels")?.as_f64().unwrap_or(0.0);
+        let channels = property(&audio, "numberOfChannels")?
+            .as_f64()
+            .unwrap_or(0.0);
         let samples = property(&audio, "length")?.as_f64().unwrap_or(0.0) as usize;
-        if !(0.05..=max_duration).contains(&duration) || !(1.0..=2.0).contains(&channels) || samples == 0 {
+        if !(0.05..=max_duration).contains(&duration)
+            || !(1.0..=2.0).contains(&channels)
+            || samples == 0
+        {
             return Err(rejected("Invalid decoded matching audio"));
         }
         let channel = invoke(&audio, "getChannelData", &[JsValue::from_f64(0.0)])?;
@@ -870,8 +970,13 @@ async fn prepare_audio_with_limit(text: &str, limit: usize, max_duration: f64) -
         let url = invoke(&api, "createObjectURL", &[blob])?
             .as_string()
             .ok_or_else(|| rejected("Cannot prepare audio playback URL"))?;
-        Ok(MatchingAudio { url, peaks, duration_seconds: duration })
-    }.await;
+        Ok(MatchingAudio {
+            url,
+            peaks,
+            duration_seconds: duration,
+        })
+    }
+    .await;
     if let Ok(closing) = invoke(&context, "close", &[]) {
         let _ = wait(closing).await;
     }
@@ -883,11 +988,19 @@ pub async fn play_prepared_reference(audio: &MatchingAudio) -> Result<(), JsValu
     cancel();
     let (generation, abort) = begin(false)?;
     let result = async {
-        let response = wait(invoke(&js_sys::global(), "fetch", &[JsValue::from_str(&audio.url)])?).await?;
-        let blob = wait(invoke(&response, "blob", &[])?) .await?;
+        let response = wait(invoke(
+            &js_sys::global(),
+            "fetch",
+            &[JsValue::from_str(&audio.url)],
+        )?)
+        .await?;
+        let blob = wait(invoke(&response, "blob", &[])?).await?;
         playback_blob(blob, generation, &abort).await
-    }.await;
-    if active(generation) { cancel(); }
+    }
+    .await;
+    if active(generation) {
+        cancel();
+    }
     result
 }
 
@@ -911,11 +1024,31 @@ mod matching_waveform_tests {
     #[test]
     fn peaks_are_normalized_and_bounded() {
         assert!(waveform_peaks(&[], 32).is_empty());
-        assert!(microphone_rms_peaks(&[0.0; 512], 32).iter().all(|value| *value == 0.0));
-        assert!(microphone_rms_peaks(&[0.005; 512], 32).iter().all(|value| *value == 0.0));
-        assert!(microphone_rms_peaks(&[0.3; 512], 32).iter().all(|value| *value > 0.0));
-        assert!(waveform_peaks(&[0.0; 64], 4).iter().all(|value| *value == 0.0));
+        assert!(
+            microphone_rms_peaks(&[0.0; 512], 32)
+                .iter()
+                .all(|value| *value == 0.0)
+        );
+        assert!(
+            microphone_rms_peaks(&[0.005; 512], 32)
+                .iter()
+                .all(|value| *value == 0.0)
+        );
+        assert!(
+            microphone_rms_peaks(&[0.3; 512], 32)
+                .iter()
+                .all(|value| *value > 0.0)
+        );
+        assert!(
+            waveform_peaks(&[0.0; 64], 4)
+                .iter()
+                .all(|value| *value == 0.0)
+        );
         assert_eq!(waveform_peaks(&[0.0, 0.5, 1.0, -0.25], 2), vec![0.5, 1.0]);
-        assert!(waveform_peaks(&[f32::NAN, 0.3], 4).iter().all(|value| value.is_finite()));
+        assert!(
+            waveform_peaks(&[f32::NAN, 0.3], 4)
+                .iter()
+                .all(|value| value.is_finite())
+        );
     }
 }

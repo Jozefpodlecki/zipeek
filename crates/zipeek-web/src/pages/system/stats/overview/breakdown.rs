@@ -1,5 +1,6 @@
 use super::super::dialog_focus::{trap_tab, use_dialog_initial_focus};
 use super::activity::{ACTIVITY_WEEKS, WEEKS};
+use crate::hooks::use_app_environment;
 use web_sys::KeyboardEvent;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -13,6 +14,7 @@ pub(super) struct ActivityBreakdownProps {
 #[function_component(ActivityBreakdown)]
 pub(super) fn activity_breakdown(props: &ActivityBreakdownProps) -> Html {
     let categories = props.categories;
+    let environment = use_app_environment();
     let close_ref = use_node_ref();
     use_dialog_initial_focus(close_ref.clone());
     let close_breakdown = {
@@ -22,8 +24,9 @@ pub(super) fn activity_breakdown(props: &ActivityBreakdownProps) -> Html {
     let onkeydown = {
         let first = close_ref.clone();
         let on_close = props.on_close.clone();
+        let document = environment.document.clone();
         Callback::from(move |event: KeyboardEvent| {
-            trap_tab(&event, &first, &first);
+            trap_tab(&document, &event, &first, &first);
             if event.key() == "Escape" {
                 event.prevent_default();
                 on_close.emit(());

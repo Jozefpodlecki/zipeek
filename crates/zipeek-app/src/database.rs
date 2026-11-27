@@ -40,11 +40,76 @@ enum Request {
     ResetPersonal(mpsc::Sender<Result<(), String>>),
 }
 
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonalStorageInfo {
+    pub path: String,
+    pub exists: bool,
+    pub size_bytes: Option<u64>,
+}
+
 pub struct NativeDatabase {
     tx: mpsc::Sender<Request>,
+    personal_path: Option<PathBuf>,
 }
 
 impl NativeDatabase {
+    pub fn personal_storage_info(&self) -> Result<PersonalStorageInfo, DatabaseError> {
+        let path = self.personal_path.as_ref().ok_or_else(|| {
+            DatabaseError::Operation("Native personal database directory unavailable".into())
+        })?;
+        let metadata = match std::fs::metadata(path) {
+            Ok(metadata) => Some(metadata),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => return Err(DatabaseError::Operation(error.to_string())),
+        };
+        Ok(PersonalStorageInfo {
+            path: path.display().to_string(),
+            exists: metadata.is_some(),
+            size_bytes: metadata.map(|metadata| metadata.len()),
+        })
+    }
+
+    pub fn reveal_personal_storage(&self) -> Result<(), DatabaseError> {
+        let path = self.personal_path.as_ref().ok_or_else(|| {
+            DatabaseError::Operation("Native personal database directory unavailable".into())
+        })?;
+        let directory = path
+            .parent()
+            .ok_or_else(|| DatabaseError::Operation("Invalid personal database location".into()))?;
+        if !directory.is_dir() {
+            return Err(DatabaseError::Operation(
+                "Personal database directory does not exist yet".into(),
+            ));
+        }
+        #[cfg(target_os = "windows")]
+        let result = if path.is_file() {
+            std::process::Command::new("explorer.exe")
+                .arg("/select,")
+                .arg(path)
+                .spawn()
+        } else {
+            std::process::Command::new("explorer.exe")
+                .arg(directory)
+                .spawn()
+        };
+        #[cfg(target_os = "macos")]
+        let result = if path.is_file() {
+            std::process::Command::new("open")
+                .arg("-R")
+                .arg(path)
+                .spawn()
+        } else {
+            std::process::Command::new("open").arg(directory).spawn()
+        };
+        #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+        let result = std::process::Command::new("xdg-open")
+            .arg(directory)
+            .spawn();
+        result
+            .map(|_| ())
+            .map_err(|error| DatabaseError::Operation(error.to_string()))
+    }
     pub fn new<R: Runtime>(app: &tauri::AppHandle<R>) -> Self {
         let resource = app
             .path()
@@ -58,12 +123,13 @@ impl NativeDatabase {
             .app_local_data_dir()
             .ok()
             .map(|dir| dir.join("zipeek-personal.duckdb"));
+        let personal_path = personal.clone();
         let (tx, rx) = mpsc::channel();
         thread::Builder::new()
             .name("zipeek-native-duckdb".into())
             .spawn(move || worker(rx, resource, personal))
             .expect("database worker thread");
-        Self { tx }
+        Self { tx, personal_path }
     }
 
     pub async fn open(&self) -> Result<DatabaseInfo, DatabaseError> {

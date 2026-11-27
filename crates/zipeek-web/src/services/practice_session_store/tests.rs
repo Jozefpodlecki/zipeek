@@ -281,7 +281,71 @@ fn translation_scores_and_direction_survive_serialization() {
 }
 
 #[test]
-fn endless_translation_appends_after_scoring_and_skipping_and_can_finish() {
+fn endless_session_prepares_upcoming_steps_before_completion() {
+    let mut session = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174109".to_owned(),
+        &["sentence-translation".to_owned()].into_iter().collect(),
+        2,
+        91,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    session.session_mode = SessionMode::Endless;
+    session.replenish_endless_steps().unwrap();
+    session.queue_generation(3);
+    assert_eq!(session.steps.len(), 3);
+    assert_eq!(session.pending_generation().count(), 3);
+    let second_id = session.steps[1].id.clone();
+    let second_seed = session.steps[1].instance_seed;
+    let first_id = session.steps[0].id.clone();
+    let attempt = session.start_generation(&first_id).unwrap();
+    session
+        .generation_succeeded(&first_id, attempt, valid_translation_instance())
+        .unwrap();
+    let second_attempt = session.start_generation(&second_id).unwrap();
+    session
+        .generation_succeeded(&second_id, second_attempt, valid_translation_instance())
+        .unwrap();
+    session
+        .complete(&first_id, ExerciseOutcome::Completed)
+        .unwrap();
+    assert_eq!(session.current, 1);
+    assert_eq!(session.steps.len(), 4);
+    assert_eq!(session.current_step().unwrap().id, second_id);
+    assert_eq!(session.current_step().unwrap().instance_seed, second_seed);
+    assert!(matches!(
+        session.current_step().unwrap().readiness,
+        ExerciseReadiness::Ready
+    ));
+    assert_eq!(session.pending_generation().count(), 2);
+    session.validate().unwrap();
+}
+
+#[test]
+fn ready_steps_count_toward_bounded_generation_lookahead() {
+    let mut session = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174110".to_owned(),
+        &["sentence-translation".to_owned()].into_iter().collect(),
+        5,
+        99,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    let first = session.steps[0].id.clone();
+    let attempt = session.start_generation(&first).unwrap();
+    session
+        .generation_succeeded(&first, attempt, valid_translation_instance())
+        .unwrap();
+    session.queue_generation(3);
+    assert_eq!(session.pending_generation().count(), 2);
+    assert!(matches!(
+        session.steps[3].readiness,
+        ExerciseReadiness::NeedsGeneration
+    ));
+}
+
+#[test]
+fn endless_mode_replenishes_after_scoring_and_skipping_and_can_finish() {
     let mut saved = PracticeSession::new(
         "123e4567-e89b-72d3-a456-426614174102".to_owned(),
         &["sentence-translation".to_owned()].into_iter().collect(),
@@ -290,12 +354,9 @@ fn endless_translation_appends_after_scoring_and_skipping_and_can_finish() {
         BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
     )
     .unwrap();
-    saved.endless_translation = true;
+    saved.session_mode = SessionMode::Endless;
     saved.validate().unwrap();
-    assert_eq!(
-        saved.finish_endless_translation(),
-        Err(PracticeSessionError::NotReady)
-    );
+    assert_eq!(saved.finish_endless(), Err(PracticeSessionError::NotReady));
     let first = saved.current_step().unwrap().id.clone();
     let attempt = saved.start_generation(&first).unwrap();
     saved
@@ -311,10 +372,10 @@ fn endless_translation_appends_after_scoring_and_skipping_and_can_finish() {
         )
         .unwrap();
     assert_eq!(saved.current, 1);
-    assert_eq!(saved.steps.len(), 3);
+    assert_eq!(saved.steps.len(), 4);
     saved.skip_current().unwrap();
     assert_eq!(saved.current, 2);
-    assert_eq!(saved.steps.len(), 4);
+    assert_eq!(saved.steps.len(), 5);
     saved.validate().unwrap();
     let restored: PracticeSession =
         serde_json::from_str(&serde_json::to_string(&saved).unwrap()).unwrap();
@@ -322,9 +383,9 @@ fn endless_translation_appends_after_scoring_and_skipping_and_can_finish() {
         restored.current_step().unwrap().id,
         saved.current_step().unwrap().id
     );
-    saved.finish_endless_translation().unwrap();
+    saved.finish_endless().unwrap();
     assert!(saved.is_completed());
-    assert!(!saved.endless_translation);
+    assert_eq!(saved.session_mode, SessionMode::Fixed);
     saved.validate().unwrap();
     assert_eq!(saved.steps.len(), 2);
 }
@@ -831,11 +892,11 @@ fn prefetch_is_bounded_and_duplicate_tasks_are_ignored() {
         BTreeMap::from([("set_ids".to_owned(), "1,2".to_owned())]),
     )
     .unwrap();
-    assert_eq!(session.pending_generation().count(), 2);
+    assert_eq!(session.pending_generation().count(), 3);
     let first = session.pending_generation().next().unwrap().id.clone();
     let attempt = session.start_generation(&first).unwrap();
     session.queue_generation(2);
-    assert_eq!(session.pending_generation().count(), 1);
+    assert_eq!(session.pending_generation().count(), 2);
     assert!(
         session
             .generation_succeeded(&first, attempt, "not json".into())
@@ -844,7 +905,7 @@ fn prefetch_is_bounded_and_duplicate_tasks_are_ignored() {
     session
         .generation_succeeded(&first, attempt, valid_translation_instance())
         .unwrap();
-    assert_eq!(session.pending_generation().count(), 1);
+    assert_eq!(session.pending_generation().count(), 2);
 }
 
 #[test]
@@ -1189,9 +1250,11 @@ fn ai_generated_matching_is_queued_saved_and_restored() {
         1,
         17,
         BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
-    ).unwrap();
+    )
+    .unwrap();
     if let Some(ExerciseConfiguration::Quiz { ai_generated, .. }) =
-        saved.exercise_configurations.get_mut("matching") {
+        saved.exercise_configurations.get_mut("matching")
+    {
         *ai_generated = true;
     }
     saved.steps[0].readiness = ExerciseReadiness::NeedsGeneration;
@@ -1205,9 +1268,442 @@ fn ai_generated_matching_is_queued_saved_and_restored() {
             {"id":1,"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},
             {"id":2,"hanzi":"谢谢","pinyin":"xièxie","meaning":"thank you"}
         ]
-    }).to_string();
+    })
+    .to_string();
     saved.generation_succeeded(&id, attempt, raw).unwrap();
     assert!(saved.validate().is_ok());
     let stored = serde_json::to_string(&saved).unwrap();
     assert!(decode_stored_session(&saved.id, &stored).is_ok());
+}
+
+#[test]
+fn typed_partial_assessment_survives_session_roundtrip() {
+    use super::{ExerciseAssessment, ExerciseVerdict};
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174121".to_owned(),
+        &["sentence-translation".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    let id = saved.current_step().unwrap().id.clone();
+    let generation = saved.start_generation(&id).unwrap();
+    saved
+        .generation_succeeded(&id, generation, valid_translation_instance())
+        .unwrap();
+    let assessment = ExerciseAssessment {
+        verdict: ExerciseVerdict::PartiallyCorrect,
+        attempts: 3,
+        mistakes: 2,
+        hints: 1,
+        assisted: true,
+        item_evidence: Vec::new(),
+    };
+    saved
+        .complete(&id, ExerciseOutcome::Assessed(assessment.clone()))
+        .unwrap();
+    let decoded: PracticeSession =
+        serde_json::from_str(&serde_json::to_string(&saved).unwrap()).unwrap();
+    decoded.validate().unwrap();
+    assert_eq!(
+        decoded.steps[0].outcome,
+        Some(ExerciseOutcome::Assessed(assessment))
+    );
+}
+
+#[test]
+fn invalid_assessments_are_rejected_without_advancing() {
+    use super::{ExerciseAssessment, ExerciseVerdict};
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174122".to_owned(),
+        &["sentence-translation".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    let id = saved.current_step().unwrap().id.clone();
+    let generation = saved.start_generation(&id).unwrap();
+    saved
+        .generation_succeeded(&id, generation, valid_translation_instance())
+        .unwrap();
+    let before = saved.clone();
+    assert_eq!(
+        saved.complete(
+            &id,
+            ExerciseOutcome::Assessed(ExerciseAssessment {
+                verdict: ExerciseVerdict::Incorrect,
+                attempts: 0,
+                mistakes: 1,
+                hints: 0,
+                assisted: false,
+                item_evidence: Vec::new(),
+            })
+        ),
+        Err(PracticeSessionError::InvalidResult)
+    );
+    assert_eq!(saved, before);
+    assert_eq!(
+        saved.complete(&id, ExerciseOutcome::Skipped),
+        Err(PracticeSessionError::InvalidResult)
+    );
+    assert_eq!(saved, before);
+}
+
+#[test]
+fn old_binary_outcomes_remain_readable_and_keep_their_verdict() {
+    use super::ExerciseVerdict;
+    let outcome: ExerciseOutcome =
+        serde_json::from_str(r#"{"scored":{"earned":1,"possible":1}}"#).unwrap();
+    assert_eq!(outcome.verdict(), Some(ExerciseVerdict::Correct));
+    let completion: ExerciseOutcome = serde_json::from_str(r#""completed""#).unwrap();
+    assert_eq!(completion.verdict(), None);
+}
+
+#[test]
+fn authored_and_listening_verdicts_persist_with_actual_single_attempt_evidence() {
+    use super::{ExerciseAssessment, ExerciseVerdict};
+    // These exercise families now report assessed results at the registry boundary.
+    for (index, exercise_id) in [
+        "fill-blank",
+        "audio-dictation",
+        "spot-mistake",
+        "sentence-transformation",
+        "listening-choice",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let mut session = PracticeSession::new(
+            uuid::Uuid::now_v7().to_string(),
+            &[exercise_id.to_owned()].into_iter().collect(),
+            1,
+            index as u64 + 7,
+            BTreeMap::new(),
+        )
+        .expect("supported exercise");
+        let step_id = session.current_step().unwrap().id.clone();
+        let evidence = ExerciseAssessment {
+            verdict: if exercise_id == "spot-mistake" {
+                ExerciseVerdict::PartiallyCorrect
+            } else {
+                ExerciseVerdict::Incorrect
+            },
+            attempts: 1,
+            mistakes: 1,
+            hints: 0,
+            assisted: false,
+            item_evidence: Vec::new(),
+        };
+        session
+            .complete(&step_id, ExerciseOutcome::Assessed(evidence.clone()))
+            .expect("new assessed exercise outcome accepted");
+        let saved = serde_json::to_string(&session).unwrap();
+        let decoded: PracticeSession = serde_json::from_str(&saved).unwrap();
+        decoded
+            .validate()
+            .expect("persisted assessment remains valid");
+        assert_eq!(
+            decoded.steps[0].outcome,
+            Some(ExerciseOutcome::Assessed(evidence))
+        );
+    }
+}
+
+#[test]
+fn quiz_and_sentence_builder_assessments_are_valid_and_round_trip() {
+    for exercise in ["matching", "multiple-choice", "sentence-builder"] {
+        let mut saved = PracticeSession::new(
+            "123e4567-e89b-72d3-a456-426614174199".to_owned(),
+            &[exercise.to_owned()].into_iter().collect(),
+            1,
+            42,
+            BTreeMap::new(),
+        )
+        .unwrap();
+        let step_id = saved.current_step().unwrap().id.clone();
+        let assessment = ExerciseAssessment {
+            verdict: ExerciseVerdict::Correct,
+            attempts: 3,
+            mistakes: 2,
+            hints: 0,
+            assisted: false,
+            item_evidence: Vec::new(),
+        };
+        saved
+            .complete(&step_id, ExerciseOutcome::Assessed(assessment.clone()))
+            .unwrap();
+        let raw = serde_json::to_string(&saved).unwrap();
+        let restored = decode_stored_session(&saved.id, &raw).unwrap();
+        assert_eq!(
+            restored.steps[0].outcome,
+            Some(ExerciseOutcome::Assessed(assessment))
+        );
+    }
+}
+
+#[test]
+fn vocabulary_exercise_assessments_preserve_real_attempt_counts() {
+    for exercise in ["type-pinyin", "character-builder", "word-mosaics"] {
+        let mut session = PracticeSession::new(
+            uuid::Uuid::now_v7().to_string(),
+            &[exercise.to_owned()].into_iter().collect(),
+            1,
+            42,
+            BTreeMap::new(),
+        )
+        .expect("vocabulary exercise can start");
+        let id = session.current_step().expect("active step").id.clone();
+        let evidence = ExerciseAssessment {
+            verdict: ExerciseVerdict::Correct,
+            attempts: 4,
+            mistakes: 2,
+            hints: 0,
+            assisted: false,
+            item_evidence: Vec::new(),
+        };
+        session
+            .complete(&id, ExerciseOutcome::Assessed(evidence.clone()))
+            .expect("vocabulary exercise can persist assessed completion");
+        let serialized = serde_json::to_string(&session).unwrap();
+        let restored = decode_stored_session(&session.id, &serialized).unwrap();
+        assert_eq!(
+            restored.steps[0].outcome,
+            Some(ExerciseOutcome::Assessed(evidence)),
+            "{exercise} assessment was not preserved",
+        );
+    }
+}
+
+#[test]
+fn mixed_endless_replenishment_is_replayable_and_restorable() {
+    let selected = [
+        "matching".to_owned(),
+        "type-pinyin".to_owned(),
+        "word-mosaics".to_owned(),
+    ]
+    .into_iter()
+    .collect();
+    let mut session = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174777".to_owned(),
+        &selected,
+        3,
+        992,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    session.session_mode = SessionMode::Endless;
+    session.replenish_endless_steps().unwrap();
+    for _ in 0..45 {
+        session.skip_current().unwrap();
+        session.validate().unwrap();
+    }
+    assert!(session.session_mode.is_endless());
+    assert!(
+        session
+            .steps
+            .iter()
+            .any(|step| step.exercise_id == "matching")
+    );
+    assert!(
+        session
+            .steps
+            .iter()
+            .any(|step| step.exercise_id == "type-pinyin")
+    );
+    assert!(
+        session
+            .steps
+            .iter()
+            .any(|step| step.exercise_id == "word-mosaics")
+    );
+    assert!(
+        session
+            .steps
+            .iter()
+            .enumerate()
+            .all(|(ordinal, step)| step.id == format!("{}:{ordinal}", session.id))
+    );
+    let encoded = serde_json::to_string(&session).unwrap();
+    let restored: PracticeSession = serde_json::from_str(&encoded).unwrap();
+    assert_eq!(restored, session);
+    let mut next = session.clone();
+    let mut replay = restored;
+    next.skip_current().unwrap();
+    replay.skip_current().unwrap();
+    assert_eq!(next.steps, replay.steps);
+}
+
+#[test]
+fn endless_replenishment_respects_generated_matching_configuration() {
+    let selected = ["matching".to_owned()].into_iter().collect();
+    let mut session = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174778".to_owned(),
+        &selected,
+        3,
+        123,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    session.session_mode = SessionMode::Endless;
+    if let Some(ExerciseConfiguration::Quiz { ai_generated, .. }) =
+        session.exercise_configurations.get_mut("matching")
+    {
+        *ai_generated = true;
+    }
+    for step in &mut session.steps {
+        step.readiness = ExerciseReadiness::NeedsGeneration;
+    }
+    session.skip_current().unwrap();
+    let next = session.steps.last().unwrap();
+    assert_eq!(next.exercise_id, "matching");
+    assert!(matches!(
+        next.readiness,
+        ExerciseReadiness::Queued | ExerciseReadiness::NeedsGeneration
+    ));
+    assert!(next.quiz_format.is_some());
+    session.validate().unwrap();
+}
+
+#[test]
+fn endless_advance_is_atomic_when_scheduler_rejects_configuration() {
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174780".to_owned(),
+        &["matching".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    saved.session_mode = SessionMode::Endless;
+    // A corrupt configuration cannot be used to generate the next step.
+    if let Some(ExerciseConfiguration::Quiz { formats, .. }) =
+        saved.exercise_configurations.get_mut("matching")
+    {
+        formats.clear();
+    }
+    let initial = saved.clone();
+    let id = saved.current_step().unwrap().id.clone();
+    assert!(saved.complete(&id, ExerciseOutcome::Completed).is_err());
+    assert_eq!(saved, initial);
+    assert!(saved.skip_current().is_err());
+    assert_eq!(saved, initial);
+    assert!(saved.replenish_endless_steps().is_err());
+    assert_eq!(saved, initial);
+}
+
+#[test]
+fn endless_replenishment_is_atomic_when_later_window_step_fails() {
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174781".to_owned(),
+        &["matching".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    saved.session_mode = SessionMode::Endless;
+    saved.exercise_configurations.clear();
+    let initial = saved.clone();
+    assert!(saved.replenish_endless_steps().is_err());
+    assert_eq!(saved, initial);
+}
+
+#[test]
+fn session_progress_rejects_revision_overflow_without_mutation() {
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174782".to_owned(),
+        &["matching".to_owned()].into_iter().collect(),
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    saved.revision = u64::MAX - 1;
+    let initial = saved.clone();
+    let id = saved.current_step().unwrap().id.clone();
+    assert_eq!(
+        saved.complete(&id, ExerciseOutcome::Completed),
+        Err(PracticeSessionError::InvalidStoredSession)
+    );
+    assert_eq!(saved, initial);
+    assert_eq!(
+        saved.skip_current(),
+        Err(PracticeSessionError::InvalidStoredSession)
+    );
+    assert_eq!(saved, initial);
+}
+
+#[test]
+fn mixed_endless_can_finish_before_every_selected_family_appears() {
+    let selected = ["matching".to_owned(), "word-mosaics".to_owned()]
+        .into_iter()
+        .collect();
+    let mut saved = PracticeSession::new(
+        "123e4567-e89b-72d3-a456-426614174783".to_owned(),
+        &selected,
+        1,
+        42,
+        BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+    )
+    .unwrap();
+    saved.session_mode = SessionMode::Endless;
+    saved.skip_current().unwrap();
+    saved.finish_endless().unwrap();
+    assert!(saved.is_completed());
+    assert_eq!(saved.steps.len(), 1);
+    assert_eq!(saved.exercise_configurations.len(), 1);
+    assert!(
+        saved
+            .exercise_configurations
+            .contains_key(&saved.steps[0].exercise_id)
+    );
+    saved.validate().unwrap();
+}
+
+#[test]
+fn endless_initial_window_is_valid_for_each_registered_exercise() {
+    for definition in zipeek_exercises::definition::DEFINITIONS {
+        let mut session = PracticeSession::new(
+            "123e4567-e89b-72d3-a456-426614174001".to_owned(),
+            &[definition.id.to_owned()].into_iter().collect(),
+            3,
+            42,
+            BTreeMap::from([("source".to_owned(), "hsk:3:1".to_owned())]),
+        )
+        .unwrap();
+        session.session_mode = SessionMode::Endless;
+        session.replenish_endless_steps().unwrap();
+        session.validate().unwrap();
+        assert_eq!(session.steps.len(), 3, "{}", definition.id);
+        assert!(
+            session
+                .steps
+                .iter()
+                .all(|step| step.exercise_id == definition.id)
+        );
+    }
+}
+
+#[test]
+fn construction_evidence_is_validated_without_inventing_mastery_dimension() {
+    use super::{AssessmentCapability, AssessmentEvidence, ExerciseAssessment, ExerciseVerdict};
+    let mut assessment = ExerciseAssessment::binary(true);
+    assessment.item_evidence.push(AssessmentEvidence {
+        capability: AssessmentCapability::CharacterSequenceConstruction,
+        target: "好".into(),
+        verdict: ExerciseVerdict::Correct,
+        attempts: 1,
+        mistakes: 0,
+        hints: 0,
+        assisted: false,
+    });
+    assert!(assessment.valid());
+    assessment.item_evidence[0].mistakes = 1;
+    assert!(!assessment.valid());
+    assessment.item_evidence[0].verdict = ExerciseVerdict::Incorrect;
+    assert!(assessment.valid());
+    assessment.item_evidence[0].target.clear();
+    assert!(!assessment.valid());
 }

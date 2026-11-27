@@ -240,10 +240,11 @@ impl AiClient {
     }
 }
 
-
 pub async fn discover_models(endpoint: &str, api_key: &str) -> Result<Vec<String>, AiClientError> {
     let mut url = chat_url(endpoint, api_key)?;
-    let prefix = url.path().strip_suffix("chat/completions")
+    let prefix = url
+        .path()
+        .strip_suffix("chat/completions")
         .ok_or_else(|| AiClientError("Invalid AI API base URL".into()))?
         .to_owned();
     url.set_path(&format!("{prefix}models"));
@@ -260,11 +261,15 @@ pub async fn discover_models(endpoint: &str, api_key: &str) -> Result<Vec<String
     }
     let response = request.send().await.map_err(request_error)?;
     if response.url() != &url {
-        return Err(AiClientError("Model discovery redirected to a different URL".into()));
+        return Err(AiClientError(
+            "Model discovery redirected to a different URL".into(),
+        ));
     }
     if !response.status().is_success() {
         let status = response.status();
-        return Err(AiClientError(format!("Model discovery failed: HTTP {status}")));
+        return Err(AiClientError(format!(
+            "Model discovery failed: HTTP {status}"
+        )));
     }
     let bytes = response.bytes().await.map_err(request_error)?;
     if bytes.len() > 1024 * 1024 {
@@ -276,9 +281,13 @@ pub async fn discover_models(endpoint: &str, api_key: &str) -> Result<Vec<String
 }
 
 fn models_from_payload(payload: &serde_json::Value) -> Result<Vec<String>, AiClientError> {
-    let list = payload.get("data").and_then(serde_json::Value::as_array)
+    let list = payload
+        .get("data")
+        .and_then(serde_json::Value::as_array)
         .ok_or_else(|| AiClientError("Model inventory lacks a data array".into()))?;
-    let models: Vec<String> = list.iter().take(100)
+    let models: Vec<String> = list
+        .iter()
+        .take(100)
         .filter_map(|item| item.get("id").and_then(serde_json::Value::as_str))
         .filter(|id| !id.trim().is_empty() && id.len() <= 256)
         .map(str::to_owned)
@@ -288,7 +297,6 @@ fn models_from_payload(payload: &serde_json::Value) -> Result<Vec<String>, AiCli
     }
     Ok(models)
 }
-
 
 #[cfg(test)]
 mod model_discovery_tests {
@@ -301,7 +309,8 @@ mod model_discovery_tests {
         assert!(models_from_payload(&json!({"data": []})).is_err());
         let models = models_from_payload(&json!({
             "data": [{"id": "qwen-instruct"}, {"id": ""}, {"wrong": "value"}]
-        })).expect("valid inventory");
+        }))
+        .expect("valid inventory");
         assert_eq!(models, vec!["qwen-instruct"]);
     }
 }

@@ -1,9 +1,15 @@
-use std::{cell::{Cell, RefCell}, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
-use zipeek_browser::local_speech::{self, live::{LiveConnection, LiveEvent}};
+use zipeek_browser::local_speech::{
+    self,
+    live::{LiveConnection, LiveEvent},
+};
 
 #[derive(Clone, PartialEq, Eq)]
 enum LivePhase {
@@ -44,10 +50,19 @@ pub(super) fn live_panel() -> Html {
         let generation = generation.clone();
         let mounted = mounted.clone();
         Callback::from(move |_: MouseEvent| {
-            if matches!(*phase, LivePhase::Connecting | LivePhase::Listening | LivePhase::Finishing) { return; }
+            if matches!(
+                *phase,
+                LivePhase::Connecting | LivePhase::Listening | LivePhase::Finishing
+            ) {
+                return;
+            }
             session.borrow_mut().take();
-            if !local_speech::allowed() || (!local_speech::enabled() && local_speech::select(true).is_err()) {
-                phase.set(LivePhase::Failed("Live speech requires the trusted localhost development app".into()));
+            if !local_speech::allowed()
+                || (!local_speech::enabled() && local_speech::select(true).is_err())
+            {
+                phase.set(LivePhase::Failed(
+                    "Live speech requires the trusted localhost development app".into(),
+                ));
                 return;
             }
             transcript.set(String::new());
@@ -68,9 +83,11 @@ pub(super) fn live_panel() -> Html {
                 let event_transcript = transcript.clone();
                 let event_waveform = waveform.clone();
                 let on_event: Rc<dyn Fn(LiveEvent)> = Rc::new(move |event| {
-                    if !*event_mounted.borrow() || *event_generation.borrow() != request { return; }
+                    if !*event_mounted.borrow() || *event_generation.borrow() != request {
+                        return;
+                    }
                     match event {
-                        LiveEvent::Connected => {},
+                        LiveEvent::Connected => {}
                         LiveEvent::Waveform(peaks) => event_waveform.set(peaks),
                         LiveEvent::Ready => event_phase.set(LivePhase::Listening),
                         LiveEvent::Partial(text) => event_transcript.set(text),
@@ -80,8 +97,12 @@ pub(super) fn live_panel() -> Html {
                         }
                         LiveEvent::Error(message) => event_phase.set(LivePhase::Failed(message)),
                         LiveEvent::Closed => {
-                            if matches!(*event_phase, LivePhase::Listening | LivePhase::Finishing | LivePhase::Connecting) {
-                                event_phase.set(LivePhase::Failed("Live session disconnected".into()));
+                            if matches!(
+                                *event_phase,
+                                LivePhase::Listening | LivePhase::Finishing | LivePhase::Connecting
+                            ) {
+                                event_phase
+                                    .set(LivePhase::Failed("Live session disconnected".into()));
                             }
                         }
                     }
@@ -90,12 +111,14 @@ pub(super) fn live_panel() -> Html {
                     Ok(connection) if *mounted.borrow() && *generation.borrow() == request => {
                         session.borrow_mut().replace(connection);
                     }
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(error) if *mounted.borrow() && *generation.borrow() == request => {
                         web_sys::console::error_1(&error);
-                        phase.set(LivePhase::Failed("Could not start microphone streaming".into()));
+                        phase.set(LivePhase::Failed(
+                            "Could not start microphone streaming".into(),
+                        ));
                     }
-                    Err(_) => {},
+                    Err(_) => {}
                 }
             });
         })
@@ -104,11 +127,15 @@ pub(super) fn live_panel() -> Html {
         let session = session.clone();
         let phase = phase.clone();
         Callback::from(move |_: MouseEvent| {
-            if *phase != LivePhase::Listening { return; }
+            if *phase != LivePhase::Listening {
+                return;
+            }
             let result = session.borrow().as_ref().map(LiveConnection::finish);
             match result {
                 Some(Ok(())) => phase.set(LivePhase::Finishing),
-                _ => phase.set(LivePhase::Failed("Could not finish the live recording".into())),
+                _ => phase.set(LivePhase::Failed(
+                    "Could not finish the live recording".into(),
+                )),
             }
         })
     };

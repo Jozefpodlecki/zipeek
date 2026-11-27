@@ -167,21 +167,7 @@ async fn answer(driver: &WebDriver, exercise: Exercise) -> HarnessResult<()> {
                 .await?;
         }
         Exercise::SentenceBuilder => {
-            let prompt = driver
-                .query_single("[data-practice-sentence-builder]")
-                .await?
-                .text()
-                .await?;
-            let order: &[&str] = if prompt.contains("I study Chinese every day") {
-                &["我", "每天", "学习", "中文"]
-            } else if prompt.contains("Tomorrow I will go to school") {
-                &["我", "明天", "去", "学校"]
-            } else if prompt.contains("We drink tea at home") {
-                &["我们", "在家", "喝茶"]
-            } else {
-                return Err(format!("Unknown Sentence Builder prompt: {prompt}").into());
-            };
-            add_tiles(driver, "[data-practice-sentence-builder]", order).await?;
+            zipeek_e2e::page_objects::sentence_builder::choose_correct(driver).await?;
             driver
                 .click("[data-sentence-builder-check]:not([disabled])")
                 .await?;

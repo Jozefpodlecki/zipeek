@@ -78,6 +78,26 @@ pub(super) fn add_tile(
     next
 }
 
+pub(super) fn place_tile(
+    selected: &[usize],
+    tile: usize,
+    available: usize,
+    capacity: usize,
+    slot: usize,
+) -> Vec<usize> {
+    if tile >= available || slot >= capacity {
+        return selected.to_vec();
+    }
+    let mut next = selected.to_vec();
+    if let Some(previous) = next.iter().position(|index| *index == tile) {
+        next.remove(previous);
+    } else if next.len() >= capacity {
+        return selected.to_vec();
+    }
+    next.insert(slot.min(next.len()), tile);
+    next
+}
+
 pub(super) fn remove_tile(selected: &[usize], slot: usize) -> Vec<usize> {
     let mut next = selected.to_vec();
     if slot < next.len() {

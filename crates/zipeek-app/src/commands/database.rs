@@ -50,3 +50,15 @@ pub async fn personal_data_reset(
     }
     Ok(state.reset_personal_data().await?)
 }
+
+#[command]
+pub fn personal_storage_info(
+    state: State<'_, NativeDatabase>,
+) -> Result<crate::database::PersonalStorageInfo, CommandError> {
+    Ok(state.personal_storage_info()?)
+}
+
+#[command]
+pub fn personal_storage_reveal(state: State<'_, NativeDatabase>) -> Result<(), CommandError> {
+    Ok(state.reveal_personal_storage()?)
+}

@@ -1,183 +1,34 @@
 use std::collections::HashMap;
+
+use super::registry;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 use yew_router::prelude::Link;
 
-use super::super::{
-    authored_exercises::{AuthoredExercise, AuthoredExerciseMode},
-    generated_session::GeneratedPractice,
-    listening_session::ResumableListeningChoice,
-    local_quiz_session::{LocalQuizMode, LocalQuizSession},
-    sentence_builder::SentenceBuilder,
-    sentence_transformation::SentenceTransformation,
-    spot_mistake::SpotMistake,
-    vocabulary_exercises::VocabularyExercisePage,
-    write_hanzi_exercise::WriteHanziExercise,
-};
-use crate::pages::learning::games::ResumableCharacterHunt;
 use crate::{
     route::Route,
-    services::practice_session_store::{ExerciseReadiness, PracticeSession, PracticeStep},
+    services::practice_session_store::{
+        ExerciseOutcome, ExerciseReadiness, PracticeSession, PracticeStep,
+    },
 };
 
 pub(super) fn render_exercise(
     saved: &PracticeSession,
     step: &PracticeStep,
     query: &HashMap<String, String>,
-    on_finish: Callback<()>,
-    on_scored: Callback<bool>,
+    on_outcome: Callback<ExerciseOutcome>,
     on_retry: Callback<MouseEvent>,
     on_hanzi_ready_change: Callback<bool>,
 ) -> Html {
     let query = query.clone();
     let exercise_content = match &step.readiness {
-        ExerciseReadiness::Ready => match step.exercise_id.as_str() {
-            "type-pinyin" | "character-builder" | "word-mosaics" => {
-                html! {
-                    <VocabularyExercisePage
-                        key={step.id.clone()}
-                        session_query={Some(query)}
-                        on_completed={Some(on_finish)}
-                        instance_seed={step.instance_seed}
-                        exercise_options={saved.exercise_configurations.get(&step.configuration_id).and_then(|configuration| configuration.vocabulary_options()).unwrap_or(crate::models::VocabularyExerciseOptions::WordMosaics)}
-                    />
-                }
-            }
-            "sentence-translation" | "image-vocabulary" => {
-                if let Some(raw) = &step.generated_instance {
-                    html! { <GeneratedPractice
-                        key={step.id.clone()}
-                        raw={raw.clone()}
-                        exercise_id={step.exercise_id.clone()}
-                        seed={step.instance_seed}
-                        on_completed={on_finish.clone()}
-                        on_scored={on_scored.clone()}
-                    /> }
-                } else {
-                    html! { <p role="alert">{"Generated exercise content is missing."}</p> }
-                }
-            }
-            "matching" | "multiple-choice" => {
-                let mode = if step.exercise_id == "matching" {
-                    LocalQuizMode::Matching
-                } else {
-                    LocalQuizMode::MultipleChoice
-                };
-                html! {
-                    <LocalQuizSession
-                        key={step.id.clone()}
-                        mode={mode}
-                        vocabulary={query.clone()}
-                        seed={step.instance_seed}
-                        quiz_format={step.quiz_format.clone().unwrap_or_default()}
-                        reverse_matching={step.reverse_matching}
-                        show_pinyin={saved.exercise_configurations.get(&step.configuration_id).and_then(|config| match config {
-                            crate::services::practice_session_store::ExerciseConfiguration::Quiz { show_pinyin, .. } => Some(*show_pinyin),
-                            _ => None,
-                        }).unwrap_or(true)}
-                        generated_words={step.generated_instance.as_ref().and_then(|raw|
-                            crate::services::practice_generated::GeneratedInstance::decode(raw, "matching").ok()
-                        ).and_then(|instance| match instance {
-                            crate::services::practice_generated::GeneratedInstance::Matching { words } => Some(words),
-                            _ => None,
-                        })}
-                        pair_count={saved.exercise_configurations.get(&step.configuration_id).and_then(|config| match config {
-                            crate::services::practice_session_store::ExerciseConfiguration::Quiz { pair_count, .. } => Some(*pair_count),
-                            _ => None,
-                        }).expect("validated Matching session must have pair count")}
-                        on_completed={on_finish.clone()}
-                    />
-                }
-            }
-            "character-hunt" => html! {
-                <ResumableCharacterHunt
-                    key={step.id.clone()}
-                    vocabulary={query.clone()}
-                    seed={step.instance_seed}
-                    on_completed={on_finish.clone()}
-                />
-            },
-            "listening-choice" => html! {
-                <ResumableListeningChoice
-                    key={step.id.clone()}
-                    options={saved.exercise_configurations.get(&step.configuration_id).and_then(|config| match config {
-                        crate::services::practice_session_store::ExerciseConfiguration::ListeningChoice(options) => Some(*options),
-                        _ => None,
-                    }).expect("validated Listening Choice configuration must exist")}
-                    vocabulary={query.clone()}
-                    seed={step.instance_seed}
-                    on_completed={on_finish.clone()}
-                />
-            },
-            "speaking" => html! {
-                <crate::pages::translation::speaking::SpeakingPractice
-                    key={step.id.clone()}
-                    seed={step.instance_seed}
-                    on_completed={Some(on_finish.clone())}
-                />
-            },
-            "write-hanzi" => html! {
-                <WriteHanziExercise
-                    key={step.id.clone()}
-                    options={saved.exercise_configurations.get(&step.configuration_id).and_then(|config| match config {
-                        crate::services::practice_session_store::ExerciseConfiguration::WriteHanzi(options) => Some(*options),
-                        _ => None,
-                    }).unwrap_or_default()}
-                    vocabulary={query.clone()}
-                    seed={step.instance_seed}
-                    on_completed={on_finish.clone()}
-                    on_ready_change={on_hanzi_ready_change}
-                />
-            },
-            "spot-mistake" => html! {
-                <SpotMistake
-                    key={step.id.clone()}
-                    seed={step.instance_seed}
-                    on_completed={on_finish.clone()}
-                />
-            },
-            "sentence-transformation" => html! {
-                <SentenceTransformation
-                    key={step.id.clone()}
-                    seed={step.instance_seed}
-                    options={saved.exercise_configurations.get(&step.configuration_id).and_then(|config| match config {
-                        crate::services::practice_session_store::ExerciseConfiguration::SentenceTransformation(options) => Some(*options),
-                        _ => None,
-                    }).expect("validated Sentence Transformation configuration must exist")}
-                    on_completed={on_finish.clone()}
-                />
-            },
-            "sentence-builder" => html! {
-                <SentenceBuilder
-                    key={step.id.clone()}
-                    seed={step.instance_seed}
-                    on_completed={on_finish.clone()}
-                />
-            },
-            "fill-blank" | "audio-dictation" => {
-                let mode = if step.exercise_id == "fill-blank" {
-                    AuthoredExerciseMode::FillBlank
-                } else {
-                    AuthoredExerciseMode::AudioDictation
-                };
-                html! {
-                    <AuthoredExercise
-                        key={step.id.clone()}
-                        mode={mode}
-                        seed={step.instance_seed}
-                        on_completed={on_finish}
-                    />
-                }
-            }
-            _ => html! {
-                <p
-                    role="status"
-                    class="text-sm text-muted"
-                >
-                    {"This exercise cannot run in the resumable session yet. You may skip it without earning a score, or return to setup to choose a supported exercise."}
-                </p>
-            },
-        },
+        ExerciseReadiness::Ready => registry::render_registered(&registry::ExerciseRenderContext {
+            saved,
+            step,
+            query: &query,
+            on_outcome: &on_outcome,
+            on_hanzi_ready_change: &on_hanzi_ready_change,
+        }),
         ExerciseReadiness::Unavailable(reason) => html! {
             <p
                 role="status"

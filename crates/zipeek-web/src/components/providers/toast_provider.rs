@@ -50,6 +50,24 @@ pub(crate) fn toast_provider(props: &ToastProviderProps) -> Html {
         })
     };
     {
+        let publish = publish.clone();
+        use_effect_with((), move |_| {
+            let listeners = web_sys::window().map(|window| {
+                let fallback = publish.clone();
+                let unavailable = publish.clone();
+                (
+                    gloo::events::EventListener::new(&window, "zipeek:speech-browser-fallback", move |_| {
+                        fallback.emit(ToastMessage { text: "Native pronunciation unavailable. Using a Mandarin browser voice.".to_owned(), kind: ToastKind::Success });
+                    }),
+                    gloo::events::EventListener::new(&window, "zipeek:speech-unavailable", move |_| {
+                        unavailable.emit(ToastMessage { text: "Mandarin audio is unavailable. No suitable browser voice was found.".to_owned(), kind: ToastKind::Error });
+                    }),
+                )
+            });
+            move || drop(listeners)
+        });
+    }
+    {
         let toast = toast.clone();
         use_effect_with((*toast).clone(), move |current| {
             let timer = current.as_ref().map(|(sequence, _)| {

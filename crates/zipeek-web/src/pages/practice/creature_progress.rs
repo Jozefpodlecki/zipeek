@@ -2,7 +2,10 @@ use animato::{Easing, Tween, Update};
 use gloo::timers::callback::Interval;
 use yew::prelude::*;
 
-use crate::appearance::{Appearance, Preset};
+use crate::{
+    appearance::{Appearance, Preset},
+    hooks::use_app_environment,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum CreatureOrientation {
@@ -72,12 +75,16 @@ fn completed_percent(completed: usize, total: usize, endless: bool) -> f32 {
 
 #[function_component(CreatureProgress)]
 pub(super) fn creature_progress(props: &CreatureProgressProps) -> Html {
+    let environment = use_app_environment();
     let appearance = use_context::<Appearance>()
         .expect("Appearance provider missing from Practice creature progress");
     let (creature, artwork) = creature_for(appearance.preset);
     let orientation = creature_orientation(appearance.preset);
-    let hosted = web_sys::window()
-        .and_then(|window| window.location().pathname().ok())
+    let hosted = environment
+        .window
+        .location()
+        .pathname()
+        .ok()
         .is_some_and(|path| path == "/zipeek" || path.starts_with("/zipeek/"));
     let image_url = creature_asset_path(appearance.preset, hosted);
     let target = completed_percent(props.completed, props.total, props.endless);
@@ -99,7 +106,7 @@ pub(super) fn creature_progress(props: &CreatureProgressProps) -> Html {
                 );
             }
             let mut tween = Tween::new(initial, target)
-                .duration(1.35)
+                .duration(0.35)
                 .easing(Easing::EaseOutCubic)
                 .build();
             let interval = Interval::new(16, move || {
@@ -132,16 +139,16 @@ pub(super) fn creature_progress(props: &CreatureProgressProps) -> Html {
     let target_style = format!("--creature-target: {:.3}%;", illumination_position(target));
     let rail_classes = match orientation {
         CreatureOrientation::Vertical => {
-            "relative flex w-14 shrink-0 self-stretch items-center justify-center sm:w-[min(25dvh,12rem)] lg:w-[min(28dvh,15rem)]"
+            "relative flex h-32 w-full shrink-0 items-center justify-center"
         }
         CreatureOrientation::Horizontal => {
-            "relative order-2 flex w-full shrink-0 items-center justify-center pb-2"
+            "relative flex h-28 w-full shrink-0 items-center justify-center"
         }
     };
     let frame_classes = match orientation {
-        CreatureOrientation::Vertical => "practice-creature-frame relative aspect-[1/3] w-full",
+        CreatureOrientation::Vertical => "practice-creature-frame relative h-full aspect-[1/3]",
         CreatureOrientation::Horizontal => {
-            "practice-creature-frame relative aspect-[3/1] w-full max-w-[28rem] shrink-0"
+            "practice-creature-frame relative h-full aspect-[3/1] max-w-[28rem] shrink-0"
         }
     };
     html! {
@@ -231,7 +238,7 @@ mod tests {
     #[test]
     fn animato_tween_interpolates_without_jumping() {
         let mut tween = Tween::new(0.0_f32, 40.0_f32)
-            .duration(1.35)
+            .duration(0.35)
             .easing(Easing::EaseOutCubic)
             .build();
         tween.update(0.4);

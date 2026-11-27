@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 #![allow(private_interfaces)]
+#![allow(unused_imports)]
 
 pub mod exercise_types;
 pub mod image_scene;

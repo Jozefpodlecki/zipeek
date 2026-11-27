@@ -2,8 +2,8 @@ use std::{cell::Cell, rc::Rc};
 
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use zipeek_browser::local_speech;
 use yew_router::prelude::Navigator;
+use zipeek_browser::local_speech;
 use zipeek_exercises::practice_draft::PracticeDraft;
 
 use crate::{

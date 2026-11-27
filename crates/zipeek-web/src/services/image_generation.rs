@@ -50,3 +50,69 @@ pub(crate) fn reset_api_url(storage: &Storage) -> Result<(), String> {
 
 mod client;
 pub(crate) use client::generate;
+
+mod tauri_image;
+#[derive(serde::Deserialize)]
+struct ImageHealth {
+    status: String,
+    backend: String,
+}
+
+pub(crate) fn describe_backend(backend: &str) -> Result<String, String> {
+    match backend {
+        "sdxl" => Ok("SDXL ready".to_owned()),
+        "placeholder" => Err("Preview-only backend: no AI images are generated. Start the SDXL service with its model files.".into()),
+        other => Err(format!("Unsupported image backend: {other}")),
+    }
+}
+
+pub(crate) async fn require_image_backend(api_url: &str) -> Result<String, String> {
+    let backend = if tauri_image::desktop_mode()? {
+        tauri_image::health().await?
+    } else {
+        let base = validate_api_url(api_url).map_err(str::to_owned)?;
+        let response = gloo::net::http::Request::get(&format!("{base}/health"))
+            .send()
+            .await
+            .map_err(|error| error.to_string())?;
+        if !response.ok() {
+            return Err(format!(
+                "Image service health check returned HTTP {}",
+                response.status()
+            ));
+        }
+        let health: ImageHealth = response
+            .json()
+            .await
+            .map_err(|error| format!("Invalid image service health response: {error}"))?;
+        if health.status != "ok" {
+            return Err("Image service is not ready".into());
+        }
+        health.backend
+    };
+    describe_backend(&backend)
+}
+
+pub(crate) async fn check_health(api_url: &str) -> Result<String, String> {
+    require_image_backend(api_url).await
+}
+
+#[cfg(test)]
+mod backend_tests {
+    use super::describe_backend;
+
+    #[test]
+    fn rejects_preview_or_unknown_backend_as_generation_ready() {
+        assert_eq!(describe_backend("sdxl").unwrap(), "SDXL ready");
+        assert!(
+            describe_backend("placeholder")
+                .unwrap_err()
+                .contains("Preview-only")
+        );
+        assert!(describe_backend("unknown").is_err());
+    }
+}
+
+pub(crate) fn release_preview(url: &str) {
+    tauri_image::release_blob_url(url);
+}

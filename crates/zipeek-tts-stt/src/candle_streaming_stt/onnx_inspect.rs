@@ -50,13 +50,20 @@ struct Wire<'a> {
 
 impl<'a> Wire<'a> {
     fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, offset: 0, fields: 0 }
+        Self {
+            bytes,
+            offset: 0,
+            fields: 0,
+        }
     }
 
     fn varint(&mut self) -> Result<u64, String> {
         let mut value = 0u64;
         for index in 0..10 {
-            let byte = *self.bytes.get(self.offset).ok_or("truncated protobuf varint")?;
+            let byte = *self
+                .bytes
+                .get(self.offset)
+                .ok_or("truncated protobuf varint")?;
             self.offset += 1;
             if index == 9 && byte > 1 {
                 return Err("protobuf varint overflow".into());
@@ -86,15 +93,27 @@ impl<'a> Wire<'a> {
             0 => Field::Integer(self.varint()?),
             1 | 5 => {
                 let size = if tag & 7 == 1 { 8 } else { 4 };
-                let end = self.offset.checked_add(size).ok_or("protobuf offset overflow")?;
-                if end > self.bytes.len() { return Err("truncated fixed-width protobuf field".into()); }
+                let end = self
+                    .offset
+                    .checked_add(size)
+                    .ok_or("protobuf offset overflow")?;
+                if end > self.bytes.len() {
+                    return Err("truncated fixed-width protobuf field".into());
+                }
                 self.offset = end;
                 Field::Other
             }
             2 => {
-                let length = usize::try_from(self.varint()?).map_err(|_| "protobuf length overflow")?;
-                let end = self.offset.checked_add(length).ok_or("protobuf offset overflow")?;
-                let bytes = self.bytes.get(self.offset..end).ok_or("truncated protobuf field")?;
+                let length =
+                    usize::try_from(self.varint()?).map_err(|_| "protobuf length overflow")?;
+                let end = self
+                    .offset
+                    .checked_add(length)
+                    .ok_or("protobuf offset overflow")?;
+                let bytes = self
+                    .bytes
+                    .get(self.offset..end)
+                    .ok_or("truncated protobuf field")?;
                 self.offset = end;
                 Field::Bytes(bytes)
             }
@@ -111,11 +130,19 @@ enum Field<'a> {
 }
 
 fn utf8(value: &[u8]) -> Result<String, String> {
-    std::str::from_utf8(value).map(str::to_owned).map_err(|_| "invalid ONNX UTF-8".into())
+    std::str::from_utf8(value)
+        .map(str::to_owned)
+        .map_err(|_| "invalid ONNX UTF-8".into())
 }
 
-fn parse_message<T: Default>(bytes: &[u8], depth: usize, mut visit: impl FnMut(&mut T, u32, Field<'_>) -> Result<(), String>) -> Result<T, String> {
-    if depth > MAX_DEPTH { return Err("ONNX metadata nesting limit exceeded".into()); }
+fn parse_message<T: Default>(
+    bytes: &[u8],
+    depth: usize,
+    mut visit: impl FnMut(&mut T, u32, Field<'_>) -> Result<(), String>,
+) -> Result<T, String> {
+    if depth > MAX_DEPTH {
+        return Err("ONNX metadata nesting limit exceeded".into());
+    }
     let mut result = T::default();
     let mut wire = Wire::new(bytes);
     while let Some((number, value)) = wire.next()? {
@@ -136,7 +163,9 @@ fn tensor_dimension(bytes: &[u8]) -> Result<Dimension, String> {
 }
 
 impl Default for Dimension {
-    fn default() -> Self { Self::Unknown }
+    fn default() -> Self {
+        Self::Unknown
+    }
 }
 
 fn tensor_shape(bytes: &[u8]) -> Result<Vec<Dimension>, String> {
@@ -178,19 +207,30 @@ fn value_info(bytes: &[u8]) -> Result<TensorPort, String> {
 
 impl Default for TensorPort {
     fn default() -> Self {
-        Self { name: String::new(), element_type: None, dimensions: Vec::new() }
+        Self {
+            name: String::new(),
+            element_type: None,
+            dimensions: Vec::new(),
+        }
     }
 }
 
 fn initializer(bytes: &[u8]) -> Result<TensorWeight, String> {
-    let mut output = TensorWeight { name: String::new(), data_type: 0, dimensions: Vec::new(), external: false };
+    let mut output = TensorWeight {
+        name: String::new(),
+        data_type: 0,
+        dimensions: Vec::new(),
+        external: false,
+    };
     let mut wire = Wire::new(bytes);
     while let Some((number, value)) = wire.next()? {
         match (number, value) {
             (1, Field::Integer(dimension)) => output.dimensions.push(dimension),
             (1, Field::Bytes(packed)) => {
                 let mut values = Wire::new(packed);
-                while values.offset < packed.len() { output.dimensions.push(values.varint()?); }
+                while values.offset < packed.len() {
+                    output.dimensions.push(values.varint()?);
+                }
             }
             (2, Field::Integer(dtype)) => output.data_type = dtype,
             (8, Field::Bytes(name)) => output.name = utf8(name)?,
@@ -198,14 +238,18 @@ fn initializer(bytes: &[u8]) -> Result<TensorWeight, String> {
             _ => {}
         }
     }
-    if output.name.is_empty() { return Err("ONNX initializer without name".into()); }
+    if output.name.is_empty() {
+        return Err("ONNX initializer without name".into());
+    }
     Ok(output)
 }
 
 fn node_op(bytes: &[u8]) -> Result<String, String> {
     let mut wire = Wire::new(bytes);
     while let Some((number, field)) = wire.next()? {
-        if let (4, Field::Bytes(op)) = (number, field) { return utf8(op); }
+        if let (4, Field::Bytes(op)) = (number, field) {
+            return utf8(op);
+        }
     }
     Err("ONNX node without op_type".into())
 }
@@ -232,14 +276,19 @@ pub fn inspect_bytes(bytes: &[u8]) -> Result<OnnxModelReport, String> {
     if bytes.is_empty() || bytes.len() > MAX_MODEL_BYTES {
         return Err("ONNX file is empty or exceeds inspection size limit".into());
     }
-    let mut result = OnnxModelReport { ir_version: 0, graph: OnnxGraphReport::default() };
+    let mut result = OnnxModelReport {
+        ir_version: 0,
+        graph: OnnxGraphReport::default(),
+    };
     let mut found_graph = false;
     let mut wire = Wire::new(bytes);
     while let Some((number, value)) = wire.next()? {
         match (number, value) {
             (1, Field::Integer(ir_version)) => result.ir_version = ir_version,
             (7, Field::Bytes(contents)) => {
-                if found_graph { return Err("multiple ONNX graphs".into()); }
+                if found_graph {
+                    return Err("multiple ONNX graphs".into());
+                }
                 result.graph = graph(contents)?;
                 found_graph = true;
             }
@@ -267,7 +316,10 @@ mod tests {
 
     fn varint(mut value: u64) -> Vec<u8> {
         let mut bytes = Vec::new();
-        while value >= 128 { bytes.push((value as u8 & 0x7f) | 0x80); value >>= 7; }
+        while value >= 128 {
+            bytes.push((value as u8 & 0x7f) | 0x80);
+            value >>= 7;
+        }
         bytes.push(value as u8);
         bytes
     }
@@ -324,7 +376,10 @@ mod tests {
     #[test]
     fn supports_symbolic_dimensions() {
         let dimension = field(2, b"num_frames");
-        assert_eq!(tensor_dimension(&dimension).unwrap(), Dimension::Symbol("num_frames".into()));
+        assert_eq!(
+            tensor_dimension(&dimension).unwrap(),
+            Dimension::Symbol("num_frames".into())
+        );
     }
 }
 
@@ -391,12 +446,23 @@ fn embedded_weight(bytes: &[u8]) -> Result<EmbeddedWeight<'_>, String> {
     })?;
     let data = raw_data.ok_or_else(|| format!("initializer {name} does not contain raw_data"))?;
     if data.len() != expected {
-        return Err(format!("initializer {name} byte length mismatch: expected {expected}, got {}", data.len()));
+        return Err(format!(
+            "initializer {name} byte length mismatch: expected {expected}, got {}",
+            data.len()
+        ));
     }
-    Ok(EmbeddedWeight { name, dimensions: dims, dtype, data })
+    Ok(EmbeddedWeight {
+        name,
+        dimensions: dims,
+        dtype,
+        data,
+    })
 }
 
-pub fn export_embedded_initializers(model_path: &Path, destination: &Path) -> Result<WeightExportReport, String> {
+pub fn export_embedded_initializers(
+    model_path: &Path,
+    destination: &Path,
+) -> Result<WeightExportReport, String> {
     use std::io::{BufWriter, Write};
 
     let metadata = fs::metadata(model_path).map_err(|error| error.to_string())?;
@@ -430,32 +496,47 @@ pub fn export_embedded_initializers(model_path: &Path, destination: &Path) -> Re
     let mut header = serde_json::Map::new();
     let mut offset = 0usize;
     for (name, weight) in &weights {
-        let end = offset.checked_add(weight.data.len()).ok_or("tensor offsets overflow")?;
-        header.insert(name.clone(), serde_json::json!({
-            "dtype": weight.dtype,
-            "shape": weight.dimensions,
-            "data_offsets": [offset, end]
-        }));
+        let end = offset
+            .checked_add(weight.data.len())
+            .ok_or("tensor offsets overflow")?;
+        header.insert(
+            name.clone(),
+            serde_json::json!({
+                "dtype": weight.dtype,
+                "shape": weight.dimensions,
+                "data_offsets": [offset, end]
+            }),
+        );
         offset = end;
     }
     let mut header_bytes = serde_json::to_vec(&header).map_err(|error| error.to_string())?;
     while header_bytes.len() % 8 != 0 {
         header_bytes.push(b' ');
     }
-    let header_length = u64::try_from(header_bytes.len()).map_err(|_| "safetensors header too large")?;
+    let header_length =
+        u64::try_from(header_bytes.len()).map_err(|_| "safetensors header too large")?;
     let target = fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(destination)
         .map_err(|error| format!("cannot create new safetensors output: {error}"))?;
     let mut output = BufWriter::new(target);
-    output.write_all(&header_length.to_le_bytes()).map_err(|error| error.to_string())?;
-    output.write_all(&header_bytes).map_err(|error| error.to_string())?;
+    output
+        .write_all(&header_length.to_le_bytes())
+        .map_err(|error| error.to_string())?;
+    output
+        .write_all(&header_bytes)
+        .map_err(|error| error.to_string())?;
     for weight in weights.values() {
-        output.write_all(weight.data).map_err(|error| error.to_string())?;
+        output
+            .write_all(weight.data)
+            .map_err(|error| error.to_string())?;
     }
     output.flush().map_err(|error| error.to_string())?;
-    Ok(WeightExportReport { tensor_count: weights.len(), total_bytes: offset })
+    Ok(WeightExportReport {
+        tensor_count: weights.len(),
+        total_bytes: offset,
+    })
 }
 
 #[cfg(test)]
@@ -520,5 +601,4 @@ mod export_tests {
         assert!(export_embedded_initializers(&source, &target).is_err());
         std::fs::remove_dir_all(directory).unwrap();
     }
-
 }

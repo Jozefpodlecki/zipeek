@@ -57,15 +57,16 @@ impl AudioResources {
     }
 
     pub(super) fn replay(&self, id: Option<RecordingId>) -> Option<Rc<Vec<u8>>> {
-        self.recording.as_ref().and_then(|recording| {
-            (id == Some(recording.id)).then(|| recording.wav.clone())
-        })
+        self.recording
+            .as_ref()
+            .and_then(|recording| (id == Some(recording.id)).then(|| recording.wav.clone()))
     }
 
     pub(super) fn waveform(&self, id: Option<RecordingId>) -> Vec<f32> {
-        self.recording.as_ref().and_then(|recording| {
-            (id == Some(recording.id)).then(|| recording.waveform.clone())
-        }).unwrap_or_default()
+        self.recording
+            .as_ref()
+            .and_then(|recording| (id == Some(recording.id)).then(|| recording.waveform.clone()))
+            .unwrap_or_default()
     }
 }
 
@@ -80,7 +81,10 @@ mod tests {
         assert!(resources.replay(Some(id)).is_none());
         resources.store(id, vec![1, 2, 3]);
         assert!(resources.replay(Some(RecordingId(2))).is_none());
-        assert_eq!(resources.replay(Some(id)).as_deref().map(Vec::as_slice), Some([1, 2, 3].as_slice()));
+        assert_eq!(
+            resources.replay(Some(id)).as_deref().map(Vec::as_slice),
+            Some([1, 2, 3].as_slice())
+        );
         resources.clear();
         assert!(resources.replay(Some(id)).is_none());
     }

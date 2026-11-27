@@ -88,7 +88,7 @@ pub(super) fn browse_word_card(props: &BrowseWordCardProps) -> Html {
         html! {
             <span data-choose-word-set="" title="Choose a Word Set to save this word">
             <Link<Route>
-                to={Route::WordSets}
+                to={Route::Profile}
                 classes="grid size-10 shrink-0 place-items-center rounded-lg border border-line text-muted hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
             >
                 <span class="sr-only">{"Choose a Word Set to save this word"}</span>

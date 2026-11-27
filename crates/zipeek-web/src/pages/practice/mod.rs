@@ -1,7 +1,9 @@
 pub mod authored_exercises;
 mod creature_progress;
+pub(crate) mod feedback;
 mod generated_session;
 pub mod image_vocabulary;
+pub(crate) mod instruction;
 pub mod listening_choice;
 mod listening_session;
 mod local_quiz_session;
@@ -11,5 +13,6 @@ pub mod sentence_transformation;
 mod session_unavailable;
 pub mod setup;
 pub mod spot_mistake;
+pub(crate) mod surface;
 pub mod vocabulary_exercises;
 pub mod write_hanzi_exercise;

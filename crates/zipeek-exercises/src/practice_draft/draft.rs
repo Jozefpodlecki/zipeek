@@ -40,12 +40,7 @@ impl PracticeDraft {
             && self
                 .exercise_ids
                 .iter()
-                .all(|id| crate::definition::supports_endless_session_host(id))
-            && (self.exercise_ids.len() == 1
-                || self
-                    .exercise_ids
-                    .iter()
-                    .all(|id| matches!(id.as_str(), "matching" | "multiple-choice")))
+                .all(|id| crate::definition::supports_resumable_session_host(id))
     }
 
     pub fn supports_local_vocabulary_session(&self) -> bool {
@@ -54,13 +49,15 @@ impl PracticeDraft {
                 .exercise_ids
                 .iter()
                 .all(|id| crate::definition::supports_resumable_session_host(id))
-            && (self.translation_session_only() || self.length.resumable_rounds().is_some())
+            && (self.translation_session_only()
+                || matches!(self.length, SessionLength::Endless)
+                || self.length.resumable_rounds().is_some())
     }
 
     pub fn translation_session_only(&self) -> bool {
         self.exercise_ids.len() == 1
             && self.has_exercise("sentence-translation")
-            && matches!(self.translation_count, 0 | 5 | 10)
+            && matches!(self.translation_count, 0 | 5 | 10 | 20)
     }
 
     pub fn playlist_exercises(&self) -> Vec<&'static str> {
@@ -141,7 +138,7 @@ impl PracticeDraft {
         if self.has_exercise("multiple-choice") && self.multiple_choice_formats.is_empty() {
             return Err(DraftError::MissingExerciseFormat("multiple-choice".into()));
         }
-        if !matches!(self.translation_count, 0 | 5 | 10) {
+        if !matches!(self.translation_count, 0 | 5 | 10 | 20) {
             return Err(DraftError::InvalidTranslationCount(self.translation_count));
         }
         Ok(())
@@ -153,6 +150,9 @@ impl PracticeDraft {
             ("matching", "matching"),
             ("multiple-choice", "multiple-choice"),
             ("sentence-translation", "translation"),
+            ("story-builder", "story-builder"),
+            ("reading-comprehension", "reading-comprehension"),
+            ("conversation-practice", "conversation-practice"),
             ("speaking", "speaking"),
             ("listening-choice", "listening"),
             ("image-vocabulary", "image"),

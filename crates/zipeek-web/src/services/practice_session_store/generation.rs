@@ -20,19 +20,20 @@ impl PracticeSession {
     }
 
     pub fn queue_generation(&mut self, lookahead: usize) {
-        let mut outstanding = 0;
+        let mut prepared_or_queued = 0;
         for step in self.steps.iter_mut().skip(self.current) {
-            if matches!(
-                &step.readiness,
-                ExerciseReadiness::Queued | ExerciseReadiness::Generating
-            ) {
-                outstanding += 1;
-            } else if outstanding < lookahead
-                && step.outcome.is_none()
-                && matches!(&step.readiness, ExerciseReadiness::NeedsGeneration)
-            {
-                step.readiness = ExerciseReadiness::Queued;
-                outstanding += 1;
+            if step.outcome.is_some() {
+                continue;
+            }
+            match &step.readiness {
+                ExerciseReadiness::Ready
+                | ExerciseReadiness::Queued
+                | ExerciseReadiness::Generating => prepared_or_queued += 1,
+                ExerciseReadiness::NeedsGeneration if prepared_or_queued < lookahead => {
+                    step.readiness = ExerciseReadiness::Queued;
+                    prepared_or_queued += 1;
+                }
+                _ => {}
             }
         }
     }

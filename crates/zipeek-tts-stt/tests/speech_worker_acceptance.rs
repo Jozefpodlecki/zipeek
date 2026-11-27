@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use zipeek_tts_stt::{
     audio_codec::{InputFormat, resample_mono},
-    speech::{Speech, MAX_AUDIO_SAMPLES, decode_pcm16_wav},
+    speech::{MAX_AUDIO_SAMPLES, Speech, decode_pcm16_wav},
 };
 
 fn normalize_reference_wav_for_stt(wav: &[u8]) -> Vec<u8> {
@@ -17,10 +17,19 @@ fn normalize_reference_wav_for_stt(wav: &[u8]) -> Vec<u8> {
     assert_eq!(&wav[36..40], b"data");
     let source_rate = u32::from_le_bytes(wav[24..28].try_into().unwrap());
     assert!((8_000..=96_000).contains(&source_rate));
-    assert_eq!(u32::from_le_bytes(wav[28..32].try_into().unwrap()), source_rate * 2);
+    assert_eq!(
+        u32::from_le_bytes(wav[28..32].try_into().unwrap()),
+        source_rate * 2
+    );
     assert_eq!(u16::from_le_bytes(wav[32..34].try_into().unwrap()), 2);
-    assert_eq!(u32::from_le_bytes(wav[4..8].try_into().unwrap()) as usize, wav.len() - 8);
-    assert_eq!(u32::from_le_bytes(wav[40..44].try_into().unwrap()) as usize, wav.len() - 44);
+    assert_eq!(
+        u32::from_le_bytes(wav[4..8].try_into().unwrap()) as usize,
+        wav.len() - 8
+    );
+    assert_eq!(
+        u32::from_le_bytes(wav[40..44].try_into().unwrap()) as usize,
+        wav.len() - 44
+    );
     assert_eq!((wav.len() - 44) % 2, 0);
 
     let source: Vec<f32> = wav[44..]
@@ -50,7 +59,11 @@ fn normalize_reference_wav_for_stt(wav: &[u8]) -> Vec<u8> {
     for sample in pcm {
         output.extend_from_slice(&sample.to_le_bytes());
     }
-    assert!(!decode_pcm16_wav(&output).expect("valid 16 kHz reference WAV").is_empty());
+    assert!(
+        !decode_pcm16_wav(&output)
+            .expect("valid 16 kHz reference WAV")
+            .is_empty()
+    );
     output
 }
 
@@ -71,7 +84,11 @@ fn reference_audio_is_resampled_to_the_stt_wav_contract() {
     wav.extend_from_slice(b"data");
     wav.extend_from_slice(&(samples * 2).to_le_bytes());
     for index in 0..samples {
-        let value = if index % 24 < 12 { 8_000_i16 } else { -8_000_i16 };
+        let value = if index % 24 < 12 {
+            8_000_i16
+        } else {
+            -8_000_i16
+        };
         wav.extend_from_slice(&value.to_le_bytes());
     }
     assert!(decode_pcm16_wav(&wav).is_err());
@@ -98,24 +115,39 @@ fn reference_greeting_accepts_honorific_variant_without_accepting_unrelated_text
 async fn twenty_warm_tts_requests_reuse_worker_and_produce_audio() {
     let speech = Speech::new().expect("speech runtime configuration");
     assert!(speech.qwen_tts_checkpoint_present());
-    speech.initialize_neural_engines().await.expect("model warm-up");
+    speech
+        .initialize_neural_engines()
+        .await
+        .expect("model warm-up");
     assert_eq!(speech.neural_tts_status(), "ready");
     let mut durations = Vec::with_capacity(20);
     for index in 0..20 {
         let start = Instant::now();
-        let wav = speech.synthesize("你好世界").await.expect("warm speech request");
+        let wav = speech
+            .synthesize("你好世界")
+            .await
+            .expect("warm speech request");
         let elapsed = start.elapsed();
         assert_eq!(&wav[..4], b"RIFF");
         assert_eq!(&wav[8..12], b"WAVE");
-        assert!(wav[44..].chunks_exact(2).any(|pair| {
-            i16::from_le_bytes([pair[0], pair[1]]).unsigned_abs() > 200
-        }));
+        assert!(
+            wav[44..]
+                .chunks_exact(2)
+                .any(|pair| { i16::from_le_bytes([pair[0], pair[1]]).unsigned_abs() > 200 })
+        );
         assert_eq!(speech.neural_tts_status(), "ready");
         durations.push(elapsed.as_secs_f64());
-        eprintln!("warm TTS request {}: {:.3}s", index + 1, elapsed.as_secs_f64());
+        eprintln!(
+            "warm TTS request {}: {:.3}s",
+            index + 1,
+            elapsed.as_secs_f64()
+        );
     }
     durations.sort_by(f64::total_cmp);
-    eprintln!("warm TTS latency p50 {:.3}s, p95 {:.3}s", durations[9], durations[18]);
+    eprintln!(
+        "warm TTS latency p50 {:.3}s, p95 {:.3}s",
+        durations[9], durations[18]
+    );
 }
 
 #[tokio::test]
@@ -124,9 +156,15 @@ async fn twenty_warm_stt_requests_preserve_reference_transcription() {
     let speech = Speech::new().expect("speech runtime configuration");
     assert!(speech.qwen_tts_checkpoint_present());
     assert!(speech.candle_stt_checkpoint_present());
-    speech.initialize_neural_engines().await.expect("model warm-up");
+    speech
+        .initialize_neural_engines()
+        .await
+        .expect("model warm-up");
     let wav = normalize_reference_wav_for_stt(
-        &speech.synthesize("你好世界").await.expect("reference speech"),
+        &speech
+            .synthesize("你好世界")
+            .await
+            .expect("reference speech"),
     );
     let mut durations = Vec::with_capacity(20);
     let mut first_transcript: Option<String> = None;
@@ -137,28 +175,47 @@ async fn twenty_warm_stt_requests_preserve_reference_transcription() {
             .await
             .expect("recognize reference speech");
         let elapsed = start.elapsed();
-        assert!(transcript_matches_reference_greeting(&transcript), "{transcript}");
+        assert!(
+            transcript_matches_reference_greeting(&transcript),
+            "{transcript}"
+        );
         if let Some(first) = &first_transcript {
-            assert_eq!(&transcript, first, "STT changed across identical reference requests");
+            assert_eq!(
+                &transcript, first,
+                "STT changed across identical reference requests"
+            );
         } else {
             eprintln!("STT reference transcript: {transcript}");
             first_transcript = Some(transcript.clone());
         }
         assert_eq!(speech.neural_stt_status(), "ready");
         durations.push(elapsed.as_secs_f64());
-        eprintln!("warm STT request {}: {:.3}s", index + 1, elapsed.as_secs_f64());
+        eprintln!(
+            "warm STT request {}: {:.3}s",
+            index + 1,
+            elapsed.as_secs_f64()
+        );
     }
     durations.sort_by(f64::total_cmp);
-    eprintln!("warm STT latency p50 {:.3}s, p95 {:.3}s", durations[9], durations[18]);
+    eprintln!(
+        "warm STT latency p50 {:.3}s, p95 {:.3}s",
+        durations[9], durations[18]
+    );
 }
 
 #[tokio::test]
 #[ignore = "requires both neural checkpoints and CUDA; exercises concurrent independent workers"]
 async fn concurrent_tts_and_stt_complete_without_backend_contention() {
     let speech = Speech::new().expect("speech runtime configuration");
-    speech.initialize_neural_engines().await.expect("model warm-up");
+    speech
+        .initialize_neural_engines()
+        .await
+        .expect("model warm-up");
     let reference = normalize_reference_wav_for_stt(
-        &speech.synthesize("你好世界").await.expect("reference speech"),
+        &speech
+            .synthesize("你好世界")
+            .await
+            .expect("reference speech"),
     );
     let (tts, stt) = tokio::join!(
         speech.synthesize("今天天气晴朗。"),
@@ -167,7 +224,10 @@ async fn concurrent_tts_and_stt_complete_without_backend_contention() {
     let wav = tts.expect("concurrent TTS");
     let transcript = stt.expect("concurrent STT");
     assert!(wav.len() > 44);
-    assert!(transcript_matches_reference_greeting(&transcript), "{transcript}");
+    assert!(
+        transcript_matches_reference_greeting(&transcript),
+        "{transcript}"
+    );
     assert_eq!(speech.neural_tts_status(), "ready");
     assert_eq!(speech.neural_stt_status(), "ready");
 }

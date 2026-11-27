@@ -140,7 +140,7 @@ mod tests {
             request: 0,
             result: Err("stale".into()),
         });
-        assert_eq!(*stale, *current);
+        assert!(*stale == *current);
         let ready = stale.reduce(VocabularyAction::Loaded {
             selected: 7,
             request: current.request,
@@ -183,7 +183,7 @@ mod readiness_tests {
             request: 0,
             message: "stale".into(),
         });
-        assert_eq!(*stale, *waiting);
+        assert!(*stale == *waiting);
         let ready = stale.reduce(VocabularyAction::Loaded {
             selected: 9,
             request: selected.request,

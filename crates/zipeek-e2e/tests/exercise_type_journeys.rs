@@ -416,10 +416,7 @@ async fn sentence_builder_undo_clear_and_grade(ctx: ScenarioContext) -> HarnessR
         .click()
         .await?;
     let undo = driver
-        .query(By::XPath(
-            "//section[@data-practice-sentence-builder]//button[normalize-space()='Undo']",
-        ))
-        .single()
+        .query_single("[data-practice-sentence-builder] button[aria-label='Undo']")
         .await?;
     zipeek_e2e::e2e_ensure!(
         undo.is_enabled().await?,
@@ -433,12 +430,7 @@ async fn sentence_builder_undo_clear_and_grade(ctx: ScenarioContext) -> HarnessR
             .is_enabled()
             .await?
     );
-    for tile in driver
-        .find_all_css("[data-practice-sentence-builder] button[aria-label^='Add ']")
-        .await?
-    {
-        tile.click().await?;
-    }
+    zipeek_e2e::page_objects::sentence_builder::choose_correct(&driver).await?;
     driver
         .query_single("[data-sentence-builder-check]:not([disabled])")
         .await?
@@ -450,7 +442,7 @@ async fn sentence_builder_undo_clear_and_grade(ctx: ScenarioContext) -> HarnessR
         .text()
         .await?;
     zipeek_e2e::e2e_ensure!(
-        feedback.contains("Correct") || feedback.contains("Not quite"),
+        feedback.contains("Correct"),
         "Sentence Builder must grade a complete tile arrangement"
     );
     driver

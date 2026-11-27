@@ -1,6 +1,7 @@
+use super::assessment::ExerciseOutcome;
 use crate::models::{
-    CharacterBuilderOptions, ListeningChoiceOptions, TypePinyinOptions, VocabularyExerciseOptions,
-    WriteHanziOptions,
+    CharacterBuilderOptions, ListeningChoiceOptions, SentenceBuilderOptions, TypePinyinOptions,
+    VocabularyExerciseOptions, WriteHanziOptions,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -18,17 +19,10 @@ pub(crate) enum ExerciseReadiness {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum ExerciseOutcome {
-    Scored { earned: u16, possible: u16 },
-    Completed,
-    Skipped,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", content = "settings", rename_all = "snake_case")]
 pub(crate) enum ExerciseConfiguration {
     CharacterBuilder(CharacterBuilderOptions),
+    SentenceBuilder(SentenceBuilderOptions),
     TypePinyin(TypePinyinOptions),
     WriteHanzi(WriteHanziOptions),
     ListeningChoice(ListeningChoiceOptions),
@@ -44,6 +38,7 @@ pub(crate) enum ExerciseConfiguration {
     SentenceTranslation {
         direction: String,
     },
+    Narrative(zipeek_exercises::ai_narrative::NarrativeSettings),
     SentenceTransformation(crate::models::SentenceTransformationOptions),
     Standard,
 }
@@ -52,6 +47,7 @@ impl ExerciseConfiguration {
     pub fn for_exercise(exercise_id: &str) -> Self {
         match exercise_id {
             "character-builder" => Self::CharacterBuilder(CharacterBuilderOptions::default()),
+            "sentence-builder" => Self::SentenceBuilder(SentenceBuilderOptions::default()),
             "type-pinyin" => Self::TypePinyin(TypePinyinOptions::default()),
             "write-hanzi" => Self::WriteHanzi(WriteHanziOptions::default()),
             "listening-choice" => Self::ListeningChoice(ListeningChoiceOptions::default()),
@@ -71,6 +67,9 @@ impl ExerciseConfiguration {
             },
             "sentence-transformation" => {
                 Self::SentenceTransformation(crate::models::SentenceTransformationOptions::default())
+            }
+            "story-builder" | "reading-comprehension" | "conversation-practice" => {
+                Self::Narrative(zipeek_exercises::ai_narrative::NarrativeSettings::default())
             }
             "sentence-translation" => Self::SentenceTranslation {
                 direction: default_translation_direction(),
@@ -109,6 +108,20 @@ pub(crate) struct PracticeStep {
     pub reverse_matching: bool,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum SessionMode {
+    #[default]
+    Fixed,
+    Endless,
+}
+
+impl SessionMode {
+    pub fn is_endless(self) -> bool {
+        matches!(self, Self::Endless)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct PracticeSession {
@@ -120,7 +133,7 @@ pub(crate) struct PracticeSession {
     pub created_at: DateTime<Utc>,
     pub started_at: Option<DateTime<Utc>>,
     #[serde(default)]
-    pub endless_translation: bool,
+    pub session_mode: SessionMode,
     #[serde(default)]
     pub scheduling_seed: u64,
 
@@ -153,5 +166,22 @@ pub(super) fn valid_translation_direction(direction: &str) -> bool {
 }
 
 pub(super) fn resumable_scores_supported(exercise_id: &str) -> bool {
-    exercise_id == "sentence-translation"
+    matches!(
+        exercise_id,
+        "sentence-translation"
+            | "story-builder"
+            | "reading-comprehension"
+            | "conversation-practice"
+            | "fill-blank"
+            | "audio-dictation"
+            | "spot-mistake"
+            | "sentence-transformation"
+            | "listening-choice"
+            | "matching"
+            | "multiple-choice"
+            | "sentence-builder"
+            | "type-pinyin"
+            | "character-builder"
+            | "word-mosaics"
+    )
 }

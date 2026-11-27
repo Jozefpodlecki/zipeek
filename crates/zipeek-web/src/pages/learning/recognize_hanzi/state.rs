@@ -3,7 +3,7 @@ use yew::Reducible;
 
 use super::RecognitionHit;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub(super) enum InputKind {
     Empty,
     Drawing,
@@ -182,8 +182,9 @@ mod tests {
         });
         let state = state.reduce(RecognitionAction::Begin);
         assert!(state.busy);
+        let generation = state.generation;
         let state = state.reduce(RecognitionAction::Failed {
-            generation: state.generation,
+            generation,
             reason: "unavailable".to_owned(),
         });
         assert!(!state.busy);

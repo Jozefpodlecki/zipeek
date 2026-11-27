@@ -38,6 +38,15 @@ fn parse_saved(value: &str) -> BTreeSet<WordId> {
         .collect()
 }
 
+pub(crate) fn write_saved(storage: &Storage, ids: &BTreeSet<WordId>) -> Result<(), String> {
+    let values: Vec<i32> = ids.iter().map(|id| id.as_i32()).collect();
+    let json = serde_json::to_string(&values)
+        .map_err(|error| format!("Cannot serialize excluded words: {error}"))?;
+    storage
+        .set_item(EXCLUSIONS_KEY, &json)
+        .map_err(|error| format!("Could not save excluded words: {error:?}"))
+}
+
 pub(crate) fn reset_saved(storage: &Storage) -> Result<(), String> {
     storage
         .remove_item(EXCLUSIONS_KEY)

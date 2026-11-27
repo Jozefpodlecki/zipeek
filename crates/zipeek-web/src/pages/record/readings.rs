@@ -1,5 +1,5 @@
-use std::collections::{BTreeMap, BTreeSet};
 use crate::services::database::TextReadingCandidates;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(super) struct ReadingGlyph {
@@ -10,14 +10,24 @@ pub(super) struct ReadingGlyph {
 fn marked_syllable(numeric: &str) -> Option<String> {
     let (base, suffix) = numeric.split_at(numeric.len().checked_sub(1)?);
     let tone = suffix.chars().next()?.to_digit(10)? as usize;
-    if tone > 5 || base.is_empty() { return None; }
+    if tone > 5 || base.is_empty() {
+        return None;
+    }
     let normalized = base.to_lowercase().replace("u:", "ü").replace('v', "ü");
-    if tone == 0 || tone == 5 { return Some(normalized); }
+    if tone == 0 || tone == 5 {
+        return Some(normalized);
+    }
     let letters: Vec<char> = normalized.chars().collect();
-    let target = letters.iter().position(|c| *c == 'a')
+    let target = letters
+        .iter()
+        .position(|c| *c == 'a')
         .or_else(|| letters.iter().position(|c| *c == 'e'))
         .or_else(|| normalized.find("ou"))
-        .or_else(|| letters.iter().rposition(|c| matches!(c, 'a'|'e'|'i'|'o'|'u'|'ü')))?;
+        .or_else(|| {
+            letters
+                .iter()
+                .rposition(|c| matches!(c, 'a' | 'e' | 'i' | 'o' | 'u' | 'ü'))
+        })?;
     let vowel = match letters[target] {
         'a' => ["ā", "á", "ǎ", "à"],
         'e' => ["ē", "é", "ě", "è"],
@@ -29,7 +39,11 @@ fn marked_syllable(numeric: &str) -> Option<String> {
     };
     let mut result = String::new();
     for (index, character) in letters.into_iter().enumerate() {
-        if index == target { result.push_str(vowel[tone - 1]); } else { result.push(character); }
+        if index == target {
+            result.push_str(vowel[tone - 1]);
+        } else {
+            result.push(character);
+        }
     }
     Some(result)
 }
@@ -44,12 +58,18 @@ pub(super) fn resolve(text: &str, candidates: &TextReadingCandidates) -> Vec<Rea
     let mut word_readings: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
     for word in &candidates.words {
         if let Some(reading) = word.pinyin_numeric.as_deref() {
-            word_readings.entry(&word.simplified).or_default().insert(reading);
+            word_readings
+                .entry(&word.simplified)
+                .or_default()
+                .insert(reading);
         }
     }
     let mut character_readings: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
     for reading in &candidates.characters {
-        character_readings.entry(&reading.character).or_default().insert(&reading.pinyin_numeric);
+        character_readings
+            .entry(&reading.character)
+            .or_default()
+            .insert(&reading.pinyin_numeric);
     }
     let source: Vec<char> = text.chars().collect();
     let mut result = Vec::with_capacity(source.len());
@@ -61,7 +81,9 @@ pub(super) fn resolve(text: &str, candidates: &TextReadingCandidates) -> Vec<Rea
                 let key = fragment.iter().collect::<String>();
                 if let Some(readings) = word_readings.get(key.as_str()) {
                     if readings.len() == 1 {
-                        if let Some(syllables) = aligned_syllables(&key, readings.iter().next().unwrap()) {
+                        if let Some(syllables) =
+                            aligned_syllables(&key, readings.iter().next().unwrap())
+                        {
                             found = Some((size, syllables));
                             break;
                         }
@@ -71,13 +93,17 @@ pub(super) fn resolve(text: &str, candidates: &TextReadingCandidates) -> Vec<Rea
         }
         if let Some((count, syllables)) = found {
             for (character, pinyin) in source[index..index + count].iter().copied().zip(syllables) {
-                result.push(ReadingGlyph { character, pinyin: Some(pinyin) });
+                result.push(ReadingGlyph {
+                    character,
+                    pinyin: Some(pinyin),
+                });
             }
             index += count;
         } else {
             let character = source[index];
             let key = character.to_string();
-            let pinyin = character_readings.get(key.as_str())
+            let pinyin = character_readings
+                .get(key.as_str())
                 .filter(|readings| readings.len() == 1)
                 .and_then(|readings| marked_syllable(readings.iter().next().unwrap()));
             result.push(ReadingGlyph { character, pinyin });
@@ -103,8 +129,18 @@ mod tests {
     #[test]
     fn word_context_beats_ambiguous_character_reading() {
         let candidates = TextReadingCandidates {
-            words: vec![TextWordReading { simplified: "银行".into(), pinyin_numeric: Some("yin2 hang2".into()) }],
-            characters: vec!["xing2", "hang2"].into_iter().map(|reading| CharacterPinyinReading { character: "行".into(), traditional: "行".into(), pinyin_numeric: reading.into() }).collect(),
+            words: vec![TextWordReading {
+                simplified: "银行".into(),
+                pinyin_numeric: Some("yin2 hang2".into()),
+            }],
+            characters: vec!["xing2", "hang2"]
+                .into_iter()
+                .map(|reading| CharacterPinyinReading {
+                    character: "行".into(),
+                    traditional: "行".into(),
+                    pinyin_numeric: reading.into(),
+                })
+                .collect(),
         };
         let resolved = resolve("银行。行", &candidates);
         assert_eq!(resolved[1].pinyin.as_deref(), Some("háng"));

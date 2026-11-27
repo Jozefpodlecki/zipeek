@@ -55,12 +55,18 @@ impl SpeechServer {
         }
         let result = tokio::time::timeout(std::time::Duration::from_secs(5), &mut self.task).await;
         match result {
-            Ok(Ok(Ok(()))) => {
-                tokio::time::timeout(std::time::Duration::from_secs(5), self.speech.shutdown_workers())
-                    .await
-                    .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "speech workers did not stop in five seconds"))?
-                    .map_err(io::Error::other)
-            },
+            Ok(Ok(Ok(()))) => tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                self.speech.shutdown_workers(),
+            )
+            .await
+            .map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "speech workers did not stop in five seconds",
+                )
+            })?
+            .map_err(io::Error::other),
             Ok(Ok(outcome)) => outcome,
             Ok(Err(error)) => Err(io::Error::other(format!(
                 "speech server task failed: {error}"

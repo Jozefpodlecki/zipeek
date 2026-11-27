@@ -9,7 +9,7 @@ use super::super::model::{
     DocumentToc, category, group_entries, ordered_categories, reading_neighbours, topic,
 };
 use super::super::navigation::{asset_url, doc_route, scroll_to_heading};
-use crate::route::Route;
+use crate::{hooks::use_app_environment, route::Route};
 
 #[derive(Properties, PartialEq)]
 pub(in crate::pages::system::docs) struct ArticleProps {
@@ -117,6 +117,7 @@ struct LoadedProps {
 
 #[function_component(LoadedArticle)]
 fn loaded_article(props: &LoadedProps) -> Html {
+    let environment = use_app_environment();
     let state = use_document(props.path.clone());
     let target = props.heading_target.clone();
     {
@@ -150,16 +151,18 @@ fn loaded_article(props: &LoadedProps) -> Html {
     };
     {
         let ready = ready.clone();
+        let document = environment.document.clone();
         use_effect_with((target, ready, raw), move |(target, ready, raw)| {
             if !raw && ready.is_some() {
                 if let Some(target) = target {
-                    scroll_to_heading(target);
+                    scroll_to_heading(&document, target);
                 }
             }
             || ()
         });
     }
-    let on_article_click = Callback::from(|event: MouseEvent| {
+    let click_document = environment.document.clone();
+    let on_article_click = Callback::from(move |event: MouseEvent| {
         let Some(link) = event
             .target()
             .and_then(|target| target.dyn_into::<web_sys::Element>().ok())
@@ -173,7 +176,7 @@ fn loaded_article(props: &LoadedProps) -> Html {
         if fragment.len() <= 1 || fragment.starts_with("#/docs/") {
             return;
         }
-        if scroll_to_heading(&fragment[1..]) {
+        if scroll_to_heading(&click_document, &fragment[1..]) {
             event.prevent_default();
         }
     });
@@ -188,8 +191,11 @@ fn loaded_article(props: &LoadedProps) -> Html {
             <pre data-docs-source="" class="whitespace-pre-wrap break-words overflow-x-auto rounded-xl border border-line bg-raised p-5 font-mono text-sm">{text}</pre>
         },
         LoadState::Ready(text) => {
-            let rendered =
-                render_document(text, &props.path, &asset_url("docs/").unwrap_or_default());
+            let rendered = render_document(
+                text,
+                &props.path,
+                &asset_url(&environment.window, "docs/").unwrap_or_default(),
+            );
             html! {
                 <article data-docs-markdown="" onclick={on_article_click} class="text-base leading-7 max-w-none [&_a]:text-accent [&_a]:underline [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:my-4 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_li]:my-1 [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-raised [&_pre]:p-4 [&_code]:break-words [&_pre_code]:break-normal [&_blockquote]:border-l-4 [&_blockquote]:border-line [&_blockquote]:pl-4 [&_blockquote]:italic [&_table]:my-5 [&_table]:w-full [&_th]:border [&_td]:border [&_th]:border-line [&_td]:border-line [&_th]:p-2 [&_td]:p-2 [&_th]:text-left [&_img]:max-w-full [&_img]:rounded-lg">
                     {Html::from_html_unchecked(AttrValue::from(rendered))}

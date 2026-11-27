@@ -7,6 +7,7 @@ pub(super) use page::SkillsExplorer;
 
 #[cfg(test)]
 mod tests {
+    use super::super::{fixture::EvidenceStatus, state::SkillGap};
     use super::*;
     #[test]
     fn each_skill_has_mutually_exclusive_counts() {

@@ -61,7 +61,10 @@ impl StreamingFbank {
         if self.closed {
             return Err("streaming feature extractor already finalized".into());
         }
-        if samples.iter().any(|sample| !sample.is_finite() || sample.abs() > 1.0) {
+        if samples
+            .iter()
+            .any(|sample| !sample.is_finite() || sample.abs() > 1.0)
+        {
             return Err("streaming fbank samples must be finite normalized PCM".into());
         }
         self.pending.extend_from_slice(samples);
@@ -102,7 +105,11 @@ impl StreamingFbank {
         let mut previous = input[0] - mean;
         for (index, sample) in input.iter().enumerate() {
             let centered = sample - mean;
-            let emphasized = if index == 0 { centered * 0.03 } else { centered - 0.97 * previous };
+            let emphasized = if index == 0 {
+                centered * 0.03
+            } else {
+                centered - 0.97 * previous
+            };
             real[index] = emphasized * self.window[index];
             previous = centered;
         }
@@ -218,7 +225,12 @@ mod tests {
     #[test]
     fn fragmented_short_audio_never_produces_a_partial_frame() {
         let mut features = StreamingFbank::new();
-        assert!(features.accept(&vec![0.0; FRAME_SAMPLES - 1]).unwrap().is_empty());
+        assert!(
+            features
+                .accept(&vec![0.0; FRAME_SAMPLES - 1])
+                .unwrap()
+                .is_empty()
+        );
         assert_eq!(features.accept(&[0.0]).unwrap().len(), 1);
         assert!(features.finish().unwrap().is_empty());
     }

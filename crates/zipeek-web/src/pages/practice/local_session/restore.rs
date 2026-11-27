@@ -7,6 +7,7 @@ pub(super) fn restore_session(
     id: &str,
 ) -> Result<PracticeSession, PracticeSessionError> {
     let mut session = store.load(id)?;
+    store.reconcile_observations(&session)?;
     if session.is_completed() {
         return Ok(session);
     }

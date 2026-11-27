@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use web_sys::Url;
+use web_sys::{Document, Url, Window};
 
 use crate::route::Route;
 
@@ -16,9 +16,8 @@ pub(super) fn heading_target(query: HeadingQuery) -> Option<String> {
     .then_some(heading)
 }
 
-pub(super) fn asset_url(relative: &str) -> Result<String, String> {
-    let base = web_sys::window()
-        .ok_or_else(|| "Browser window unavailable".to_string())?
+pub(super) fn asset_url(window: &Window, relative: &str) -> Result<String, String> {
+    let base = window
         .location()
         .href()
         .map_err(|_| "Cannot read window location")?;
@@ -33,11 +32,8 @@ pub(super) fn doc_route(path: &str) -> Route {
     }
 }
 
-pub(super) fn scroll_to_heading(target: &str) -> bool {
-    if let Some(element) = web_sys::window()
-        .and_then(|window| window.document())
-        .and_then(|document| document.get_element_by_id(target))
-    {
+pub(super) fn scroll_to_heading(document: &Document, target: &str) -> bool {
+    if let Some(element) = document.get_element_by_id(target) {
         element.scroll_into_view();
         true
     } else {

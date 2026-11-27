@@ -15,6 +15,7 @@ pub(crate) mod translation_vocabulary;
 
 pub(crate) mod personal_data;
 pub(crate) mod practice_history;
+pub(crate) mod practice_observations;
 
 pub(crate) mod planned_handoff;
 
@@ -31,12 +32,11 @@ pub(crate) mod practice_generated;
 
 pub(crate) mod speech;
 
+pub(crate) mod tauri;
 pub(crate) mod tauri_service;
 
 pub(crate) mod learning_history;
 pub(crate) mod tauri_database;
-
-pub(crate) mod tauri_ipc_error;
 
 pub(crate) mod browser_stt;
 

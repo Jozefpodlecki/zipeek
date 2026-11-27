@@ -1,3 +1,7 @@
+use super::feedback::{ExerciseReview, ExerciseSubmitAction, FeedbackVerdict};
+use super::instruction::InstructionIcon;
+use super::surface::ExerciseSurface;
+use crate::services::practice_session_store::{ExerciseAssessment, ExerciseVerdict};
 use yew::prelude::*;
 use zipeek_exercises::spot_mistake::{self, MistakePrompt};
 
@@ -5,6 +9,8 @@ use zipeek_exercises::spot_mistake::{self, MistakePrompt};
 pub struct SpotMistakeProps {
     pub seed: u64,
     pub on_completed: Callback<()>,
+    #[prop_or_default]
+    pub on_assessed: Option<Callback<ExerciseAssessment>>,
 }
 
 #[function_component(SpotMistake)]
@@ -56,14 +62,32 @@ pub fn spot_mistake(props: &SpotMistakeProps) -> Html {
     };
     let on_continue = {
         let on_completed = props.on_completed.clone();
-        Callback::from(move |_: MouseEvent| on_completed.emit(()))
+        let on_assessed = props.on_assessed.clone();
+        let identified = verdict.identified;
+        let repaired = verdict.repaired;
+        Callback::from(move |_: MouseEvent| {
+            if let Some(on_assessed) = &on_assessed {
+                on_assessed.emit(ExerciseAssessment {
+                    verdict: match (identified, repaired) {
+                        (true, true) => ExerciseVerdict::Correct,
+                        (false, false) => ExerciseVerdict::Incorrect,
+                        _ => ExerciseVerdict::PartiallyCorrect,
+                    },
+                    attempts: 1,
+                    mistakes: u16::from(!identified) + u16::from(!repaired),
+                    hints: 0,
+                    assisted: false,
+                    item_evidence: Vec::new(),
+                });
+            } else {
+                on_completed.emit(());
+            }
+        })
     };
     html! {
-        <section class="space-y-5 rounded-2xl border border-line bg-surface p-6" data-practice-spot-mistake="">
-            <h2 class="text-xl font-semibold">{"Spot the Mistake"}</h2>
-            <p class="text-sm text-muted">{"Authored grammar practice only. No mastery evidence is awarded."}</p>
+        <div class="w-full" data-practice-spot-mistake="">
+            <ExerciseSurface icon={InstructionIcon::Find} instruction="Find the mistake and enter its correction">
             <p>{prompt.meaning}</p>
-            <p>{"Select the incorrect Chinese phrase, then type a replacement."}</p>
             <div class="flex flex-wrap gap-2" role="group" aria-label="Select the incorrect Chinese phrase" lang="zh-CN">
                 {for prompt.spans.iter().enumerate().map(|(index, span)| {
                     let selected_value = selected.clone();
@@ -84,23 +108,19 @@ pub fn spot_mistake(props: &SpotMistakeProps) -> Html {
                     value={(*replacement).clone()} oninput={on_input} onkeydown={on_keydown}
                     disabled={*checked} />
                 {if !*checked { html! {
-                    <button type="submit" data-spot-mistake-check=""
-                        disabled={selected.is_none() || replacement.trim().is_empty() || *composing}
-                        class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white disabled:opacity-50">
-                        {"Check answer"}
-                    </button>
+                    <ExerciseSubmitAction label="Check answer" spot_mistake=true
+                        disabled={selected.is_none() || replacement.trim().is_empty() || *composing} />
                 }} else { Html::default() }}
             </form>
             {if *checked { html! {
-                <div aria-live="polite" data-practice-feedback="" class="space-y-3">
+                <ExerciseReview verdict={if verdict.identified && verdict.repaired { FeedbackVerdict::Correct } else if verdict.identified || verdict.repaired { FeedbackVerdict::Partial } else { FeedbackVerdict::Incorrect }} on_continue={on_continue} spot_mistake=true>
                     <p>{if verdict.identified { "Mistake identified correctly" } else { "Mistake not identified" }}</p>
                     <p>{if verdict.repaired { "Correction accepted" } else { "Correction not accepted" }}</p>
                     <p lang="zh-CN">{spot_mistake::corrected_sentence(prompt, prompt.accepted_replacements[0]).unwrap_or_default()}</p>
                     <p class="text-sm text-muted">{prompt.explanation}</p>
-                    <button type="button" data-spot-mistake-continue="" onclick={on_continue}
-                        class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white">{"Continue session"}</button>
-                </div>
+                </ExerciseReview>
             }} else { Html::default() }}
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }

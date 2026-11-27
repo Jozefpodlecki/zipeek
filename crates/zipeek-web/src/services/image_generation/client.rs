@@ -9,6 +9,10 @@ struct JobResponse {
 }
 
 pub(crate) async fn generate(api_url: &str, prompt: &str) -> Result<String, String> {
+    if super::tauri_image::desktop_mode()? {
+        return super::tauri_image::generate(prompt).await;
+    }
+    super::require_image_backend(api_url).await?;
     let base = super::validate_api_url(api_url).map_err(str::to_owned)?;
     let response = gloo::net::http::Request::post(&format!("{base}/v1/images"))
         .json(&serde_json::json!({ "prompt": prompt, "width": 512, "height": 512 }))

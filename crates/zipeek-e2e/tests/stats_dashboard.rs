@@ -8,12 +8,10 @@ async fn stats_route_and_sections(ctx: ScenarioContext) -> HarnessResult<()> {
     let page = driver.query_single("[data-stats-page]").await?;
     zipeek_e2e::e2e_ensure!(page.attr("data-stats-page").await?.is_some());
     let notice = driver.query_single("[data-stats-unavailable]").await?;
-    zipeek_e2e::e2e_ensure!(
-        notice
-            .text()
-            .await?
-            .contains("Learning evidence not connected")
-    );
+    zipeek_e2e::e2e_ensure!(notice.text().await?.contains("Learning assessment"));
+    driver
+        .query_single("[data-stats-recorded-activity]")
+        .await?;
     driver
         .query_single("[data-stats-preview-toggle]")
         .await?

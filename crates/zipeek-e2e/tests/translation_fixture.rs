@@ -439,6 +439,16 @@ async fn endless_translation_can_finish_and_clears_temporary_state(
     );
     context
         .driver
+        .find_css("[data-practice-request-finish]")
+        .await?
+        .click()
+        .await?;
+    context
+        .driver
+        .query_single("[data-practice-finish-confirmation]")
+        .await?;
+    context
+        .driver
         .find_css("[data-practice-finish-endless]")
         .await?
         .click()

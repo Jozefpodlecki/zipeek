@@ -1,12 +1,13 @@
 #![allow(dead_code)]
 #![allow(unused)]
 #![allow(private_interfaces)]
+#![allow(unused_imports)]
 
 use std::{convert::Infallible, net::SocketAddr, sync::Arc};
 
 pub mod llama_cpp;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "fixture-backend"))]
 pub mod fixture_backend;
 
 use axum::{

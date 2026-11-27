@@ -83,11 +83,7 @@ pub fn word_sets_page() -> Html {
     let word_set_content = {
         if selected.is_none() {
             html! {
-            <p
-                class="text-sm text-muted"
-            >
-                {"Choose a Word Set to see saved vocabulary and manage its words."}
-            </p>}
+            <div class="flex flex-col items-center justify-center gap-2 py-10 text-muted"><Icon data={IconData::LUCIDE_BOOK_OPEN} width="24px" height="24px" /><span class="text-sm">{"Select a set"}</span></div>}
         } else if ids.is_empty() {
             html! {
             <div class="space-y-3 py-4">
@@ -187,27 +183,20 @@ pub fn word_sets_page() -> Html {
             data-component="word-sets-page"
             class="mx-auto flex w-full max-w-7xl flex-col gap-5 py-4"
         >
-            <header class="flex items-center justify-between gap-3">
-                <div>
-                    <h1 class="text-2xl font-bold">{"Word Sets"}</h1>
-                    <p class="mt-1 text-sm text-muted">{"Manage your saved vocabulary."}</p>
-                </div>
-            </header>
             <div
                 class="grid items-start gap-4 lg:grid-cols-[minmax(15rem,18rem)_minmax(0,1fr)]"
             >
                 <WordSetPanel />
                 <section
-                    class="flex min-h-64 min-w-0 flex-col rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5"
+                    class="flex min-w-0 flex-col rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5"
                     data-word-set-vocabulary=""
                     aria-label="Selected Word Set vocabulary"
                 >
                     <h2
                         class="mb-1 text-xl font-semibold"
                     >
-                        {selected.as_ref().map(|set| format!("{} ({} words)", set.name, set.word_ids.len())).unwrap_or_else(|| "Select a Word Set".to_owned())}
+                        {selected.as_ref().map(|set| format!("{} · {}", set.name, set.word_ids.len())).unwrap_or_default()}
                     </h2>
-                    <p class="mb-3 text-xs text-muted">{"Browse and manage words in this set."}</p>
                     {if !ids.is_empty() {
                         html! {
                             <label class="mb-3 flex items-center gap-2 rounded-lg border border-line bg-surface px-3">

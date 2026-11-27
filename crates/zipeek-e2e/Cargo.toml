@@ -18,6 +18,6 @@ futures-util = { workspace = true }
 
 zipeek-image-server = { path = "../zipeek-image-server" }
 zipeek-static-server = { path = "../zipeek-static-server" }
-zipeek-ai-server = { path = "../zipeek-ai-server" }
+zipeek-ai-server = { path = "../zipeek-ai-server", features = ["fixture-backend"] }
 zipeek-tts-stt = { path = "../zipeek-tts-stt" }
 zipeek-pedagogy = { path = "../zipeek-pedagogy" }

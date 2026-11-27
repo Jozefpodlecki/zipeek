@@ -291,7 +291,7 @@ fn local_vocabulary_session_support_requires_fixed_count_and_hosted_types() {
     .collect();
     assert!(draft.supports_local_vocabulary_session());
     draft.length = SessionLength::Endless;
-    assert!(!draft.supports_local_vocabulary_session());
+    assert!(draft.supports_local_vocabulary_session());
     draft.length = SessionLength::Fixed(5);
     draft.exercise_ids.insert("sentence-translation".into());
     assert!(!draft.supports_local_vocabulary_session());
@@ -350,7 +350,7 @@ fn mixed_matching_listening_and_multiple_choice_have_uuid_hosts() {
     assert!(draft.supports_local_vocabulary_session());
     draft.toggle_exercise("sentence-translation").unwrap();
     draft.length = SessionLength::Endless;
-    assert!(!draft.supports_local_vocabulary_session());
+    assert!(draft.supports_local_vocabulary_session());
 }
 
 #[test]
@@ -366,7 +366,7 @@ fn single_fixed_exercise_uses_the_same_uuid_host_as_mixed_sessions() {
         draft.toggle_exercise(id).unwrap();
         assert!(draft.supports_local_vocabulary_session());
         draft.length = SessionLength::Endless;
-        assert!(!draft.supports_local_vocabulary_session());
+        assert!(draft.supports_local_vocabulary_session());
     }
 }
 
@@ -403,7 +403,7 @@ fn ai_generated_exercises_have_fixed_uuid_launch_paths() {
         assert!(draft.supports_local_vocabulary_session());
         assert_eq!(draft.validate(), Ok(()));
         draft.length = SessionLength::Endless;
-        assert!(!draft.supports_local_vocabulary_session());
+        assert!(draft.supports_local_vocabulary_session());
     }
 }
 
@@ -422,15 +422,15 @@ fn duplicate_selected_quiz_formats_fail_validation() {
 }
 
 #[test]
-fn endless_mode_rejects_exercises_without_a_repeatable_host() {
+fn endless_mode_supports_mixed_resumable_exercise_hosts() {
     let mut draft = PracticeDraft::default();
     draft.length = SessionLength::Endless;
     assert!(draft.supports_endless_session());
     draft.exercise_ids.insert("matching".into());
     assert!(draft.supports_endless_session());
     draft.exercise_ids.insert("fill-blank".into());
-    assert!(!draft.supports_endless_session());
-    assert_eq!(draft.validate(), Err(DraftError::InvalidSessionLength));
+    assert!(draft.supports_endless_session());
+    assert_eq!(draft.validate(), Ok(()));
     draft.length = SessionLength::Fixed(5);
     assert_eq!(draft.validate(), Ok(()));
 }
@@ -439,7 +439,7 @@ fn endless_mode_rejects_exercises_without_a_repeatable_host() {
 fn translation_only_persists_its_own_finite_or_endless_count() {
     let mut draft = PracticeDraft::default();
     draft.exercise_ids = ["sentence-translation".to_owned()].into_iter().collect();
-    for count in [0, 5, 10] {
+    for count in [0, 5, 10, 20] {
         draft.translation_count = count;
         draft.length = SessionLength::Endless;
         assert!(draft.translation_session_only());
@@ -448,5 +448,27 @@ fn translation_only_persists_its_own_finite_or_endless_count() {
     }
     draft.toggle_exercise("matching").unwrap();
     assert!(!draft.translation_session_only());
-    assert!(!draft.supports_local_vocabulary_session());
+    assert!(draft.supports_local_vocabulary_session());
+}
+
+#[test]
+fn endless_is_supported_for_every_registered_exercise_and_any_mixed_selection() {
+    use crate::definition::DEFINITIONS;
+    let mut draft = PracticeDraft::default();
+    draft.length = SessionLength::Endless;
+    draft.exercise_ids.clear();
+    for exercise in DEFINITIONS {
+        draft.exercise_ids.clear();
+        draft.exercise_ids.insert(exercise.id.to_owned());
+        assert!(draft.supports_endless_session(), "{}", exercise.id);
+        assert!(draft.supports_local_vocabulary_session(), "{}", exercise.id);
+        assert!(draft.validate().is_ok(), "{}", exercise.id);
+    }
+    draft.exercise_ids = DEFINITIONS
+        .iter()
+        .map(|definition| definition.id.to_owned())
+        .collect();
+    assert!(draft.supports_endless_session());
+    assert!(draft.supports_local_vocabulary_session());
+    assert_eq!(draft.validate(), Ok(()));
 }

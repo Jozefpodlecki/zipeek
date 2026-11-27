@@ -98,7 +98,9 @@ pub(super) fn use_ai_settings_controller() -> AiSettingsController {
         Callback::from(move |event: Event| {
             gate.borrow_mut().cancel();
             state.dispatch(AiSettingsAction::ModelChanged(
-                event.target_unchecked_into::<web_sys::HtmlSelectElement>().value(),
+                event
+                    .target_unchecked_into::<web_sys::HtmlSelectElement>()
+                    .value(),
             ));
         })
     };
@@ -107,16 +109,24 @@ pub(super) fn use_ai_settings_controller() -> AiSettingsController {
         let gate = request_gate.clone();
         Callback::from(move |_: MouseEvent| {
             let url = state.url.clone();
-            let Some(ticket) = gate.borrow_mut().start() else { return; };
+            let Some(ticket) = gate.borrow_mut().start() else {
+                return;
+            };
             state.dispatch(AiSettingsAction::DiscoverModels { ticket });
             let state = state.clone();
             let gate = gate.clone();
             spawn_local(async move {
                 let result = ai::discover_models(&url).await;
-                if !gate.borrow_mut().finish(ticket) { return; }
+                if !gate.borrow_mut().finish(ticket) {
+                    return;
+                }
                 match result {
-                    Ok(models) => state.dispatch(AiSettingsAction::ModelsDiscovered { ticket, models }),
-                    Err(message) => state.dispatch(AiSettingsAction::ModelDiscoveryFailed { ticket, message }),
+                    Ok(models) => {
+                        state.dispatch(AiSettingsAction::ModelsDiscovered { ticket, models })
+                    }
+                    Err(message) => {
+                        state.dispatch(AiSettingsAction::ModelDiscoveryFailed { ticket, message })
+                    }
                 }
             });
         })
@@ -136,12 +146,15 @@ pub(super) fn use_ai_settings_controller() -> AiSettingsController {
         let gate = request_gate.clone();
         Callback::from(move |_: MouseEvent| {
             gate.borrow_mut().cancel();
-            if state.provider() == AiProvider::Local { ai::clear_key(); }
+            if state.provider() == AiProvider::Local {
+                ai::clear_key();
+            }
             match ai::save_configuration(&state.url, &state.model, &state.key) {
                 Ok(()) => {
                     crate::contexts::service_management::notify_configuration_changed();
                     state.dispatch(AiSettingsAction::Saved {
-                        has_key: state.provider() != AiProvider::Local && (state.has_key || !state.key.is_empty()),
+                        has_key: state.provider() != AiProvider::Local
+                            && (state.has_key || !state.key.is_empty()),
                     });
                 }
                 Err(message) => state.dispatch(AiSettingsAction::SaveFailed(message)),

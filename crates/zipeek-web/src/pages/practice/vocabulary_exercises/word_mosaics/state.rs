@@ -1,5 +1,8 @@
 use super::super::mosaic::{MosaicChoice, MosaicTile, choose_tile};
-use std::{collections::BTreeSet, rc::Rc};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    rc::Rc,
+};
 use yew::prelude::*;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -8,6 +11,7 @@ pub(super) struct MosaicState {
     pub(super) matched: BTreeSet<usize>,
     pub(super) feedback: String,
     pub(super) mistakes: u32,
+    pub(super) pair_mistakes: BTreeMap<usize, u32>,
 }
 
 pub(super) enum MosaicAction {
@@ -35,7 +39,15 @@ impl Reducible for MosaicState {
                         next.feedback = "Pair matched".into();
                     }
                     MosaicChoice::Incorrect => {
-                        next.mistakes += 1;
+                        next.mistakes = next.mistakes.saturating_add(1);
+                        let left = self.selected.and_then(|selected| tiles.get(selected));
+                        let right = tiles.get(index);
+                        if let (Some(left), Some(right)) = (left, right) {
+                            for pair in [left.pair, right.pair] {
+                                let count = next.pair_mistakes.entry(pair).or_default();
+                                *count = count.saturating_add(1);
+                            }
+                        }
                         next.selected = None;
                         next.feedback = "Not a match. Try again.".into();
                     }
@@ -58,6 +70,7 @@ mod tests {
             matched: [1usize].into_iter().collect(),
             feedback: "Incorrect".to_owned(),
             mistakes: 3,
+            pair_mistakes: BTreeMap::from([(1, 2)]),
         });
         assert_eq!(
             changed.reduce(MosaicAction::Reset).as_ref(),
@@ -98,6 +111,8 @@ mod tests {
             tiles: tiles.clone(),
         });
         assert_eq!(state.mistakes, 1);
+        assert_eq!(state.pair_mistakes.get(&0), Some(&1));
+        assert_eq!(state.pair_mistakes.get(&1), Some(&1));
         assert_eq!(state.selected, None);
         let state = state.reduce(MosaicAction::Select {
             index: 0,

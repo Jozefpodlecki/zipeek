@@ -4,9 +4,12 @@ use serde::{Deserialize, Serialize};
 use web_sys::Storage;
 use zipeek_ai_protocol::{Sentence, SentenceVocabulary};
 use zipeek_core::Word;
+use zipeek_exercises::ai_narrative::{
+    ConversationPractice, NarrativeSettings, ReadingComprehension, StoryBuilder,
+};
 use zipeek_exercises::{
-    local_quiz::QuizWord,
     image_questions::{ImageQuestionMode, VisualWord},
+    local_quiz::QuizWord,
     translation::TranslationDirection,
 };
 
@@ -27,6 +30,15 @@ pub(crate) enum GeneratedInstance {
     Matching {
         words: Vec<QuizWord>,
     },
+    StoryBuilder {
+        content: StoryBuilder,
+    },
+    ReadingComprehension {
+        content: ReadingComprehension,
+    },
+    ConversationPractice {
+        content: ConversationPractice,
+    },
     SentenceTranslation {
         sentence: Sentence,
     },
@@ -46,6 +58,21 @@ impl GeneratedInstance {
         let instance: Self = serde_json::from_str(raw)
             .map_err(|_| "Generated exercise has an invalid structure".to_owned())?;
         match (&instance, exercise_id) {
+            (Self::StoryBuilder { content }, "story-builder") => {
+                content
+                    .validate(content.sentences.len() as u8)
+                    .map_err(str::to_owned)?;
+            }
+            (Self::ReadingComprehension { content }, "reading-comprehension") => {
+                content
+                    .validate(content.sentences.len() as u8)
+                    .map_err(str::to_owned)?;
+            }
+            (Self::ConversationPractice { content }, "conversation-practice") => {
+                content
+                    .validate(content.turns.len() as u8)
+                    .map_err(str::to_owned)?;
+            }
             (Self::Matching { words }, "matching") => {
                 validate_matching_words(words)?;
             }
@@ -103,22 +130,29 @@ impl GeneratedInstance {
                         .iter()
                         .any(|choice| choice.hanzi.contains('\0') || choice.english.contains('\0'))
                     || image_url.len() > 2048
-                    || !(image_url.starts_with("http://") || image_url.starts_with("https://"))
+                    || !(image_url.starts_with("http://")
+                        || image_url.starts_with("https://")
+                        || (image_url.starts_with("blob:")
+                            && (image_url.starts_with("blob:http://tauri.localhost/")
+                                || image_url.starts_with("blob:http://localhost:1421/")
+                                || image_url.starts_with("blob:tauri://localhost/"))))
                     || image_url.chars().any(char::is_whitespace)
                     || image_url.contains('@')
                     || image_url.contains('#')
                     || image_url.contains('\\')
-                    || image_url.split_once("://").is_some_and(|(_, rest)| {
-                        let authority = rest.split('/').next().unwrap_or_default();
-                        authority.is_empty() || authority.starts_with(':')
-                    })
-                    || image_url
-                        .split_once("://")
-                        .is_none_or(|(_, authority_and_path)| {
-                            authority_and_path.is_empty()
-                                || authority_and_path.starts_with('/')
-                                || authority_and_path.starts_with('?')
-                        })
+                    || (!image_url.starts_with("blob:")
+                        && image_url.split_once("://").is_some_and(|(_, rest)| {
+                            let authority = rest.split('/').next().unwrap_or_default();
+                            authority.is_empty() || authority.starts_with(':')
+                        }))
+                    || (!image_url.starts_with("blob:")
+                        && image_url
+                            .split_once("://")
+                            .is_none_or(|(_, authority_and_path)| {
+                                authority_and_path.is_empty()
+                                    || authority_and_path.starts_with('/')
+                                    || authority_and_path.starts_with('?')
+                            }))
                 {
                     return Err("Generated picture contains invalid question data".to_owned());
                 }
@@ -153,7 +187,10 @@ fn validate_matching_words(words: &[QuizWord]) -> Result<(), String> {
         if word.id != index as i32 + 1
             || word.hanzi.chars().count() == 0
             || word.hanzi.chars().count() > 12
-            || !word.hanzi.chars().all(|ch| matches!(ch as u32, 0x3400..=0x9fff | 0x20000..=0x2fa1f))
+            || !word
+                .hanzi
+                .chars()
+                .all(|ch| matches!(ch as u32, 0x3400..=0x9fff | 0x20000..=0x2fa1f))
             || word.pinyin.trim().is_empty()
             || word.pinyin.chars().count() > 80
             || word.pinyin.chars().any(char::is_control)
@@ -173,17 +210,23 @@ fn parse_generated_matching(raw: &str, count: usize) -> Result<Vec<QuizWord>, St
     if raw.len() > 16_384 {
         return Err("AI matching response is too large".to_owned());
     }
-    let response: GeneratedMatchingResponse = serde_json::from_str(raw)
-        .map_err(|_| "AI matching response must contain a JSON object with a words array".to_owned())?;
+    let response: GeneratedMatchingResponse = serde_json::from_str(raw).map_err(|_| {
+        "AI matching response must contain a JSON object with a words array".to_owned()
+    })?;
     if response.words.len() != count {
         return Err("AI matching response contains the wrong number of pairs".to_owned());
     }
-    let words = response.words.into_iter().enumerate().map(|(index, candidate)| QuizWord {
-        id: index as i32 + 1,
-        hanzi: candidate.hanzi,
-        pinyin: candidate.pinyin,
-        meaning: candidate.meaning,
-    }).collect::<Vec<_>>();
+    let words = response
+        .words
+        .into_iter()
+        .enumerate()
+        .map(|(index, candidate)| QuizWord {
+            id: index as i32 + 1,
+            hanzi: candidate.hanzi,
+            pinyin: candidate.pinyin,
+            meaning: candidate.meaning,
+        })
+        .collect::<Vec<_>>();
     validate_matching_words(&words)?;
     Ok(words)
 }
@@ -229,6 +272,7 @@ pub(crate) async fn prepare(
     translation_direction: &str,
     translation_ordinal: usize,
     matching_pairs: Option<u8>,
+    narrative: NarrativeSettings,
     dictionary: &Dictionary,
     storage: &Storage,
 ) -> Result<String, String> {
@@ -246,7 +290,65 @@ pub(crate) async fn prepare(
                 serde_json::json!({"role":"system", "content":"Generate accurate educational Mandarin vocabulary. Return only a JSON object with a words array, no Markdown. Each item must have exactly hanzi, pinyin with tone marks, and a concise English meaning. All meanings and words must be unique. Never include IDs or additional fields."}),
                 serde_json::json!({"role":"user", "content": format!("Create exactly {count} distinct beginner Mandarin vocabulary pairs, each 1 to 6 Chinese characters. The JSON format is an object with one words array and each word contains exactly hanzi, pinyin and meaning fields. No extra text.")}),
             ]).await?;
-            GeneratedInstance::Matching { words: parse_generated_matching(&raw, count)? }
+            GeneratedInstance::Matching {
+                words: parse_generated_matching(&raw, count)?,
+            }
+        }
+        "story-builder" | "reading-comprehension" | "conversation-practice" => {
+            narrative.validate().map_err(str::to_owned)?;
+            let words = load_words(dictionary, vocabulary, false).await?;
+            let bank = sentence_vocabulary(&words, seed)?;
+            let vocabulary_words = bank.vocabulary.iter().take(18).cloned().collect::<Vec<_>>();
+            let count = if exercise_id == "conversation-practice" {
+                narrative.dialogue_turns
+            } else {
+                narrative.passage_sentences
+            };
+            let grammar_focus = zipeek_exercises::sentence_transformation::item_for_seed(
+                0,
+                narrative.grammar_pattern_index,
+            )
+            .filter(|_| narrative.grammar_pattern_index != 0)
+            .map(|item| item.target_structure)
+            .unwrap_or("natural HSK-level grammar");
+            let instructions = match exercise_id {
+                "story-builder" => format!(
+                    "Return exactly {{\"sentences\": [exactly {count} Chinese sentence strings], \"gaps\": [{{\"id\":0,\"sentence_index\":0,\"answer\":\"词\"}}, ...], \"word_bank\": [Chinese words]}}. Use 2 to 6 unique gaps, one in each selected sentence, marked exactly ____; answers must appear exactly once in word_bank. Word bank includes plausible distractors. Write a coherent story."
+                ),
+                "reading-comprehension" => format!(
+                    "Return a JSON object with exactly {{\"sentences\": [exactly {count} complete Chinese sentences], \"question_type\":\"main_idea\" or \"character_action\" or \"circumstances\", \"question\":\"Chinese question\", \"choices\":[three distinct Chinese answers], \"correct_index\":0, \"explanation\":\"brief Chinese explanation\"}}. The question must be answerable only from the passage; exactly one defensible answer."
+                ),
+                _ => format!(
+                    "Return a JSON object with exactly {{\"scenario\":\"short context\", \"turns\": [exactly {count} objects each with \"speaker_text\":\"AI speaker utterance\", \"choices\":[three distinct Chinese responses], \"correct_index\":0]}}. Produce a coherent 5 to 10 round dialogue with one contextually appropriate reply for each round."
+                ),
+            };
+            let raw = ai::complete(&config.url, &config.model, vec![
+                serde_json::json!({"role":"system","content":"Create accurate, cohesive Mandarin learning exercises. Return only valid JSON with the exact requested fields, no Markdown. Preserve the requested sentence/round count."}),
+                serde_json::json!({"role":"user","content":format!("Exercise: {exercise_id}. Focus grammar: {grammar_focus}. Vocabulary to incorporate naturally: {}. {instructions}", vocabulary_words.join("、"))}),
+            ]).await?;
+            if raw.len() > 262_144 {
+                return Err("AI passage exceeds the allowed response size".to_owned());
+            }
+            match exercise_id {
+                "story-builder" => {
+                    let content: StoryBuilder =
+                        serde_json::from_str(&raw).map_err(|_| "Invalid AI story JSON")?;
+                    content.validate(count).map_err(str::to_owned)?;
+                    GeneratedInstance::StoryBuilder { content }
+                }
+                "reading-comprehension" => {
+                    let content: ReadingComprehension =
+                        serde_json::from_str(&raw).map_err(|_| "Invalid AI reading JSON")?;
+                    content.validate(count).map_err(str::to_owned)?;
+                    GeneratedInstance::ReadingComprehension { content }
+                }
+                _ => {
+                    let content: ConversationPractice =
+                        serde_json::from_str(&raw).map_err(|_| "Invalid AI dialogue JSON")?;
+                    content.validate(count).map_err(str::to_owned)?;
+                    GeneratedInstance::ConversationPractice { content }
+                }
+            }
         }
         "sentence-translation" => {
             let words = load_words(dictionary, vocabulary, false).await?;
@@ -411,8 +513,14 @@ mod generated_matching_tests {
     fn ai_matching_pairs_are_strictly_validated_and_persistable() {
         let raw = r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thank you"}]}"#;
         let words = parse_generated_matching(raw, 2).unwrap();
-        let persisted = serde_json::to_string(&GeneratedInstance::Matching { words: words.clone() }).unwrap();
-        assert_eq!(GeneratedInstance::decode(&persisted, "matching"), Ok(GeneratedInstance::Matching { words }));
+        let persisted = serde_json::to_string(&GeneratedInstance::Matching {
+            words: words.clone(),
+        })
+        .unwrap();
+        assert_eq!(
+            GeneratedInstance::decode(&persisted, "matching"),
+            Ok(GeneratedInstance::Matching { words })
+        );
         assert!(GeneratedInstance::decode(&persisted, "sentence-translation").is_err());
         assert!(parse_generated_matching(raw, 3).is_err());
     }
@@ -425,6 +533,84 @@ mod generated_matching_tests {
             r#"{"words":[{"hanzi":"<script>","pinyin":"bad","meaning":"hello"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thanks"}]}"#,
             r#"{"words":[{"hanzi":"你好","pinyin":"nǐ hǎo","meaning":"hello","extra":"no"},{"hanzi":"谢谢","pinyin":"xièxie","meaning":"thanks"}]}"#,
         ];
-        for raw in invalid { assert!(parse_generated_matching(raw, 2).is_err(), "accepted {raw}"); }
+        for raw in invalid {
+            assert!(parse_generated_matching(raw, 2).is_err(), "accepted {raw}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod narrative_generation_tests {
+    use super::*;
+    use zipeek_exercises::ai_narrative::{DialogueTurn, ReadingQuestionType, StoryGap};
+
+    #[test]
+    fn saved_story_respects_configured_sentence_length() {
+        let mut sentences = (0..5)
+            .map(|index| format!("第{index}句。"))
+            .collect::<Vec<_>>();
+        sentences[0] = "他喜欢____。".to_owned();
+        sentences[3] = "我每天____。".to_owned();
+        let raw = serde_json::to_string(&GeneratedInstance::StoryBuilder {
+            content: StoryBuilder {
+                sentences,
+                gaps: vec![
+                    StoryGap {
+                        id: 0,
+                        sentence_index: 0,
+                        answer: "看书".to_owned(),
+                    },
+                    StoryGap {
+                        id: 1,
+                        sentence_index: 3,
+                        answer: "学习".to_owned(),
+                    },
+                ],
+                word_bank: vec!["看书".to_owned(), "学习".to_owned(), "工作".to_owned()],
+            },
+        })
+        .unwrap();
+        assert!(GeneratedInstance::decode(&raw, "story-builder").is_ok());
+        assert!(GeneratedInstance::decode(&raw, "reading-comprehension").is_err());
+    }
+
+    #[test]
+    fn generated_reading_and_dialogue_reject_invalid_choice_keys() {
+        let reading = ReadingComprehension {
+            sentences: (0..10).map(|index| format!("第{index}句话。")).collect(),
+            question_type: ReadingQuestionType::MainIdea,
+            question: "文章的主题是什么？".to_owned(),
+            choices: ["学习".to_owned(), "旅行".to_owned(), "工作".to_owned()],
+            correct_index: 2,
+            explanation: "文章谈到工作。".to_owned(),
+        };
+        let raw = serde_json::to_string(&GeneratedInstance::ReadingComprehension {
+            content: reading.clone(),
+        })
+        .unwrap();
+        assert!(GeneratedInstance::decode(&raw, "reading-comprehension").is_ok());
+        let mut invalid = reading;
+        invalid.correct_index = 3;
+        let raw =
+            serde_json::to_string(&GeneratedInstance::ReadingComprehension { content: invalid })
+                .unwrap();
+        assert!(GeneratedInstance::decode(&raw, "reading-comprehension").is_err());
+        let turn = DialogueTurn {
+            speaker_text: "您好，今天想买什么？".to_owned(),
+            choices: [
+                "我要面包".to_owned(),
+                "不用了".to_owned(),
+                "几点了".to_owned(),
+            ],
+            correct_index: 0,
+        };
+        let raw = serde_json::to_string(&GeneratedInstance::ConversationPractice {
+            content: ConversationPractice {
+                scenario: "面包店".to_owned(),
+                turns: vec![turn; 5],
+            },
+        })
+        .unwrap();
+        assert!(GeneratedInstance::decode(&raw, "conversation-practice").is_ok());
     }
 }

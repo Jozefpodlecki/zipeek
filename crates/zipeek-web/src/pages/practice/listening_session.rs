@@ -9,10 +9,18 @@ use zipeek_exercises::listening_choice::{ListeningQuestion, ListeningWord, prepa
 use crate::{
     hooks::{use_app_environment, use_dictionary},
     models::ListeningChoiceOptions,
-    services::practice_audio,
+    services::{
+        practice_audio,
+        practice_session_store::{ExerciseAssessment, ExerciseVerdict},
+    },
 };
 
-use super::vocabulary_exercises::load_words;
+use super::{
+    feedback::{ExerciseReview, FeedbackVerdict},
+    instruction::InstructionIcon,
+    surface::ExerciseSurface,
+    vocabulary_exercises::load_words,
+};
 
 #[derive(Clone, PartialEq)]
 struct ListeningPrompt {
@@ -32,6 +40,8 @@ pub(crate) struct ResumableListeningChoiceProps {
     pub seed: u64,
     pub options: ListeningChoiceOptions,
     pub on_completed: Callback<()>,
+    #[prop_or_default]
+    pub on_assessed: Option<Callback<ExerciseAssessment>>,
 }
 
 #[function_component(ResumableListeningChoice)]
@@ -121,11 +131,6 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
             }
         })
     };
-    let continue_session = {
-        let on_completed = props.on_completed.clone();
-        Callback::from(move |_: MouseEvent| on_completed.emit(()))
-    };
-
     let body = match &*prepared {
         None => html! { <p role="status">{"Loading listening vocabulary..."}</p> },
         Some(Err(error)) => html! { <p role="alert">{error}</p> },
@@ -134,6 +139,28 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
             let answer = (*selected).and_then(|id| question.grade(id).ok());
             let answered = answer.is_some();
             let correct_word = prompt.word(question.correct_id);
+            let continue_session = {
+                let on_completed = props.on_completed.clone();
+                let on_assessed = props.on_assessed.clone();
+                Callback::from(move |_: MouseEvent| {
+                    if let (Some(correct), Some(on_assessed)) = (answer, &on_assessed) {
+                        on_assessed.emit(ExerciseAssessment {
+                            verdict: if correct {
+                                ExerciseVerdict::Correct
+                            } else {
+                                ExerciseVerdict::Incorrect
+                            },
+                            attempts: 1,
+                            mistakes: u16::from(!correct),
+                            hints: 0,
+                            assisted: false,
+                            item_evidence: Vec::new(),
+                        });
+                    } else {
+                        on_completed.emit(());
+                    }
+                })
+            };
             html! {
                 <div class="space-y-4">
                     <div class="flex flex-col items-center gap-3 rounded-xl border border-line bg-raised px-4 py-6 text-center">
@@ -176,20 +203,18 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
                         {if let Some(correct) = answer {
                             html! {
                                 <div class="space-y-3">
-                                    <p role="status" class="text-sm font-medium">
-                                        {if correct { "Correct!" } else { "Not quite." }}
-                                        {format!(" The spoken word was {}.", question.spoken_hanzi)}
-                                    </p>
-                                    {if props.options.pinyin.visible(true) || props.options.meaning.visible(true) {
-                                        html! { <p class="text-sm text-muted">
-                                            {if props.options.pinyin.visible(true) { correct_word.map(|word| word.pinyin.as_str()).unwrap_or("") } else { "" }}
-                                            {if props.options.pinyin.visible(true) && props.options.meaning.visible(true) { " · " } else { "" }}
-                                            {if props.options.meaning.visible(true) { correct_word.and_then(|word| word.english.as_deref()).and_then(|gloss| gloss.split('|').next()).unwrap_or("") } else { "" }}
-                                        </p> }
-                                    } else { Html::default() }}
-                                    <button type="button" class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" data-listening-continue="" onclick={continue_session}>
-                                        {"Continue"}
-                                    </button>
+                                    <ExerciseReview verdict={if correct { FeedbackVerdict::Correct } else { FeedbackVerdict::Incorrect }} on_continue={continue_session.clone()} listening_choice=true>
+                                        <p class="text-sm font-medium">
+                                            {format!("The spoken word was {}.", question.spoken_hanzi)}
+                                        </p>
+                                        {if props.options.pinyin.visible(true) || props.options.meaning.visible(true) {
+                                            html! { <p class="text-sm text-muted">
+                                                {if props.options.pinyin.visible(true) { correct_word.map(|word| word.pinyin.as_str()).unwrap_or("") } else { "" }}
+                                                {if props.options.pinyin.visible(true) && props.options.meaning.visible(true) { " · " } else { "" }}
+                                                {if props.options.meaning.visible(true) { correct_word.and_then(|word| word.english.as_deref()).and_then(|gloss| gloss.split('|').next()).unwrap_or("") } else { "" }}
+                                            </p> }
+                                        } else { Html::default() }}
+                                    </ExerciseReview>
                                 </div>
                             }
                         } else { Html::default() }}
@@ -199,11 +224,11 @@ pub(crate) fn resumable_listening_choice(props: &ResumableListeningChoiceProps) 
         }
     };
     html! {
-        <section data-listening-session="" class="mx-auto max-w-3xl space-y-4 rounded-2xl border border-line bg-surface p-5">
-            <h2 class="text-xl font-semibold">{"Listening choice"}</h2>
-            <p class="text-sm text-muted">{"Listen and choose the matching Chinese word. This step is practice-only until scored evidence is connected."}</p>
+        <div data-listening-session="" class="w-full">
+            <ExerciseSurface icon={InstructionIcon::Listen} instruction="Listen and choose the matching Chinese word.">
             {body}
             {if audio_error.is_empty() { Html::default() } else { html! { <p role="alert">{&*audio_error}</p> } }}
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }

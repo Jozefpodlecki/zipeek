@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::*;
+    use std::rc::Rc;
+    use yew::Reducible;
 
     #[test]
     fn selection_review_requires_items_and_bulk_selection_ignores_blank_ids() {

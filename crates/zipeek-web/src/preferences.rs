@@ -13,6 +13,7 @@ pub(crate) struct Preferences {
     pub character_size: String,
     pub matching_autoplay: bool,
     pub learning_history_enabled: bool,
+    pub hidden_drawer_items: Vec<String>,
     pub image_server_url: Option<String>,
     pub ai_url: String,
     pub ai_model: String,
@@ -28,6 +29,7 @@ impl Default for Preferences {
             character_size: "normal".to_owned(),
             matching_autoplay: false,
             learning_history_enabled: false,
+            hidden_drawer_items: Vec::new(),
             image_server_url: None,
             ai_url: "http://127.0.0.1:1234/v1/".to_owned(),
             ai_model: String::new(),
@@ -143,6 +145,14 @@ mod tests {
         let decoded = Preferences::parse(&encoded).unwrap();
         assert_eq!(decoded.preset, "jade");
         assert!(decoded.learning_history_enabled);
+    }
+
+    #[test]
+    fn hidden_drawer_items_round_trip() {
+        let mut preferences = Preferences::default();
+        preferences.hidden_drawer_items = vec!["/games".into(), "/record".into()];
+        let json = serde_json::to_string(&preferences).unwrap();
+        assert_eq!(Preferences::parse(&json).unwrap(), preferences);
     }
 
     #[test]

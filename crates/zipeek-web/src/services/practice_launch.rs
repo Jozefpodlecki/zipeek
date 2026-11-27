@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use zipeek_exercises::practice_draft::VocabularySource;
+use zipeek_exercises::practice_draft::{SessionLength, VocabularySource};
 
 use super::word_sets::{self, UserWordSet};
 
@@ -22,7 +22,7 @@ pub(crate) fn create_session(
     exercise_options: crate::models::PracticeExerciseOptions,
 ) -> Result<String, String> {
     if !draft.supports_local_vocabulary_session() {
-        return Err("Select supported exercises and a fixed 1 to 20 step session".to_owned());
+        return Err("Select supported exercises and a valid Practice session mode".to_owned());
     }
     if draft
         .exercise_ids
@@ -34,17 +34,17 @@ pub(crate) fn create_session(
             "Configure an AI model in Settings before starting generated exercises".to_owned(),
         );
     }
-    if draft.has_exercise("matching") && exercise_options.matching_ai_generated
-        && super::ai::configuration().model.trim().is_empty() {
-        return Err("Configure an AI model in Settings before generating Matching questions".to_owned());
+    if draft.has_exercise("matching")
+        && exercise_options.matching_ai_generated
+        && super::ai::configuration().model.trim().is_empty()
+    {
+        return Err(
+            "Configure an AI model in Settings before generating Matching questions".to_owned(),
+        );
     }
-    let translation_only = draft.translation_session_only();
-    let count = if translation_only {
-        if draft.translation_count == 0 {
-            2
-        } else {
-            usize::from(draft.translation_count)
-        }
+    let endless = matches!(draft.length, SessionLength::Endless);
+    let count = if endless {
+        3
     } else {
         draft
             .length
@@ -79,6 +79,11 @@ pub(crate) fn create_session(
     {
         *options = exercise_options.character_builder;
     }
+    if let Some(super::practice_session_store::ExerciseConfiguration::SentenceBuilder(options)) =
+        session.exercise_configurations.get_mut("sentence-builder")
+    {
+        *options = exercise_options.sentence_builder;
+    }
     if let Some(super::practice_session_store::ExerciseConfiguration::ListeningChoice(options)) =
         session.exercise_configurations.get_mut("listening-choice")
     {
@@ -104,6 +109,21 @@ pub(crate) fn create_session(
     {
         *options = exercise_options.sentence_transformation;
     }
+    exercise_options
+        .narrative
+        .validate()
+        .map_err(str::to_owned)?;
+    for id in [
+        "story-builder",
+        "reading-comprehension",
+        "conversation-practice",
+    ] {
+        if let Some(super::practice_session_store::ExerciseConfiguration::Narrative(options)) =
+            session.exercise_configurations.get_mut(id)
+        {
+            *options = exercise_options.narrative;
+        }
+    }
     let direction = match draft.translation.direction {
         zipeek_exercises::practice_draft::TranslationDirection::ChineseToEnglish => "zh-to-en",
         zipeek_exercises::practice_draft::TranslationDirection::EnglishToChinese => "en-to-zh",
@@ -118,7 +138,11 @@ pub(crate) fn create_session(
     {
         *stored = direction;
     }
-    session.endless_translation = translation_only && draft.translation_count == 0;
+    session.session_mode = if endless {
+        super::practice_session_store::SessionMode::Endless
+    } else {
+        super::practice_session_store::SessionMode::Fixed
+    };
     session
         .configure_quiz_formats(
             &draft.matching_formats,
@@ -127,8 +151,12 @@ pub(crate) fn create_session(
                 == zipeek_exercises::practice_draft::MatchingColumnOrder::Reversed,
         )
         .map_err(|error| format!("Cannot prepare exercise formats: {error:?}"))?;
-    if let Some(super::practice_session_store::ExerciseConfiguration::Quiz { pair_count, ai_generated, show_pinyin, .. }) =
-        session.exercise_configurations.get_mut("matching")
+    if let Some(super::practice_session_store::ExerciseConfiguration::Quiz {
+        pair_count,
+        ai_generated,
+        show_pinyin,
+        ..
+    }) = session.exercise_configurations.get_mut("matching")
     {
         *pair_count = exercise_options.matching_pairs;
         *ai_generated = exercise_options.matching_ai_generated;
@@ -142,7 +170,13 @@ pub(crate) fn create_session(
         }
         session.queue_generation(2);
     }
-    session.validate().map_err(|error| format!("Invalid prepared session: {error:?}"))?;
+    session
+        .replenish_endless_steps()
+        .map_err(|error| format!("Cannot prepare upcoming exercises: {error:?}"))?;
+    session.queue_generation(3);
+    session
+        .validate()
+        .map_err(|error| format!("Invalid prepared session: {error:?}"))?;
     super::practice_session_store::PracticeSessionStore::new(storage.clone())
         .create(&session)
         .map_err(|error| format!("Cannot save local session: {error:?}"))?;

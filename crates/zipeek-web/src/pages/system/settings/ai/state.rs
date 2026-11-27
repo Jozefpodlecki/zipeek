@@ -7,7 +7,7 @@ use crate::services::ai;
 const LOCAL_URL: &str = "http://127.0.0.1:1430/v1/";
 const LM_STUDIO_URL: &str = "http://192.168.1.148:1234/v1/";
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(super) enum AiProvider {
     Local,
     LmStudio,
@@ -31,9 +31,17 @@ pub(super) struct AiSettingsState {
 pub(super) enum AiSettingsAction {
     UrlChanged(String),
     ProviderChanged(AiProvider),
-    DiscoverModels { ticket: u64 },
-    ModelsDiscovered { ticket: u64, models: Vec<String> },
-    ModelDiscoveryFailed { ticket: u64, message: String },
+    DiscoverModels {
+        ticket: u64,
+    },
+    ModelsDiscovered {
+        ticket: u64,
+        models: Vec<String>,
+    },
+    ModelDiscoveryFailed {
+        ticket: u64,
+        message: String,
+    },
     ModelChanged(String),
     KeyChanged(String),
     Saved {
@@ -73,7 +81,11 @@ impl AiSettingsState {
     }
 
     pub(super) fn provider(&self) -> AiProvider {
-        if self.url == LOCAL_URL { AiProvider::Local } else { AiProvider::LmStudio }
+        if self.url == LOCAL_URL {
+            AiProvider::Local
+        } else {
+            AiProvider::LmStudio
+        }
     }
 
     pub(super) fn test_busy(&self) -> bool {
@@ -101,7 +113,9 @@ impl Reducible for AiSettingsState {
                 next.discovery_error = None;
             }
             AiSettingsAction::ModelsDiscovered { ticket, models } => {
-                if next.model_discovery != Some(ticket) { return self; }
+                if next.model_discovery != Some(ticket) {
+                    return self;
+                }
                 next.model_discovery = None;
                 next.discovery_error = if models.is_empty() {
                     Some("No models were returned. Enter a model ID manually.".to_owned())
@@ -114,7 +128,9 @@ impl Reducible for AiSettingsState {
                 next.models = models;
             }
             AiSettingsAction::ModelDiscoveryFailed { ticket, message } => {
-                if next.model_discovery != Some(ticket) { return self; }
+                if next.model_discovery != Some(ticket) {
+                    return self;
+                }
                 next.model_discovery = None;
                 next.discovery_error = Some(message);
             }
@@ -329,9 +345,14 @@ mod discovery_feedback_tests {
             ticket: 5,
             message: "Server did not respond".to_owned(),
         });
-        assert_eq!(failed.discovery_error.as_deref(), Some("Server did not respond"));
+        assert_eq!(
+            failed.discovery_error.as_deref(),
+            Some("Server did not respond")
+        );
         assert!(failed.message.is_empty());
-        let edited = failed.reduce(AiSettingsAction::UrlChanged("http://localhost:1234/v1".to_owned()));
+        let edited = failed.reduce(AiSettingsAction::UrlChanged(
+            "http://localhost:1234/v1".to_owned(),
+        ));
         assert!(edited.discovery_error.is_none());
     }
 
@@ -365,7 +386,9 @@ mod provider_tests {
     #[test]
     fn choosing_local_sets_native_server_and_model() {
         let initial = Rc::new(AiSettingsState::new(ai::AiConfiguration {
-            url: LM_STUDIO_URL.into(), model: "remote".into(), key_present: false,
+            url: LM_STUDIO_URL.into(),
+            model: "remote".into(),
+            key_present: false,
         }));
         let chosen = initial.reduce(AiSettingsAction::ProviderChanged(AiProvider::Local));
         assert_eq!(chosen.url, LOCAL_URL);

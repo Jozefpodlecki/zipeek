@@ -1,13 +1,17 @@
 mod exercise;
+mod frame;
 mod generation;
 mod history;
 mod page;
 mod persistence;
 mod progress;
+mod registry;
 mod restore;
+mod state;
 mod summary;
 #[cfg(test)]
 mod tests;
+mod transition;
 
 use yew::prelude::*;
 

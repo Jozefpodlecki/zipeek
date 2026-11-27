@@ -142,11 +142,6 @@ pub(crate) fn word_set_panel() -> Html {
     } else {
         Html::default()
     };
-    let selected_label = if let (Ok(saved), Some(id)) = (&sets.state.sets, &sets.state.target) {
-        word_sets::find(saved, id).map(|set| set.name.clone())
-    } else {
-        None
-    };
     let saved_word_set_details = if let Ok(saved) = &sets.state.sets {
         html! {
             <div class="space-y-1" role="group" aria-label="Available Word Sets">
@@ -188,7 +183,6 @@ pub(crate) fn word_set_panel() -> Html {
         >
             <div class="flex items-center justify-between gap-2">
                 <h2 class="text-lg font-semibold">{"My sets"}</h2>
-                <Icon data={IconData::LUCIDE_BOOK_OPEN} width="19px" height="19px" />
             </div>
             <form class="space-y-2" onsubmit={Callback::from({
                 let sets = sets.clone();
@@ -201,22 +195,17 @@ pub(crate) fn word_set_panel() -> Html {
                     }
                 }
             })}>
-                <label class="block text-xs font-semibold text-muted" for="new-word-set-name">{"New Word Set"}</label>
+                <label class="sr-only" for="new-word-set-name">{"New Word Set name"}</label>
                 <input id="new-word-set-name" data-new-word-set="" class="min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm" maxlength="64" value={(*set_name).clone()} oninput={on_set_name} placeholder="My vocabulary" />
-                <button type="submit" data-create-word-set="" class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-action px-3 text-sm font-semibold text-white disabled:opacity-50" disabled={sets.state.sets.is_err() || set_name.trim().is_empty()}>
+                <button type="submit" data-create-word-set="" class="inline-flex size-10 items-center justify-center rounded-lg bg-brand-action text-white disabled:opacity-50" aria-label="Create Word Set" title="New Word Set" disabled={sets.state.sets.is_err() || set_name.trim().is_empty()}>
                     <Icon data={IconData::LUCIDE_PLUS} width="17px" height="17px" />
-                    {"New set"}
                 </button>
             </form>
             <WordSetMessages load_error={sets.state.sets.as_ref().err().cloned()} feedback={sets.state.feedback.clone()} on_reload={on_reload}/>
             <div class="space-y-2" data-component="word-set-selector">
-                <div data-target-word-set="" data-selected-word-set-id={sets.state.target.as_ref().map(ToString::to_string).unwrap_or_default()} class="text-xs font-semibold text-muted">
-                    {selected_label.unwrap_or_else(|| "Choose a personal set".to_owned())}
-                </div>
                 <nav data-word-set-options="" aria-label="Available Word Sets">
                     {saved_word_set_details}
                 </nav>
-                <p class="text-xs text-muted">{"Words saved from Dictionary go to this set. Your selection is remembered; Practice chooses its vocabulary separately."}</p>
             </div>
             {selected_word_set_details}
             {target_word_content}

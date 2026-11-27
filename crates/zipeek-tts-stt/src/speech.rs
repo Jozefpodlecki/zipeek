@@ -50,7 +50,9 @@ impl fmt::Display for SpeechError {
             Self::Invalid(message) | Self::Unavailable(message) => f.write_str(message),
             Self::Busy => f.write_str("speech engine is busy"),
             Self::Timeout(message) => f.write_str(message),
-            Self::ModelLoad(message) | Self::Inference(message) | Self::Codec(message) => f.write_str(message),
+            Self::ModelLoad(message) | Self::Inference(message) | Self::Codec(message) => {
+                f.write_str(message)
+            }
             Self::Cancelled => f.write_str("speech request cancelled"),
             Self::Io(error) => fmt::Display::fmt(error, f),
         }
@@ -86,7 +88,10 @@ fn read_device(key: &str, default: &str) -> io::Result<ComputeDevice> {
     match value.as_str() {
         "cpu" => Ok(ComputeDevice::Cpu),
         "cuda" => Ok(ComputeDevice::Cuda),
-        _ => Err(io::Error::new(io::ErrorKind::InvalidInput, format!("{key} must be cpu or cuda"))),
+        _ => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("{key} must be cpu or cuda"),
+        )),
     }
 }
 
@@ -136,15 +141,22 @@ impl Speech {
             .unwrap_or_else(|| speech_models.join("Qwen3-ASR-0.6B/model.safetensors"));
         let qwen_tts_model = std::env::var_os("ZIPEEK_QWEN_TTS_MODEL")
             .map(PathBuf::from)
-            .unwrap_or_else(|| speech_models.join("Qwen3-TTS-12Hz-0.6B-CustomVoice/model.safetensors"));
+            .unwrap_or_else(|| {
+                speech_models.join("Qwen3-TTS-12Hz-0.6B-CustomVoice/model.safetensors")
+            });
         let candle_tts_model = std::env::var_os("ZIPEEK_CANDLE_TTS_MODEL")
             .map(PathBuf::from)
             .unwrap_or_else(|| speech_models.join("Kokoro-82M-v1.1-zh/kokoro-v1_1-zh.pth"));
         let tts_device = read_device("ZIPEEK_TTS_DEVICE", "cuda")?;
         let stt_device = read_device("ZIPEEK_STT_DEVICE", "cpu")?;
         Ok(Self::build(
-            espeak, espeak_data, candle_stt_model, qwen_tts_model,
-            candle_tts_model, tts_device, stt_device,
+            espeak,
+            espeak_data,
+            candle_stt_model,
+            qwen_tts_model,
+            candle_tts_model,
+            tts_device,
+            stt_device,
         ))
     }
 
@@ -152,10 +164,17 @@ impl Speech {
         let qwen_tts_model = PathBuf::from("zipeek-model-not-configured/model.safetensors");
         let candle_tts_model = std::env::var_os("ZIPEEK_CANDLE_TTS_MODEL")
             .map(PathBuf::from)
-            .unwrap_or_else(|| default_speech_models_root().join("Kokoro-82M-v1.1-zh/kokoro-v1_1-zh.pth"));
+            .unwrap_or_else(|| {
+                default_speech_models_root().join("Kokoro-82M-v1.1-zh/kokoro-v1_1-zh.pth")
+            });
         Self::build(
-            espeak, espeak_data, candle_stt_model, qwen_tts_model,
-            candle_tts_model, ComputeDevice::Cuda, ComputeDevice::Cpu,
+            espeak,
+            espeak_data,
+            candle_stt_model,
+            qwen_tts_model,
+            candle_tts_model,
+            ComputeDevice::Cuda,
+            ComputeDevice::Cpu,
         )
     }
 
@@ -168,10 +187,17 @@ impl Speech {
         tts_device: ComputeDevice,
         stt_device: ComputeDevice,
     ) -> Self {
-        let tts_installed = QwenTtsAssets::from_checkpoint(&qwen_tts_model).validate().is_ok();
-        let stt_installed = QwenAsrAssets::from_checkpoint(&candle_stt_model).validate().is_ok();
+        let tts_installed = QwenTtsAssets::from_checkpoint(&qwen_tts_model)
+            .validate()
+            .is_ok();
+        let stt_installed = QwenAsrAssets::from_checkpoint(&candle_stt_model)
+            .validate()
+            .is_ok();
         let tts_worker = TtsWorker::start(
-            qwen_tts_model.parent().unwrap_or(Path::new(".")).to_path_buf(),
+            qwen_tts_model
+                .parent()
+                .unwrap_or(Path::new("."))
+                .to_path_buf(),
             tts_device,
             tts_installed,
         );
@@ -199,14 +225,22 @@ impl Speech {
 
     pub async fn initialize_neural_engines(&self) -> Result<(), SpeechError> {
         if self.qwen_tts_model.is_file() {
-            let permit = self.synthesis.clone().acquire_owned().await
+            let permit = self
+                .synthesis
+                .clone()
+                .acquire_owned()
+                .await
                 .map_err(|_| SpeechError::Unavailable("Qwen3-TTS worker is shutting down"))?;
             let result = self.tts_worker.warm().await;
             drop(permit);
             result?;
         }
         if self.candle_stt_model.is_file() {
-            let permit = self.recognition.clone().acquire_owned().await
+            let permit = self
+                .recognition
+                .clone()
+                .acquire_owned()
+                .await
                 .map_err(|_| SpeechError::Unavailable("Qwen3-ASR worker is shutting down"))?;
             let result = self.stt_worker.warm().await;
             drop(permit);
@@ -297,7 +331,12 @@ impl Speech {
         } else {
             format!("espeak:{text}")
         };
-        if let Some(cached) = self.tts_cache.lock().unwrap_or_else(|error| error.into_inner()).get(&cache_key) {
+        if let Some(cached) = self
+            .tts_cache
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .get(&cache_key)
+        {
             return Ok(cached);
         }
         let permit = self
@@ -318,7 +357,9 @@ impl Speech {
             .map_err(|_| SpeechError::Timeout("Qwen3-TTS inference timed out"))?;
             drop(cancellation_guard);
             if let Ok(ref wav) = result {
-                self.tts_cache.lock().unwrap_or_else(|error| error.into_inner())
+                self.tts_cache
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
                     .insert(cache_key, wav.clone());
             }
             return result;
@@ -367,10 +408,12 @@ impl Speech {
         .await;
         match result {
             Ok(Ok(output)) => {
-                self.tts_cache.lock().unwrap_or_else(|error| error.into_inner())
+                self.tts_cache
+                    .lock()
+                    .unwrap_or_else(|error| error.into_inner())
                     .insert(cache_key, output.clone());
                 Ok(output)
-            },
+            }
             Ok(Err(error)) => {
                 let _ = child.kill().await;
                 let _ = child.wait().await;

@@ -202,7 +202,10 @@ fn matching_round_size_is_configurable_but_multiple_choice_is_four() {
 #[test]
 fn audio_matching_preserves_pair_identity_across_both_answer_modes() {
     use zipeek_core::practice::ExerciseVariant;
-    for mode in [ExerciseVariant::MatchingAudioHanzi, ExerciseVariant::MatchingAudioMeaning] {
+    for mode in [
+        ExerciseVariant::MatchingAudioHanzi,
+        ExerciseVariant::MatchingAudioMeaning,
+    ] {
         let first = prepare_for_format_with_count(&words(), 127, mode, 5).unwrap();
         let second = prepare_for_format_with_count(&words(), 127, mode, 5).unwrap();
         assert_eq!(first, second);
@@ -210,11 +213,14 @@ fn audio_matching_preserves_pair_identity_across_both_answer_modes() {
         for word in &first.words {
             assert_eq!(first.prompt_for(word), word.hanzi);
             assert_eq!(first.pair_is_correct(word.id, word.id), Ok(true));
-            assert_eq!(first.option_for(word), if mode == ExerciseVariant::MatchingAudioHanzi {
-                word.hanzi.as_str()
-            } else {
-                word.meaning.as_str()
-            });
+            assert_eq!(
+                first.option_for(word),
+                if mode == ExerciseVariant::MatchingAudioHanzi {
+                    word.hanzi.as_str()
+                } else {
+                    word.meaning.as_str()
+                }
+            );
         }
     }
 }

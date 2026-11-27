@@ -37,12 +37,21 @@ impl SpeechStopDetector {
             _ => 0.0,
         };
         self.last_sample_ms = Some(now_ms);
-        let power = samples.iter().filter(|value| value.is_finite())
-            .map(|sample| sample * sample).sum::<f32>() / samples.len() as f32;
+        let power = samples
+            .iter()
+            .filter(|value| value.is_finite())
+            .map(|sample| sample * sample)
+            .sum::<f32>()
+            / samples.len() as f32;
         let rms = power.sqrt();
         let start_threshold = (self.noise_floor * 3.0).max(0.012);
         let continue_threshold = (self.noise_floor * 1.7).max(0.007);
-        let voiced = rms >= if self.speech_started { continue_threshold } else { start_threshold };
+        let voiced = rms
+            >= if self.speech_started {
+                continue_threshold
+            } else {
+                start_threshold
+            };
 
         if !self.speech_started {
             if voiced {
@@ -71,7 +80,15 @@ mod tests {
     use super::*;
 
     fn frame(amplitude: f32) -> Vec<f32> {
-        (0..1024).map(|index| if index % 2 == 0 { amplitude } else { -amplitude }).collect()
+        (0..1024)
+            .map(|index| {
+                if index % 2 == 0 {
+                    amplitude
+                } else {
+                    -amplitude
+                }
+            })
+            .collect()
     }
 
     #[test]
@@ -85,9 +102,15 @@ mod tests {
     #[test]
     fn stops_after_confirmed_speech_and_continuous_silence() {
         let mut vad = SpeechStopDetector::new(VadConfig { silence_ms: 900.0 });
-        for tick in 0..8 { assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0)); }
-        for tick in 8..15 { assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0)); }
-        for tick in 15..26 { assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0)); }
+        for tick in 0..8 {
+            assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0));
+        }
+        for tick in 8..15 {
+            assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0));
+        }
+        for tick in 15..26 {
+            assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0));
+        }
         assert!(vad.observe(&frame(0.001), 26.0 * 80.0));
     }
 
@@ -96,10 +119,18 @@ mod tests {
         let mut vad = SpeechStopDetector::new(VadConfig { silence_ms: 1500.0 });
         assert!(!vad.observe(&frame(0.09), 0.0));
         assert!(!vad.observe(&frame(0.001), 80.0));
-        for tick in 2..9 { assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0)); }
-        for tick in 9..24 { assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0)); }
-        for tick in 24..28 { assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0)); }
-        for tick in 28..46 { assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0)); }
+        for tick in 2..9 {
+            assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0));
+        }
+        for tick in 9..24 {
+            assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0));
+        }
+        for tick in 24..28 {
+            assert!(!vad.observe(&frame(0.09), tick as f64 * 80.0));
+        }
+        for tick in 28..46 {
+            assert!(!vad.observe(&frame(0.001), tick as f64 * 80.0));
+        }
         assert!(vad.observe(&frame(0.001), 46.0 * 80.0));
     }
 

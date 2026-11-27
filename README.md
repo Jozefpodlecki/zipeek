@@ -108,3 +108,10 @@ cargo run --locked -p zipeek-cli -- build pedagogy-worker
 ```
 
 Or use `cargo make pedagogy-worker`. The CLI generates `pedagogy_wasm.js` and `pedagogy_wasm_bg.wasm` alongside `worker.mjs` under `crates/zipeek-web/static/pedagogy-worker/`. This builds the transport only; it does not enable pedagogical tracking.
+
+
+## Local image generation
+
+The image sidecar defaults to **SDXL**, not a simulated image preview. It requires a locally installed SDXL model directory and a CUDA-capable environment. The source archive does not bundle SDXL weights. Put the model files under `models/sdxl` at the repository root, or set `ZIPEEK_IMAGE_MODEL_DIR` to their absolute location **in the environment of the process that launches Zipeek**. Restart the image service after changing the environment. On the desktop, go to Settings → Services and start Image generation, then check Settings → Image Generation.
+
+If the SDXL model files are absent, the service fails to start rather than display a fake generated image. For development-only protocol testing, set `ZIPEEK_IMAGE_BACKEND=placeholder` explicitly before launching the service. This preview mode is reported as **not inference-ready** in Zipeek and cannot be used for real image generation. Health indicates network/process reachability; readiness additionally requires the SDXL backend.

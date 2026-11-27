@@ -27,10 +27,12 @@ use crate::{
 pub fn practice_setup() -> Html {
     let state = use_reducer_eq(SetupState::default);
     let session_revision = use_state(|| 0_u64);
+    let blocked_feedback = use_state(|| None::<String>);
+    let environment = use_app_environment();
     {
         let revision = session_revision.clone();
+        let window = environment.window.clone();
         use_effect_with((), move |_| {
-            let window = gloo::utils::window();
             let on_change = {
                 let revision = revision.clone();
                 gloo::events::EventListener::new(
@@ -50,7 +52,6 @@ pub fn practice_setup() -> Html {
     }
     let saved = use_saved_exclusions();
     let navigator = use_navigator().expect("Practice setup requires the router provider");
-    let environment = use_app_environment();
     let storage = environment.local_storage.clone();
     let personal_sets = use_state(move || word_sets::read(&storage));
     let location = use_location();
@@ -128,30 +129,38 @@ pub fn practice_setup() -> Html {
     let local_enabled = local_speech::enabled();
     {
         let speech_status = speech_status.clone();
-        use_effect_with((needs_tts, local_enabled, *speech_revision), move |(requires_tts, enabled, _revision)| {
-            let live = Rc::new(Cell::new(true));
-            if !requires_tts {
-                speech_status.set(Some(Ok(())));
-            } else if !enabled {
-                speech_status.set(Some(Err(
-                    "Enable Local Mandarin speech in Settings to use audio matching.".to_owned(),
-                )));
-            } else {
-                speech_status.set(None);
-                let live_task = live.clone();
-                spawn_local(async move {
-                    let status = match local_speech::service_capabilities().await {
-                        Ok(value) if value.synthesis => Ok(()),
-                        Ok(_) => Err("Local speech is running, but neural TTS is unavailable.".to_owned()),
-                        Err(_) => Err("Cannot reach the local speech server at 127.0.0.1:8799.".to_owned()),
-                    };
-                    if live_task.get() {
-                        speech_status.set(Some(status));
-                    }
-                });
-            }
-            move || live.set(false)
-        });
+        use_effect_with(
+            (needs_tts, local_enabled, *speech_revision),
+            move |(requires_tts, enabled, _revision)| {
+                let live = Rc::new(Cell::new(true));
+                if !requires_tts {
+                    speech_status.set(Some(Ok(())));
+                } else if !enabled {
+                    speech_status.set(Some(Err(
+                        "Enable Local Mandarin speech in Settings to use audio matching."
+                            .to_owned(),
+                    )));
+                } else {
+                    speech_status.set(None);
+                    let live_task = live.clone();
+                    spawn_local(async move {
+                        let status = match local_speech::service_capabilities().await {
+                            Ok(value) if value.synthesis => Ok(()),
+                            Ok(_) => Err("Local speech is running, but neural TTS is unavailable."
+                                .to_owned()),
+                            Err(_) => {
+                                Err("Cannot reach the local speech server at 127.0.0.1:8799."
+                                    .to_owned())
+                            }
+                        };
+                        if live_task.get() {
+                            speech_status.set(Some(status));
+                        }
+                    });
+                }
+                move || live.set(false)
+            },
+        );
     }
     let personal_reference = match &draft.vocabulary {
         VocabularySource::PersonalSet { reference } => reference.as_str(),
@@ -292,20 +301,77 @@ pub fn practice_setup() -> Html {
             .as_ref()
             .ok()
             .and_then(|inventory| inventory.sessions.first());
-        let warning = match &session_inventory {
-            Ok(inventory) if inventory.invalid_records > 0 => Some(format!(
-                "{} saved Practice record(s) need recovery. No records were deleted.",
-                inventory.invalid_records,
-            )),
-            Err(error) => Some(format!(
-                "Could not check saved Practice sessions: {error:?}"
-            )),
-            _ => None,
+        let has_invalid_records = session_inventory
+            .as_ref()
+            .is_ok_and(|inventory| inventory.invalid_records > 0);
+        let warning = if let Some(message) = &*blocked_feedback {
+            Some(message.clone())
+        } else {
+            match &session_inventory {
+                Ok(inventory) if inventory.invalid_records > 0 => Some(format!(
+                    "{} saved Practice record(s) need recovery. No records were deleted.",
+                    inventory.invalid_records,
+                )),
+                Err(error) => Some(format!(
+                    "Could not check saved Practice sessions: {error:?}"
+                )),
+                _ => None,
+            }
+        };
+        let on_retry_session_inventory = {
+            let session_revision = session_revision.clone();
+            let blocked_feedback = blocked_feedback.clone();
+            Callback::from(move |_: MouseEvent| {
+                blocked_feedback.set(None);
+                session_revision.set((*session_revision).wrapping_add(1));
+            })
+        };
+        let on_discard_session = {
+            let storage = environment.local_storage.clone();
+            let session_revision = session_revision.clone();
+            let blocked_feedback = blocked_feedback.clone();
+            let session_id = existing.map(|session| session.id.clone());
+            Callback::from(move |_: MouseEvent| {
+                let Some(id) = &session_id else {
+                    return;
+                };
+                match PracticeSessionStore::new(storage.clone()).discard(id) {
+                    Ok(()) => {
+                        blocked_feedback.set(None);
+                        session_revision.set((*session_revision).wrapping_add(1));
+                    }
+                    Err(error) => blocked_feedback.set(Some(format!(
+                        "Could not remove the saved session: {error:?}"
+                    ))),
+                }
+            })
+        };
+        let on_clear_invalid_records = {
+            let storage = environment.local_storage.clone();
+            let session_revision = session_revision.clone();
+            let blocked_feedback = blocked_feedback.clone();
+            Callback::from(move |_: MouseEvent| {
+                match PracticeSessionStore::new(storage.clone()).clear_invalid_sessions() {
+                    Ok(removed) => {
+                        blocked_feedback.set(Some(format!(
+                            "Removed {removed} broken saved Practice record(s)."
+                        )));
+                        session_revision.set((*session_revision).wrapping_add(1));
+                    }
+                    Err(error) => blocked_feedback.set(Some(format!(
+                        "Could not remove broken saved Practice records: {error:?}"
+                    ))),
+                }
+            })
         };
         return html! {
             <super::session_recovery::PracticeSessionRecovery
                 session={existing.cloned()}
                 warning={warning}
+                has_invalid_records={has_invalid_records}
+                on_retry={on_retry_session_inventory}
+                on_discard_session={on_discard_session}
+                on_clear_invalid_records={on_clear_invalid_records}
             />
         };
     }

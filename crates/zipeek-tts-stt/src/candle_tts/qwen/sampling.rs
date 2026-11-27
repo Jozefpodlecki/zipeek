@@ -26,7 +26,9 @@ pub struct SamplingRng {
 
 impl SamplingRng {
     pub fn seeded(seed: u64) -> Self {
-        Self { state: if seed == 0 { 0x9e3779b97f4a7c15 } else { seed } }
+        Self {
+            state: if seed == 0 { 0x9e3779b97f4a7c15 } else { seed },
+        }
     }
 
     pub fn from_entropy() -> Self {
@@ -59,7 +61,10 @@ pub fn top_k_logits(logits: &[f32], k: usize) -> Result<Vec<(u32, f32)>, String>
         .map(|(index, logit)| (index as u32, logit))
         .collect::<Vec<_>>();
     values.sort_unstable_by(|left, right| {
-        right.1.total_cmp(&left.1).then_with(|| left.0.cmp(&right.0))
+        right
+            .1
+            .total_cmp(&left.1)
+            .then_with(|| left.0.cmp(&right.0))
     });
     values.truncate(k.min(values.len()));
     Ok(values)
@@ -106,7 +111,10 @@ pub fn sample_logits(
         choices.push((index as u32, score / parameters.temperature));
     }
     choices.sort_unstable_by(|left, right| {
-        right.1.total_cmp(&left.1).then_with(|| left.0.cmp(&right.0))
+        right
+            .1
+            .total_cmp(&left.1)
+            .then_with(|| left.0.cmp(&right.0))
     });
     choices.truncate(parameters.top_k.min(choices.len()));
     let maximum = choices[0].1;
@@ -148,7 +156,11 @@ pub fn sample_acoustic_code(
     parameters: GenerationSampling,
     rng: &mut SamplingRng,
 ) -> Result<Option<u32>, String> {
-    if codebook_size == 0 || codebook_size > logits.len() || eos_token >= logits.len() || eos_token < codebook_size {
+    if codebook_size == 0
+        || codebook_size > logits.len()
+        || eos_token >= logits.len()
+        || eos_token < codebook_size
+    {
         return Err("invalid Qwen3-TTS acoustic sampling vocabulary".into());
     }
     let mut allowed = (0..codebook_size).collect::<Vec<_>>();
@@ -173,41 +185,99 @@ mod tests {
     #[test]
     fn stable_rank_and_rejects_invalid_logits() {
         assert_eq!(greedy_code(&[0.4, 2.0, 2.0]).unwrap(), 1);
-        assert_eq!(top_k_logits(&[0.1, 0.3, 0.2], 2).unwrap(), vec![(1, 0.3), (2, 0.2)]);
+        assert_eq!(
+            top_k_logits(&[0.1, 0.3, 0.2], 2).unwrap(),
+            vec![(1, 0.3), (2, 0.2)]
+        );
         assert!(greedy_code(&[f32::NAN]).is_err());
         assert!(greedy_code(&[]).is_err());
     }
 
     #[test]
     fn fixed_seed_replays_stochastic_selection() {
-        let config = GenerationSampling { top_k: 3, ..Default::default() };
+        let config = GenerationSampling {
+            top_k: 3,
+            ..Default::default()
+        };
         let logits = [2.0, 2.1, 2.2];
         let mut first = SamplingRng::seeded(1234);
         let mut second = SamplingRng::seeded(1234);
-        let samples_a = (0..64).map(|_| sample_residual_code(&logits, config, &mut first).unwrap()).collect::<Vec<_>>();
-        let samples_b = (0..64).map(|_| sample_residual_code(&logits, config, &mut second).unwrap()).collect::<Vec<_>>();
+        let samples_a = (0..64)
+            .map(|_| sample_residual_code(&logits, config, &mut first).unwrap())
+            .collect::<Vec<_>>();
+        let samples_b = (0..64)
+            .map(|_| sample_residual_code(&logits, config, &mut second).unwrap())
+            .collect::<Vec<_>>();
         assert_eq!(samples_a, samples_b);
-        assert!(samples_a.iter().copied().collect::<std::collections::HashSet<_>>().len() > 1);
+        assert!(
+            samples_a
+                .iter()
+                .copied()
+                .collect::<std::collections::HashSet<_>>()
+                .len()
+                > 1
+        );
     }
 
     #[test]
     fn repetition_penalty_can_break_a_greedy_loop() {
         let logits = [10.0, 9.8, -1.0, 8.0];
         let mut rng = SamplingRng::seeded(7);
-        let result = sample_acoustic_code(&logits, 3, 3, &[0], GenerationSampling {
-            top_k: 1,
-            repetition_penalty: 1.1,
-            ..Default::default()
-        }, &mut rng).unwrap();
+        let result = sample_acoustic_code(
+            &logits,
+            3,
+            3,
+            &[0],
+            GenerationSampling {
+                top_k: 1,
+                repetition_penalty: 1.1,
+                ..Default::default()
+            },
+            &mut rng,
+        )
+        .unwrap();
         assert_eq!(result, Some(1));
     }
 
     #[test]
     fn eos_is_sampled_and_invalid_values_fail() {
         let mut rng = SamplingRng::seeded(4);
-        assert_eq!(sample_acoustic_code(&[1.0, 2.0, 30.0], 2, 2, &[], GenerationSampling::default(), &mut rng).unwrap(), None);
-        assert!(sample_acoustic_code(&[1.0, 2.0], 2, 1, &[], GenerationSampling::default(), &mut rng).is_err());
-        assert!(sample_residual_code(&[f32::NAN], GenerationSampling::default(), &mut rng).is_err());
-        assert!(sample_residual_code(&[1.0], GenerationSampling { temperature: 0.0, ..Default::default() }, &mut rng).is_err());
+        assert_eq!(
+            sample_acoustic_code(
+                &[1.0, 2.0, 30.0],
+                2,
+                2,
+                &[],
+                GenerationSampling::default(),
+                &mut rng
+            )
+            .unwrap(),
+            None
+        );
+        assert!(
+            sample_acoustic_code(
+                &[1.0, 2.0],
+                2,
+                1,
+                &[],
+                GenerationSampling::default(),
+                &mut rng
+            )
+            .is_err()
+        );
+        assert!(
+            sample_residual_code(&[f32::NAN], GenerationSampling::default(), &mut rng).is_err()
+        );
+        assert!(
+            sample_residual_code(
+                &[1.0],
+                GenerationSampling {
+                    temperature: 0.0,
+                    ..Default::default()
+                },
+                &mut rng
+            )
+            .is_err()
+        );
     }
 }

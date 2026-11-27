@@ -84,17 +84,28 @@ fn error_response(error: SpeechError) -> Response {
         SpeechError::Busy => StatusCode::TOO_MANY_REQUESTS,
         SpeechError::Timeout(_) => StatusCode::GATEWAY_TIMEOUT,
         SpeechError::Cancelled => StatusCode::REQUEST_TIMEOUT,
-        SpeechError::Inference(_) | SpeechError::Codec(_) | SpeechError::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        SpeechError::Inference(_) | SpeechError::Codec(_) | SpeechError::Io(_) => {
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
     };
     let public_message = match &error {
-        SpeechError::Invalid(_) | SpeechError::Unavailable(_) | SpeechError::Busy
-        | SpeechError::Timeout(_) | SpeechError::Cancelled => error.to_string(),
+        SpeechError::Invalid(_)
+        | SpeechError::Unavailable(_)
+        | SpeechError::Busy
+        | SpeechError::Timeout(_)
+        | SpeechError::Cancelled => error.to_string(),
         SpeechError::ModelLoad(_) => "speech model unavailable".to_owned(),
         SpeechError::Inference(_) => "speech inference failed".to_owned(),
         SpeechError::Codec(_) => "speech audio conversion failed".to_owned(),
         SpeechError::Io(_) => "speech service failed".to_owned(),
     };
-    if matches!(&error, SpeechError::ModelLoad(_) | SpeechError::Inference(_) | SpeechError::Codec(_) | SpeechError::Io(_)) {
+    if matches!(
+        &error,
+        SpeechError::ModelLoad(_)
+            | SpeechError::Inference(_)
+            | SpeechError::Codec(_)
+            | SpeechError::Io(_)
+    ) {
         tracing::error!(error = %error, "speech request failed");
     }
     (
@@ -108,10 +119,14 @@ fn error_response(error: SpeechError) -> Response {
         .into_response()
 }
 
-const TRUSTED_BROWSER_ORIGINS: [&str; 3] = [
+const TRUSTED_BROWSER_ORIGINS: [&str; 7] = [
     "http://localhost:1420",
     "http://localhost.:1420",
     "http://127.0.0.1:1420",
+    "http://localhost:1421",
+    "http://127.0.0.1:1421",
+    "http://tauri.localhost",
+    "tauri://localhost",
 ];
 
 fn trusted_browser_origin(headers: &HeaderMap) -> Result<Option<HeaderValue>, SpeechError> {
@@ -304,7 +319,9 @@ async fn synthesize(
         Err(_) => return error_response(SpeechError::Invalid("text must be UTF-8")),
     };
     let Some(requested_format) = choose_audio_format(
-        headers.get(header::ACCEPT).and_then(|value| value.to_str().ok()),
+        headers
+            .get(header::ACCEPT)
+            .and_then(|value| value.to_str().ok()),
     ) else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
@@ -533,7 +550,6 @@ mod tests {
         for origin in [
             "https://example.com",
             "https://localhost:1420",
-            "http://localhost:1421",
             "http://localhost.:1421",
             "http://localhost..:1420",
             "http://localhost.:1420.evil.test",
@@ -551,20 +567,37 @@ mod tests {
     #[tokio::test]
     async fn public_errors_do_not_reveal_internal_inference_or_model_paths() {
         for (error, status, public_message) in [
-            (SpeechError::ModelLoad("C:/secret/model.safetensors".into()), StatusCode::SERVICE_UNAVAILABLE, "speech model unavailable"),
-            (SpeechError::Inference("private tensor layout".into()), StatusCode::INTERNAL_SERVER_ERROR, "speech inference failed"),
-            (SpeechError::Codec("private codec exception".into()), StatusCode::INTERNAL_SERVER_ERROR, "speech audio conversion failed"),
+            (
+                SpeechError::ModelLoad("C:/secret/model.safetensors".into()),
+                StatusCode::SERVICE_UNAVAILABLE,
+                "speech model unavailable",
+            ),
+            (
+                SpeechError::Inference("private tensor layout".into()),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "speech inference failed",
+            ),
+            (
+                SpeechError::Codec("private codec exception".into()),
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "speech audio conversion failed",
+            ),
         ] {
             let response = error_response(error);
             assert_eq!(response.status(), status);
-            let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+            let body = axum::body::to_bytes(response.into_body(), 1024)
+                .await
+                .unwrap();
             assert_eq!(body.as_ref(), public_message.as_bytes());
         }
     }
 
     #[test]
     fn cancellation_has_distinct_http_status() {
-        assert_eq!(error_response(SpeechError::Cancelled).status(), StatusCode::REQUEST_TIMEOUT);
+        assert_eq!(
+            error_response(SpeechError::Cancelled).status(),
+            StatusCode::REQUEST_TIMEOUT
+        );
     }
 
     #[test]
@@ -577,8 +610,14 @@ mod tests {
     fn accepts_weighted_audio_content_negotiation() {
         assert_eq!(choose_audio_format(None), Some("wav"));
         assert_eq!(choose_audio_format(Some("audio/mpeg")), Some("mp3"));
-        assert_eq!(choose_audio_format(Some("audio/ogg; q=0.9, audio/mpeg; q=0.4")), Some("opus"));
-        assert_eq!(choose_audio_format(Some("audio/ogg;q=0, audio/wav;q=1")), Some("wav"));
+        assert_eq!(
+            choose_audio_format(Some("audio/ogg; q=0.9, audio/mpeg; q=0.4")),
+            Some("opus")
+        );
+        assert_eq!(
+            choose_audio_format(Some("audio/ogg;q=0, audio/wav;q=1")),
+            Some("wav")
+        );
         assert_eq!(choose_audio_format(Some("audio/*")), Some("wav"));
         assert_eq!(choose_audio_format(Some("audio/aac")), None);
         assert_eq!(choose_audio_format(Some("audio/mpeg;q=0")), None);

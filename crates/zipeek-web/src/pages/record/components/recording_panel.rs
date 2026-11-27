@@ -2,8 +2,8 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
 use super::waveform::{Waveform, use_playback_progress};
-use zipeek_browser::local_speech;
 use crate::pages::record::state::{Playback, RecordState, RecordingStage};
+use zipeek_browser::local_speech;
 
 #[derive(Properties, PartialEq)]
 pub(super) struct RecordingPanelProps {
@@ -23,7 +23,9 @@ pub(super) fn recording_panel(props: &RecordingPanelProps) -> Html {
     let state = &props.state;
     let active = state.playback == Playback::Recording;
     let progress = use_playback_progress(active);
-    let on_seek = Callback::from(|fraction: f64| { local_speech::seek_playback(fraction); });
+    let on_seek = Callback::from(|fraction: f64| {
+        local_speech::seek_playback(fraction);
+    });
     html! {
         <section class="flex min-w-0 flex-col items-center justify-center gap-4 rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-5" aria-label="Microphone recording">
             <div class="w-full">

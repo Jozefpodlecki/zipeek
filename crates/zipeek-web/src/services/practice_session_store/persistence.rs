@@ -55,7 +55,10 @@ impl PracticeSessionStore {
                 .ok_or(PracticeSessionError::OutOfDate)?;
             match decode_stored_session(id, &raw) {
                 Ok(session) => inventory.sessions.push(session),
-                Err(_) => inventory.invalid_records += 1,
+                Err(_) => {
+                    inventory.invalid_records += 1;
+                    inventory.invalid_ids.push(id.to_owned());
+                }
             }
         }
         inventory_keys_match(&keys, &self.inventory_keys()?)?;
@@ -103,8 +106,17 @@ impl PracticeSessionStore {
         self.write(session)
     }
 
+    pub fn reconcile_observations(
+        &self,
+        session: &PracticeSession,
+    ) -> Result<(), PracticeSessionError> {
+        crate::services::practice_observations::reconcile(&self.storage, session)
+            .map_err(PracticeSessionError::Storage)
+    }
+
     pub fn record_progress(&self, session: &PracticeSession) -> Result<(), PracticeSessionError> {
-        self.save(session)
+        self.save(session)?;
+        crate::services::practice_observations::reconcile_progress(&self.storage, session)
     }
 
     pub fn remove_completed(&self, session: &PracticeSession) -> Result<(), PracticeSessionError> {
@@ -142,8 +154,21 @@ impl PracticeSessionStore {
         Ok(())
     }
 
+    pub fn clear_invalid_sessions(&self) -> Result<usize, PracticeSessionError> {
+        let inventory = self.recoverable_sessions()?;
+        for id in &inventory.invalid_ids {
+            self.clear_invalid_record_key(id)?;
+        }
+        Ok(inventory.invalid_ids.len())
+    }
+
     pub fn clear_invalid_session(&self, id: &str) -> Result<(), PracticeSessionError> {
-        let key = session_storage_key(id)?;
+        session_storage_key(id)?;
+        self.clear_invalid_record_key(id)
+    }
+
+    fn clear_invalid_record_key(&self, id: &str) -> Result<(), PracticeSessionError> {
+        let key = format!("{SESSION_KEY_PREFIX}{id}");
         match self
             .storage
             .get_item(&key)

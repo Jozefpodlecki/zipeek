@@ -1,219 +1,211 @@
 use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
+use yew_icons::{Icon, IconData};
 
 use crate::{hooks::use_app_environment, services::image_generation};
 
 #[derive(Clone, PartialEq)]
-enum ConnectionFeedback {
+enum Feedback {
+    Healthy(String),
     Saved,
     Reset,
-    Checking,
-    Connected,
-    InvalidUrl(String),
-    HttpError(u16),
-    Unreachable(String),
+    Failure(String),
 }
 
 #[function_component(ImageServerSettings)]
 pub fn image_server_settings() -> Html {
     let environment = use_app_environment();
-    let initial_storage = environment.local_storage.clone();
-    let url = use_state(move || image_generation::read_api_url(&initial_storage));
-    let feedback = use_state(|| None::<ConnectionFeedback>);
-    let busy = use_state(|| false);
-    let epoch = use_mut_ref(|| 0u64);
+    let is_tauri = environment.is_tauri;
+    let storage = environment.local_storage.clone();
+    let url = use_state(move || image_generation::read_api_url(&storage));
+    let checking = use_state(|| false);
+    let generating = use_state(|| false);
+    let feedback = use_state(|| None::<Feedback>);
+    let preview = use_state(|| None::<String>);
+    let generation = use_mut_ref(|| 0u64);
+    use_effect_with((*preview).clone(), |current| {
+        let previous = current.clone();
+        move || {
+            if let Some(url) = previous {
+                image_generation::release_preview(&url);
+            }
+        }
+    });
 
-    let on_change = {
+    let on_url_change = {
         let url = url.clone();
         let feedback = feedback.clone();
-        let busy = busy.clone();
-        let epoch = epoch.clone();
+        let generation = generation.clone();
         Callback::from(move |event: InputEvent| {
-            busy.set(false);
-            *epoch.borrow_mut() += 1;
+            *generation.borrow_mut() += 1;
             url.set(event.target_unchecked_into::<HtmlInputElement>().value());
             feedback.set(None);
         })
     };
     let on_save = {
+        let storage = environment.local_storage.clone();
         let url = url.clone();
         let feedback = feedback.clone();
-        let storage = environment.local_storage.clone();
         Callback::from(
             move |_: MouseEvent| match image_generation::save_api_url(&storage, &url) {
                 Ok(()) => {
                     crate::contexts::service_management::notify_configuration_changed();
-                    feedback.set(Some(ConnectionFeedback::Saved));
+                    feedback.set(Some(Feedback::Saved));
                 }
-                Err(error) => feedback.set(Some(ConnectionFeedback::InvalidUrl(error))),
+                Err(error) => feedback.set(Some(Feedback::Failure(error))),
             },
         )
     };
     let on_reset = {
+        let storage = environment.local_storage.clone();
         let url = url.clone();
         let feedback = feedback.clone();
-        let busy = busy.clone();
-        let epoch = epoch.clone();
-        let storage = environment.local_storage.clone();
+        let generation = generation.clone();
         Callback::from(move |_: MouseEvent| {
-            *epoch.borrow_mut() += 1;
-            if let Err(error) = image_generation::reset_api_url(&storage) {
-                feedback.set(Some(ConnectionFeedback::InvalidUrl(error)));
-                return;
+            *generation.borrow_mut() += 1;
+            match image_generation::reset_api_url(&storage) {
+                Ok(()) => {
+                    url.set(image_generation::DEFAULT_URL.to_owned());
+                    feedback.set(Some(Feedback::Reset));
+                    crate::contexts::service_management::notify_configuration_changed();
+                }
+                Err(error) => feedback.set(Some(Feedback::Failure(error))),
             }
-            busy.set(false);
-            crate::contexts::service_management::notify_configuration_changed();
-            url.set(image_generation::DEFAULT_URL.to_owned());
-            feedback.set(Some(ConnectionFeedback::Reset));
         })
     };
-    let on_test = {
+    let on_check = {
         let url = url.clone();
+        let checking = checking.clone();
         let feedback = feedback.clone();
-        let busy = busy.clone();
-        let epoch = epoch.clone();
+        let generation = generation.clone();
         Callback::from(move |_: MouseEvent| {
-            if *busy {
-                return;
-            }
-            let candidate = url.trim().trim_end_matches('/').to_owned();
-            if let Err(error) = image_generation::validate_api_url(&candidate) {
-                feedback.set(Some(ConnectionFeedback::InvalidUrl(error.to_owned())));
+            if *checking {
                 return;
             }
             let ticket = {
-                let mut value = epoch.borrow_mut();
-                *value += 1;
-                *value
+                let mut current = generation.borrow_mut();
+                *current += 1;
+                *current
             };
-            busy.set(true);
-            feedback.set(Some(ConnectionFeedback::Checking));
+            checking.set(true);
+            feedback.set(None);
+            let endpoint = (*url).clone();
+            let checking = checking.clone();
             let feedback = feedback.clone();
-            let busy = busy.clone();
-            let epoch = epoch.clone();
+            let generation = generation.clone();
             spawn_local(async move {
-                let result = gloo::net::http::Request::get(&format!("{candidate}/health"))
-                    .send()
-                    .await;
-                if *epoch.borrow() != ticket {
+                let result = image_generation::check_health(&endpoint).await;
+                if *generation.borrow() != ticket {
                     return;
                 }
-                busy.set(false);
+                checking.set(false);
+                feedback.set(Some(match result {
+                    Ok(message) => Feedback::Healthy(message),
+                    Err(error) => Feedback::Failure(error),
+                }));
+            });
+        })
+    };
+    let on_generate = {
+        let generating = generating.clone();
+        let feedback = feedback.clone();
+        let preview = preview.clone();
+        let url = url.clone();
+        let generation = generation.clone();
+        Callback::from(move |_: MouseEvent| {
+            if *generating {
+                return;
+            }
+            let ticket = {
+                let mut current = generation.borrow_mut();
+                *current += 1;
+                *current
+            };
+            generating.set(true);
+            feedback.set(None);
+            preview.set(None);
+            let endpoint = (*url).clone();
+            let generating = generating.clone();
+            let feedback = feedback.clone();
+            let preview = preview.clone();
+            let generation = generation.clone();
+            spawn_local(async move {
+                let result = image_generation::generate(
+                    &endpoint,
+                    "A simple Chinese landscape painting of a mountain and river",
+                )
+                .await;
+                if *generation.borrow() != ticket {
+                    return;
+                }
+                generating.set(false);
                 match result {
-                    Ok(response) if response.ok() => {
-                        feedback.set(Some(ConnectionFeedback::Connected));
-                    }
-                    Ok(response) => {
-                        feedback.set(Some(ConnectionFeedback::HttpError(response.status())));
-                    }
-                    Err(error) => {
-                        feedback.set(Some(ConnectionFeedback::Unreachable(error.to_string())));
-                    }
+                    Ok(url) => preview.set(Some(url)),
+                    Err(error) => feedback.set(Some(Feedback::Failure(error))),
                 }
             });
         })
     };
 
-    let health_url = format!("{}/health", url.trim().trim_end_matches('/'));
-    let feedback_panel = match &*feedback {
-        Some(ConnectionFeedback::Saved) => html! {
-            <div data-image-server-feedback="saved" role="status" class="mt-4 rounded-xl border border-line bg-raised px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"URL saved"}</p>
-                <p class="mt-1 text-muted">{"Use Test connection to check that the image server is reachable."}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::Reset) => html! {
-            <div data-image-server-feedback="reset" role="status" class="mt-4 rounded-xl border border-line bg-raised px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"Default address restored"}</p>
-                <p class="mt-1 text-muted">{"The image server has not yet been checked."}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::Checking) => html! {
-            <div data-image-server-feedback="checking" role="status" class="mt-4 rounded-xl border border-line bg-raised px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"Checking image server…"}</p>
-                <p class="mt-1 text-muted">{"Requesting the local health endpoint."}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::Connected) => html! {
-            <div data-image-server-feedback="connected" role="status" class="mt-4 rounded-xl border border-line bg-raised px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"Image server connected"}</p>
-                <p class="mt-1 text-muted">{"The health endpoint responded successfully. This does not confirm that the image-generation model is loaded."}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::InvalidUrl(reason)) => html! {
-            <div data-image-server-feedback="invalid" role="alert" class="mt-4 rounded-xl border border-amber-500/40 bg-amber-950/10 px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"Check the server address"}</p>
-                <p class="mt-1 text-muted">{reason}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::HttpError(code)) => html! {
-            <div data-image-server-feedback="http-error" role="alert" class="mt-4 rounded-xl border border-amber-500/40 bg-amber-950/10 px-4 py-3 text-sm text-ink">
-                <p class="font-semibold">{"The image server responded with an error"}</p>
-                <p class="mt-1 text-muted">{format!("Health check returned HTTP {code}. Verify that the image API is running at this address.")}</p>
-            </div>
-        },
-        Some(ConnectionFeedback::Unreachable(details)) => html! {
-            <div data-image-server-feedback="unreachable" role="alert" class="mt-4 space-y-3 rounded-xl border border-amber-500/40 bg-amber-950/10 p-4 text-sm text-ink">
-                <div>
-                    <p class="font-semibold">{"Browser connection blocked"}</p>
-                    <p class="mt-1 leading-6 text-muted">{"The browser could not read the server response. The server may be offline, or its CORS policy may not allow this browser address."}</p>
-                </div>
-                <div class="rounded-lg border border-line bg-raised px-3 py-2">
-                    <p class="font-medium">{"Check the connection"}</p>
-                    <ol class="mt-1 list-inside list-decimal space-y-1 text-muted">
-                        <li>{"Start the local image server and keep it running."}</li>
-                        <li>{"Open its health endpoint below. If it responds there but this check fails, inspect the browser console for a CORS error."}</li>
-                        <li>{"If the URL contains localhost. (with a trailing dot), restart with the updated image server that recognizes this origin."}</li>
-                    </ol>
-                </div>
-                <a href={health_url} target="_blank" rel="noopener noreferrer" class="inline-flex rounded-lg border border-line bg-raised px-3 py-2 font-semibold text-ink no-underline hover:border-accent focus-visible:outline-2 focus-visible:outline-accent">
-                    {"Open health endpoint"}
-                </a>
-                <details class="text-xs text-muted">
-                    <summary class="cursor-pointer font-medium">{"Technical details"}</summary>
-                    <p class="mt-1 break-all">{details}</p>
-                </details>
-            </div>
-        },
-        None => Html::default(),
-    };
-
+    let button_class = "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line px-4 text-sm font-medium hover:bg-raised disabled:opacity-50";
     html! {
-        <section
-            data-settings-image-server=""
-            class="min-w-0 w-full rounded-2xl border border-line bg-surface p-4 shadow-sm sm:p-6 lg:p-8"
-        >
-            <h2 class="text-xl font-semibold">{"Image generation"}</h2>
-            <p class="mt-2 text-sm text-muted">
-                {"Connect the separate local Axum image server. The URL is stored in this browser, independently of LM Studio."}
-            </p>
-            <label class="mt-5 flex min-w-0 flex-col gap-2 text-sm font-semibold">
-                {"Image API URL"}
-                <input
-                    type="url"
-                    data-image-server-url=""
-                    value={(*url).clone()}
-                    oninput={on_change}
-                    placeholder={image_generation::DEFAULT_URL}
-                    class="min-h-11 min-w-0 w-full rounded-lg border border-line bg-raised px-3 font-normal text-ink focus-visible:outline-2 focus-visible:outline-accent"
-                />
-            </label>
-            <div class="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                <button type="button" data-action="save" onclick={on_save} class="min-h-11 rounded-lg bg-brand-action px-4 font-semibold text-white sm:px-5">
-                    {"Save"}
+        <section data-settings-image-server="" class="w-full rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-7">
+            <div class="flex items-center gap-3">
+                <Icon data={IconData::LUCIDE_IMAGE} width="22px" height="22px" />
+                <h2 class="text-xl font-semibold">{"Image generation"}</h2>
+            </div>
+            if is_tauri {
+                <div class="mt-5 flex items-center justify-between gap-3 rounded-xl border border-line bg-raised/50 p-4">
+                    <div class="min-w-0">
+                        <p class="font-medium">{"Zipeek image service"}</p>
+                        <p class="mt-1 font-mono text-xs text-muted">{"http://127.0.0.1:1431"}</p>
+                    </div>
+                    <span class="shrink-0 text-xs text-muted">{"Managed locally"}</span>
+                </div>
+                <p class="mt-3 text-xs text-muted">{"Real image generation requires SDXL model files and a supported CUDA device. Configure ZIPEEK_IMAGE_MODEL_DIR before starting the service."}</p>
+            } else {
+                <label class="mt-5 flex flex-col gap-2 text-sm font-medium">
+                    {"Image API URL"}
+                    <input type="url" data-image-server-url="" value={(*url).clone()}
+                        oninput={on_url_change} placeholder={image_generation::DEFAULT_URL}
+                        class="min-h-11 w-full rounded-lg border border-line bg-raised px-3 text-ink focus-visible:outline-2 focus-visible:outline-accent" />
+                </label>
+            }
+            <div class="mt-5 flex flex-wrap items-center gap-2">
+                if !is_tauri {
+                    <button type="button" data-action="save" onclick={on_save} class={button_class}>{"Save"}</button>
+                    <button type="button" data-action="reset" onclick={on_reset} class={button_class}>{"Reset"}</button>
+                }
+                <button type="button" onclick={on_check} disabled={*checking} class={button_class} aria-label="Check image service health">
+                    <Icon data={IconData::LUCIDE_REFRESH_CW} width="16px" height="16px"
+                        class={if *checking {"animate-spin motion-reduce:animate-none"} else {""}} />
+                    {if *checking {"Checking"} else {"Check health"}}
                 </button>
-                <button type="button" data-action="test" onclick={on_test} disabled={*busy} class="min-h-11 min-w-0 rounded-lg border border-line px-3 disabled:opacity-50 sm:px-4">
-                    {if *busy {"Checking…"} else {"Test connection"}}
-                </button>
-                <button type="button" data-action="reset" onclick={on_reset} class="min-h-11 min-w-0 rounded-lg border border-line px-3 sm:px-4">
-                    {"Reset"}
+                <button type="button" onclick={on_generate} disabled={*generating} class={button_class} aria-label="Generate a test image">
+                    <Icon data={if *generating {IconData::LUCIDE_REFRESH_CW} else {IconData::LUCIDE_WAND_2}}
+                        width="16px" height="16px" class={if *generating {"animate-spin motion-reduce:animate-none"} else {""}} />
+                    {if *generating {"Generating"} else {"Test generation"}}
                 </button>
             </div>
-            {feedback_panel}
-            <p class="mt-4 text-xs text-muted">
-                {"The image server must permit your browser's exact origin. Generated images are only used when the image exercise is enabled."}
-            </p>
+            if let Some(status) = &*feedback {
+                <p class={classes!("mt-4", "text-sm", if matches!(status, Feedback::Failure(_)) {"text-amber-600 dark:text-amber-400"} else {"text-muted"})}
+                    role={if matches!(status, Feedback::Failure(_)) {"alert"} else {"status"}}>
+                    {match status {
+                        Feedback::Healthy(message) => message.clone(),
+                        Feedback::Saved => "Endpoint saved".to_owned(),
+                        Feedback::Reset => "Default endpoint restored".to_owned(),
+                        Feedback::Failure(message) => message.clone(),
+                    }}
+                </p>
+            }
+            if let Some(url) = &*preview {
+                <div class="mt-5 space-y-2">
+                    <p class="text-xs font-medium text-muted">{"Generated preview"}</p>
+                    <img src={url.clone()} alt="Test image generated by the configured image service"
+                        class="max-h-72 w-full rounded-xl border border-line bg-raised object-contain" />
+                </div>
+            }
         </section>
     }
 }

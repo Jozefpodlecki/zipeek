@@ -41,9 +41,49 @@ struct EvidenceStep {
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum EvidenceOutcome {
+    Assessed(EvidenceAssessment),
     Scored { earned: u16, possible: u16 },
     Completed,
     Skipped,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EvidenceAssessment {
+    verdict: EvidenceVerdict,
+    attempts: u16,
+    mistakes: u16,
+    hints: u16,
+    assisted: bool,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum EvidenceVerdict {
+    Correct,
+    PartiallyCorrect,
+    Incorrect,
+}
+
+fn supports_assessment(exercise_id: &str) -> bool {
+    matches!(
+        exercise_id,
+        "sentence-translation"
+            | "story-builder"
+            | "reading-comprehension"
+            | "conversation-practice"
+            | "fill-blank"
+            | "audio-dictation"
+            | "spot-mistake"
+            | "sentence-transformation"
+            | "listening-choice"
+            | "matching"
+            | "multiple-choice"
+            | "sentence-builder"
+            | "type-pinyin"
+            | "character-builder"
+            | "word-mosaics"
+    )
 }
 
 fn valid_session_id(id: &str) -> bool {
@@ -132,14 +172,31 @@ impl PracticeOutcomeSummary {
                     "Invalid saved Practice step identity".into(),
                 ));
             }
-            match step.outcome {
+            match &step.outcome {
+                EvidenceOutcome::Assessed(assessment)
+                    if supports_assessment(&step.exercise_id) && assessment.attempts > 0 =>
+                {
+                    let _ = (assessment.mistakes, assessment.hints, assessment.assisted);
+                    match assessment.verdict {
+                        EvidenceVerdict::Correct => {
+                            scored += 1;
+                            earned += 1;
+                            possible += 1;
+                        }
+                        EvidenceVerdict::Incorrect => {
+                            scored += 1;
+                            possible += 1;
+                        }
+                        EvidenceVerdict::PartiallyCorrect => completed += 1,
+                    }
+                }
                 EvidenceOutcome::Scored {
                     earned: points,
                     possible: max,
-                } if step.exercise_id == "sentence-translation" && max == 1 && points <= 1 => {
+                } if step.exercise_id == "sentence-translation" && *max == 1 && *points <= 1 => {
                     scored += 1;
-                    earned += u64::from(points);
-                    possible += u64::from(max);
+                    earned += u64::from(*points);
+                    possible += u64::from(*max);
                 }
                 EvidenceOutcome::Completed => completed += 1,
                 EvidenceOutcome::Skipped => skipped += 1,
@@ -360,6 +417,28 @@ mod tests {
             let mut summary = PracticeOutcomeSummary::default();
             assert!(summary.include(ID, &json).is_err());
             assert_eq!(summary, PracticeOutcomeSummary::default());
+        }
+    }
+
+    #[test]
+    fn typed_assessments_are_accepted_without_inventing_partial_points() {
+        let evidence = format!(
+            r#"{{"schema_version":2,"session_id":"{ID}","completed_at_ms":1700000000000,"steps":[{{"step_id":"{ID}:0","exercise_id":"fill-blank","outcome":{{"assessed":{{"verdict":"correct","attempts":2,"mistakes":1,"hints":0,"assisted":false}}}}}},{{"step_id":"{ID}:1","exercise_id":"spot-mistake","outcome":{{"assessed":{{"verdict":"partially_correct","attempts":1,"mistakes":1,"hints":0,"assisted":false}}}}}},{{"step_id":"{ID}:2","exercise_id":"listening-choice","outcome":{{"assessed":{{"verdict":"incorrect","attempts":1,"mistakes":1,"hints":0,"assisted":false}}}}}}]}}"#
+        );
+        let summary =
+            PracticeOutcomeSummary::from_evidence_rows([(ID, evidence.as_str())]).unwrap();
+        assert_eq!(summary.scored_steps, 2);
+        assert_eq!(summary.completed_steps, 1);
+        assert_eq!((summary.earned_points, summary.possible_points), (1, 2));
+    }
+
+    #[test]
+    fn rejects_unassessed_exercise_and_invalid_attempt_evidence() {
+        for (exercise, attempts) in [("speaking", 1), ("fill-blank", 0)] {
+            let evidence = format!(
+                r#"{{"schema_version":2,"session_id":"{ID}","completed_at_ms":1700000000000,"steps":[{{"step_id":"{ID}:0","exercise_id":"{exercise}","outcome":{{"assessed":{{"verdict":"correct","attempts":{attempts},"mistakes":0,"hints":0,"assisted":false}}}}}}]}}"#
+            );
+            assert!(PracticeOutcomeSummary::from_evidence_rows([(ID, evidence.as_str())]).is_err());
         }
     }
 }

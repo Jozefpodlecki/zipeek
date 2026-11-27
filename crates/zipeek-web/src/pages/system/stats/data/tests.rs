@@ -1,4 +1,5 @@
 use super::super::fixture::SAMPLE_ACTIVITIES;
+use super::super::sections::DashboardTab;
 use super::super::simulator::{demo_sessions, demo_words};
 use super::source::demo_section;
 use super::*;

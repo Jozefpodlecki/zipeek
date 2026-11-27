@@ -64,8 +64,8 @@ pub enum Route {
     Docs,
     #[at("/docs/:file")]
     DocsArticle { file: String },
-    #[at("/word-sets")]
-    WordSets,
+    #[at("/profile")]
+    Profile,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -172,9 +172,9 @@ pub fn switch(routes: Route) -> Html {
             }
         }
         Route::Docs | Route::DocsArticle { .. } => html! { <DocsPage /> },
-        Route::WordSets => html! {
+        Route::Profile => html! {
             <WordSetsProvider>
-                <WordSetsPage />
+                <ProfilePage />
             </WordSetsProvider>
         },
         Route::NotFound => html! { <NotFound /> },
@@ -204,7 +204,7 @@ impl Route {
             Self::PracticeSetup => "Practice",
             Self::LocalPracticeSession { .. } => "Practice session",
             Self::Browse => "Browse",
-            Self::WordSets => "Word Sets",
+            Self::Profile => "Profile",
             Self::Themes => "Themes",
             Self::Courses => "Courses",
             Self::GrammarCourse => "Grammar courses",

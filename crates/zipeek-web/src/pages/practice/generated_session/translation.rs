@@ -1,3 +1,8 @@
+use super::super::{
+    feedback::{ExercisePrimaryAction, ExerciseReview, FeedbackVerdict},
+    instruction::InstructionIcon,
+    surface::ExerciseSurface,
+};
 use super::order;
 use crate::services::{ai, translation_instance::canonical_tile_positions};
 use wasm_bindgen_futures::spawn_local;
@@ -130,10 +135,8 @@ pub(super) fn translation_practice(props: &TranslationPracticeProps) -> Html {
         Callback::from(move |_: MouseEvent| on_scored.emit(correct))
     };
     html! {
-        <div
-                    class="space-y-4"
-                    data-generated-translation="">
-            <p class="text-sm text-muted">{"Translate by arranging every word-bank tile."}</p>
+        <div class="w-full" data-generated-translation="">
+            <ExerciseSurface icon={InstructionIcon::Arrange} instruction="Translate by arranging every word-bank tile.">
             <p class="rounded-xl border border-line p-4 text-xl"
                 data-generated-translation-source=""
                 lang={if source_is_chinese {"zh-Hans"} else {"en"}}>{source}</p>
@@ -189,24 +192,23 @@ pub(super) fn translation_practice(props: &TranslationPracticeProps) -> Html {
                 html! { <p role="alert" data-generated-translation-error="">{format!("Could not evaluate: {message}. Try again.")}</p> }
             } else { Html::default() }}
             {if checked {
-                html! { <div
-                    role="status"
-                    class="space-y-3">
+                html! { <div class="space-y-3">
                     {if let Some(Ok(verdict)) = (*evaluation).as_ref() {
-                        html! { <div data-generated-translation-feedback="">
-                            <p data-generated-translation-result={if verdict.accurate {"correct"} else {"incorrect"}}>
-                                {if verdict.accurate { "Correct translation." } else { "Review this translation." }}
-                            </p>
-                            <p>{&verdict.feedback}</p>
-                            <p>{format!("Suggested: {}", verdict.suggested_translation)}</p>
-                        </div> }
+                        html! {
+                            <div data-generated-translation-next="">
+                                <ExerciseReview verdict={if verdict.accurate { FeedbackVerdict::Correct } else { FeedbackVerdict::Incorrect }} on_continue={on_continue_translation.clone()}>
+                                    <div data-generated-translation-feedback="">
+                                        <p data-generated-translation-result={if verdict.accurate {"correct"} else {"incorrect"}}>
+                                            {if verdict.accurate { "Correct translation." } else { "Review this translation." }}
+                                        </p>
+                                        <p>{&verdict.feedback}</p>
+                                        <p>{format!("Suggested: {}", verdict.suggested_translation)}</p>
+                                    </div>
+                                    <p>{format!("Reference: {target}")}</p>
+                                </ExerciseReview>
+                            </div>
+                        }
                     } else { Html::default() }}
-                    <p>{format!("Reference: {target}")}</p>
-                    <button
-                    type="button"
-                    class="rounded-lg bg-brand-action px-5 py-3 text-white"
-                    data-generated-translation-next=""
-                    onclick={on_continue_translation}>{"Continue"}</button>
                 </div> }
             } else {
                 html! { <div class="flex gap-3">
@@ -215,14 +217,15 @@ pub(super) fn translation_practice(props: &TranslationPracticeProps) -> Html {
                     class="rounded-lg border border-line px-4 py-2"
                     disabled={*evaluating}
                     onclick={reset}>{"Clear"}</button>
-                    <button
-                    type="button"
-                    class="rounded-lg bg-brand-action px-5 py-3 text-white"
-                    data-generated-translation-check=""
-                    disabled={!complete || *evaluating}
-                    onclick={check}>{if *evaluating {"Evaluating…"} else {"Check answer"}}</button>
+                    <ExercisePrimaryAction
+                        label={if *evaluating {"Evaluating…"} else {"Check answer"}}
+                        on_activate={check}
+                        disabled={!complete || *evaluating}
+                        translation=true
+                    />
                 </div> }
             }}
+            </ExerciseSurface>
         </div>
     }
 }

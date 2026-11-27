@@ -4,7 +4,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{Navigator, Storage, Window};
 
 use super::policy::{owns_private_entry, owns_storage_key};
-use crate::services::tauri_ipc_error::message;
+use crate::services::tauri::message;
 
 #[wasm_bindgen(inline_js = r#"
 export async function acquireAppStorageSession() {

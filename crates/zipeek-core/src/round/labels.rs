@@ -10,9 +10,9 @@ pub(crate) fn labels(word: &Word, variant: ExerciseVariant) -> (&str, &str) {
         ExerciseVariant::MatchingEnglishPinyin => (english, &word.pinyin),
         ExerciseVariant::MatchingPinyinHanzi => (&word.pinyin, &word.simplified),
         ExerciseVariant::MatchingAudioHanzi => (&word.simplified, &word.simplified),
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
-            (&word.simplified, english)
-        }
+        ExerciseVariant::MatchingHanziMeaning
+        | ExerciseVariant::MatchingAudioMeaning
+        | ExerciseVariant::MultipleChoiceHanziMeaning => (&word.simplified, english),
         ExerciseVariant::MultipleChoiceMeaningHanzi => (english, &word.simplified),
         ExerciseVariant::MultipleChoiceMeaningPinyin => (english, &word.pinyin),
     }
@@ -31,16 +31,16 @@ pub(crate) fn answer_key(word: &Word, variant: ExerciseVariant) -> String {
         ExerciseVariant::MatchingEnglishPinyin | ExerciseVariant::MultipleChoiceMeaningPinyin => {
             normalize_for_comparison(right)
         }
-        ExerciseVariant::MatchingPinyinHanzi | ExerciseVariant::MatchingAudioHanzi | ExerciseVariant::MultipleChoiceMeaningHanzi => {
-            right.to_owned()
-        }
-        ExerciseVariant::MatchingHanziMeaning | ExerciseVariant::MatchingAudioMeaning | ExerciseVariant::MultipleChoiceHanziMeaning => {
-            right
-                .split_whitespace()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .to_lowercase()
-        }
+        ExerciseVariant::MatchingPinyinHanzi
+        | ExerciseVariant::MatchingAudioHanzi
+        | ExerciseVariant::MultipleChoiceMeaningHanzi => right.to_owned(),
+        ExerciseVariant::MatchingHanziMeaning
+        | ExerciseVariant::MatchingAudioMeaning
+        | ExerciseVariant::MultipleChoiceHanziMeaning => right
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_lowercase(),
     }
 }
 

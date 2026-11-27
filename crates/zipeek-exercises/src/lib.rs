@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused)]
 #![allow(private_interfaces)]
+#![allow(unused_imports)]
 
 pub mod definition;
 pub mod session;
@@ -52,3 +53,5 @@ pub mod province_quest;
 pub mod time_weaver;
 
 pub mod grammar_learning;
+
+pub mod ai_narrative;

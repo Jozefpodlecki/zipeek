@@ -2,10 +2,10 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
 use super::waveform::{Waveform, use_playback_progress};
-use zipeek_browser::local_speech;
 use crate::pages::record::controller::ReferenceStatus;
 use crate::pages::record::readings::ReadingGlyph;
 use crate::pages::record::state::{Playback, RecordState, RecordingStage, TargetMode};
+use zipeek_browser::local_speech;
 
 #[derive(Properties, PartialEq)]
 pub(super) struct ReferencePanelProps {
@@ -22,11 +22,22 @@ pub(super) fn reference_panel(props: &ReferencePanelProps) -> Html {
     let state = &props.state;
     let active = state.playback == Playback::Reference;
     let progress = use_playback_progress(active);
-    let on_seek = Callback::from(|fraction: f64| { local_speech::seek_playback(fraction); });
+    let on_seek = Callback::from(|fraction: f64| {
+        local_speech::seek_playback(fraction);
+    });
     let render_text = |text: &str, class: &'static str| {
         let characters: Vec<char> = text.chars().collect();
-        let highlighted = if active { (characters.len() as f64 * *progress).ceil() as usize } else { 0 };
-        let aligned = props.readings.len() == characters.len() && props.readings.iter().zip(&characters).all(|(glyph, character)| glyph.character == *character);
+        let highlighted = if active {
+            (characters.len() as f64 * *progress).ceil() as usize
+        } else {
+            0
+        };
+        let aligned = props.readings.len() == characters.len()
+            && props
+                .readings
+                .iter()
+                .zip(&characters)
+                .all(|(glyph, character)| glyph.character == *character);
         html! {
             <p class={classes!(class, "flex", "flex-wrap", "gap-x-0.5", "gap-y-2")} lang="zh-CN">
                 {for characters.into_iter().enumerate().map(|(index, character)| {

@@ -5,7 +5,7 @@ use zipeek_core::Word;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct RecordingId(pub(super) u64);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(super) enum RecordingStage {
     Idle,
     Recording,
@@ -25,13 +25,26 @@ fn pick_word(words: &[Word], previous: Option<&Word>) -> Option<Word> {
 }
 
 pub(super) fn comparable(text: &str) -> String {
-    text.chars().filter(|character| !character.is_whitespace() && !character.is_ascii_punctuation() && !matches!(character, '。' | '，' | '！' | '？' | '、' | '；' | '：' | '“' | '”' | '（' | '）')).collect()
+    text.chars()
+        .filter(|character| {
+            !character.is_whitespace()
+                && !character.is_ascii_punctuation()
+                && !matches!(
+                    character,
+                    '。' | '，' | '！' | '？' | '、' | '；' | '：' | '“' | '”' | '（' | '）'
+                )
+        })
+        .collect()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum TargetMode { Hsk, Sentence, Live }
+pub(super) enum TargetMode {
+    Hsk,
+    Sentence,
+    Live,
+}
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(super) enum Playback {
     None,
     Reference,
@@ -81,7 +94,10 @@ pub(super) enum RecordAction {
     EndPlayback(Option<String>),
     BeginRecording,
     Recognizing,
-    CompleteRecording { transcript: Result<String, String>, recording_id: Option<RecordingId> },
+    CompleteRecording {
+        transcript: Result<String, String>,
+        recording_id: Option<RecordingId>,
+    },
     Cancel,
     Error(String),
 }
@@ -93,7 +109,9 @@ impl Reducible for RecordState {
         let mut next = (*self).clone();
         match action {
             RecordAction::ChangeMode(mode) => {
-                if next.mode == mode { return self; }
+                if next.mode == mode {
+                    return self;
+                }
                 next.mode = mode;
                 next.clear_speech();
             }
@@ -102,7 +120,9 @@ impl Reducible for RecordState {
                 next.clear_speech();
             }
             RecordAction::ChangeBank(bank) => {
-                if next.bank == bank { return self; }
+                if next.bank == bank {
+                    return self;
+                }
                 next.bank = bank;
                 next.loading = true;
                 next.pool.clear();
@@ -144,7 +164,10 @@ impl Reducible for RecordState {
                     next.stage = RecordingStage::Recognizing;
                 }
             }
-            RecordAction::CompleteRecording { transcript, recording_id } => {
+            RecordAction::CompleteRecording {
+                transcript,
+                recording_id,
+            } => {
                 next.stage = RecordingStage::Idle;
                 next.recording_id = recording_id;
                 match transcript {
@@ -183,10 +206,11 @@ impl RecordState {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{comparable, Playback, RecordAction, RecordState, RecordingId, RecordingStage, TargetMode};
+    use super::{
+        Playback, RecordAction, RecordState, RecordingId, RecordingStage, TargetMode, comparable,
+    };
     use std::rc::Rc;
     use yew::Reducible;
 
@@ -224,10 +248,14 @@ mod tests {
 
     #[test]
     fn sentence_edit_clears_stale_recording() {
-        let state = Rc::new(RecordState::default()).reduce(RecordAction::ChangeMode(TargetMode::Sentence));
+        let state =
+            Rc::new(RecordState::default()).reduce(RecordAction::ChangeMode(TargetMode::Sentence));
         let state = state.reduce(RecordAction::ChangeSentence("你好世界".into()));
         assert_eq!(state.target(), Some("你好世界"));
-        let state = state.reduce(RecordAction::CompleteRecording { transcript: Ok("你好世界".into()), recording_id: Some(RecordingId(1)) });
+        let state = state.reduce(RecordAction::CompleteRecording {
+            transcript: Ok("你好世界".into()),
+            recording_id: Some(RecordingId(1)),
+        });
         let state = state.reduce(RecordAction::ChangeSentence("早上好".into()));
         assert!(state.transcript.is_none());
         assert!(state.recording_id.is_none());

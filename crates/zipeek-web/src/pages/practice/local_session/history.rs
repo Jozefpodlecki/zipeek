@@ -4,14 +4,13 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{Document, Storage};
 use yew::prelude::*;
 
-use crate::{
-    services::practice_history::{self, CompletionDisposition},
-    services::practice_session_store::{PracticeSession, PracticeSessionError},
-};
+use super::state::SessionState;
+
+use crate::services::practice_history::{self, CompletionDisposition};
 
 #[hook]
 pub(super) fn use_history_finalization(
-    session: UseStateHandle<Option<Result<PracticeSession, PracticeSessionError>>>,
+    session: UseReducerHandle<SessionState>,
     retry: u32,
     storage: Storage,
     document: Document,
@@ -19,7 +18,7 @@ pub(super) fn use_history_finalization(
     let result = use_state(|| None::<Result<CompletionDisposition, String>>);
     {
         let result = result.clone();
-        use_effect_with(((*session).clone(), retry), move |(snapshot, _)| {
+        use_effect_with((session.snapshot.clone(), retry), move |(snapshot, _)| {
             let active = Rc::new(Cell::new(true));
             if let Some(Ok(saved)) = snapshot {
                 if saved.is_completed() {

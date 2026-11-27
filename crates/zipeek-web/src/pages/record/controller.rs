@@ -6,10 +6,10 @@ use web_sys::HtmlTextAreaElement;
 use yew::prelude::*;
 use zipeek_browser::local_speech::{self, AutoStopMode};
 
-use crate::hooks::use_dictionary;
 use super::audio::AudioResources;
 use super::readings::{self, ReadingGlyph};
 use super::state::{Playback, RecordAction, RecordState, RecordingId, RecordingStage, TargetMode};
+use crate::hooks::use_dictionary;
 
 fn public_error(error: JsValue) -> String {
     web_sys::console::error_1(&error);
@@ -18,7 +18,10 @@ fn public_error(error: JsValue) -> String {
         "Microphone permission was denied. Allow access and try again.".into()
     } else if message.contains("fetch") || message.contains("network") {
         "Cannot reach the local speech server. Check that it is running.".into()
-    } else if message.contains("no mandarin") || message.contains("no speech") || message.contains("empty") {
+    } else if message.contains("no mandarin")
+        || message.contains("no speech")
+        || message.contains("empty")
+    {
         "No speech was recognized. Try recording again.".into()
     } else {
         "Speech request failed. Check the local service and try again.".into()
@@ -36,7 +39,12 @@ fn ensure_local_speech() -> Result<(), String> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum ReferenceStatus { Idle, Loading, Ready, Failed }
+pub(super) enum ReferenceStatus {
+    Idle,
+    Loading,
+    Ready,
+    Failed,
+}
 
 #[derive(PartialEq)]
 pub(super) struct RecordController {
@@ -87,8 +95,12 @@ pub(super) fn use_record_controller() -> RecordController {
             spawn_local(async move {
                 let result = async {
                     let db = dictionary.database().map_err(|error| error.to_string())?;
-                    db.game_words_for_hsk(system, level).await.map_err(|error| error.to_string())
-                }.await.map_err(|_| "Could not load the HSK vocabulary. Try another level.".to_owned());
+                    db.game_words_for_hsk(system, level)
+                        .await
+                        .map_err(|error| error.to_string())
+                }
+                .await
+                .map_err(|_| "Could not load the HSK vocabulary. Try another level.".to_owned());
                 if pending.get() && *generation.borrow() == request {
                     state.dispatch(RecordAction::LoadWords(result));
                 }
@@ -103,7 +115,9 @@ pub(super) fn use_record_controller() -> RecordController {
             let interval = if *phase == RecordingStage::Recording {
                 let meter = level.clone();
                 Some(Interval::new(80, move || {
-                    if local_speech::microphone_auto_stop_tick() || local_speech::microphone_processing() {
+                    if local_speech::microphone_auto_stop_tick()
+                        || local_speech::microphone_processing()
+                    {
                         state.dispatch(RecordAction::Recognizing);
                     } else {
                         meter.set(local_speech::microphone_waveform().unwrap_or_default());
@@ -129,79 +143,101 @@ pub(super) fn use_record_controller() -> RecordController {
         let retry = *retry_epoch;
         let mode = state.mode;
         let word_numeric = if state.mode == TargetMode::Hsk {
-            state.selected.as_ref().and_then(|word| word.pinyin_numeric.clone())
-        } else { None };
-        use_effect_with((key, word_numeric, retry, mode), move |(key, word_numeric, _retry, mode)| {
-            audio.borrow_mut().clear_reference();
-            reference_waveform.set(Vec::new());
-            reading_glyphs.set(Vec::new());
-            reference_status.set(if key.is_some() {ReferenceStatus::Loading} else {ReferenceStatus::Idle});
-            let pending = Rc::new(std::cell::Cell::new(true));
-            let current = pending.clone();
-            let timer = key.as_ref().map(|text| {
-                let text = text.clone();
-                let word_numeric = word_numeric.clone();
-                let dictionary = dictionary.clone();
-                let audio = audio.clone();
-                let reference_waveform = reference_waveform.clone();
-                let reference_status = reference_status.clone();
-                let reading_glyphs = reading_glyphs.clone();
-                let pending = pending.clone();
-                Timeout::new(if *mode == TargetMode::Hsk { 0 } else { 600 }, move || {
-                    let reading_text = text.clone();
-                    let reading_pending = pending.clone();
-                    spawn_local(async move {
-                        let resolved = async {
-                            let db = dictionary.database().ok()?;
-                            let candidates = db.text_reading_candidates(&reading_text).await.ok()?;
-                            let mut resolved = readings::resolve(&reading_text, &candidates);
-                            if let Some(numeric) = word_numeric.as_deref() {
-                                if let Some(syllables) = readings::aligned_syllables(&reading_text, numeric) {
-                                    for (glyph, pinyin) in resolved.iter_mut().zip(syllables) {
-                                        glyph.pinyin = Some(pinyin);
+            state
+                .selected
+                .as_ref()
+                .and_then(|word| word.pinyin_numeric.clone())
+        } else {
+            None
+        };
+        use_effect_with(
+            (key, word_numeric, retry, mode),
+            move |(key, word_numeric, _retry, mode)| {
+                audio.borrow_mut().clear_reference();
+                reference_waveform.set(Vec::new());
+                reading_glyphs.set(Vec::new());
+                reference_status.set(if key.is_some() {
+                    ReferenceStatus::Loading
+                } else {
+                    ReferenceStatus::Idle
+                });
+                let pending = Rc::new(std::cell::Cell::new(true));
+                let current = pending.clone();
+                let timer = key.as_ref().map(|text| {
+                    let text = text.clone();
+                    let word_numeric = word_numeric.clone();
+                    let dictionary = dictionary.clone();
+                    let audio = audio.clone();
+                    let reference_waveform = reference_waveform.clone();
+                    let reference_status = reference_status.clone();
+                    let reading_glyphs = reading_glyphs.clone();
+                    let pending = pending.clone();
+                    Timeout::new(if *mode == TargetMode::Hsk { 0 } else { 600 }, move || {
+                        let reading_text = text.clone();
+                        let reading_pending = pending.clone();
+                        spawn_local(async move {
+                            let resolved = async {
+                                let db = dictionary.database().ok()?;
+                                let candidates =
+                                    db.text_reading_candidates(&reading_text).await.ok()?;
+                                let mut resolved = readings::resolve(&reading_text, &candidates);
+                                if let Some(numeric) = word_numeric.as_deref() {
+                                    if let Some(syllables) =
+                                        readings::aligned_syllables(&reading_text, numeric)
+                                    {
+                                        for (glyph, pinyin) in resolved.iter_mut().zip(syllables) {
+                                            glyph.pinyin = Some(pinyin);
+                                        }
                                     }
                                 }
+                                Some(resolved)
                             }
-                            Some(resolved)
-                        }.await;
-                        if reading_pending.get() {
-                            if let Some(readings) = resolved { reading_glyphs.set(readings); }
-                        }
-                    });
-                    spawn_local(async move {
-                        if ensure_local_speech().is_err() {
-                            if pending.get() { reference_status.set(ReferenceStatus::Failed); }
-                            return;
-                        }
-                        let result = local_speech::prepare_record_reference_audio(&text).await;
-                        match result {
-                            Ok(prepared) if pending.get() => {
-                                reference_waveform.set(prepared.peaks.clone());
-                                audio.borrow_mut().store_reference(prepared);
-                                reference_status.set(ReferenceStatus::Ready);
+                            .await;
+                            if reading_pending.get() {
+                                if let Some(readings) = resolved {
+                                    reading_glyphs.set(readings);
+                                }
                             }
-                            Ok(prepared) => local_speech::dispose_matching_audio(&prepared),
-                            Err(error) if pending.get() => {
-                                web_sys::console::error_1(&error);
-                                reference_status.set(ReferenceStatus::Failed);
+                        });
+                        spawn_local(async move {
+                            if ensure_local_speech().is_err() {
+                                if pending.get() {
+                                    reference_status.set(ReferenceStatus::Failed);
+                                }
+                                return;
                             }
-                            Err(_) => {}
-                        }
-                    });
-                })
-            });
-            move || {
-                current.set(false);
-                drop(timer);
-            }
-        });
+                            let result = local_speech::prepare_record_reference_audio(&text).await;
+                            match result {
+                                Ok(prepared) if pending.get() => {
+                                    reference_waveform.set(prepared.peaks.clone());
+                                    audio.borrow_mut().store_reference(prepared);
+                                    reference_status.set(ReferenceStatus::Ready);
+                                }
+                                Ok(prepared) => local_speech::dispose_matching_audio(&prepared),
+                                Err(error) if pending.get() => {
+                                    web_sys::console::error_1(&error);
+                                    reference_status.set(ReferenceStatus::Failed);
+                                }
+                                Err(_) => {}
+                            }
+                        });
+                    })
+                });
+                move || {
+                    current.set(false);
+                    drop(timer);
+                }
+            },
+        );
     }
     let on_mode = {
         let state = state.clone();
         let generation = generation.clone();
         let audio = audio.clone();
         Callback::from(move |mode: TargetMode| {
-            if mode == state.mode { return; }
+            if mode == state.mode {
+                return;
+            }
             *generation.borrow_mut() += 1;
             audio.borrow_mut().clear();
             local_speech::cancel();
@@ -213,10 +249,16 @@ pub(super) fn use_record_controller() -> RecordController {
         let generation = generation.clone();
         let audio = audio.clone();
         Callback::from(move |event: InputEvent| {
-            let Some(target) = event.target() else { return; };
-            let Ok(target) = target.dyn_into::<HtmlTextAreaElement>() else { return; };
+            let Some(target) = event.target() else {
+                return;
+            };
+            let Ok(target) = target.dyn_into::<HtmlTextAreaElement>() else {
+                return;
+            };
             let value = target.value();
-            if value.chars().count() > 200 { return; }
+            if value.chars().count() > 200 {
+                return;
+            }
             *generation.borrow_mut() += 1;
             audio.borrow_mut().clear();
             local_speech::cancel();
@@ -228,7 +270,9 @@ pub(super) fn use_record_controller() -> RecordController {
         let generation = generation.clone();
         let audio = audio.clone();
         Callback::from(move |next: (u8, u8)| {
-            if next == state.bank || !matches!(next, (2, 1..=6) | (3, 1..=7)) { return; }
+            if next == state.bank || !matches!(next, (2, 1..=6) | (3, 1..=7)) {
+                return;
+            }
             *generation.borrow_mut() += 1;
             audio.borrow_mut().clear();
             local_speech::cancel();
@@ -258,9 +302,15 @@ pub(super) fn use_record_controller() -> RecordController {
                 state.dispatch(RecordAction::Cancel);
                 return;
             }
-            if state.stage != RecordingStage::Idle || state.playback != Playback::None { return; }
-            if *reference_status != ReferenceStatus::Ready { return; }
-            let Some(prepared) = audio.borrow().reference() else { return; };
+            if state.stage != RecordingStage::Idle || state.playback != Playback::None {
+                return;
+            }
+            if *reference_status != ReferenceStatus::Ready {
+                return;
+            }
+            let Some(prepared) = audio.borrow().reference() else {
+                return;
+            };
             state.dispatch(RecordAction::BeginPlayback(Playback::Reference));
             *generation.borrow_mut() += 1;
             let request = *generation.borrow();
@@ -289,7 +339,9 @@ pub(super) fn use_record_controller() -> RecordController {
                 }
                 return;
             }
-            if state.stage != RecordingStage::Idle { return; }
+            if state.stage != RecordingStage::Idle {
+                return;
+            }
             if let Err(message) = ensure_local_speech() {
                 state.dispatch(RecordAction::Error(message));
                 return;
@@ -308,7 +360,9 @@ pub(super) fn use_record_controller() -> RecordController {
             };
             spawn_local(async move {
                 let result = local_speech::transcribe_microphone_with_auto_stop(auto_mode).await;
-                if *generation.borrow() != request { return; }
+                if *generation.borrow() != request {
+                    return;
+                }
                 match result {
                     Ok(result) => {
                         audio.borrow_mut().store(RecordingId(request), result.wav);
@@ -336,9 +390,13 @@ pub(super) fn use_record_controller() -> RecordController {
                 state.dispatch(RecordAction::Cancel);
                 return;
             }
-            if state.stage != RecordingStage::Idle || state.playback != Playback::None { return; }
+            if state.stage != RecordingStage::Idle || state.playback != Playback::None {
+                return;
+            }
             let wav = audio.borrow().replay(state.recording_id);
-            let Some(wav) = wav else { return; };
+            let Some(wav) = wav else {
+                return;
+            };
             if let Err(message) = ensure_local_speech() {
                 state.dispatch(RecordAction::Error(message));
                 return;
@@ -369,7 +427,9 @@ pub(super) fn use_record_controller() -> RecordController {
         let state = state.clone();
         let audio = audio.clone();
         Callback::from(move |_: MouseEvent| {
-            if state.stage != RecordingStage::Idle { return; }
+            if state.stage != RecordingStage::Idle {
+                return;
+            }
             if let Some(wav) = audio.borrow().replay(state.recording_id) {
                 if let Err(error) = local_speech::download_recorded_wav(wav.as_ref()) {
                     state.dispatch(RecordAction::Error(public_error(error)));

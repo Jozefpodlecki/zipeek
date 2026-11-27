@@ -114,12 +114,52 @@ pub fn schedule(
     Ok(output)
 }
 
+pub fn endless_step(
+    selected: &BTreeSet<String>,
+    ordinal: usize,
+    seed: u64,
+) -> Result<ScheduledExercise, ScheduleError> {
+    const CYCLE_LEN: usize = 32;
+    let cycle = ordinal / CYCLE_LEN;
+    let cycle_seed = mix_seed(seed, cycle);
+    let cycle_steps = schedule(selected, CYCLE_LEN, cycle_seed)?;
+    let mut step = cycle_steps[ordinal % CYCLE_LEN].clone();
+    step.ordinal = ordinal;
+    Ok(step)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn selected(names: &[&str]) -> BTreeSet<String> {
         names.iter().map(|name| (*name).to_owned()).collect()
+    }
+
+    #[test]
+    fn endless_scheduler_replays_mixed_cycles_without_repeating_step_ids() {
+        let selected = selected(&["matching", "sentence-translation", "write-hanzi"]);
+        let first = (0..96)
+            .map(|ordinal| endless_step(&selected, ordinal, 2026).unwrap())
+            .collect::<Vec<_>>();
+        let replay = (0..96)
+            .map(|ordinal| endless_step(&selected, ordinal, 2026).unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(first, replay);
+        assert!(
+            first
+                .iter()
+                .enumerate()
+                .all(|(ordinal, step)| step.ordinal == ordinal)
+        );
+        for id in selected {
+            assert!(first.iter().any(|step| step.exercise_id == id));
+        }
+        assert!(
+            first
+                .windows(2)
+                .any(|window| window[0].exercise_id != window[1].exercise_id)
+        );
     }
 
     #[test]

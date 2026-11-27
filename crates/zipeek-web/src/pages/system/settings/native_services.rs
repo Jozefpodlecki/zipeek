@@ -1,6 +1,4 @@
-use crate::contexts::service_management::{
-    ServiceAvailability, ServiceHandle, ServiceOperation,
-};
+use crate::contexts::service_management::{ServiceAvailability, ServiceHandle, ServiceOperation};
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
@@ -26,17 +24,27 @@ pub fn native_service_panel(props: &NativeServicePanelProps) -> Html {
     };
     let (label, description, icon) = match service.name {
         "ai" => ("Local AI", "Llama.cpp GGUF inference", IconData::LUCIDE_CPU),
-        "image" => ("Image generation", "Local image backend", IconData::LUCIDE_IMAGE),
+        "image" => (
+            "Image generation",
+            "Local image backend",
+            IconData::LUCIDE_IMAGE,
+        ),
         "speech" => ("Speech", "TTS, STT and Live STT", IconData::LUCIDE_MIC),
-        _ => ("Local service", "Managed local process", IconData::LUCIDE_SERVER),
+        _ => (
+            "Local service",
+            "Managed local process",
+            IconData::LUCIDE_SERVER,
+        ),
     };
     let checking = matches!(&service.availability, ServiceAvailability::Checking);
     let starting = service.operation == Some(ServiceOperation::Starting);
     let stopping = service.operation == Some(ServiceOperation::Stopping);
     let phase = service.status.as_ref().map(|status| status.phase.as_str());
-    let running = phase == Some("running") && service.status.as_ref().is_some_and(|status| status.healthy);
+    let running =
+        phase == Some("running") && service.status.as_ref().is_some_and(|status| status.healthy);
     let external = phase == Some("external");
-    let failed = matches!(&service.availability, ServiceAvailability::Failed(_)) || phase == Some("failed");
+    let failed =
+        matches!(&service.availability, ServiceAvailability::Failed(_)) || phase == Some("failed");
     let (phase_label, phase_color, phase_icon) = if starting || phase == Some("starting") {
         ("Starting", "text-amber-500", IconData::LUCIDE_REFRESH_CW)
     } else if stopping || phase == Some("stopping") {
@@ -44,9 +52,17 @@ pub fn native_service_panel(props: &NativeServicePanelProps) -> Html {
     } else if running {
         ("Healthy", "text-emerald-500", IconData::LUCIDE_CHECK)
     } else if external {
-        ("External", "text-amber-500", IconData::LUCIDE_ALERT_TRIANGLE)
+        (
+            "External",
+            "text-amber-500",
+            IconData::LUCIDE_ALERT_TRIANGLE,
+        )
     } else if failed {
-        ("Issue detected", "text-red-500", IconData::LUCIDE_ALERT_TRIANGLE)
+        (
+            "Issue detected",
+            "text-red-500",
+            IconData::LUCIDE_ALERT_TRIANGLE,
+        )
     } else {
         ("Stopped", "text-muted", IconData::LUCIDE_SQUARE)
     };
@@ -56,8 +72,12 @@ pub fn native_service_panel(props: &NativeServicePanelProps) -> Html {
         details
     } else {
         match service.status.as_ref() {
-            Some(status) if (running && status.message == "Running and healthy")
-                || (phase == Some("stopped") && status.message == "Stopped") => "",
+            Some(status)
+                if (running && status.message == "Running and healthy")
+                    || (phase == Some("stopped") && status.message == "Stopped") =>
+            {
+                ""
+            }
             Some(status) => status.message.as_str(),
             None => "Waiting for service status",
         }

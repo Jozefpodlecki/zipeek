@@ -1,3 +1,5 @@
+#![allow(unused)]
+#![allow(unused_imports)]
 use std::{
     fmt,
     io::{Read, Write},

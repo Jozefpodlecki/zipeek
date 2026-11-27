@@ -88,9 +88,7 @@ async fn matching_session_is_focused_and_interactive(ctx: ScenarioContext) -> Ha
     driver
         .query_single("[data-local-quiz-continue][disabled]")
         .await?;
-    driver
-        .query_single("[data-matching-feedback]")
-        .await?;
+    driver.query_single("[data-matching-feedback]").await?;
     first_column[0].click().await?;
     zipeek_e2e::e2e_ensure_eq!(
         first_column[0].attr("aria-pressed").await?.as_deref(),
@@ -127,7 +125,10 @@ async fn matching_session_is_focused_and_interactive(ctx: ScenarioContext) -> Ha
         .query_single("[data-local-quiz-continue]:not([disabled])")
         .await?;
     zipeek_e2e::e2e_ensure!(
-        driver.find_all_css("[data-local-quiz] h2").await?.is_empty(),
+        driver
+            .find_all_css("[data-local-quiz] h2")
+            .await?
+            .is_empty(),
         "Completing a matching round must not insert a heading above the board"
     );
     driver

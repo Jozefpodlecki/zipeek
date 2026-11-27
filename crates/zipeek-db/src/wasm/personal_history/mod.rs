@@ -73,6 +73,24 @@ impl PersonalLearningHistory {
             utc_completion_dates,
         ))
     }
+    pub async fn recorded_rows(document: &Document) -> Result<Vec<HistoryRow>, DbError> {
+        let document = document.clone();
+        let callback = Closure::<dyn FnMut() -> Promise>::new(move || {
+            let document = document.clone();
+            future_to_promise(async move {
+                let rows = rows_locked(&document)
+                    .await
+                    .map_err(|error| JsValue::from_str(&error.to_string()))?;
+                serde_wasm_bindgen::to_value(&rows)
+                    .map_err(|error| JsValue::from_str(&error.to_string()))
+            })
+        });
+        let value = with_history_lock(callback.as_ref().unchecked_ref())
+            .await
+            .map_err(|error| js_error("Reading personal learning history", error))?;
+        serde_wasm_bindgen::from_value(value).map_err(|error| DbError::Decode(error.to_string()))
+    }
+
     pub async fn recorded_session_count(document: &Document) -> Result<u64, DbError> {
         let document = document.clone();
         let callback = Closure::<dyn FnMut() -> Promise>::new(move || {
@@ -240,6 +258,52 @@ async fn summary_locked(document: &Document) -> Result<PracticeOutcomeSummary, D
     let summary = summarized?;
     closed?;
     Ok(summary)
+}
+
+async fn rows_locked(document: &Document) -> Result<Vec<HistoryRow>, DbError> {
+    let bundle = BaseBundle::browser_default(document)?;
+    let arrow_url = bundle.module_url("arrow.mjs")?;
+    let _arrow = Arrow::load(&arrow_url).await?;
+    let module_url = bundle.module_url("duckdb-browser.mjs")?;
+    let module = DuckDbModule::load(&module_url)
+        .await
+        .map_err(|error| js_error("Loading learning history", error))?;
+    let session = DbSession::open(
+        &module,
+        &bundle.base.main_module,
+        &bundle.base.main_worker,
+        HISTORY_PATH,
+        AccessMode::ReadWrite,
+        None,
+    )
+    .await?;
+    let fetched = async {
+        let tables = session.connection.query(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main' AND table_name = 'practice_sessions'"
+        ).await.map_err(|error| js_error("Checking learning history", error))?;
+        if js_sys::Array::from(
+            &table_rows(&tables).map_err(|error| js_error("Reading history metadata", error))?
+        ).length() == 0 {
+            return Ok(Vec::new());
+        }
+        let result = session.connection.query(
+            "SELECT session_id, evidence_json AS evidence FROM practice_sessions LIMIT 100001"
+        ).await.map_err(|error| js_error("Reading Practice history", error))?;
+        let rows: Vec<HistoryRow> = serde_wasm_bindgen::from_value(
+            table_rows(&result).map_err(|error| js_error("Decoding Practice history", error))?
+        ).map_err(|error| DbError::Decode(error.to_string()))?;
+        if rows.len() > 100_000 {
+            return Err(DbError::Decode("Too many Practice history records".into()));
+        }
+        crate::PracticeOutcomeSummary::from_evidence_rows(
+            rows.iter().map(|row| (row.session_id.as_str(), row.evidence.as_str()))
+        ).map_err(|error| DbError::Decode(error.to_string()))?;
+        Ok(rows)
+    }.await;
+    let closed = session.close().await;
+    let rows = fetched?;
+    closed?;
+    Ok(rows)
 }
 
 async fn count_locked(document: &Document) -> Result<u64, DbError> {

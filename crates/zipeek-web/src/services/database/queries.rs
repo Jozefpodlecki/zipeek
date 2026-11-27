@@ -54,11 +54,17 @@ impl Database {
         .await
     }
 
-    pub async fn text_reading_candidates(&self, text: &str) -> Result<TextReadingCandidates, DbError> {
-        let characters: Vec<String> = text.chars()
+    pub async fn text_reading_candidates(
+        &self,
+        text: &str,
+    ) -> Result<TextReadingCandidates, DbError> {
+        let characters: Vec<String> = text
+            .chars()
             .filter(|character| ('\u{3400}'..='\u{9fff}').contains(character))
             .map(|character| character.to_string())
-            .collect::<BTreeSet<_>>().into_iter().collect();
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
         if characters.is_empty() {
             return Ok(TextReadingCandidates::default());
         }
@@ -71,8 +77,13 @@ impl Database {
         let mut fragments = BTreeSet::new();
         for start in 0..source.len() {
             for size in 2..=5 {
-                let Some(slice) = source.get(start..start.saturating_add(size)) else { break; };
-                if slice.iter().all(|character| ('\u{3400}'..='\u{9fff}').contains(character)) {
+                let Some(slice) = source.get(start..start.saturating_add(size)) else {
+                    break;
+                };
+                if slice
+                    .iter()
+                    .all(|character| ('\u{3400}'..='\u{9fff}').contains(character))
+                {
                     fragments.insert(slice.iter().collect::<String>());
                 }
             }
@@ -86,7 +97,10 @@ impl Database {
                 fragments.iter().map(|fragment| json!(fragment)).collect(),
             ).await?
         };
-        Ok(TextReadingCandidates { words, characters: characters_rows })
+        Ok(TextReadingCandidates {
+            words,
+            characters: characters_rows,
+        })
     }
 
     pub async fn word_relations(&self, word_id: WordId) -> Result<Vec<BrowseRelation>, DbError> {
@@ -206,6 +220,45 @@ ORDER BY id ASC"#
             .await?
             .into_iter()
             .next())
+    }
+
+    /// Bounded dictionary lookup for the Profile exclusion picker. Query text is bound,
+    /// never interpolated into SQL; ranking prefers exact Hanzi and readings.
+    pub async fn suggest_words(&self, input: &str, limit: u32) -> Result<Vec<Word>, DbError> {
+        let query = input.trim().to_lowercase();
+        if query.is_empty() {
+            return Ok(Vec::new());
+        }
+        let limit = limit.clamp(1, 20);
+        self.words(
+            r#"SELECT * FROM words
+WHERE strpos(lower(simplified), ?) > 0
+   OR strpos(lower(coalesce(traditional, '')), ?) > 0
+   OR strpos(lower(pinyin), ?) > 0
+   OR strpos(lower(coalesce(pinyin_numeric, '')), ?) > 0
+   OR strpos(lower(coalesce(english, '')), ?) > 0
+ORDER BY CASE
+    WHEN lower(simplified) = ? THEN 0
+    WHEN lower(pinyin) = ? OR lower(coalesce(pinyin_numeric, '')) = ? THEN 1
+    WHEN lower(coalesce(english, '')) = ? THEN 2
+    WHEN strpos(lower(simplified), ?) = 1 THEN 3
+    ELSE 4 END, length(simplified), id
+LIMIT ?"#,
+            vec![
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(query),
+                json!(limit),
+            ],
+        )
+        .await
     }
 
     pub async fn words_by_simplified(&self, spellings: &[&str]) -> Result<Vec<Word>, DbError> {

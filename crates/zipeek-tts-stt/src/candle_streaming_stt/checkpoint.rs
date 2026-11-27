@@ -23,21 +23,30 @@ pub struct StreamingCheckpointReport {
     pub blank_id: u32,
 }
 
-pub fn inspect_checkpoint(paths: &StreamingCheckpointPaths) -> Result<StreamingCheckpointReport, String> {
+pub fn inspect_checkpoint(
+    paths: &StreamingCheckpointPaths,
+) -> Result<StreamingCheckpointReport, String> {
     let encoder = inspect_component(&paths.encoder, "encoder")?;
     let decoder = inspect_component(&paths.decoder, "decoder")?;
     let joiner = inspect_component(&paths.joiner, "joiner")?;
     let vocabulary = TransducerTokens::from_file(&paths.tokens, paths.blank_id)?;
-    if encoder.graph.inputs.is_empty() || encoder.graph.outputs.is_empty()
-        || decoder.graph.inputs.is_empty() || decoder.graph.outputs.is_empty()
-        || joiner.graph.inputs.is_empty() || joiner.graph.outputs.is_empty()
+    if encoder.graph.inputs.is_empty()
+        || encoder.graph.outputs.is_empty()
+        || decoder.graph.inputs.is_empty()
+        || decoder.graph.outputs.is_empty()
+        || joiner.graph.inputs.is_empty()
+        || joiner.graph.outputs.is_empty()
     {
-        return Err("one or more streaming model components lack declared inputs or outputs".into());
+        return Err(
+            "one or more streaming model components lack declared inputs or outputs".into(),
+        );
     }
     if encoder.ir_version != decoder.ir_version || decoder.ir_version != joiner.ir_version {
         return Err("streaming model components have inconsistent ONNX IR versions".into());
     }
-    if let Some(Dimension::Fixed(size)) = joiner.graph.outputs
+    if let Some(Dimension::Fixed(size)) = joiner
+        .graph
+        .outputs
         .first()
         .and_then(|port| port.dimensions.last())
     {
@@ -49,7 +58,11 @@ pub fn inspect_checkpoint(paths: &StreamingCheckpointPaths) -> Result<StreamingC
         }
     }
     Ok(StreamingCheckpointReport {
-        encoder, decoder, joiner, vocabulary_size: vocabulary.len(), blank_id: paths.blank_id,
+        encoder,
+        decoder,
+        joiner,
+        vocabulary_size: vocabulary.len(),
+        blank_id: paths.blank_id,
     })
 }
 
@@ -58,8 +71,15 @@ fn inspect_component(path: &Path, name: &str) -> Result<OnnxModelReport, String>
     if report.graph.node_count == 0 {
         return Err(format!("{name} model has no graph operators"));
     }
-    if report.graph.initializers.iter().any(|tensor| tensor.external) {
-        return Err(format!("{name} model uses externally stored weights; bundle verification required"));
+    if report
+        .graph
+        .initializers
+        .iter()
+        .any(|tensor| tensor.external)
+    {
+        return Err(format!(
+            "{name} model uses externally stored weights; bundle verification required"
+        ));
     }
     Ok(report)
 }

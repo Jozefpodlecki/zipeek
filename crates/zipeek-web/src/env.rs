@@ -1,9 +1,8 @@
 use std::{rc::Rc, str::FromStr};
 
-use js_sys::{Function, Reflect};
 use log::Level;
 use thiserror::Error;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsCast;
 use web_sys::{Document, HtmlElement, Navigator, Storage, Window, window};
 use zipeek_browser::document::{BrowserDocument, BrowserDocumentError};
 
@@ -143,47 +142,16 @@ impl AppEnvironment {
     }
 
     pub(crate) fn detect_tauri(window: &Window) -> Result<bool, AppEnvironmentError> {
-        let tauri =
-            Reflect::get(window.as_ref(), &JsValue::from_str("__TAURI__")).map_err(|error| {
-                AppEnvironmentError::Inspection {
-                    field: "__TAURI__",
-                    details: format!("{error:?}"),
-                }
-            })?;
+        use crate::services::tauri::{TauriError, TauriService};
 
-        if !tauri.is_object() {
-            return Ok(false);
-        }
-
-        let core = Reflect::get(&tauri, &JsValue::from_str("core")).map_err(|error| {
-            AppEnvironmentError::Inspection {
-                field: "core",
-                details: format!("{error:?}"),
-            }
-        })?;
-
-        if !core.is_object() {
-            return Ok(false);
-        }
-
-        let check = Reflect::get(&core, &JsValue::from_str("isTauri")).map_err(|error| {
-            AppEnvironmentError::Inspection {
-                field: "isTauri",
-                details: format!("{error:?}"),
-            }
-        })?;
-
-        let Ok(check) = check.dyn_into::<Function>() else {
-            return Ok(false);
+        let service = match TauriService::new(window) {
+            Ok(service) => service,
+            Err(TauriError::BridgeUnavailable | TauriError::ApiUnavailable(_)) => return Ok(false),
+            Err(error) => return Err(AppEnvironmentError::CheckFailed(error.to_string())),
         };
-
-        let result = check
-            .call0(&core)
-            .map_err(|error| AppEnvironmentError::CheckFailed(format!("{error:?}")))?;
-
-        result
-            .as_bool()
-            .ok_or(AppEnvironmentError::InvalidCheckResult)
+        service
+            .is_tauri()
+            .map_err(|error| AppEnvironmentError::CheckFailed(error.to_string()))
     }
 
     pub fn try_get_log_level_from_local_storage(&self, key: &str) -> Option<Level> {

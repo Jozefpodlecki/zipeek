@@ -112,3 +112,27 @@ fn readings_do_not_guess_syllable_boundaries() {
     malformed.pinyin = "yínháng".into();
     assert_eq!(reading_for_character('行', &malformed, &[]), "");
 }
+
+#[test]
+fn pointer_and_html_drag_preserve_tile_identity_and_slot_order() {
+    assert_eq!(place_tile(&[], 2, 4, 3, 0), vec![2]);
+    assert_eq!(place_tile(&[2], 1, 4, 3, 0), vec![1, 2]);
+    assert_eq!(place_tile(&[1, 2], 2, 4, 3, 0), vec![2, 1]);
+    assert_eq!(place_tile(&[1, 2], 3, 4, 3, 1), vec![1, 3, 2]);
+    assert_eq!(place_tile(&[1, 3, 2], 4, 4, 3, 1), vec![1, 3, 2]);
+    assert_eq!(place_tile(&[1, 3, 2], 0, 4, 3, 1), vec![1, 3, 2]);
+}
+
+#[test]
+fn dropping_into_empty_slots_and_reordering_keep_a_unique_bounded_selection() {
+    let mut selection = vec![1];
+    selection = place_tile(&selection, 2, 5, 3, 2);
+    assert_eq!(selection, vec![1, 2]);
+    selection = place_tile(&selection, 3, 5, 3, 1);
+    assert_eq!(selection, vec![1, 3, 2]);
+    selection = place_tile(&selection, 1, 5, 3, 2);
+    assert_eq!(selection, vec![3, 2, 1]);
+    assert_eq!(selection.iter().copied().collect::<BTreeSet<_>>().len(), 3);
+    assert_eq!(place_tile(&selection, 4, 5, 3, 0), selection);
+    assert_eq!(remove_tile(&selection, 0), vec![2, 1]);
+}

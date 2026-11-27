@@ -18,6 +18,7 @@ pub mod exercises;
 pub mod games;
 pub mod practice_config;
 pub mod routes;
+pub mod sentence_builder;
 pub mod speaking;
 pub mod translator;
 pub mod writing;

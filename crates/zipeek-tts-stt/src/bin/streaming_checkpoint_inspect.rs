@@ -14,18 +14,37 @@ fn describe_dimension(dimension: &Dimension) -> String {
 }
 
 fn print_model(name: &str, model: &OnnxModelReport) {
-    println!("{name}: IR v{}, {} nodes, {} initializers", model.ir_version, model.graph.node_count, model.graph.initializers.len());
-    for (direction, ports) in [("input", &model.graph.inputs), ("output", &model.graph.outputs)] {
+    println!(
+        "{name}: IR v{}, {} nodes, {} initializers",
+        model.ir_version,
+        model.graph.node_count,
+        model.graph.initializers.len()
+    );
+    for (direction, ports) in [
+        ("input", &model.graph.inputs),
+        ("output", &model.graph.outputs),
+    ] {
         for port in ports {
-            let dimensions = port.dimensions.iter().map(describe_dimension).collect::<Vec<_>>().join(", ");
-            println!("  {direction} {} [{dimensions}] dtype={:?}", port.name, port.element_type);
+            let dimensions = port
+                .dimensions
+                .iter()
+                .map(describe_dimension)
+                .collect::<Vec<_>>()
+                .join(", ");
+            println!(
+                "  {direction} {} [{dimensions}] dtype={:?}",
+                port.name, port.element_type
+            );
         }
     }
     for (operator, count) in &model.graph.operators {
         println!("  operator {operator}: {count}");
     }
     for tensor in &model.graph.initializers {
-        println!("  weight {} {:?} dtype={} external={}", tensor.name, tensor.dimensions, tensor.data_type, tensor.external);
+        println!(
+            "  weight {} {:?} dtype={} external={}",
+            tensor.name, tensor.dimensions, tensor.data_type, tensor.external
+        );
     }
 }
 
@@ -36,7 +55,10 @@ fn run() -> Result<(), String> {
             &PathBuf::from(&arguments[1]),
             &PathBuf::from(&arguments[2]),
         )?;
-        println!("Exported {} tensors ({} bytes) to {}", export.tensor_count, export.total_bytes, arguments[2]);
+        println!(
+            "Exported {} tensors ({} bytes) to {}",
+            export.tensor_count, export.total_bytes, arguments[2]
+        );
         return Ok(());
     }
     if arguments.len() != 4 && arguments.len() != 5 {
@@ -54,7 +76,10 @@ fn run() -> Result<(), String> {
         blank_id,
     };
     let report = inspect_checkpoint(&paths)?;
-    println!("Streaming model inventory: vocabulary={} blank_id={}", report.vocabulary_size, report.blank_id);
+    println!(
+        "Streaming model inventory: vocabulary={} blank_id={}",
+        report.vocabulary_size, report.blank_id
+    );
     print_model("encoder", &report.encoder);
     print_model("decoder", &report.decoder);
     print_model("joiner", &report.joiner);

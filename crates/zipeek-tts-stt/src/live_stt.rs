@@ -1,13 +1,25 @@
-use std::{sync::{Arc, OnceLock}, time::Duration};
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 
 use axum::{
-    extract::{State, ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade}},
+    extract::{
+        State,
+        ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade},
+    },
     http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
 };
-use tokio::{sync::{OwnedSemaphorePermit, Semaphore}, task::JoinHandle};
+use tokio::{
+    sync::{OwnedSemaphorePermit, Semaphore},
+    task::JoinHandle,
+};
 
-use crate::{speech::{Speech, MAX_AUDIO_SAMPLES}, candle_tts::waveform::encode_mono_pcm16_wav};
+use crate::{
+    candle_tts::waveform::encode_mono_pcm16_wav,
+    speech::{MAX_AUDIO_SAMPLES, Speech},
+};
 
 const MAX_PACKET_BYTES: usize = 6_401;
 const MAX_PCM_BYTES: usize = 6_400;
@@ -33,7 +45,6 @@ impl Drop for Inflight {
     }
 }
 
-
 #[derive(Default)]
 struct LivePcm {
     samples: Vec<f32>,
@@ -54,7 +65,8 @@ impl LivePcm {
         }
         self.samples.reserve(count);
         for pair in packet.chunks_exact(2) {
-            self.samples.push(i16::from_le_bytes([pair[0], pair[1]]) as f32 / 32768.0);
+            self.samples
+                .push(i16::from_le_bytes([pair[0], pair[1]]) as f32 / 32768.0);
         }
         Ok(())
     }
@@ -68,8 +80,7 @@ impl LivePcm {
     }
 
     fn speech_present(&self) -> bool {
-        self.samples.len() >= MIN_SPEECH_SAMPLES
-            && self.samples.iter().any(|x| x.abs() > 1e-3)
+        self.samples.len() >= MIN_SPEECH_SAMPLES && self.samples.iter().any(|x| x.abs() > 1e-3)
     }
 
     fn wav(&self) -> Result<Vec<u8>, &'static str> {
@@ -86,9 +97,19 @@ enum ClientFrame<'a> {
 
 fn client_frame(data: &[u8]) -> Result<ClientFrame<'_>, &'static str> {
     match data {
-        [START, rate @ ..] if rate.len() == 4 && u32::from_le_bytes(rate.try_into().map_err(|_| "invalid sample rate")?) == 16_000 => Ok(ClientFrame::Start),
+        [START, rate @ ..]
+            if rate.len() == 4
+                && u32::from_le_bytes(rate.try_into().map_err(|_| "invalid sample rate")?)
+                    == 16_000 =>
+        {
+            Ok(ClientFrame::Start)
+        }
         [FINISH] => Ok(ClientFrame::Finish),
-        [AUDIO, pcm @ ..] if !pcm.is_empty() && pcm.len() <= MAX_PCM_BYTES && pcm.len() % 2 == 0 => Ok(ClientFrame::Audio(pcm)),
+        [AUDIO, pcm @ ..]
+            if !pcm.is_empty() && pcm.len() <= MAX_PCM_BYTES && pcm.len() % 2 == 0 =>
+        {
+            Ok(ClientFrame::Audio(pcm))
+        }
         _ => Err("invalid_frame"),
     }
 }
@@ -116,15 +137,26 @@ fn error_code(code: &str) -> u8 {
 }
 
 async fn report(socket: &mut WebSocket, data: Vec<u8>) -> Result<(), ()> {
-    socket.send(Message::Binary(data.into())).await.map_err(|_| ())
+    socket
+        .send(Message::Binary(data.into()))
+        .await
+        .map_err(|_| ())
 }
 
 async fn failure(socket: &mut WebSocket, code: &str) {
     let _ = report(socket, vec![ERROR, error_code(code)]).await;
-    let _ = socket.send(Message::Close(Some(CloseFrame { code: 1008, reason: "stream rejected".into() }))).await;
+    let _ = socket
+        .send(Message::Close(Some(CloseFrame {
+            code: 1008,
+            reason: "stream rejected".into(),
+        })))
+        .await;
 }
 
-fn recognize(speech: &Arc<Speech>, pcm: &LivePcm) -> Result<JoinHandle<Result<String, String>>, &'static str> {
+fn recognize(
+    speech: &Arc<Speech>,
+    pcm: &LivePcm,
+) -> Result<JoinHandle<Result<String, String>>, &'static str> {
     let wav = pcm.wav()?;
     let speech = Arc::clone(speech);
     Ok(tokio::spawn(async move {
@@ -135,11 +167,17 @@ fn recognize(speech: &Arc<Speech>, pcm: &LivePcm) -> Result<JoinHandle<Result<St
     }))
 }
 
-pub async fn upgrade(State(speech): State<Arc<Speech>>, headers: HeaderMap, ws: WebSocketUpgrade) -> Response {
+pub async fn upgrade(
+    State(speech): State<Arc<Speech>>,
+    headers: HeaderMap,
+    ws: WebSocketUpgrade,
+) -> Response {
     if headers.get(header::ORIGIN).is_none() {
         return StatusCode::FORBIDDEN.into_response();
     }
-    let permits = LIVE_SESSIONS.get_or_init(|| Arc::new(Semaphore::new(MAX_CONCURRENT_SESSIONS))).clone();
+    let permits = LIVE_SESSIONS
+        .get_or_init(|| Arc::new(Semaphore::new(MAX_CONCURRENT_SESSIONS)))
+        .clone();
     let Ok(permit) = permits.try_acquire_owned() else {
         return StatusCode::TOO_MANY_REQUESTS.into_response();
     };
@@ -157,7 +195,16 @@ async fn serve(mut socket: WebSocket, speech: Arc<Speech>, _permit: OwnedSemapho
         let mut last_requested = 0usize;
         let mut last_completed = 0usize;
         let mut last_text = String::new();
-        if report(&mut socket, { let mut header = vec![CONNECTED]; header.extend_from_slice(&16_000_u32.to_le_bytes()); header.extend_from_slice(&30_u16.to_le_bytes()); header.push(1); header }).await.is_err() {
+        if report(&mut socket, {
+            let mut header = vec![CONNECTED];
+            header.extend_from_slice(&16_000_u32.to_le_bytes());
+            header.extend_from_slice(&30_u16.to_le_bytes());
+            header.push(1);
+            header
+        })
+        .await
+        .is_err()
+        {
             return;
         }
         loop {
@@ -246,7 +293,7 @@ mod tests {
         pcm.append(&[0, 128, 255, 127]).unwrap();
         assert_eq!(pcm.samples, vec![-1.0, 32767.0 / 32768.0]);
         assert!(pcm.append(&[1]).is_err());
-        assert!(pcm.append(&vec![0; MAX_PACKET_BYTES+2]).is_err());
+        assert!(pcm.append(&vec![0; MAX_PACKET_BYTES + 2]).is_err());
         assert_eq!(pcm.samples.len(), 2);
         pcm.finish().unwrap();
         assert!(pcm.append(&[0, 0]).is_err());
@@ -255,17 +302,23 @@ mod tests {
     fn binary_protocol_is_strict() {
         assert_eq!(client_frame(&[1, 0x80, 0x3e, 0, 0]), Ok(ClientFrame::Start));
         assert_eq!(client_frame(&[2]), Ok(ClientFrame::Finish));
-        assert_eq!(client_frame(&[3, 0, 0xff]), Ok(ClientFrame::Audio(&[0, 0xff])));
+        assert_eq!(
+            client_frame(&[3, 0, 0xff]),
+            Ok(ClientFrame::Audio(&[0, 0xff]))
+        );
         assert!(client_frame(&[1, 0x80, 0xbb, 0, 0]).is_err());
         assert!(client_frame(&[3, 0]).is_err());
         assert!(client_frame(&[3]).is_err());
         assert!(client_frame(&[4]).is_err());
-        assert_eq!(transcript_frame(PARTIAL, "你好", 16000), [vec![PARTIAL, 0x80, 0x3e, 0, 0], "你好".as_bytes().to_vec()].concat());
+        assert_eq!(
+            transcript_frame(PARTIAL, "你好", 16000),
+            [vec![PARTIAL, 0x80, 0x3e, 0, 0], "你好".as_bytes().to_vec()].concat()
+        );
     }
     #[test]
     fn no_speech_is_rejected() {
         let mut pcm = LivePcm::default();
-        pcm.append(&vec![0;6400]).unwrap();
+        pcm.append(&vec![0; 6400]).unwrap();
         assert!(!pcm.speech_present());
     }
 }

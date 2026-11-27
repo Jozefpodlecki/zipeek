@@ -115,7 +115,10 @@ fn exercise_icon(id: &str) -> IconData {
     match id {
         "matching" => IconData::LUCIDE_SHUFFLE,
         "multiple-choice" => IconData::LUCIDE_GRADUATION_CAP,
-        "sentence-translation" => IconData::LUCIDE_BOOK_OPEN,
+        "sentence-translation" | "story-builder" | "reading-comprehension" => {
+            IconData::LUCIDE_BOOK_OPEN
+        }
+        "conversation-practice" => IconData::LUCIDE_MESSAGE_CIRCLE,
         "speaking" | "listening-choice" => IconData::LUCIDE_VOLUME_2,
         "type-pinyin" | "audio-dictation" => IconData::LUCIDE_KEYBOARD,
         "character-builder" | "sentence-builder" | "sentence-transformation" => {

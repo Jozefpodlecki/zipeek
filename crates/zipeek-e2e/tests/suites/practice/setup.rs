@@ -405,9 +405,7 @@ pub async fn sentence_builder_session_and_restore(ctx: ScenarioContext) -> Harne
         .find_all_css("[aria-label='Available Chinese phrase tiles'] button")
         .await?;
     zipeek_e2e::e2e_ensure!(tiles.len() >= 2);
-    for tile in tiles {
-        tile.click().await?;
-    }
+    zipeek_e2e::page_objects::sentence_builder::choose_correct(driver).await?;
     driver
         .find_css("[data-sentence-builder-check]:not([disabled])")
         .await?

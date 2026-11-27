@@ -1,6 +1,28 @@
 use js_sys::Reflect;
 use serde::Deserialize;
+use thiserror::Error;
 use wasm_bindgen::JsValue;
+
+#[derive(Debug, Error)]
+pub(crate) enum TauriError {
+    #[error("Tauri bridge unavailable")]
+    BridgeUnavailable,
+    #[error("Tauri API unavailable: {0}")]
+    ApiUnavailable(&'static str),
+    #[error("Tauri JavaScript interop failed: {0}")]
+    JavaScript(String),
+    #[error("Tauri request encoding failed: {0}")]
+    Encode(String),
+    #[error("Tauri command {command} failed: {details}")]
+    Invocation {
+        command: &'static str,
+        details: String,
+    },
+    #[error("Tauri IPC returned an unexpected response for {0}")]
+    InvalidResponse(&'static str),
+    #[error("Tauri response decoding failed: {0}")]
+    Decode(String),
+}
 
 #[derive(Debug, Deserialize)]
 struct IpcError {
@@ -8,20 +30,19 @@ struct IpcError {
     details: Option<String>,
 }
 
-pub fn message(value: JsValue) -> String {
+pub(crate) fn message(value: JsValue) -> String {
     if let Ok(error) = serde_wasm_bindgen::from_value::<IpcError>(value.clone()) {
-        let kind = error.kind.replace('_', " ");
-        return match error.details {
-            Some(details) if !details.is_empty() => details,
-            _ => kind,
-        };
+        return error
+            .details
+            .filter(|details| !details.is_empty())
+            .unwrap_or_else(|| error.kind.replace('_', " "));
     }
     value
         .as_string()
         .or_else(|| {
             Reflect::get(&value, &JsValue::from_str("message"))
                 .ok()
-                .and_then(|message| message.as_string())
+                .and_then(|value| value.as_string())
         })
         .unwrap_or_else(|| format!("{value:?}"))
 }

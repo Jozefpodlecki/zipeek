@@ -68,6 +68,9 @@ pub(crate) enum PracticeSetupAction {
     ToggleFormat(ExerciseVariant),
     SetMatchingColumnOrder(MatchingColumnOrder),
     SetMatchingPairs(u8),
+    SetPassageSentences(u8),
+    SetDialogueTurns(u8),
+    SetNarrativeGrammar(u8),
     SetMatchingAiGenerated(bool),
     SetMatchingShowPinyin(bool),
     SetWritingGuidance(WritingGuidance),
@@ -90,6 +93,8 @@ pub(crate) enum PracticeSetupAction {
     SetTypePinyinRetry(bool),
     SetCharacterBuilderAudio(bool),
     SetCharacterBuilderAutoCheck(bool),
+    SetSentenceBuilderAutoCheck(bool),
+    SetSentenceBuilderRetry(bool),
     SetTypePinyinHint(bool),
 }
 
@@ -231,6 +236,23 @@ impl Reducible for PracticeSetupFlow {
             PracticeSetupAction::SetMatchingColumnOrder(order) => {
                 next.draft.matching_column_order = order;
             }
+            PracticeSetupAction::SetPassageSentences(count) => {
+                if (5..=10).contains(&count) {
+                    next.exercise_options.narrative.passage_sentences = count;
+                }
+            }
+            PracticeSetupAction::SetNarrativeGrammar(index) => {
+                if index == 0
+                    || zipeek_exercises::sentence_transformation::item_for_seed(0, index).is_some()
+                {
+                    next.exercise_options.narrative.grammar_pattern_index = index;
+                }
+            }
+            PracticeSetupAction::SetDialogueTurns(count) => {
+                if (5..=10).contains(&count) {
+                    next.exercise_options.narrative.dialogue_turns = count;
+                }
+            }
             PracticeSetupAction::SetMatchingAiGenerated(enabled) => {
                 next.exercise_options.matching_ai_generated = enabled;
             }
@@ -285,7 +307,17 @@ impl Reducible for PracticeSetupFlow {
                 }
                 next.draft.length = length;
             }
-            PracticeSetupAction::SetTranslationCount(count) => next.draft.translation_count = count,
+            PracticeSetupAction::SetTranslationCount(count) => {
+                if !matches!(count, 0 | 5 | 10 | 20) {
+                    return self;
+                }
+                next.draft.translation_count = count;
+                next.draft.length = if count == 0 {
+                    SessionLength::Endless
+                } else {
+                    SessionLength::Fixed(count)
+                };
+            }
             PracticeSetupAction::SetTranslationDirection(direction) => {
                 next.draft.translation.direction = direction;
             }
@@ -306,6 +338,12 @@ impl Reducible for PracticeSetupFlow {
                 } else {
                     AnswerPolicy::Advance
                 };
+            }
+            PracticeSetupAction::SetSentenceBuilderAutoCheck(value) => {
+                next.exercise_options.sentence_builder.automatic_check = value;
+            }
+            PracticeSetupAction::SetSentenceBuilderRetry(value) => {
+                next.exercise_options.sentence_builder.retry_incorrect = value;
             }
             PracticeSetupAction::SetCharacterBuilderAutoCheck(value) => {
                 next.exercise_options.character_builder.automatic_check = value;

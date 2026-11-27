@@ -205,8 +205,16 @@ fn qwen3_tts_engine_reuses_weights_and_resets_attention() {
     assert_eq!(&second[8..12], b"WAVE");
     assert!(first.len() > 44);
     assert!(second.len() > 44);
-    assert!(first[44..].chunks_exact(2).any(|sample| i16::from_le_bytes([sample[0], sample[1]]).unsigned_abs() > 200));
-    assert!(second[44..].chunks_exact(2).any(|sample| i16::from_le_bytes([sample[0], sample[1]]).unsigned_abs() > 200));
+    assert!(
+        first[44..]
+            .chunks_exact(2)
+            .any(|sample| i16::from_le_bytes([sample[0], sample[1]]).unsigned_abs() > 200)
+    );
+    assert!(
+        second[44..]
+            .chunks_exact(2)
+            .any(|sample| i16::from_le_bytes([sample[0], sample[1]]).unsigned_abs() > 200)
+    );
 }
 
 #[tokio::test]
@@ -228,7 +236,10 @@ async fn speech_server_warms_tts_before_accepting_requests() {
     if speech.candle_stt_checkpoint_present() {
         assert!(speech.neural_stt_engine_loaded());
     }
-    let wav = speech.synthesize("你好世界").await.expect("post-warm-up neural synthesis");
+    let wav = speech
+        .synthesize("你好世界")
+        .await
+        .expect("post-warm-up neural synthesis");
     assert_eq!(&wav[..4], b"RIFF");
     assert_eq!(&wav[8..12], b"WAVE");
     server.shutdown().await.expect("stop warmed speech server");
@@ -255,8 +266,7 @@ fn qwen3_tts_bubian_eos_diagnostic() {
         "cpu" => candle_core::Device::Cpu,
         other => panic!("unsupported ZIPEEK_TTS_DEVICE: {other}"),
     };
-    let tokenizer =
-        MandarinBpeTokenizer::load(root).expect("load Qwen3-TTS vocabulary and merges");
+    let tokenizer = MandarinBpeTokenizer::load(root).expect("load Qwen3-TTS vocabulary and merges");
     let prompt = tokenizer
         .encode_assistant_mandarin("不便")
         .expect("tokenize regression input 不便");
@@ -305,7 +315,10 @@ fn qwen3_tts_bubian_eos_diagnostic() {
     let last = trace.last();
     eprintln!(
         "EOS diagnostic summary: observed_steps={}, generated_frames={}, distinct_first_codes={}, longest_repetition={}, last_frame={last:?}",
-        trace.len(), generated_frames, distinct_codes, longest_run,
+        trace.len(),
+        generated_frames,
+        distinct_codes,
+        longest_run,
     );
     let codes = result.unwrap_or_else(|error| {
         panic!(

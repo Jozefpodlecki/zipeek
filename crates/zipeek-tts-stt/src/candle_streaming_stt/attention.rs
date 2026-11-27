@@ -73,7 +73,11 @@ impl ChunkCausalAttention {
         let mut mask = Vec::with_capacity(frames * total);
         for query in 0..frames {
             for key in 0..total {
-                mask.push(if key <= previous + query { 0.0f32 } else { -1e9f32 });
+                mask.push(if key <= previous + query {
+                    0.0f32
+                } else {
+                    -1e9f32
+                });
             }
         }
         let causal = Tensor::from_vec(mask, (frames, total), new_frames.device())?

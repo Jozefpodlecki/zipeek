@@ -107,7 +107,7 @@ return {current:value.current, direction:value.translation_direction, ready:valu
 pub const TRANSLATION_FIXTURE_ENDLESS_TRANSLATION_CAN_FINISH_AND_CLEARS_TEMPORARY_STATE_01: &str = r####"
 const key=Object.keys(localStorage).find(key=>key.startsWith('zipeek.practice.session.v1.'));
 const value=JSON.parse(localStorage.getItem(key));
-return {current:value.current, steps:value.steps.length, endless:value.endless_translation,
+return {current:value.current, steps:value.steps.length, endless:value.session_mode === "endless",
     earned:value.steps[0].outcome.scored.earned};
 "####;
 

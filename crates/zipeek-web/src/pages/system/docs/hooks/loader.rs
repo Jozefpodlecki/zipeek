@@ -7,6 +7,8 @@ use yew::prelude::*;
 use zipeek_docs::{DocumentEntry, is_safe_path};
 
 use super::super::navigation::asset_url;
+use crate::hooks::use_app_environment;
+use web_sys::Window;
 
 #[derive(Clone, PartialEq)]
 pub(in crate::pages::system::docs) enum LoadState<T> {
@@ -15,8 +17,8 @@ pub(in crate::pages::system::docs) enum LoadState<T> {
     Error(String),
 }
 
-async fn load_index() -> Result<Vec<DocumentEntry>, String> {
-    let url = asset_url("docs/index.json")?;
+async fn load_index(window: &Window) -> Result<Vec<DocumentEntry>, String> {
+    let url = asset_url(window, "docs/index.json")?;
     let response = Request::get(&url)
         .send()
         .await
@@ -34,11 +36,11 @@ async fn load_index() -> Result<Vec<DocumentEntry>, String> {
         .collect())
 }
 
-async fn load_document(path: &str) -> Result<String, String> {
+async fn load_document(window: &Window, path: &str) -> Result<String, String> {
     if !is_safe_path(path) || !path.ends_with(".md") {
         return Err("Select a Markdown document from the explorer.".into());
     }
-    let url = asset_url(&format!("docs/{path}"))?;
+    let url = asset_url(window, &format!("docs/{path}"))?;
     let response = Request::get(&url)
         .send()
         .await
@@ -51,14 +53,16 @@ async fn load_document(path: &str) -> Result<String, String> {
 
 #[hook]
 pub(in crate::pages::system::docs) fn use_index() -> UseStateHandle<LoadState<Vec<DocumentEntry>>> {
+    let environment = use_app_environment();
     let state = use_state(|| LoadState::Loading);
     {
         let state = state.clone();
+        let window = environment.window.clone();
         use_effect_with((), move |_| {
             let active = Rc::new(Cell::new(true));
             let task_active = active.clone();
             spawn_local(async move {
-                let result = load_index().await;
+                let result = load_index(&window).await;
                 if task_active.get() {
                     state.set(match result {
                         Ok(items) => LoadState::Ready(items),
@@ -76,16 +80,18 @@ pub(in crate::pages::system::docs) fn use_index() -> UseStateHandle<LoadState<Ve
 pub(in crate::pages::system::docs) fn use_document(
     path: String,
 ) -> UseStateHandle<LoadState<String>> {
+    let environment = use_app_environment();
     let state = use_state(|| LoadState::Loading);
     {
         let state = state.clone();
+        let window = environment.window.clone();
         use_effect_with(path, move |path| {
             state.set(LoadState::Loading);
             let active = Rc::new(Cell::new(true));
             let task_active = active.clone();
             let path = path.clone();
             spawn_local(async move {
-                let result = load_document(&path).await;
+                let result = load_document(&window, &path).await;
                 if task_active.get() {
                     state.set(match result {
                         Ok(text) => LoadState::Ready(text),

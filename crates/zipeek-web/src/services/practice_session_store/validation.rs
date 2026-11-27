@@ -20,23 +20,26 @@ impl PracticeSession {
                 .completed_at
                 .is_some_and(|at| self.started_at.is_none_or(|start| at < start))
             || !valid_translation_direction(self.translation_direction())
-            || self.exercise_configurations.len()
-                != self
-                    .steps
-                    .iter()
-                    .map(|step| step.exercise_id.as_str())
-                    .collect::<std::collections::BTreeSet<_>>()
-                    .len()
+            || (!self.session_mode.is_endless()
+                && self.exercise_configurations.len()
+                    != self
+                        .steps
+                        .iter()
+                        .map(|step| step.exercise_id.as_str())
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .len())
             || self
                 .exercise_configurations
                 .iter()
                 .any(|(id, configuration)| {
-                    !self.steps.iter().any(|step| step.exercise_id == *id)
+                    (!self.session_mode.is_endless()
+                        && !self.steps.iter().any(|step| step.exercise_id == *id))
                         || match (id.as_str(), configuration) {
                             ("listening-choice", ExerciseConfiguration::ListeningChoice(_))
                             | ("write-hanzi", ExerciseConfiguration::WriteHanzi(_))
                             | ("type-pinyin", ExerciseConfiguration::TypePinyin(_))
-                            | ("character-builder", ExerciseConfiguration::CharacterBuilder(_)) => {
+                            | ("character-builder", ExerciseConfiguration::CharacterBuilder(_))
+                            | ("sentence-builder", ExerciseConfiguration::SentenceBuilder(_)) => {
                                 false
                             }
                             (
@@ -68,7 +71,8 @@ impl PracticeSession {
                                     show_pinyin: _,
                                 },
                             ) => {
-                                *reverse_matching || *ai_generated
+                                *reverse_matching
+                                    || *ai_generated
                                     || *pair_count != 4
                                     || formats.is_empty()
                                     || formats.iter().any(|format| {
@@ -78,6 +82,10 @@ impl PracticeSession {
                                         .is_none_or(|variant| !variant.is_mcq())
                                     })
                             }
+                            (
+                                "story-builder" | "reading-comprehension" | "conversation-practice",
+                                ExerciseConfiguration::Narrative(options),
+                            ) => options.validate().is_err(),
                             (
                                 "sentence-translation",
                                 ExerciseConfiguration::SentenceTranslation { direction },
@@ -93,18 +101,14 @@ impl PracticeSession {
                                     | "write-hanzi"
                                     | "type-pinyin"
                                     | "character-builder"
+                                    | "sentence-builder"
                                     | "sentence-translation"
                                     | "sentence-transformation"
                             ),
                             _ => true,
                         }
                 })
-            || (self.endless_translation
-                && (self
-                    .steps
-                    .iter()
-                    .any(|step| step.exercise_id != "sentence-translation")
-                    || self.is_completed()))
+            || (self.session_mode.is_endless() && self.is_completed())
             || self.vocabulary.len() > 2
             || (self.vocabulary.contains_key("source") == self.vocabulary.contains_key("set_ids"))
             || !self
@@ -125,10 +129,16 @@ impl PracticeSession {
             return Err(PracticeSessionError::InvalidStoredSession);
         }
         for (index, step) in self.steps.iter().enumerate() {
-            let needs_generation = zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
-                || (step.exercise_id == "matching"
-                    && matches!(self.exercise_configurations.get("matching"),
-                        Some(ExerciseConfiguration::Quiz { ai_generated: true, .. })));
+            let needs_generation =
+                zipeek_exercises::practice_queue::requires_generation(&step.exercise_id)
+                    || (step.exercise_id == "matching"
+                        && matches!(
+                            self.exercise_configurations.get("matching"),
+                            Some(ExerciseConfiguration::Quiz {
+                                ai_generated: true,
+                                ..
+                            })
+                        ));
             if step.id != format!("{}:{index}", self.id)
                 || step.configuration_id != step.exercise_id
                 || !self
@@ -158,11 +168,38 @@ impl PracticeSession {
                     _ => step.quiz_format.is_some() || step.reverse_matching,
                 })
                 || step.generated_instance.as_ref().is_some_and(|instance| {
-                    crate::services::practice_generated::GeneratedInstance::decode(
-                        instance,
-                        &step.exercise_id,
-                    )
-                    .is_err()
+                    use crate::services::practice_generated::GeneratedInstance;
+                    match GeneratedInstance::decode(instance, &step.exercise_id) {
+                        Err(_) => true,
+                        Ok(GeneratedInstance::StoryBuilder { content }) => self
+                            .exercise_configurations
+                            .get(&step.configuration_id)
+                            .is_none_or(|configuration| match configuration {
+                                ExerciseConfiguration::Narrative(options) => {
+                                    content.validate(options.passage_sentences).is_err()
+                                }
+                                _ => true,
+                            }),
+                        Ok(GeneratedInstance::ReadingComprehension { content }) => self
+                            .exercise_configurations
+                            .get(&step.configuration_id)
+                            .is_none_or(|configuration| match configuration {
+                                ExerciseConfiguration::Narrative(options) => {
+                                    content.validate(options.passage_sentences).is_err()
+                                }
+                                _ => true,
+                            }),
+                        Ok(GeneratedInstance::ConversationPractice { content }) => self
+                            .exercise_configurations
+                            .get(&step.configuration_id)
+                            .is_none_or(|configuration| match configuration {
+                                ExerciseConfiguration::Narrative(options) => {
+                                    content.validate(options.dialogue_turns).is_err()
+                                }
+                                _ => true,
+                            }),
+                        Ok(_) => false,
+                    }
                 })
                 || (step.generated_instance.is_some() && step.generation_attempt == 0)
                 || (step.generation_attempt > 3)
@@ -175,8 +212,7 @@ impl PracticeSession {
                     ExerciseReadiness::Queued | ExerciseReadiness::NeedsGeneration
                 ) && step.generated_instance.is_some())
                 || (matches!(&step.readiness, ExerciseReadiness::Failed(reason) if reason.trim().is_empty() || reason.len() > 512))
-                || (!needs_generation
-                    && step.generation_attempt != 0)
+                || (!needs_generation && step.generation_attempt != 0)
                 || (step.generated_instance.is_some()
                     && !matches!(&step.readiness, ExerciseReadiness::Ready))
                 || (!needs_generation
@@ -202,9 +238,22 @@ impl PracticeSession {
                     return Err(PracticeSessionError::InvalidStoredSession);
                 }
             }
-            if let Some(ExerciseOutcome::Scored { earned, possible }) = &step.outcome {
-                if *possible != 1 || *earned > 1 || !resumable_scores_supported(&step.exercise_id) {
-                    return Err(PracticeSessionError::InvalidStoredSession);
+            if let Some(outcome) = &step.outcome {
+                match outcome {
+                    ExerciseOutcome::Scored { earned, possible }
+                        if *possible != 1
+                            || *earned > 1
+                            || !resumable_scores_supported(&step.exercise_id) =>
+                    {
+                        return Err(PracticeSessionError::InvalidStoredSession);
+                    }
+                    ExerciseOutcome::Assessed(assessment)
+                        if !assessment.valid()
+                            || !resumable_scores_supported(&step.exercise_id) =>
+                    {
+                        return Err(PracticeSessionError::InvalidStoredSession);
+                    }
+                    _ => {}
                 }
             }
         }

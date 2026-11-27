@@ -1,5 +1,9 @@
-use std::{io::{Read, Write}, net::{SocketAddr, TcpStream}, time::Duration};
 use super::registry::ServiceKey;
+use std::{
+    io::{Read, Write},
+    net::{SocketAddr, TcpStream},
+    time::Duration,
+};
 
 pub(super) const HEALTH_TIMEOUT: Duration = Duration::from_millis(500);
 
@@ -54,4 +58,3 @@ pub(super) fn health_ready_at(kind: ServiceKey, address: SocketAddr) -> bool {
         })
         .unwrap_or(false)
 }
-

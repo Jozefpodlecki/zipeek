@@ -35,3 +35,9 @@ Tauri's `bundle.externalBin` declares all three binary basenames, and bundles th
 - **AI:** launches `zipeek-ai-server --fixture --bind 127.0.0.1:1430`. This executable presently supports fixture responses only; it is not a production LLM service.
 
 The native service controller does not manage services already listening on the configured ports. Inference/model assets are deliberately outside the source package and the Tauri sidecar binary bundle.
+
+## R699 image client boundary
+
+The Tauri image Settings view uses `image_health` and `image_generate` native IPC commands. The native implementation connects only to `127.0.0.1:1431`, using bounded HTTP requests, validates returned job identifiers and paths, and polls image jobs off the UI thread. It does not accept URLs from WebView arguments. The Yew image-generation client automatically uses IPC when the desktop runtime is present. The hosted browser version retains the configured image endpoint and direct HTTP workflow. The image element displays the resulting loopback image URL without a cross-origin `fetch`; native health/generation requests no longer depend on WebView CORS.
+
+The Settings image page displays backend health and supports a user-triggered test-generation preview; Tauri process ownership and Start/Stop remain exclusively in Services. Generated test images are stored by the existing image server under its configured storage, not in personal DuckDB. Process health is distinct from an actual successful test generation.

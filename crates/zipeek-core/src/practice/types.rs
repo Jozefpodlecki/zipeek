@@ -79,9 +79,10 @@ impl ExerciseVariant {
         match self {
             Self::MatchingEnglishPinyin => QuestionFormat::EnglishToPinyin,
             Self::MatchingPinyinHanzi => QuestionFormat::PinyinToHanzi,
-            Self::MatchingHanziMeaning | Self::MatchingAudioHanzi | Self::MatchingAudioMeaning | Self::MultipleChoiceHanziMeaning => {
-                QuestionFormat::HanziToMeaning
-            }
+            Self::MatchingHanziMeaning
+            | Self::MatchingAudioHanzi
+            | Self::MatchingAudioMeaning
+            | Self::MultipleChoiceHanziMeaning => QuestionFormat::HanziToMeaning,
             Self::MultipleChoiceMeaningHanzi => QuestionFormat::MeaningToHanzi,
             Self::MultipleChoiceMeaningPinyin => QuestionFormat::MeaningToPinyin,
         }

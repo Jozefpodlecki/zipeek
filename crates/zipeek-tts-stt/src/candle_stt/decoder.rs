@@ -273,14 +273,10 @@ mod tests {
         let device = Device::Cpu;
         let tokens = 2;
         let positions = 3;
-        let q = Tensor::ones(
-            (tokens, TEXT_HEADS, TEXT_HEAD_WIDTH),
-            DType::F32,
-            &device,
-        )
-        .unwrap()
-        .transpose(0, 1)
-        .unwrap();
+        let q = Tensor::ones((tokens, TEXT_HEADS, TEXT_HEAD_WIDTH), DType::F32, &device)
+            .unwrap()
+            .transpose(0, 1)
+            .unwrap();
         let keys = Tensor::ones(
             (positions, TEXT_HEADS, TEXT_HEAD_WIDTH),
             DType::F32,

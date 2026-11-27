@@ -31,7 +31,8 @@ pub(super) fn recognition_result(props: &RecognitionResultProps) -> Html {
                         let db = dictionary.database().ok()?;
                         let candidates = db.text_reading_candidates(&heard).await.ok()?;
                         Some(readings::resolve(&heard, &candidates))
-                    }.await;
+                    }
+                    .await;
                     if active_request.get() {
                         heard_readings.set(resolved.map(|readings| (heard, readings)));
                     }
@@ -52,12 +53,18 @@ pub(super) fn recognition_result(props: &RecognitionResultProps) -> Html {
     } else {
         None
     };
-    let resolved = (*heard_readings).as_ref()
+    let resolved = (*heard_readings)
+        .as_ref()
         .filter(|(text, _)| text == heard)
         .map(|(_, readings)| readings.as_slice());
     let characters: Vec<char> = heard.chars().collect();
-    let aligned = resolved.filter(|readings| readings.len() == characters.len()
-        && readings.iter().zip(characters.iter()).all(|(glyph, character)| glyph.character == *character));
+    let aligned = resolved.filter(|readings| {
+        readings.len() == characters.len()
+            && readings
+                .iter()
+                .zip(characters.iter())
+                .all(|(glyph, character)| glyph.character == *character)
+    });
     let status_text = if matches {
         "Recognized text matches the reference"
     } else {

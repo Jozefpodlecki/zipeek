@@ -1,7 +1,7 @@
 use candle_core::{DType, Module, Result, Tensor};
 use candle_nn::{Conv2d, Conv2dConfig, VarBuilder};
 
-use super::zipformer32::{FEATURES_PER_CHUNK, FEATURE_BINS};
+use super::zipformer32::{FEATURE_BINS, FEATURES_PER_CHUNK};
 
 const EMBED_CHANNELS: usize = 128;
 const EMBED_FREQ: usize = 19;
@@ -38,19 +38,46 @@ pub struct Zipformer32EncoderEmbedding {
 
 impl Zipformer32EncoderEmbedding {
     pub fn load(vb: VarBuilder<'_>) -> Result<Self> {
-        let projection_weight = vb.get((EMBED_CHANNELS * EMBED_FREQ, EMBED_OUTPUT), "onnx::MatMul_9326")?;
+        let projection_weight = vb.get(
+            (EMBED_CHANNELS * EMBED_FREQ, EMBED_OUTPUT),
+            "onnx::MatMul_9326",
+        )?;
         let vb = vb.pp("encoder_embed");
         let standard = Conv2dConfig::default();
-        let downsample = Conv2dConfig { stride: 2, ..Default::default() };
-        let depthwise = Conv2dConfig { groups: EMBED_CHANNELS, ..Default::default() };
+        let downsample = Conv2dConfig {
+            stride: 2,
+            ..Default::default()
+        };
+        let depthwise = Conv2dConfig {
+            groups: EMBED_CHANNELS,
+            ..Default::default()
+        };
         let norm = vb.pp("out_norm");
         Ok(Self {
             conv_first: candle_nn::conv2d(1, 8, 3, standard, vb.pp("conv.0"))?,
             conv_downsample: candle_nn::conv2d(8, 32, 3, downsample, vb.pp("conv.4"))?,
             conv_frequency: candle_nn::conv2d(32, EMBED_CHANNELS, 3, standard, vb.pp("conv.7"))?,
-            depthwise: candle_nn::conv2d(EMBED_CHANNELS, EMBED_CHANNELS, 7, depthwise, vb.pp("convnext.depthwise_conv"))?,
-            pointwise_in: candle_nn::conv2d(EMBED_CHANNELS, 384, 1, standard, vb.pp("convnext.pointwise_conv1"))?,
-            pointwise_out: candle_nn::conv2d(384, EMBED_CHANNELS, 1, standard, vb.pp("convnext.pointwise_conv2"))?,
+            depthwise: candle_nn::conv2d(
+                EMBED_CHANNELS,
+                EMBED_CHANNELS,
+                7,
+                depthwise,
+                vb.pp("convnext.depthwise_conv"),
+            )?,
+            pointwise_in: candle_nn::conv2d(
+                EMBED_CHANNELS,
+                384,
+                1,
+                standard,
+                vb.pp("convnext.pointwise_conv1"),
+            )?,
+            pointwise_out: candle_nn::conv2d(
+                384,
+                EMBED_CHANNELS,
+                1,
+                standard,
+                vb.pp("convnext.pointwise_conv2"),
+            )?,
             projection_weight,
             projection_bias: vb.pp("out").get((EMBED_OUTPUT,), "bias")?,
             normalization_bias: norm.get((EMBED_OUTPUT,), "bias")?,
@@ -58,9 +85,18 @@ impl Zipformer32EncoderEmbedding {
         })
     }
 
-    pub fn forward_chunk(&self, features: &Tensor, cached_left_pad: &Tensor) -> Result<(Tensor, Tensor)> {
+    pub fn forward_chunk(
+        &self,
+        features: &Tensor,
+        cached_left_pad: &Tensor,
+    ) -> Result<(Tensor, Tensor)> {
         let (batch, frames, bands) = features.dims3()?;
-        if batch == 0 || batch > 16 || frames != FEATURES_PER_CHUNK || bands != FEATURE_BINS || features.dtype() != DType::F32 {
+        if batch == 0
+            || batch > 16
+            || frames != FEATURES_PER_CHUNK
+            || bands != FEATURE_BINS
+            || features.dtype() != DType::F32
+        {
             candle_core::bail!("Zipformer embedding expects [batch, 77, 80] FP32 input")
         }
         if cached_left_pad.dims() != [batch, EMBED_CHANNELS, EMBED_LEFT_CONTEXT, EMBED_FREQ]
@@ -72,14 +108,22 @@ impl Zipformer32EncoderEmbedding {
         let x = swoosh_right(&self.conv_first.forward(&x)?)?;
         let x = swoosh_right(&self.conv_downsample.forward(&x)?)?;
         let x = self.conv_frequency.forward(&x)?;
-        let even_frequency = Tensor::from_vec((0..EMBED_FREQ).map(|index| (index * 2) as u32).collect(), (EMBED_FREQ,), features.device())?;
+        let even_frequency = Tensor::from_vec(
+            (0..EMBED_FREQ).map(|index| (index * 2) as u32).collect(),
+            (EMBED_FREQ,),
+            features.device(),
+        )?;
         let x = swoosh_right(&x.index_select(&even_frequency, 3)?)?;
         let (_, _, subsampled_frames, subsampled_bands) = x.dims4()?;
-        if subsampled_frames != STREAMING_OUTPUT_FRAMES + EMBED_LEFT_CONTEXT || subsampled_bands != EMBED_FREQ {
+        if subsampled_frames != STREAMING_OUTPUT_FRAMES + EMBED_LEFT_CONTEXT
+            || subsampled_bands != EMBED_FREQ
+        {
             candle_core::bail!("Zipformer convolutional subsampling dimensions mismatch")
         }
         let combined = Tensor::cat(&[cached_left_pad, &x], 2)?;
-        let next_left_pad = combined.narrow(2, STREAMING_OUTPUT_FRAMES, EMBED_LEFT_CONTEXT)?.contiguous()?;
+        let next_left_pad = combined
+            .narrow(2, STREAMING_OUTPUT_FRAMES, EMBED_LEFT_CONTEXT)?
+            .contiguous()?;
         let bypass = x.narrow(2, 0, STREAMING_OUTPUT_FRAMES)?;
         let padded = combined.pad_with_zeros(3, 3, 3)?;
         let conv = self.depthwise.forward(&padded)?;
@@ -87,14 +131,22 @@ impl Zipformer32EncoderEmbedding {
         let conv = swoosh_left(&conv)?;
         let conv = self.pointwise_out.forward(&conv)?;
         let mixed = (&bypass + &conv)?;
-        let flattened = mixed.transpose(1, 2)?.contiguous()?.reshape((batch, STREAMING_OUTPUT_FRAMES, EMBED_CHANNELS * EMBED_FREQ))?;
+        let flattened = mixed.transpose(1, 2)?.contiguous()?.reshape((
+            batch,
+            STREAMING_OUTPUT_FRAMES,
+            EMBED_CHANNELS * EMBED_FREQ,
+        ))?;
         let projected = flattened
             .reshape((batch * STREAMING_OUTPUT_FRAMES, EMBED_CHANNELS * EMBED_FREQ))?
             .matmul(&self.projection_weight)?
             .broadcast_add(&self.projection_bias)?
             .reshape((batch, STREAMING_OUTPUT_FRAMES, EMBED_OUTPUT))?;
         let centered = projected.broadcast_sub(&self.normalization_bias)?;
-        let rms = centered.sqr()?.mean_keepdim(2)?.affine(1.0, 1e-12)?.sqrt()?;
+        let rms = centered
+            .sqr()?
+            .mean_keepdim(2)?
+            .affine(1.0, 1e-12)?
+            .sqrt()?;
         let scale = self.normalization_log_scale.exp()?;
         let normalized = projected.broadcast_div(&rms)?.broadcast_mul(&scale)?;
         Ok((normalized, next_left_pad))
@@ -111,18 +163,27 @@ mod tests {
         let device = Device::Cpu;
         let vb = VarBuilder::zeros(DType::F32, &device);
         let embedding = Zipformer32EncoderEmbedding::load(vb).unwrap();
-        let frames = Tensor::zeros((1, FEATURES_PER_CHUNK, FEATURE_BINS), DType::F32, &device).unwrap();
+        let frames =
+            Tensor::zeros((1, FEATURES_PER_CHUNK, FEATURE_BINS), DType::F32, &device).unwrap();
         let cache = Tensor::zeros((1, 128, 3, 19), DType::F32, &device).unwrap();
         let (output, next_cache) = embedding.forward_chunk(&frames, &cache).unwrap();
         assert_eq!(output.dims(), &[1, 32, 192]);
         assert_eq!(next_cache.dims(), &[1, 128, 3, 19]);
-        assert_eq!(embedding.forward_chunk(&frames, &next_cache).unwrap().0.dims(), &[1, 32, 192]);
+        assert_eq!(
+            embedding
+                .forward_chunk(&frames, &next_cache)
+                .unwrap()
+                .0
+                .dims(),
+            &[1, 32, 192]
+        );
     }
 
     #[test]
     fn embedding_rejects_unexpected_chunk_or_cache() {
         let device = Device::Cpu;
-        let embedding = Zipformer32EncoderEmbedding::load(VarBuilder::zeros(DType::F32, &device)).unwrap();
+        let embedding =
+            Zipformer32EncoderEmbedding::load(VarBuilder::zeros(DType::F32, &device)).unwrap();
         let cache = Tensor::zeros((1, 128, 3, 19), DType::F32, &device).unwrap();
         let invalid_features = Tensor::zeros((1, 76, 80), DType::F32, &device).unwrap();
         assert!(embedding.forward_chunk(&invalid_features, &cache).is_err());

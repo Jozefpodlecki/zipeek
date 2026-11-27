@@ -2,7 +2,8 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 use yew_router::prelude::*;
 
-use crate::route::Route;
+use crate::{hooks::use_app_environment, preferences::PreferencesStore, route::Route};
+use gloo::events::EventListener;
 
 fn active(current: Option<&Route>, destination: &Route) -> bool {
     match destination {
@@ -29,13 +30,13 @@ fn active(current: Option<&Route>, destination: &Route) -> bool {
     }
 }
 
-struct NavigationItemConfig {
-    route: Route,
-    label: &'static str,
-    icon: IconData,
+pub(crate) struct NavigationItemConfig {
+    pub(crate) route: Route,
+    pub(crate) label: &'static str,
+    pub(crate) icon: IconData,
 }
 
-const NAVIGATION_ITEMS: [NavigationItemConfig; 14] = [
+pub(crate) const NAVIGATION_ITEMS: [NavigationItemConfig; 14] = [
     NavigationItemConfig {
         route: Route::Home,
         label: "Home",
@@ -62,9 +63,9 @@ const NAVIGATION_ITEMS: [NavigationItemConfig; 14] = [
         icon: IconData::LUCIDE_LAYOUT_GRID,
     },
     NavigationItemConfig {
-        route: Route::WordSets,
-        label: "Word Sets",
-        icon: IconData::LUCIDE_BOOKMARK,
+        route: Route::Profile,
+        label: "Profile",
+        icon: IconData::LUCIDE_USER,
     },
     NavigationItemConfig {
         route: Route::WriteHanzi,
@@ -188,8 +189,40 @@ pub struct NavigationProps {
     pub collapsed: bool,
 }
 
+pub(crate) fn drawer_item_is_required(route: &Route) -> bool {
+    matches!(route, Route::Profile | Route::Settings)
+}
+
+pub(crate) fn drawer_item_visible(route: &Route, hidden: &[String]) -> bool {
+    drawer_item_is_required(route) || !hidden.iter().any(|key| key == &route.to_path())
+}
+
 #[function_component(Navigation)]
 pub fn navigation(props: &NavigationProps) -> Html {
+    let environment = use_app_environment();
+    let storage = environment.local_storage.clone();
+    let hidden = use_state(move || PreferencesStore::new(&storage).read().hidden_drawer_items);
+    {
+        let storage = environment.local_storage.clone();
+        let window = environment.window.clone();
+        let hidden = hidden.clone();
+        use_effect_with((), move |_| {
+            let reload = {
+                let hidden = hidden.clone();
+                let storage = storage.clone();
+                move || hidden.set(PreferencesStore::new(&storage).read().hidden_drawer_items)
+            };
+            let same_tab = EventListener::new(&window, "zipeek-navigation-change", {
+                let reload = reload.clone();
+                move |_| reload()
+            });
+            let other_tab = EventListener::new(&window, "storage", move |_| reload());
+            move || {
+                drop(same_tab);
+                drop(other_tab);
+            }
+        });
+    }
     let debug_navigation = if cfg!(debug_assertions) {
         let debug_label = if props.collapsed {
             Html::default()
@@ -225,7 +258,7 @@ pub fn navigation(props: &NavigationProps) -> Html {
             class="flex flex-wrap gap-[.4rem] md:flex-col md:gap-2"
             aria-label="Main navigation"
         >
-            {for NAVIGATION_ITEMS.iter().map(|item| html! {
+            {for NAVIGATION_ITEMS.iter().filter(|item| drawer_item_visible(&item.route, &hidden)).map(|item| html! {
                 <NavigationItem
                     key={item.label}
                     route={item.route.clone()}
@@ -260,6 +293,18 @@ mod tests {
             Some(&crate::route::GameId::CloudMatch.route()),
             &Route::PracticeSetup
         ));
+    }
+
+    #[test]
+    fn essential_drawer_entries_cannot_be_hidden() {
+        let hidden = vec![
+            "/profile".to_owned(),
+            "/settings".to_owned(),
+            "/games".to_owned(),
+        ];
+        assert!(drawer_item_visible(&Route::Profile, &hidden));
+        assert!(drawer_item_visible(&Route::Settings, &hidden));
+        assert!(!drawer_item_visible(&Route::Games, &hidden));
     }
 
     #[test]

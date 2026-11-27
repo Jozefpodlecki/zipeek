@@ -33,7 +33,7 @@ fn skill_evidence(record: &WordRecord, skill: SkillGap) -> EvidenceStatus {
     }
 }
 
-fn needs_review(record: &WordRecord) -> bool {
+pub(super) fn needs_review(record: &WordRecord) -> bool {
     SkillGap::ALL
         .into_iter()
         .any(|skill| skill_evidence(record, skill) == EvidenceStatus::NeedsReview)

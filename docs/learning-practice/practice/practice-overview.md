@@ -12,3 +12,7 @@ Practice has separate setup, active-session and completion stages. The shared se
 - [Vocabulary eligibility](../../dictionary-data/vocabulary/vocabulary-selection.md) controls exclusions and visitation policy.
 
 For current visual design see [Practice UX](../../product-ux/practice/ux-practice-setup.md) and [global UX](../../product-ux/ux.md). Historical Practice notes have been retained for provenance in [the archive](../../archive-history/audits/PRODUCT_PRACTICE.md), not as active behavior.
+
+## AI narrative exercises
+
+Story Builder and Reading Comprehension use separate 5–10 sentence passage settings. Conversation Practice uses a separate 5–10 turn setting. See [AI narrative exercises](ai-narrative-exercises.md) for the validation contract and implementation limitations.

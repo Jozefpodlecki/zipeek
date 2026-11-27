@@ -47,7 +47,9 @@ pub fn decode_for_stt(bytes: &[u8], format: InputFormat) -> Result<Vec<f32>, Spe
     let pcm = match format {
         InputFormat::Wav => return decode_pcm16_wav(bytes),
         InputFormat::OggOpus => decode_opus(bytes)?,
-        InputFormat::Mp3 | InputFormat::Flac => decode_symphonia(bytes, format, INPUT_SAMPLE_LIMIT)?,
+        InputFormat::Mp3 | InputFormat::Flac => {
+            decode_symphonia(bytes, format, INPUT_SAMPLE_LIMIT)?
+        }
     };
     let samples = resample_mono(&pcm.0, pcm.1, 16_000, MAX_AUDIO_SAMPLES)?;
     if samples.is_empty() || samples.iter().any(|sample| !sample.is_finite()) {
@@ -251,12 +253,14 @@ pub fn resample_mono(
         let cached_taps = if phases <= 256 {
             Some(
                 (0..phases)
-                    .map(|phase| downsample_taps(
-                        cutoff,
-                        radius,
-                        ((phase as u64 * input_rate as u64) % output_rate as u64) as f64
-                            / output_rate as f64,
-                    ))
+                    .map(|phase| {
+                        downsample_taps(
+                            cutoff,
+                            radius,
+                            ((phase as u64 * input_rate as u64) % output_rate as u64) as f64
+                                / output_rate as f64,
+                        )
+                    })
                     .collect::<Vec<_>>(),
             )
         } else {
@@ -536,17 +540,20 @@ mod tests {
             let center = (numerator / 16_000) as isize;
             let fraction = (numerator % 16_000) as f64 / 16_000.0;
             let taps = downsample_taps(cutoff, radius, fraction);
-            let (weighted, sum) = taps.iter().enumerate().fold(
-                (0.0, 0.0),
-                |(weighted, sum), (tap, weight)| {
-                    let source = center + tap as isize - radius;
-                    if (0..input.len() as isize).contains(&source) {
-                        (weighted + f64::from(input[source as usize]) * weight, sum + weight)
-                    } else {
-                        (weighted, sum)
-                    }
-                },
-            );
+            let (weighted, sum) =
+                taps.iter()
+                    .enumerate()
+                    .fold((0.0, 0.0), |(weighted, sum), (tap, weight)| {
+                        let source = center + tap as isize - radius;
+                        if (0..input.len() as isize).contains(&source) {
+                            (
+                                weighted + f64::from(input[source as usize]) * weight,
+                                sum + weight,
+                            )
+                        } else {
+                            (weighted, sum)
+                        }
+                    });
             assert!((output[index] - (weighted / sum) as f32).abs() < 1e-5);
         }
     }

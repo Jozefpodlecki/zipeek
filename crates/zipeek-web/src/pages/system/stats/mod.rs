@@ -12,6 +12,7 @@ mod overview;
 mod pagination;
 mod query;
 mod query_hook;
+mod recorded_activity;
 mod sections;
 mod selection_review;
 mod settings;
@@ -35,6 +36,7 @@ use grammar::GrammarExplorer;
 use history::HistoryExplorer;
 use insights::InsightExplorer;
 use overview::Overview;
+use recorded_activity::RecordedActivity;
 use sections::DashboardTab;
 use selection_review::SelectionReview;
 use settings::DashboardSettings;
@@ -102,19 +104,22 @@ fn stats_content() -> Html {
                 </div>
                 <button type="button" data-stats-preview-toggle="" aria-pressed={(state.phase == PreviewPhase::Open).to_string()}
                     onclick={on_preview}
-                    aria-label={match state.phase { PreviewPhase::Open => "Close preview", PreviewPhase::Loading { .. } => "Cancel preview", PreviewPhase::Closed => "Preview dashboard" }}
-                    title={match state.phase { PreviewPhase::Open => "Close preview", PreviewPhase::Loading { .. } => "Cancel preview", PreviewPhase::Closed => "Preview dashboard" }}
+                    aria-label={match state.phase { PreviewPhase::Open => "Close preview", PreviewPhase::Loading { .. } => "Cancel preview", PreviewPhase::Closed => "Preview sample dashboard" }}
+                    title={match state.phase { PreviewPhase::Open => "Close preview", PreviewPhase::Loading { .. } => "Cancel preview", PreviewPhase::Closed => "Preview sample dashboard" }}
                     class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-semibold hover:bg-raised disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-accent">
                     <Icon data={if state.phase == PreviewPhase::Open { IconData::LUCIDE_X } else { IconData::LUCIDE_EYE }} width="17px" height="17px" />
                 </button>
             </header>
             {match state.phase {
                 PreviewPhase::Closed => html! {
+                    <>
                     <section data-stats-unavailable="" class="rounded-xl border border-line bg-surface p-5" aria-labelledby="stats-data-status-heading">
-                        <h2 id="stats-data-status-heading" class="font-semibold">{"Learning evidence not connected"}</h2>
-                        <p class="mt-2 text-sm text-muted">{"Verified learning observations are needed before proficiency can be assessed."}</p>
+                        <h2 id="stats-data-status-heading" class="font-semibold">{"Learning assessment"}</h2>
+                        <p class="mt-2 text-sm text-muted">{"Verified mastery is not available yet. Saved activity is shown below."}</p>
                         <a href="#/settings?section=learning" class="mt-3 inline-flex min-h-10 items-center rounded-lg border border-line px-3 text-sm font-semibold hover:bg-raised">{"Learning settings"}</a>
                     </section>
+                    <RecordedActivity />
+                    </>
                 },
                 PreviewPhase::Loading { .. } => html! {
                     <section data-stats-loading="" role="status" aria-live="polite" aria-busy="true" class="space-y-3 motion-reduce:animate-none">
@@ -130,6 +135,7 @@ fn stats_content() -> Html {
                 },
                 PreviewPhase::Open => html! {
                     <>
+                        <p class="text-xs text-muted" data-stats-sample-notice="">{"Sample dashboard · illustrative records, not your saved activity"}</p>
                         <div role="tablist" aria-label="Statistics sections" class="flex flex-nowrap gap-2 overflow-x-auto pb-1">{for tabs}</div>
                         <section data-stats-panel={state.tab.key()} role="tabpanel" aria-label={state.tab.label()} class="min-w-0 space-y-3">
                             <StatsSection tab={state.tab} />

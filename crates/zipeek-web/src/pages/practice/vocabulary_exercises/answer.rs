@@ -11,6 +11,7 @@ pub(super) enum AnswerPhase {
 pub(super) struct AnswerState {
     pub phase: AnswerPhase,
     pub mistakes: u32,
+    pub attempts: u32,
     pub retry_notice: bool,
 }
 
@@ -19,6 +20,7 @@ impl Default for AnswerState {
         Self {
             phase: AnswerPhase::Editing,
             mistakes: 0,
+            attempts: 0,
             retry_notice: false,
         }
     }
@@ -48,7 +50,8 @@ impl Reducible for AnswerState {
                     } else {
                         AnswerPhase::Reviewed { correct }
                     },
-                    mistakes: self.mistakes + u32::from(!correct),
+                    mistakes: self.mistakes.saturating_add(u32::from(!correct)),
+                    attempts: self.attempts.saturating_add(1),
                     retry_notice: !correct && retry,
                 })
             }
@@ -68,12 +71,15 @@ mod tests {
         });
         assert_eq!(state.phase, AnswerPhase::Editing);
         assert_eq!(state.mistakes, 1);
+        assert_eq!(state.attempts, 1);
         assert!(state.retry_notice);
+        assert_eq!(state.attempts, 1);
         let state = state.reduce(AnswerAction::Submit {
             correct: true,
             retry: true,
         });
         assert_eq!(state.phase, AnswerPhase::Reviewed { correct: true });
+        assert_eq!(state.attempts, 2);
         assert_eq!(state.mistakes, 1);
     }
 
@@ -88,6 +94,7 @@ mod tests {
             retry: false,
         });
         assert_eq!(state.phase, AnswerPhase::Reviewed { correct: false });
+        assert_eq!(state.attempts, 1);
         assert_eq!(state.mistakes, 1);
     }
 }

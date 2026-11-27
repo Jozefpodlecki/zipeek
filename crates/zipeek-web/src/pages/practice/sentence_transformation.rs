@@ -1,3 +1,6 @@
+use super::feedback::{ExercisePrimaryAction, ExerciseReview, FeedbackVerdict};
+use super::instruction::InstructionIcon;
+use super::surface::ExerciseSurface;
 use std::rc::Rc;
 use yew::TargetCast;
 use yew::prelude::*;
@@ -5,13 +8,18 @@ use zipeek_exercises::sentence_transformation::{
     self, AnswerMode, TransformationAction, TransformationItem, TransformationState,
 };
 
-use crate::models::SentenceTransformationOptions;
+use crate::{
+    models::SentenceTransformationOptions,
+    services::practice_session_store::{ExerciseAssessment, ExerciseVerdict},
+};
 
 #[derive(Properties, PartialEq)]
 pub struct SentenceTransformationProps {
     pub seed: u64,
     pub options: SentenceTransformationOptions,
     pub on_completed: Callback<()>,
+    #[prop_or_default]
+    pub on_assessed: Option<Callback<ExerciseAssessment>>,
 }
 
 #[function_component(SentenceTransformation)]
@@ -22,7 +30,7 @@ pub fn sentence_transformation(props: &SentenceTransformationProps) -> Html {
         return html! { <p role="alert">{"The selected grammar pattern has no authored question."}</p> };
     };
     html! { <TransformationExercise key={format!("{}-{}-{:?}", item.id, props.seed, props.options.answer_mode)}
-    item={item} seed={props.seed} mode={props.options.answer_mode} on_completed={props.on_completed.clone()} /> }
+    item={item} seed={props.seed} mode={props.options.answer_mode} on_completed={props.on_completed.clone()} on_assessed={props.on_assessed.clone()} /> }
 }
 
 #[derive(Properties, PartialEq)]
@@ -31,6 +39,8 @@ struct TransformationExerciseProps {
     seed: u64,
     mode: AnswerMode,
     on_completed: Callback<()>,
+    #[prop_or_default]
+    on_assessed: Option<Callback<ExerciseAssessment>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -122,14 +132,31 @@ fn transformation_exercise(props: &TransformationExerciseProps) -> Html {
     };
     let continue_session = {
         let on_completed = props.on_completed.clone();
-        Callback::from(move |_: MouseEvent| on_completed.emit(()))
+        let on_assessed = props.on_assessed.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(on_assessed) = &on_assessed {
+                on_assessed.emit(ExerciseAssessment {
+                    verdict: if correct {
+                        ExerciseVerdict::Correct
+                    } else {
+                        ExerciseVerdict::Incorrect
+                    },
+                    attempts: 1,
+                    mistakes: u16::from(!correct),
+                    hints: 0,
+                    assisted: false,
+                    item_evidence: Vec::new(),
+                });
+            } else {
+                on_completed.emit(());
+            }
+        })
     };
     let can_check = state.can_check(item);
 
     html! {
-        <section class="space-y-5 rounded-2xl border border-line bg-surface p-6" data-practice-sentence-transformation="" data-item-id={item.id} data-transformation-method={if use_tiles {"tiles"} else {"typing"}} data-transformation-status={if checked {if correct {"correct"} else {"incorrect"}} else {"editing"}}>
-            <h2 class="text-xl font-semibold">{"Sentence Transformation"}</h2>
-            <p class="text-sm text-muted">{"Rewrite the sentence using the requested grammar pattern. Only authored accepted answers are recognized; this activity is practice-only."}</p>
+        <div class="w-full" data-practice-sentence-transformation="" data-item-id={item.id} data-transformation-method={if use_tiles {"tiles"} else {"typing"}} data-transformation-status={if checked {if correct {"correct"} else {"incorrect"}} else {"editing"}}>
+            <ExerciseSurface icon={InstructionIcon::Rewrite} instruction="Rewrite using the requested grammar pattern">
             <p lang="zh-CN" class="text-lg">{item.original}</p>
             <p><strong>{"Target construction: "}</strong><span lang="zh-CN">{item.target_structure}</span></p>
             <p>{item.instruction}</p>
@@ -186,18 +213,16 @@ fn transformation_exercise(props: &TransformationExerciseProps) -> Html {
                         <button type="button" data-transformation-undo="" onclick={undo} disabled={selected.is_empty()} class="rounded-lg border border-line px-4 py-2 disabled:opacity-40">{"Undo"}</button>
                         <button type="button" data-transformation-reset="" onclick={clear} disabled={selected.is_empty()} class="rounded-lg border border-line px-4 py-2 disabled:opacity-40">{"Reset"}</button>
                     </>}} else {Html::default()}}
-                    <button type="button" data-sentence-transformation-check="" onclick={check} disabled={!can_check}
-                        class="rounded-lg bg-brand-action px-4 py-2 text-white disabled:opacity-40">{"Check answer"}</button>
+                    <ExercisePrimaryAction label="Check answer" on_activate={check} disabled={!can_check} sentence_transformation=true />
                 </div>
             }} else {html! {
-                <div aria-live="polite" data-practice-feedback="" data-transformation-feedback={if correct {"correct"} else {"incorrect"}} class="space-y-3">
-                    <p class="font-semibold">{if correct {"Correct"} else {"Not quite"}}</p>
+                <ExerciseReview verdict={if correct { FeedbackVerdict::Correct } else { FeedbackVerdict::Incorrect }} on_continue={continue_session} sentence_transformation=true>
+                    <span data-transformation-feedback={if correct {"correct"} else {"incorrect"}} />
                     <p class="text-sm">{if correct {item.explanation} else {item.incorrect_feedback}}</p>
                     <p><strong>{"Accepted answer: "}</strong><span lang="zh-CN">{sentence_transformation::answer(item, item.accepted_orders[0]).unwrap_or_default()}</span></p>
-                    <button type="button" data-sentence-transformation-continue="" onclick={continue_session}
-                        class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white">{"Continue session"}</button>
-                </div>
+                </ExerciseReview>
             }}}
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }

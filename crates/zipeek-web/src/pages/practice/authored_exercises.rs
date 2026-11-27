@@ -1,7 +1,16 @@
+use super::feedback::{ExerciseReview, ExerciseSubmitAction, FeedbackVerdict};
+use super::instruction::InstructionIcon;
+use super::surface::ExerciseSurface;
 use yew::prelude::*;
 use zipeek_exercises::{audio_dictation, fill_blank};
 
-use crate::{hooks::use_app_environment, services::practice_audio};
+use crate::{
+    hooks::use_app_environment,
+    services::{
+        practice_audio,
+        practice_session_store::{ExerciseAssessment, ExerciseVerdict},
+    },
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AuthoredExerciseMode {
@@ -14,6 +23,8 @@ pub struct AuthoredExerciseProps {
     pub mode: AuthoredExerciseMode,
     pub seed: u64,
     pub on_completed: Callback<()>,
+    #[prop_or_default]
+    pub on_assessed: Option<Callback<ExerciseAssessment>>,
 }
 
 #[function_component(AuthoredExercise)]
@@ -91,16 +102,32 @@ pub fn authored_exercise(props: &AuthoredExerciseProps) -> Html {
     };
     let on_continue = {
         let completed = props.on_completed.clone();
-        Callback::from(move |_: MouseEvent| completed.emit(()))
+        let assessed = props.on_assessed.clone();
+        Callback::from(move |_: MouseEvent| {
+            if let Some(assessed) = &assessed {
+                assessed.emit(ExerciseAssessment {
+                    verdict: if is_correct {
+                        ExerciseVerdict::Correct
+                    } else {
+                        ExerciseVerdict::Incorrect
+                    },
+                    attempts: 1,
+                    mistakes: u16::from(!is_correct),
+                    hints: 0,
+                    assisted: false,
+                    item_evidence: Vec::new(),
+                });
+            } else {
+                completed.emit(());
+            }
+        })
     };
     html! {
-        <section
-            class="space-y-5 rounded-2xl border border-line bg-surface p-6"
-            data-practice-authored-exercise=""
-        >
-            <h2 class="text-xl font-semibold">
-                {if is_dictation { "Audio Dictation" } else { "Fill in the Blank" }}
-            </h2>
+        <div class="w-full" data-practice-authored-exercise="">
+            <ExerciseSurface
+                icon={if is_dictation { InstructionIcon::Listen } else { InstructionIcon::Rewrite }}
+                instruction={if is_dictation { "Listen and type the Chinese sentence" } else { "Complete the missing Chinese word" }}
+            >
             <p class="text-sm text-muted">
                 {"Author-provided practice examples. Feedback here does not award learning mastery."}
             </p>
@@ -149,22 +176,14 @@ pub fn authored_exercise(props: &AuthoredExerciseProps) -> Html {
                 />
                 {if !*checked {
                     html! {
-                        <button
-                            type="submit"
-                            disabled={input.trim().is_empty() || *composing || (is_dictation && !*played)}
-                            class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white disabled:opacity-50"
-                        >
-                            {"Check answer"}
-                        </button>
+                        <ExerciseSubmitAction label="Check answer"
+                            disabled={input.trim().is_empty() || *composing || (is_dictation && !*played)} />
                     }
                 } else { Html::default() }}
             </form>
             {if *checked {
                 html! {
-                    <div class="space-y-3" aria-live="polite" data-practice-feedback="">
-                        <p class="font-semibold">
-                            {if is_correct { "Correct" } else { "Not quite" }}
-                        </p>
+                    <ExerciseReview verdict={if is_correct { FeedbackVerdict::Correct } else { FeedbackVerdict::Incorrect }} on_continue={on_continue}>
                         <p lang="zh-CN">
                             {if is_dictation { dictation.transcript.to_owned() } else {
                                 format!("{}{}{}", cloze.sentence_before, cloze.accepted_hanzi[0], cloze.sentence_after)
@@ -173,16 +192,10 @@ pub fn authored_exercise(props: &AuthoredExerciseProps) -> Html {
                         <p class="text-sm text-muted">
                             {if is_dictation { dictation.meaning } else { cloze.explanation }}
                         </p>
-                        <button
-                            type="button"
-                            class="rounded-lg bg-brand-action px-5 py-3 font-semibold text-white"
-                            onclick={on_continue}
-                        >
-                            {"Continue session"}
-                        </button>
-                    </div>
+                    </ExerciseReview>
                 }
             } else { Html::default() }}
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }

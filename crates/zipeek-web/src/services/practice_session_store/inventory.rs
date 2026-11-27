@@ -17,6 +17,7 @@ pub(super) fn completed_removal_allowed(
 pub(crate) struct PracticeSessionInventory {
     pub sessions: Vec<PracticeSession>,
     pub invalid_records: usize,
+    pub invalid_ids: Vec<String>,
 }
 
 pub(super) fn ensure_new_session_allowed(

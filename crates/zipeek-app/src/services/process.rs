@@ -1,5 +1,16 @@
-use std::{env, net::TcpStream, path::PathBuf, process::{Command, Stdio}, thread, time::{Duration, Instant}};
-use super::{NativeServices, ServiceError, registry::{ServiceKey, ManagedProcess}, health::{health_ready, HEALTH_TIMEOUT}};
+use super::{
+    NativeServices, ServiceError,
+    health::{HEALTH_TIMEOUT, health_ready},
+    registry::{ManagedProcess, ServiceKey},
+};
+use std::{
+    env,
+    net::TcpStream,
+    path::PathBuf,
+    process::{Command, Stdio},
+    thread,
+    time::{Duration, Instant},
+};
 
 const STARTUP_INTERVAL: Duration = Duration::from_millis(200);
 
@@ -89,7 +100,13 @@ impl NativeServices {
                     return Err(ServiceError::ProcessFailure(format!(
                         "{} exited before readiness: {exit}{}",
                         kind.binary(),
-                        if kind.name() == "ai" { " (configure a GGUF model in models/ai or ZIPEEK_AI_MODEL_PATH)" } else { "" }
+                        if kind.name() == "ai" {
+                            " (configure a GGUF model in models/ai or ZIPEEK_AI_MODEL_PATH)"
+                        } else if kind.name() == "image" {
+                            " (SDXL requires model files in models/sdxl or ZIPEEK_IMAGE_MODEL_DIR and a working CUDA device; check image-server logs)"
+                        } else {
+                            ""
+                        }
                     )));
                 }
             }

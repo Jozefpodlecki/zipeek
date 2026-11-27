@@ -7,6 +7,9 @@ pub enum ExternalService {
 pub fn required_external_services(exercise_id: &str) -> &'static [ExternalService] {
     match exercise_id {
         "sentence-translation"
+        | "story-builder"
+        | "reading-comprehension"
+        | "conversation-practice"
         | "fill-blank"
         | "sentence-builder"
         | "sentence-transformation"
@@ -192,6 +195,33 @@ pub const WRITE_HANZI: ExerciseDefinition = ExerciseDefinition {
     verdict_authority: VerdictAuthority::PracticeOnly,
 };
 
+pub const STORY_BUILDER: ExerciseDefinition = ExerciseDefinition {
+    id: "story-builder",
+    version: 1,
+    description: "Complete a 5 to 10 sentence AI-authored Mandarin story by selecting missing words from a word bank.",
+    visible_input_contract: "A coherent ordered passage with numbered gaps and a shuffled bank of Chinese words; hidden solutions are excluded.",
+    learner_output_contract: "One word-bank choice per gap; each choice may be used at most once.",
+    verdict_authority: VerdictAuthority::Deterministic,
+};
+
+pub const READING_COMPREHENSION: ExerciseDefinition = ExerciseDefinition {
+    id: "reading-comprehension",
+    version: 1,
+    description: "Read an AI-authored passage of 5 to 10 Mandarin sentences and answer a contextual question.",
+    visible_input_contract: "Ordered story sentences, one question about topic, action or circumstances, and three unmarked options.",
+    learner_output_contract: "The index of one of three visible answers.",
+    verdict_authority: VerdictAuthority::Deterministic,
+};
+
+pub const CONVERSATION_PRACTICE: ExerciseDefinition = ExerciseDefinition {
+    id: "conversation-practice",
+    version: 1,
+    description: "Choose replies in an AI-authored dialogue spanning 5 to 10 turns.",
+    visible_input_contract: "A dialogue scenario, the current utterance, and three candidate replies.",
+    learner_output_contract: "One reply index per conversational turn.",
+    verdict_authority: VerdictAuthority::Deterministic,
+};
+
 pub const DEFINITIONS: &[ExerciseDefinition] = &[
     TYPE_PINYIN,
     CHARACTER_BUILDER,
@@ -199,6 +229,9 @@ pub const DEFINITIONS: &[ExerciseDefinition] = &[
     MATCHING,
     MULTIPLE_CHOICE,
     SENTENCE_TRANSLATION,
+    STORY_BUILDER,
+    READING_COMPREHENSION,
+    CONVERSATION_PRACTICE,
     LISTENING_CHOICE,
     IMAGE_VOCABULARY,
     SPEAKING,
@@ -211,7 +244,7 @@ pub const DEFINITIONS: &[ExerciseDefinition] = &[
     WRITE_HANZI,
 ];
 
-pub const PRACTICE_PLAYLIST_ORDER: [&str; 16] = [
+pub const PRACTICE_PLAYLIST_ORDER: [&str; 19] = [
     "matching",
     "multiple-choice",
     "type-pinyin",
@@ -220,6 +253,9 @@ pub const PRACTICE_PLAYLIST_ORDER: [&str; 16] = [
     "character-hunt",
     "listening-choice",
     "sentence-translation",
+    "story-builder",
+    "reading-comprehension",
+    "conversation-practice",
     "speaking",
     "image-vocabulary",
     "fill-blank",
@@ -231,7 +267,14 @@ pub const PRACTICE_PLAYLIST_ORDER: [&str; 16] = [
 ];
 
 pub fn needs_generated_content(id: &str) -> bool {
-    matches!(id, "sentence-translation" | "image-vocabulary")
+    matches!(
+        id,
+        "sentence-translation"
+            | "image-vocabulary"
+            | "story-builder"
+            | "reading-comprehension"
+            | "conversation-practice"
+    )
 }
 
 pub fn supports_endless_session_host(id: &str) -> bool {
@@ -265,6 +308,9 @@ pub fn supports_resumable_session_host(id: &str) -> bool {
             | "character-hunt"
             | "sentence-translation"
             | "image-vocabulary"
+            | "story-builder"
+            | "reading-comprehension"
+            | "conversation-practice"
     )
 }
 
@@ -283,7 +329,14 @@ mod tests {
         assert!(needs_generated_content("image-vocabulary"));
         assert!(DEFINITIONS.iter().all(|item| {
             needs_generated_content(item.id)
-                == matches!(item.id, "sentence-translation" | "image-vocabulary")
+                == matches!(
+                    item.id,
+                    "sentence-translation"
+                        | "image-vocabulary"
+                        | "story-builder"
+                        | "reading-comprehension"
+                        | "conversation-practice"
+                )
         }));
         assert!(!needs_generated_content("matching"));
         assert!(!needs_generated_content("fill-blank"));
@@ -356,7 +409,14 @@ mod playlist_tests {
             assert!(definition(id).is_some());
             assert_eq!(
                 needs_generated_content(id),
-                matches!(id, "sentence-translation" | "image-vocabulary")
+                matches!(
+                    id,
+                    "sentence-translation"
+                        | "image-vocabulary"
+                        | "story-builder"
+                        | "reading-comprehension"
+                        | "conversation-practice"
+                )
             );
         }
         assert!(!supports_resumable_session_host("not-a-real-exercise"));

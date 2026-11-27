@@ -269,7 +269,10 @@ impl QwenTtsTalker {
             }
             let final_hidden = hidden.narrow(0, hidden.dim(0)? - 1, 1)?;
             let logits = self.codec_head.forward(&final_hidden)?;
-            let scores = logits.to_dtype(DType::F32)?.flatten_all()?.to_vec1::<f32>()?;
+            let scores = logits
+                .to_dtype(DType::F32)?
+                .flatten_all()?
+                .to_vec1::<f32>()?;
             let chosen_code = sample_acoustic_code(
                 &scores,
                 self.config.predictor.vocab_size,
@@ -285,9 +288,7 @@ impl QwenTtsTalker {
                     .iter()
                     .enumerate()
                     .max_by(|left, right| {
-                        left.1
-                            .total_cmp(right.1)
-                            .then_with(|| right.0.cmp(&left.0))
+                        left.1.total_cmp(right.1).then_with(|| right.0.cmp(&left.0))
                     })
                     .ok_or_else(|| candle_core::Error::Msg("empty acoustic vocabulary".into()))?;
                 observe(AcousticFrameDiagnostic {
@@ -456,8 +457,8 @@ impl QwenTtsCodePredictor {
             let last = hidden.narrow(0, hidden.dim(0)? - 1, 1)?;
             let logits = head.forward(&last)?.to_dtype(DType::F32)?;
             let scores = logits.flatten_all()?.to_vec1::<f32>()?;
-            let code = sample_residual_code(&scores, parameters, rng)
-                .map_err(candle_core::Error::Msg)?;
+            let code =
+                sample_residual_code(&scores, parameters, rng).map_err(candle_core::Error::Msg)?;
             codes.push(code);
             if index + 1 < self.heads.len() {
                 let next =

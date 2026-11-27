@@ -196,7 +196,7 @@ mod tests {
         let large: Vec<_> = seeds
             .iter()
             .zip(counts.iter())
-            .filter(|(_, &count)| count >= 200)
+            .filter(|&(_, &count)| count >= 200)
             .map(|(site, _)| site.x)
             .collect();
         assert!(large.iter().any(|&x| x < VIEW_WIDTH / 3.0));

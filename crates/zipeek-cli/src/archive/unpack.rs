@@ -31,6 +31,14 @@ const SOURCE_LIMITS: ArchiveLimits = ArchiveLimits {
 pub async fn unpack(root: &Path, archive: &Path) -> Result<()> {
     let target = root.join("target/zipeek-unpack");
     let stage = target.join("stage");
+    let rollback_area = target.join("rollback");
+    if tokio::fs::try_exists(&rollback_area).await? {
+        return Err(format!(
+            "Previous source installation needs manual recovery from {}",
+            rollback_area.display()
+        )
+        .into());
+    }
     if tokio::fs::try_exists(&stage).await? {
         tokio::fs::remove_dir_all(&stage).await?;
     }
@@ -47,7 +55,14 @@ pub async fn unpack(root: &Path, archive: &Path) -> Result<()> {
         tokio::fs::remove_dir_all(&stage).await?;
         return Err(error);
     }
-    restore(root, &stage, archive).await
+    let result = restore(root, &stage, archive).await;
+    if result.is_err() && tokio::fs::try_exists(&rollback_area).await? {
+        return result;
+    }
+    if let Err(error) = tokio::fs::remove_dir_all(&stage).await {
+        eprintln!("Source install succeeded, but unpack stage cleanup failed: {error}");
+    }
+    result
 }
 
 fn extract(archive: &Path, stage: &Path) -> Result<()> {
@@ -64,16 +79,20 @@ fn extract_with_limits(archive: &Path, stage: &Path, limits: ArchiveLimits) -> R
     let mut normalized_paths = HashSet::new();
     let mut created_directories = HashSet::new();
     for index in 0..zip.len() {
-        let mut entry = zip.by_index(index)?;
+        let entry = zip.by_index(index)?;
+
         if entry.is_dir() {
             continue;
         }
+
         if entry.size() > limits.entry_bytes {
             return Err("archive entry exceeds the source extraction size limit".into());
         }
+
         total_bytes = total_bytes
             .checked_add(entry.size())
             .ok_or("archive extraction size overflow")?;
+
         if total_bytes > limits.total_bytes {
             return Err("archive exceeds the total source extraction size limit".into());
         }
@@ -146,9 +165,15 @@ fn protected_generated_asset(relative: &Path) -> bool {
 }
 
 async fn restore(root: &Path, stage: &Path, archive: &Path) -> Result<()> {
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
-    let backup = root.join(format!(".unpack-backups/{timestamp}"));
-    tokio::fs::create_dir_all(&backup).await?;
+    let rollback_area = root.join("target/zipeek-unpack/rollback");
+    if tokio::fs::try_exists(&rollback_area).await? {
+        return Err(format!(
+            "Previous source installation needs manual recovery from {}",
+            rollback_area.display()
+        )
+        .into());
+    }
+    let backup = rollback_area.as_path();
     let mut managed = vec![
         "docs".to_owned(),
         "scripts".to_owned(),
@@ -182,6 +207,7 @@ async fn restore(root: &Path, stage: &Path, archive: &Path) -> Result<()> {
             .into());
         }
     }
+    tokio::fs::create_dir_all(backup).await?;
     let mut replaced_directories = Vec::new();
     let mut copied_files = Vec::new();
     let installation = async {
@@ -202,40 +228,49 @@ async fn restore(root: &Path, stage: &Path, archive: &Path) -> Result<()> {
         }
 
         for file in collect(stage, stage).await? {
-            let relative = file.strip_prefix(stage)?.to_owned();
-            if protected_generated_asset(&relative) {
-                continue;
-            }
-            let dest = root.join(&relative);
-            let had_original = tokio::fs::try_exists(&dest).await?;
-            if had_original {
-                let saved = backup.join(&relative);
-                tokio::fs::create_dir_all(saved.parent().ok_or("invalid backup path")?).await?;
-                tokio::fs::copy(&dest, saved).await?;
-            }
-            copied_files.push((relative, had_original));
-            tokio::fs::create_dir_all(dest.parent().ok_or("invalid target path")?).await?;
-            tokio::fs::copy(&file, dest).await?;
+            install_source_file(root, stage, &backup, &file, &mut copied_files).await?;
         }
         Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
     }
     .await;
     if let Err(error) = installation {
-        let recovery = rollback(root, &backup, &copied_files, &replaced_directories).await;
+        let recovery = rollback(root, backup, &copied_files, &replaced_directories).await;
         if let Err(recovery_error) = recovery {
             return Err(format!(
-                "Installation failed: {error}; rollback also failed: {recovery_error}. Backups: {}",
+                "Installation failed: {error}; rollback failed: {recovery_error}. Recovery files retained at {}",
                 backup.display()
             )
             .into());
         }
+        tokio::fs::remove_dir_all(backup).await?;
         return Err(format!("Installation failed and was rolled back: {error}").into());
     }
-    println!(
-        "Unpacked archive: {}. Backups: {}",
-        archive.display(),
-        backup.display()
-    );
+    tokio::fs::remove_dir_all(backup).await?;
+    println!("Unpacked archive: {}", archive.display());
+    Ok(())
+}
+
+async fn install_source_file(
+    root: &Path,
+    stage: &Path,
+    backup: &Path,
+    file: &Path,
+    installed: &mut Vec<(std::path::PathBuf, bool)>,
+) -> Result<()> {
+    let relative = file.strip_prefix(stage)?.to_owned();
+    if protected_generated_asset(&relative) {
+        return Ok(());
+    }
+    let destination = root.join(&relative);
+    let had_original = tokio::fs::try_exists(&destination).await?;
+    if had_original {
+        let saved = backup.join(&relative);
+        tokio::fs::create_dir_all(saved.parent().ok_or("invalid backup path")?).await?;
+        tokio::fs::rename(&destination, saved).await?;
+    }
+    installed.push((relative, had_original));
+    tokio::fs::create_dir_all(destination.parent().ok_or("invalid target path")?).await?;
+    tokio::fs::rename(file, destination).await?;
     Ok(())
 }
 
@@ -251,7 +286,7 @@ async fn rollback(
             tokio::fs::remove_file(&destination).await?;
         }
         if *had_original {
-            tokio::fs::copy(backup.join(relative), destination).await?;
+            tokio::fs::rename(backup.join(relative), destination).await?;
         }
     }
     for (relative, had_original) in replaced_directories.iter().rev() {
@@ -338,6 +373,86 @@ mod tests {
         let result = extract(&archive, &parent.join("stage"));
         assert!(result.is_err());
         std::fs::remove_dir_all(parent)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn interrupted_move_restore_uses_saved_originals() -> Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-rollback-move-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
+        ));
+        let backup = root.join("target/zipeek-unpack/rollback");
+        tokio::fs::create_dir_all(&backup).await?;
+        tokio::fs::write(root.join("README.md"), "replacement").await?;
+        tokio::fs::write(root.join("NEW.md"), "new").await?;
+        tokio::fs::write(backup.join("README.md"), "original").await?;
+        rollback(
+            &root,
+            &backup,
+            &[("README.md".into(), true), ("NEW.md".into(), false)],
+            &[],
+        )
+        .await?;
+        assert_eq!(
+            tokio::fs::read_to_string(root.join("README.md")).await?,
+            "original"
+        );
+        assert!(!root.join("NEW.md").exists());
+        tokio::fs::remove_dir_all(root).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn incomplete_rollback_refuses_reinstall() -> Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-recovery-guard-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
+        ));
+        let rollback = root.join("target/zipeek-unpack/rollback");
+        tokio::fs::create_dir_all(&rollback).await?;
+        tokio::fs::write(rollback.join("README.md"), "recoverable").await?;
+        let stage = root.join("target/zipeek-unpack/stage");
+        tokio::fs::create_dir_all(&stage).await?;
+        tokio::fs::write(stage.join("README.md"), "new").await?;
+        assert!(
+            restore(&root, &stage, Path::new("fixture.zip"))
+                .await
+                .is_err()
+        );
+        assert_eq!(
+            tokio::fs::read_to_string(rollback.join("README.md")).await?,
+            "recoverable"
+        );
+        assert!(!root.join("README.md").exists());
+        tokio::fs::remove_dir_all(root).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn staged_files_install_by_move_and_remove_temporary_rollback() -> Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "zipeek-archive-move-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
+        ));
+        let stage = root.join("target/zipeek-unpack/stage");
+        tokio::fs::create_dir_all(&stage).await?;
+        tokio::fs::write(root.join("README.md"), "previous").await?;
+        tokio::fs::write(stage.join("README.md"), "replacement").await?;
+        tokio::fs::write(stage.join("NEW.md"), "new").await?;
+        restore(&root, &stage, Path::new("fixture.zip")).await?;
+        assert_eq!(
+            tokio::fs::read_to_string(root.join("README.md")).await?,
+            "replacement"
+        );
+        assert_eq!(tokio::fs::read_to_string(root.join("NEW.md")).await?, "new");
+        assert!(!stage.join("README.md").exists());
+        assert!(!stage.join("NEW.md").exists());
+        assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/rollback")).await?);
+        tokio::fs::remove_dir_all(root).await?;
         Ok(())
     }
 
@@ -571,7 +686,7 @@ mod tests {
             std::process::id(),
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
         ));
-        let backup = root.join(".unpack-backups/fixture");
+        let backup = root.join("target/zipeek-unpack/rollback");
         tokio::fs::create_dir_all(root.join("docs")).await?;
         tokio::fs::create_dir_all(backup.join("docs")).await?;
         tokio::fs::write(root.join("docs/changed.md"), "replacement").await?;
@@ -617,7 +732,7 @@ mod tests {
             tokio::fs::read_to_string(root.join("README.md")).await?,
             "local changes"
         );
-        assert!(!tokio::fs::try_exists(root.join(".unpack-backups")).await?);
+        assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/rollback")).await?);
         assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/stage")).await?);
         tokio::fs::remove_dir_all(root).await?;
         Ok(())
@@ -639,14 +754,14 @@ mod tests {
             tokio::fs::read_to_string(root.join("README.md")).await?,
             "original"
         );
-        assert!(!tokio::fs::try_exists(root.join(".unpack-backups")).await?);
+        assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/rollback")).await?);
         assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/stage")).await?);
         tokio::fs::remove_dir_all(root).await?;
         Ok(())
     }
 
     #[tokio::test]
-    async fn old_vendor_preparation_script_is_removed_and_backed_up() -> Result<()> {
+    async fn old_vendor_preparation_script_is_removed() -> Result<()> {
         let root = std::env::temp_dir().join(format!(
             "zipeek-cli-cleanup-{}-{}",
             std::process::id(),
@@ -666,7 +781,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn removed_crate_js_and_tests_are_backed_up_and_cleared() -> Result<()> {
+    async fn removed_crate_js_and_tests_are_cleared() -> Result<()> {
         let root = std::env::temp_dir().join(format!(
             "zipeek-cli-interop-cleanup-{}-{}",
             std::process::id(),
@@ -702,20 +817,13 @@ mod tests {
             tokio::fs::read_to_string(crate_root.join("local-notes.txt")).await?,
             "preserve",
         );
-        let mut backups = tokio::fs::read_dir(root.join(".unpack-backups")).await?;
-        let backup = backups
-            .next_entry()
-            .await?
-            .expect("unpack must keep backup")
-            .path();
-        assert!(tokio::fs::try_exists(backup.join("crates/demo/js/transport.js")).await?);
-        assert!(tokio::fs::try_exists(backup.join("crates/demo/tests/obsolete.rs")).await?);
+        assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/rollback")).await?);
         tokio::fs::remove_dir_all(root).await?;
         Ok(())
     }
 
     #[tokio::test]
-    async fn archive_restores_managed_files_and_preserves_backup() -> Result<()> {
+    async fn archive_restores_managed_files_without_persistent_backup() -> Result<()> {
         let root = std::env::temp_dir().join(format!(
             "zipeek-cli-test-{}-{}",
             std::process::id(),
@@ -738,13 +846,7 @@ mod tests {
             tokio::fs::read_to_string(source.join("stale.rs")).await?,
             "stale"
         );
-        assert!(
-            tokio::fs::read_dir(root.join(".unpack-backups"))
-                .await?
-                .next_entry()
-                .await?
-                .is_some()
-        );
+        assert!(!tokio::fs::try_exists(root.join("target/zipeek-unpack/rollback")).await?);
         tokio::fs::remove_dir_all(root).await?;
         Ok(())
     }

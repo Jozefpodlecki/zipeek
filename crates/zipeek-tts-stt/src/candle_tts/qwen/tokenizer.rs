@@ -240,7 +240,11 @@ mod tests {
             let tokens = tokenizer.encode_mandarin_run(input).unwrap();
             assert_eq!(
                 tokens,
-                input.as_bytes().iter().map(|byte| *byte as u32).collect::<Vec<_>>()
+                input
+                    .as_bytes()
+                    .iter()
+                    .map(|byte| *byte as u32)
+                    .collect::<Vec<_>>()
             );
             assert_eq!(pretokenize(input).concat(), input);
             assert_eq!(
@@ -252,7 +256,10 @@ mod tests {
 
     #[test]
     fn splits_digits_into_groups_of_three_and_keeps_punctuation() {
-        assert_eq!(pretokenize("你好，欢迎学习中文。"), ["你好", "，欢迎学习中文", "。"]);
+        assert_eq!(
+            pretokenize("你好，欢迎学习中文。"),
+            ["你好", "，欢迎学习中文", "。"]
+        );
         assert_eq!(pretokenize("1234567"), ["123", "456", "7"]);
         assert_eq!(pretokenize("hi world!"), ["hi", " world", "!"]);
     }

@@ -11,6 +11,11 @@ mod tests {
         data::demo_sessions_for_tests,
         query::{RECENT_DAYS, query_activity, query_history},
     };
+    use super::super::{
+        query::{ActivityQuery, HistoryQuery, PageRequest},
+        state::HistoryCategory,
+    };
+    use super::page::{PAGE_SIZE, summary_search};
     use super::*;
 
     #[test]

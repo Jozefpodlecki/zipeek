@@ -6,6 +6,7 @@ use super::guided_bank::GuidedCourse;
 use super::guided_bank_view::GuidedGrammarBank;
 use super::progress;
 use crate::components::ListenButton;
+use crate::hooks::use_app_environment;
 use crate::route::Route;
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -18,6 +19,7 @@ pub struct GrammarLessonProps {
 
 #[function_component(GrammarLesson)]
 fn grammar_lesson(props: &GrammarLessonProps) -> Html {
+    let environment = use_app_environment();
     let course_order = props.course.region();
     let (course, checks) = authored_grammar_region(course_order).expect("authored grammar course");
     let registry = registry_entry(course_order).expect("published grammar registry");
@@ -36,10 +38,9 @@ fn grammar_lesson(props: &GrammarLessonProps) -> Html {
     let save_error = use_state(|| None::<String>);
     let current = *step;
     {
+        let window = environment.window.clone();
         use_effect_with(current, move |_| {
-            if let Some(window) = web_sys::window() {
-                window.scroll_to_with_x_and_y(0.0, 0.0);
-            }
+            window.scroll_to_with_x_and_y(0.0, 0.0);
         });
     }
     let next = {

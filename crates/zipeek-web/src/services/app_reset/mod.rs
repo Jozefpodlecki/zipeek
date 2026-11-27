@@ -10,7 +10,7 @@ use yew::Renderer;
 
 use crate::{
     AppEnvironment,
-    services::{tauri_database, tauri_ipc_error::message},
+    services::{tauri::message, tauri_database},
 };
 use policy::{CONFIRMATION_KEY, RESET_HASH};
 

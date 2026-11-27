@@ -31,7 +31,6 @@ fn microphone_meter(level: f32) -> Html {
     }
 }
 
-
 fn speech_error(error: JsValue, operation: &str) -> String {
     web_sys::console::error_2(&JsValue::from_str(operation), &error);
     let detail = error.as_string().unwrap_or_default().to_ascii_lowercase();
@@ -201,7 +200,8 @@ pub(super) fn speech_settings() -> Html {
                         .map(|_| "".to_owned())
                         .map_err(|error| {
                             web_sys::console::error_1(&JsValue::from_str(&format!("{error:?}")));
-                            "Browser voice test failed. Check your browser's speech settings.".to_owned()
+                            "Browser voice test failed. Check your browser's speech settings."
+                                .to_owned()
                         }),
                 ));
             }
@@ -272,7 +272,9 @@ pub(super) fn speech_settings() -> Html {
                 });
                 if let Err(error) = browser_stt::test_mandarin(&window, finished) {
                     web_sys::console::error_1(&JsValue::from_str(&error));
-                    feedback.set(Some(Err("Microphone could not start. Check browser permissions.".into())));
+                    feedback.set(Some(Err(
+                        "Microphone could not start. Check browser permissions.".into(),
+                    )));
                     listening.set(false);
                     recording_phase.set(RecordingPhase::Idle);
                 }

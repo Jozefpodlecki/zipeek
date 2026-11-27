@@ -48,7 +48,10 @@ pub(super) fn waveform(props: &WaveformProps) -> Html {
     let on_seek = props.on_seek.as_ref().map(|seek| {
         let seek = seek.clone();
         Callback::from(move |event: InputEvent| {
-            if let Some(target) = event.target().and_then(|target| target.dyn_into::<HtmlInputElement>().ok()) {
+            if let Some(target) = event
+                .target()
+                .and_then(|target| target.dyn_into::<HtmlInputElement>().ok())
+            {
                 if let Ok(value) = target.value().parse::<f64>() {
                     seek.emit((value / 1000.0).clamp(0.0, 1.0));
                 }

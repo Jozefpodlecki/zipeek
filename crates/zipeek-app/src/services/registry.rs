@@ -1,6 +1,12 @@
-use std::{collections::{HashMap, HashSet}, net::SocketAddr, process::Child, sync::{Arc, Mutex}, time::Duration};
-use serde::Serialize;
 use super::{ServiceError, health::health_ready};
+use serde::Serialize;
+use std::{
+    collections::{HashMap, HashSet},
+    net::SocketAddr,
+    process::Child,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 const STARTUP_TIMEOUT: Duration = Duration::from_secs(20);
 const SPEECH_STARTUP_TIMEOUT: Duration = Duration::from_secs(120);
@@ -46,9 +52,11 @@ impl ServiceKey {
             .iter()
             .find(|definition| definition.name == value)
             .map(|definition| Self(definition.name))
-            .ok_or_else(|| ServiceError::UnknownService(format!(
-                "Unknown service '{value}'. Expected 'ai', 'image' or 'speech'."
-            )))
+            .ok_or_else(|| {
+                ServiceError::UnknownService(format!(
+                    "Unknown service '{value}'. Expected 'ai', 'image' or 'speech'."
+                ))
+            })
     }
 
     fn definition(self) -> &'static ServiceDefinition {
@@ -58,15 +66,27 @@ impl ServiceKey {
             .expect("service key originates from known definition")
     }
 
-    pub(super) fn name(self) -> &'static str { self.0 }
-    pub(super) fn label(self) -> &'static str { self.definition().label }
-    pub(super) fn binary(self) -> &'static str { self.definition().binary }
-    pub(super) fn override_variable(self) -> &'static str { self.definition().override_variable }
+    pub(super) fn name(self) -> &'static str {
+        self.0
+    }
+    pub(super) fn label(self) -> &'static str {
+        self.definition().label
+    }
+    pub(super) fn binary(self) -> &'static str {
+        self.definition().binary
+    }
+    pub(super) fn override_variable(self) -> &'static str {
+        self.definition().override_variable
+    }
     pub(super) fn address(self) -> SocketAddr {
         SocketAddr::from(([127, 0, 0, 1], self.definition().port))
     }
     pub(super) fn startup_timeout(self) -> Duration {
-        if self.name() == "speech" || self.name() == "ai" { SPEECH_STARTUP_TIMEOUT } else { STARTUP_TIMEOUT }
+        if self.name() == "speech" || self.name() == "ai" {
+            SPEECH_STARTUP_TIMEOUT
+        } else {
+            STARTUP_TIMEOUT
+        }
     }
 }
 
@@ -117,20 +137,25 @@ pub struct NativeServices(pub(super) Arc<ServicesInner>);
 
 impl Default for NativeServices {
     fn default() -> Self {
-        Self(Arc::new(ServicesInner { registry: Mutex::new(Registry::default()) }))
+        Self(Arc::new(ServicesInner {
+            registry: Mutex::new(Registry::default()),
+        }))
     }
 }
 
-
 impl NativeServices {
     pub(super) fn lock(&self) -> Result<std::sync::MutexGuard<'_, Registry>, ServiceError> {
-        self.0.registry
+        self.0
+            .registry
             .lock()
             .map_err(|_| ServiceError::RegistryUnavailable)
     }
 
     pub(super) fn probe_health(&self) {
-        for kind in SERVICE_DEFINITIONS.iter().map(|definition| ServiceKey(definition.name)) {
+        for kind in SERVICE_DEFINITIONS
+            .iter()
+            .map(|definition| ServiceKey(definition.name))
+        {
             let ready = health_ready(kind);
             if let Ok(mut registry) = self.lock() {
                 registry.health.insert(kind, ready);
@@ -284,8 +309,6 @@ impl NativeServices {
             message,
         })
     }
-
-
 }
 
 impl Drop for ServicesInner {
@@ -298,4 +321,3 @@ impl Drop for ServicesInner {
         }
     }
 }
-

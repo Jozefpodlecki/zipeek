@@ -33,4 +33,3 @@ impl std::fmt::Display for ServiceError {
 }
 
 impl std::error::Error for ServiceError {}
-

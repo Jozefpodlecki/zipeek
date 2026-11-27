@@ -29,7 +29,7 @@ pub(super) fn view(active_tab: &str, select_tab: Callback<String>, is_tauri: boo
         ("ai", "AI Translation", IconData::LUCIDE_FLAME),
         ("images", "Image Generation", IconData::LUCIDE_IMAGE),
         ("practice", "Practice", IconData::LUCIDE_VOLUME_2),
-        ("speech", "Speech", IconData::LUCIDE_VOLUME_2),
+        ("speech", "Speech", IconData::LUCIDE_MIC),
         ("learning", "Learning", IconData::LUCIDE_BOOKMARK),
         ("reset", "Reset app", IconData::LUCIDE_TRASH_2),
         ("services", "Services", IconData::LUCIDE_SERVER),

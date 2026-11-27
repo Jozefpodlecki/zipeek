@@ -10,7 +10,7 @@ use super::super::model::{
     category, group_entries, matches_search, ordered_categories, topic, visible,
 };
 use super::super::navigation::{asset_url, doc_route};
-use crate::route::Route;
+use crate::{hooks::use_app_environment, route::Route};
 
 #[derive(Properties, PartialEq)]
 pub(in crate::pages::system::docs) struct ExplorerProps {
@@ -23,6 +23,7 @@ pub(in crate::pages::system::docs) struct ExplorerProps {
 
 #[function_component(DocsExplorer)]
 pub(in crate::pages::system::docs) fn docs_explorer(props: &ExplorerProps) -> Html {
+    let environment = use_app_environment();
     let query = use_state(String::new);
     let expanded = use_state(|| None::<String>);
     let expanded_topics = use_state(BTreeSet::<String>::new);
@@ -105,7 +106,7 @@ pub(in crate::pages::system::docs) fn docs_explorer(props: &ExplorerProps) -> Ht
                                                         {if entry.markdown {html! {
                                                             <Link<Route> to={doc_route(&entry.path)} classes={classes!("block", "rounded-md", "px-2", "py-1.5", "text-sm", "break-words", "hover:bg-raised", if selected { "bg-raised" } else { "text-ink" }, if selected { "font-semibold" } else { "" }, if selected { "text-accent" } else { "" })}>{&entry.title}</Link<Route>>
                                                         }} else {html! {
-                                                            <a href={asset_url(&format!("docs/{}", entry.path)).unwrap_or_default()} class="block rounded-md px-2 py-1.5 text-sm text-muted hover:bg-raised">{format!("{} ↗",entry.title)}</a>
+                                                            <a href={asset_url(&environment.window, &format!("docs/{}", entry.path)).unwrap_or_default()} class="block rounded-md px-2 py-1.5 text-sm text-muted hover:bg-raised">{format!("{} ↗",entry.title)}</a>
                                                         }}}
                                                     </div> }
                                                 })}

@@ -52,7 +52,13 @@ pub(crate) fn ai_translation_settings() -> Html {
                             </div>
                         </div>
                         <p class="mt-3 text-sm text-muted">{"Place a GGUF model in models/ai, or configure its absolute path before starting the AI service. Manage the process in Settings > Services."}</p>
-                        <p class="mt-3 font-mono text-xs text-muted">{"127.0.0.1:1430 · local-gguf"}</p>
+                        <div class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+                            <div>
+                                <p class="text-xs text-muted">{"Endpoint"}</p>
+                                <p class="font-mono text-sm">{"http://127.0.0.1:1430/v1"}</p>
+                            </div>
+                            <span class="text-xs text-muted">{"local-gguf"}</span>
+                        </div>
                     </div>
                 } else {
                     <label class="flex flex-col gap-2 text-sm font-semibold">

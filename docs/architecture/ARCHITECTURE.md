@@ -109,3 +109,9 @@ The first-run landing form chooses one of the six existing theme presets and sto
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../archive-history/audits/maintained-source-snapshots/architecture-architecture.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## Frontend native IPC boundary (R705 WIP)
+
+The WASM frontend owns one Tauri transport under `crates/zipeek-web/src/services/tauri/mod.rs`. `TauriService::new(&Window)` resolves and validates the host bridge; `TauriService::shared()` reuses a successful runtime instance and does not cache absence of the bridge. The transport owns JavaScript invocation, request serialization, response decoding and typed error categories. `commands.rs` defines native command identifiers and argument/response contracts. `events.rs` manages native event emission and an owned unlisten handle, distinct from request-response IPC. Domain adapters for personal database/history, desktop service management, AI and images retain their existing application APIs and do not inspect the Tauri bridge directly.
+
+The transport does not select browser fallbacks or change scoring, personal-data persistence rules or service orchestration. Event listeners must retain and dispose of their subscription owner. The capability requires WASM compilation and desktop runtime acceptance before release sign-off.

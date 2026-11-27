@@ -1,12 +1,12 @@
 mod audio;
-mod readings;
-mod controller;
-mod state;
 mod components;
+mod controller;
+mod readings;
+mod state;
 
-use yew::prelude::*;
-use controller::use_record_controller;
 use components::RecordView;
+use controller::use_record_controller;
+use yew::prelude::*;
 
 #[function_component(RecordPage)]
 pub fn record_page() -> Html {

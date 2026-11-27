@@ -103,7 +103,10 @@ mod tests {
         cache.insert("first".into(), vec![1; 20 * 1024 * 1024]);
         cache.insert("second".into(), vec![2; 20 * 1024 * 1024]);
         assert!(cache.get("first").is_none());
-        assert_eq!(cache.get("second").map(|wav| wav.len()), Some(20 * 1024 * 1024));
+        assert_eq!(
+            cache.get("second").map(|wav| wav.len()),
+            Some(20 * 1024 * 1024)
+        );
         cache.insert("huge".into(), vec![3; TTS_CACHE_MAX_BYTES + 1]);
         assert!(cache.get("huge").is_none());
     }

@@ -15,7 +15,7 @@ use super::super::{
     state::{DashboardAction, HistoryCategory, HistoryView},
 };
 
-const PAGE_SIZE: usize = 8;
+pub(super) const PAGE_SIZE: usize = 8;
 
 pub(crate) fn display_timestamp(timestamp: &str) -> String {
     let date = timestamp.get(0..10).unwrap_or(timestamp);
@@ -23,7 +23,7 @@ pub(crate) fn display_timestamp(timestamp: &str) -> String {
     format!("{date} · {time} UTC")
 }
 
-fn summary_search(query: &str) -> String {
+pub(super) fn summary_search(query: &str) -> String {
     if is_week_date(query) {
         String::new()
     } else {

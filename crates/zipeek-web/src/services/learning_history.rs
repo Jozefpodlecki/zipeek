@@ -13,6 +13,27 @@ pub async fn commit(document: &Document, session_id: &str, evidence: &str) -> Re
     }
 }
 
+pub async fn recorded_rows(
+    document: &Document,
+) -> Result<Vec<zipeek_db::contracts::HistoryRow>, String> {
+    let rows = if backend::selected()? == DatabaseBackend::Native {
+        tauri_database::history_rows().await?
+    } else {
+        PersonalLearningHistory::recorded_rows(document)
+            .await
+            .map_err(|error| error.to_string())?
+    };
+    if rows.len() > 100_000 {
+        return Err("Too many saved Practice sessions".into());
+    }
+    PracticeOutcomeSummary::from_evidence_rows(
+        rows.iter()
+            .map(|row| (row.session_id.as_str(), row.evidence.as_str())),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(rows)
+}
+
 pub async fn summary(document: &Document) -> Result<PracticeOutcomeSummary, String> {
     if backend::selected()? == DatabaseBackend::Native {
         let rows = tauri_database::history_rows().await?;

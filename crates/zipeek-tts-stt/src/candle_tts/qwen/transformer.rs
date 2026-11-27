@@ -135,7 +135,10 @@ impl CausalAttention {
                 hidden.dtype(),
             )?);
         }
-        let (cos, sin) = self.rotary_tables.as_ref().expect("rotary tables initialized");
+        let (cos, sin) = self
+            .rotary_tables
+            .as_ref()
+            .expect("rotary tables initialized");
         let q = apply_rotary(&self.q_norm.forward(&q)?, start, cos, sin)?;
         let k = apply_rotary(&self.k_norm.forward(&k)?, start, cos, sin)?;
         let (k, v) = if let Some(cache) = &self.cache {
@@ -298,7 +301,10 @@ mod tests {
         for position in [0, 1, 17, 127] {
             let result = apply_rotary(&hidden, position, &cached.0, &cached.1).unwrap();
             let reference = rotary_embedding(&hidden, position).unwrap();
-            assert_eq!(result.to_vec3::<f32>().unwrap(), reference.to_vec3::<f32>().unwrap());
+            assert_eq!(
+                result.to_vec3::<f32>().unwrap(),
+                reference.to_vec3::<f32>().unwrap()
+            );
         }
     }
 

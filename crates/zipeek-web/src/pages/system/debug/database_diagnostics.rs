@@ -154,124 +154,222 @@ struct PersistenceSimulatorProps {
     disabled: bool,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+enum SimulationPhase {
+    Idle,
+    Running,
+    Stopped,
+    Completed,
+    Failed,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct SimulationState {
+    phase: SimulationPhase,
+    run_id: String,
+    completed: u32,
+    logs: Vec<String>,
+    verification: Option<Result<String, String>>,
+    busy: bool,
+    verifying: bool,
+    started_at: f64,
+    verification_id: u64,
+}
+
+impl Default for SimulationState {
+    fn default() -> Self {
+        Self {
+            phase: SimulationPhase::Idle,
+            run_id: String::new(),
+            completed: 0,
+            logs: Vec::new(),
+            verification: None,
+            busy: false,
+            verifying: false,
+            started_at: 0.0,
+            verification_id: 0,
+        }
+    }
+}
+
+enum SimulationAction {
+    Start {
+        id: String,
+        at: f64,
+    },
+    Stop,
+    CycleStarted {
+        id: String,
+    },
+    CycleFinished {
+        id: String,
+        cycle: u32,
+        result: Result<u32, String>,
+        elapsed: f64,
+        total_elapsed: f64,
+    },
+    VerifyStarted,
+    VerifyFinished {
+        verification_id: u64,
+        result: Result<String, String>,
+    },
+}
+
+impl Reducible for SimulationState {
+    type Action = SimulationAction;
+
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        let mut next = (*self).clone();
+        match action {
+            SimulationAction::Start { id, at } => {
+                if next.busy || next.verifying || next.phase == SimulationPhase::Running {
+                    return self;
+                }
+                next = Self {
+                    phase: SimulationPhase::Running,
+                    run_id: id,
+                    started_at: at,
+                    verification_id: next.verification_id.wrapping_add(1),
+                    ..Self::default()
+                };
+            }
+            SimulationAction::Stop => {
+                if next.phase == SimulationPhase::Running {
+                    next.phase = SimulationPhase::Stopped;
+                }
+            }
+            SimulationAction::CycleStarted { id } => {
+                if next.phase == SimulationPhase::Running && next.run_id == id && !next.busy {
+                    next.busy = true;
+                }
+            }
+            SimulationAction::CycleFinished {
+                id,
+                cycle,
+                result,
+                elapsed,
+                total_elapsed,
+            } => {
+                if next.run_id != id || !next.busy || cycle != next.completed + 1 {
+                    return self;
+                }
+                next.busy = false;
+                match result {
+                    Ok(revision) => {
+                        next.logs.push(format!(
+                            "Cycle {cycle}/10: revision {revision} saved, reopened and verified (operation {elapsed:.0} ms; total {total_elapsed:.0} ms)"
+                        ));
+                        next.completed = cycle;
+                        if cycle == 10 && next.phase == SimulationPhase::Running {
+                            next.phase = SimulationPhase::Completed;
+                        }
+                    }
+                    Err(error) => {
+                        next.logs.push(format!("Cycle {cycle}/10 FAILED: {error}"));
+                        next.phase = SimulationPhase::Failed;
+                    }
+                }
+            }
+            SimulationAction::VerifyStarted => {
+                if next.phase != SimulationPhase::Running && !next.busy && !next.verifying {
+                    next.verification_id = next.verification_id.wrapping_add(1);
+                    next.verification = None;
+                    next.verifying = true;
+                }
+            }
+            SimulationAction::VerifyFinished {
+                verification_id,
+                result,
+            } => {
+                if next.verifying && next.verification_id == verification_id {
+                    next.verification = Some(result);
+                    next.verifying = false;
+                }
+            }
+        }
+        Rc::new(next)
+    }
+}
+
 #[function_component(PersistenceSimulator)]
 fn persistence_simulator(props: &PersistenceSimulatorProps) -> Html {
-    let running = use_state(|| false);
-    let run_id = use_state(String::new);
-    let completed = use_state(|| 0_u32);
-    let logs = use_state(Vec::<String>::new);
-    let latest = use_state(|| None::<Result<String, String>>);
-    let busy = use_state(|| false);
-    let started_at = use_state(js_sys::Date::now);
+    let state = use_reducer_eq(SimulationState::default);
+    let in_flight = use_mut_ref(|| false);
     {
-        let running = running.clone();
-        let completed = completed.clone();
-        let logs = logs.clone();
-        let busy = busy.clone();
+        let state = state.clone();
+        let in_flight = in_flight.clone();
         let document = props.document.clone();
-        let started_at = *started_at;
-        let run_id = (*run_id).clone();
-        use_effect_with(
-            (*running, *completed, run_id.clone()),
-            move |(active, count, _)| {
-                let alive = Rc::new(Cell::new(true));
-                let in_flight = Rc::new(Cell::new(false));
-                let interval = if *active && *count < 10 && !run_id.is_empty() {
-                    let alive_for_tick = alive.clone();
-                    let in_flight_for_tick = in_flight.clone();
-                    let running = running.clone();
-                    let completed = completed.clone();
-                    let logs = logs.clone();
-                    let busy = busy.clone();
+        let run_id = state.run_id.clone();
+        let completed = state.completed;
+        let started_at = state.started_at;
+        let running = state.phase == SimulationPhase::Running;
+        use_effect_with((running, completed, run_id.clone()), move |_| {
+            let alive = Rc::new(Cell::new(true));
+            let interval = if running && completed < 10 && !run_id.is_empty() {
+                let state = state.clone();
+                let in_flight = in_flight.clone();
+                let document = document.clone();
+                let alive = alive.clone();
+                Some(Interval::new(5_000, move || {
+                    if !alive.get() || *in_flight.borrow() {
+                        return;
+                    }
+                    *in_flight.borrow_mut() = true;
+                    state.dispatch(SimulationAction::CycleStarted { id: run_id.clone() });
+                    let started = js_sys::Date::now();
+                    let state = state.clone();
+                    let in_flight = in_flight.clone();
                     let document = document.clone();
-                    let cycle = *count + 1;
-                    Some(Interval::new(5_000, move || {
-                        if !alive_for_tick.get() || in_flight_for_tick.get() {
-                            return;
-                        }
-                        in_flight_for_tick.set(true);
-                        busy.set(true);
-                        let started = js_sys::Date::now();
-                        let running = running.clone();
-                        let completed = completed.clone();
-                        let logs = logs.clone();
-                        let busy = busy.clone();
-                        let document = document.clone();
-                        let run_id = run_id.clone();
-                        let alive = alive_for_tick.clone();
-                        let in_flight = in_flight_for_tick.clone();
-                        wasm_bindgen_futures::spawn_local(async move {
-                            let result =
-                                zipeek_db::wasm::PersonalPersistenceSimulator::save_and_verify(
-                                    &document, &run_id, cycle,
-                                )
-                                .await;
-                            in_flight.set(false);
-                            if !alive.get() {
-                                busy.set(false);
-                                return;
-                            }
-                            let elapsed = js_sys::Date::now() - started;
-                            let total_elapsed = js_sys::Date::now() - started_at;
-                            let entry = match result {
-                                Ok(checkpoint) => format!(
-                                    "Cycle {cycle}/10: revision {} saved, reopened and verified (operation {elapsed:.0} ms; total {total_elapsed:.0} ms)",
-                                    checkpoint.revision
-                                ),
-                                Err(error) => {
-                                    running.set(false);
-                                    format!("Cycle {cycle}/10 FAILED: {error}")
-                                }
-                            };
-                            let successful = entry.contains("saved, reopened and verified");
-                            let mut updated = (*logs).clone();
-                            updated.push(entry);
-                            logs.set(updated);
-                            busy.set(false);
-                            if successful {
-                                completed.set(cycle);
-                                if cycle == 10 {
-                                    running.set(false);
-                                }
-                            }
+                    let run_id = run_id.clone();
+                    let cycle = completed + 1;
+                    wasm_bindgen_futures::spawn_local(async move {
+                        let result =
+                            zipeek_db::wasm::PersonalPersistenceSimulator::save_and_verify(
+                                &document, &run_id, cycle,
+                            )
+                            .await
+                            .map(|checkpoint| checkpoint.revision)
+                            .map_err(|error| error.to_string());
+                        *in_flight.borrow_mut() = false;
+                        state.dispatch(SimulationAction::CycleFinished {
+                            id: run_id,
+                            cycle,
+                            result,
+                            elapsed: js_sys::Date::now() - started,
+                            total_elapsed: js_sys::Date::now() - started_at,
                         });
-                    }))
-                } else {
-                    None
-                };
-                move || {
-                    alive.set(false);
-                    drop(interval);
-                }
-            },
-        );
+                    });
+                }))
+            } else {
+                None
+            };
+            move || {
+                alive.set(false);
+                drop(interval);
+            }
+        });
     }
     let on_start = {
-        let running = running.clone();
-        let run_id = run_id.clone();
-        let completed = completed.clone();
-        let logs = logs.clone();
-        let latest = latest.clone();
-        let started_at = started_at.clone();
+        let state = state.clone();
         Callback::from(move |_: MouseEvent| {
-            started_at.set(js_sys::Date::now());
-            run_id.set(uuid::Uuid::now_v7().to_string());
-            completed.set(0);
-            logs.set(Vec::new());
-            latest.set(None);
-            running.set(true);
+            state.dispatch(SimulationAction::Start {
+                id: uuid::Uuid::now_v7().to_string(),
+                at: js_sys::Date::now(),
+            });
         })
     };
     let on_stop = {
-        let running = running.clone();
-        Callback::from(move |_: MouseEvent| running.set(false))
+        let state = state.clone();
+        Callback::from(move |_: MouseEvent| state.dispatch(SimulationAction::Stop))
     };
     let on_verify = {
         let document = props.document.clone();
-        let latest = latest.clone();
+        let state = state.clone();
+        let verification_id = state.verification_id.wrapping_add(1);
         Callback::from(move |_: MouseEvent| {
+            state.dispatch(SimulationAction::VerifyStarted);
             let document = document.clone();
-            let latest = latest.clone();
+            let state = state.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 let result =
                     zipeek_db::wasm::PersonalPersistenceSimulator::verify_latest(&document)
@@ -284,24 +382,34 @@ fn persistence_simulator(props: &PersistenceSimulatorProps) -> Html {
                             None => "No simulator checkpoint has been saved".to_owned(),
                         })
                         .map_err(|error| error.to_string());
-                latest.set(Some(result));
+                state.dispatch(SimulationAction::VerifyFinished {
+                    verification_id,
+                    result,
+                });
             });
         })
     };
+    let running = state.phase == SimulationPhase::Running;
     html! {
         <div class="mt-5 border-t border-line pt-4" data-persistence-simulator="">
             <h4 class="font-semibold">{"Personal DuckDB / OPFS persistence simulator"}</h4>
             <p class="mt-1 text-xs text-muted">{"Development-only. Writes an isolated synthetic session every 5 seconds, up to 10 cycles, using the existing personal database and exclusive Web Lock. Each cycle closes and reopens the database to verify its revision. No learner scores are changed."}</p>
             <div class="mt-3 flex flex-wrap gap-2">
-                <button type="button" class="rounded-lg bg-accent px-3 py-2 text-sm text-white disabled:opacity-50" onclick={on_start} disabled={props.disabled || *running || *busy}>{"Start simulation"}</button>
-                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" onclick={on_stop} disabled={!*running}>{"Stop"}</button>
-                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" disabled={props.disabled || *running || *busy} onclick={on_verify}>{"Verify saved state after reload"}</button>
+                <button type="button" class="rounded-lg bg-accent px-3 py-2 text-sm text-white disabled:opacity-50" onclick={on_start} disabled={props.disabled || running || state.busy || state.verifying}>{"Start simulation"}</button>
+                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" onclick={on_stop} disabled={!running}>{"Stop"}</button>
+                <button type="button" class="rounded-lg border border-line px-3 py-2 text-sm disabled:opacity-50" disabled={props.disabled || running || state.busy || state.verifying} onclick={on_verify}>{"Verify saved state after reload"}</button>
             </div>
-            <p class="mt-2 text-sm" role="status">{format!("{} | {} of 10 completed", if *running { "Running" } else { "Stopped" }, *completed)}</p>
+            <p class="mt-2 text-sm" role="status">{format!("{} | {} of 10 completed", match &state.phase {
+                SimulationPhase::Running => "Running",
+                SimulationPhase::Idle => "Idle",
+                SimulationPhase::Stopped => "Stopped",
+                SimulationPhase::Completed => "Completed",
+                SimulationPhase::Failed => "Failed",
+            }, state.completed)}</p>
             <ul class="mt-2 space-y-1 text-xs" aria-label="Persistence simulation results">
-                {for (*logs).iter().map(|entry| html! { <li class="break-words">{entry}</li> })}
+                {for state.logs.iter().map(|entry| html! { <li class="break-words">{entry}</li> })}
             </ul>
-            {match &*latest {
+            {match &state.verification {
                 Some(Ok(message)) => html! { <p class="mt-2 text-sm" role="status">{message}</p> },
                 Some(Err(message)) => html! { <p class="mt-2 text-sm text-red-300" role="alert">{format!("Persistence verification failed: {message}")}</p> },
                 None => Html::default(),
@@ -324,7 +432,75 @@ fn extract_storage_version(tags: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
-    use super::extract_storage_version;
+    use super::{SimulationAction, SimulationPhase, SimulationState, extract_storage_version};
+    use std::rc::Rc;
+    use yew::Reducible;
+
+    #[test]
+    fn simulation_rejects_outdated_cycle_results() {
+        let state = Rc::new(SimulationState::default()).reduce(SimulationAction::Start {
+            id: "first".to_owned(),
+            at: 10.0,
+        });
+        let state = state.reduce(SimulationAction::CycleStarted {
+            id: "first".to_owned(),
+        });
+        let state = state.reduce(SimulationAction::CycleFinished {
+            id: "old".to_owned(),
+            cycle: 1,
+            result: Ok(1),
+            elapsed: 2.0,
+            total_elapsed: 2.0,
+        });
+        assert_eq!(state.completed, 0);
+        assert!(state.busy);
+        let state = state.reduce(SimulationAction::CycleFinished {
+            id: "first".to_owned(),
+            cycle: 1,
+            result: Ok(1),
+            elapsed: 2.0,
+            total_elapsed: 2.0,
+        });
+        assert_eq!(state.completed, 1);
+        assert!(!state.busy);
+        assert_eq!(state.logs.len(), 1);
+    }
+
+    #[test]
+    fn stopped_simulation_keeps_in_flight_result_without_resuming() {
+        let state = Rc::new(SimulationState::default()).reduce(SimulationAction::Start {
+            id: "test".to_owned(),
+            at: 1.0,
+        });
+        let state = state.reduce(SimulationAction::CycleStarted {
+            id: "test".to_owned(),
+        });
+        let state = state.reduce(SimulationAction::Stop);
+        let state = state.reduce(SimulationAction::CycleFinished {
+            id: "test".to_owned(),
+            cycle: 1,
+            result: Ok(1),
+            elapsed: 2.0,
+            total_elapsed: 2.0,
+        });
+        assert_eq!(state.phase, SimulationPhase::Stopped);
+        assert_eq!(state.completed, 1);
+    }
+
+    #[test]
+    fn old_verification_cannot_overwrite_newer_result() {
+        let state = Rc::new(SimulationState::default()).reduce(SimulationAction::VerifyStarted);
+        let state = state.reduce(SimulationAction::VerifyFinished {
+            verification_id: 0,
+            result: Ok("stale".to_owned()),
+        });
+        assert!(state.verification.is_none());
+        let state = state.reduce(SimulationAction::VerifyFinished {
+            verification_id: 1,
+            result: Ok("fresh".to_owned()),
+        });
+        assert_eq!(state.verification, Some(Ok("fresh".to_owned())));
+    }
 
     #[test]
     fn duckdb_storage_tags_display_only_the_version() {

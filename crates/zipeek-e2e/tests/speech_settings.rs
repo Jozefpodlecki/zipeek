@@ -10,8 +10,12 @@ async fn browser_speech_configuration(ctx: ScenarioContext) -> HarnessResult<()>
     zipeek_e2e::e2e_ensure!(text.contains("Mandarin speech"));
     zipeek_e2e::e2e_ensure!(text.contains("Browser speech"));
     zipeek_e2e::e2e_ensure!(text.contains("Local Mandarin speech"));
-    driver.query_single("[data-speech-provider='browser']").await?;
-    driver.query_single("[data-speech-provider='local']").await?;
+    driver
+        .query_single("[data-speech-provider='browser']")
+        .await?;
+    driver
+        .query_single("[data-speech-provider='local']")
+        .await?;
     driver.query_single("[data-speech-test-tts] svg").await?;
     driver.query_single("[data-speech-test-stt] svg").await?;
     zipeek_e2e::e2e_ensure!(text.contains("今天天气晴朗。"));
@@ -22,7 +26,9 @@ async fn browser_speech_configuration(ctx: ScenarioContext) -> HarnessResult<()>
     zipeek_e2e::e2e_ensure!(!text.contains("voice available, microphone available"));
     driver.query_single("[data-speech-tts-status]").await?;
     driver.query_single("[data-speech-stt-status]").await?;
-    driver.query_single("[data-speech-test-stt]:not([disabled])").await?;
+    driver
+        .query_single("[data-speech-test-stt]:not([disabled])")
+        .await?;
     zipeek_e2e::e2e_ensure!(!text.contains("JsValue("));
     Ok(())
 }

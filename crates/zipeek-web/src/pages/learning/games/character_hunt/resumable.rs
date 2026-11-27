@@ -1,6 +1,9 @@
 use std::{cell::Cell, collections::HashMap, rc::Rc};
 
-use crate::hooks::use_dictionary;
+use crate::{
+    hooks::use_dictionary,
+    pages::practice::{instruction::InstructionIcon, surface::ExerciseSurface},
+};
 use yew::prelude::*;
 use zipeek_exercises::character_hunt::Candidate;
 
@@ -61,10 +64,11 @@ pub fn resumable_character_hunt(props: &ResumableCharacterHuntProps) -> Html {
     };
 
     html! {
-        <section data-resumable-character-hunt="" class="space-y-4">
-            <h2 class="text-lg font-semibold">{"Character Hunt"}</h2>
-            <p class="text-sm text-muted">{"Find all words to continue. This round is practice-only and does not award mastery evidence."}</p>
+        <div data-resumable-character-hunt="" class="w-full">
+            <ExerciseSurface icon={InstructionIcon::Find} instruction="Find all hidden words in the character grid.">
+            <p class="text-sm text-muted">{"This round is practice-only and does not award mastery evidence."}</p>
             {content}
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }

@@ -48,4 +48,3 @@ impl NativeServices {
             .map_err(|error| ServiceError::TaskFailure(error.to_string()))?
     }
 }
-

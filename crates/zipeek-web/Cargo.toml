@@ -55,6 +55,8 @@ features = [
     "HtmlTextAreaElement",
     "HtmlSelectElement",
     "MouseEvent",
+    "KeyboardEvent",
+    "Node",
     "DragEvent",
     "DataTransfer",
     "DomRect",

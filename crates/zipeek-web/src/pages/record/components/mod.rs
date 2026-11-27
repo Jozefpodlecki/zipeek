@@ -1,5 +1,5 @@
-mod recognition_result;
 mod live_panel;
+mod recognition_result;
 mod recording_panel;
 mod reference_panel;
 mod target_selector;
@@ -9,12 +9,12 @@ use yew::prelude::*;
 use yew_icons::{Icon, IconData};
 
 use super::controller::RecordController;
+use super::state::TargetMode;
+use live_panel::LivePanel;
 use recognition_result::RecognitionResult;
 use recording_panel::RecordingPanel;
 use reference_panel::ReferencePanel;
 use target_selector::TargetSelector;
-use live_panel::LivePanel;
-use super::state::TargetMode;
 
 #[derive(Properties, PartialEq)]
 pub(super) struct RecordViewProps {

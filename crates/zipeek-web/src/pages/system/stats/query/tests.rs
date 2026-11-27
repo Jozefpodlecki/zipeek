@@ -5,7 +5,8 @@ mod tests {
     use super::super::super::data::{
         demo_grammar_for_tests, demo_sessions_for_tests, demo_words_for_tests,
     };
-    use super::*;
+    use super::super::selectors::needs_review;
+    use super::super::*;
 
     fn word_query(page: usize, limit: usize) -> WordQuery {
         WordQuery {

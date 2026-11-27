@@ -135,7 +135,10 @@ mod tests {
                 .contains("zipeek-ai-server-x86_64-pc-windows-msvc")
         );
         assert!(
-            paths[2].1.to_string_lossy().contains("zipeek-tts-stt-x86_64-pc-windows-msvc")
+            paths[2]
+                .1
+                .to_string_lossy()
+                .contains("zipeek-tts-stt-x86_64-pc-windows-msvc")
         );
         assert!(
             paths[1]

@@ -203,3 +203,53 @@ fn listening_configuration_is_independent_from_writing() {
     assert!(configured.exercise_options.listening_choice.autoplay);
     assert!(configured.exercise_options.write_hanzi.playable_audio);
 }
+
+#[test]
+fn narrative_sentence_count_and_turns_are_independent() {
+    let initial = std::rc::Rc::new(PracticeSetupFlow::with_source(None));
+    let passage = initial.reduce(PracticeSetupAction::SetPassageSentences(10));
+    assert_eq!(passage.exercise_options.narrative.passage_sentences, 10);
+    assert_eq!(passage.exercise_options.narrative.dialogue_turns, 7);
+    let turns = passage.reduce(PracticeSetupAction::SetDialogueTurns(5));
+    assert_eq!(turns.exercise_options.narrative.passage_sentences, 10);
+    assert_eq!(turns.exercise_options.narrative.dialogue_turns, 5);
+    let rejected = turns.reduce(PracticeSetupAction::SetPassageSentences(11));
+    assert_eq!(rejected.exercise_options.narrative.passage_sentences, 10);
+}
+
+#[test]
+fn sentence_builder_auto_check_and_retry_are_independent() {
+    let initial = Rc::new(PracticeSetupFlow::with_source(None));
+    let configured = initial.reduce(PracticeSetupAction::SetSentenceBuilderAutoCheck(true));
+    let configured = configured.reduce(PracticeSetupAction::SetSentenceBuilderRetry(false));
+    assert!(configured.exercise_options.sentence_builder.automatic_check);
+    assert!(!configured.exercise_options.sentence_builder.retry_incorrect);
+    assert!(
+        !configured
+            .exercise_options
+            .character_builder
+            .automatic_check
+    );
+}
+
+#[test]
+fn translation_session_length_is_the_same_mode_used_by_the_session_host() {
+    let state = Rc::new(PracticeSetupFlow::with_source(None));
+    let state = state.reduce(PracticeSetupAction::ToggleExercise("sentence-translation"));
+    for (count, expected) in [
+        (0, SessionLength::Endless),
+        (5, SessionLength::Fixed(5)),
+        (10, SessionLength::Fixed(10)),
+        (20, SessionLength::Fixed(20)),
+    ] {
+        let selected = state
+            .clone()
+            .reduce(PracticeSetupAction::SetTranslationCount(count));
+        assert_eq!(selected.draft.length, expected);
+        assert_eq!(selected.draft.translation_count, count);
+    }
+    let invalid = state
+        .clone()
+        .reduce(PracticeSetupAction::SetTranslationCount(7));
+    assert_eq!(invalid.draft, state.draft);
+}

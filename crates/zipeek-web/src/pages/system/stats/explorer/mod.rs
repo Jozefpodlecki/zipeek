@@ -5,6 +5,10 @@ pub(super) use page::VocabularyExplorer;
 #[cfg(test)]
 mod tests {
     use super::super::{data::demo_words_for_tests, query::query_words};
+    use super::super::{
+        query::{PageRequest, WordQuery},
+        state::WordSort,
+    };
     use super::*;
 
     #[test]

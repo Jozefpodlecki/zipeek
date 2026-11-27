@@ -9,7 +9,9 @@ use crate::{
     models::WriteHanziOptions, pages::learning::hanzi_writing::HanziWriting,
 };
 
-use super::vocabulary_exercises::load_words;
+use super::{
+    instruction::InstructionIcon, surface::ExerciseSurface, vocabulary_exercises::load_words,
+};
 
 #[derive(Properties, PartialEq)]
 pub struct WriteHanziExerciseProps {
@@ -131,13 +133,11 @@ pub fn write_hanzi_exercise(props: &WriteHanziExerciseProps) -> Html {
         })
     };
     html! {
-        <section
-            data-exercise="write-hanzi"
-            class="mx-auto flex w-full max-w-3xl flex-col gap-4"
-        >
-            <header class="space-y-2" data-writing-word-prompt="">
+        <div data-exercise="write-hanzi" class="w-full">
+            <ExerciseSurface icon={InstructionIcon::Write} instruction="Write the displayed Chinese character.">
+                <header class="space-y-2" data-writing-word-prompt="">
                 <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="text-2xl font-bold">{"Write "}<span lang="zh-Hans">{word.simplified.clone()}</span></h2>
+                    <p class="text-2xl font-bold" lang="zh-Hans">{word.simplified.clone()}</p>
                     if props.options.playable_audio {
                         <ListenButton hanzi={word.simplified.clone()} compact=true />
                     }
@@ -164,7 +164,8 @@ pub fn write_hanzi_exercise(props: &WriteHanziExerciseProps) -> Html {
                 }}
                 options={Some(props.options)}
             />
-        </section>
+            </ExerciseSurface>
+        </div>
     }
 }
 

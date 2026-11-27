@@ -7,7 +7,8 @@ pub struct TransducerTokens {
 
 impl TransducerTokens {
     pub fn from_file(path: &Path, blank_id: u32) -> Result<Self, String> {
-        let text = fs::read_to_string(path).map_err(|error| format!("cannot read streaming token list: {error}"))?;
+        let text = fs::read_to_string(path)
+            .map_err(|error| format!("cannot read streaming token list: {error}"))?;
         Self::parse(&text, blank_id)
     }
 
@@ -17,10 +18,13 @@ impl TransducerTokens {
             if line.trim().is_empty() {
                 continue;
             }
-            let separator = line.rfind(char::is_whitespace)
+            let separator = line
+                .rfind(char::is_whitespace)
                 .ok_or_else(|| format!("missing token id at line {}", line_no + 1))?;
             let (piece, id) = line.split_at(separator);
-            let index = id.trim().parse::<u32>()
+            let index = id
+                .trim()
+                .parse::<u32>()
                 .map_err(|_| format!("invalid token id at line {}", line_no + 1))?;
             if piece.is_empty() || piece.trim() != piece || index > 1_000_000 {
                 return Err(format!("invalid token entry at line {}", line_no + 1));
@@ -34,7 +38,11 @@ impl TransducerTokens {
             return Err("invalid streaming token vocabulary or blank id".into());
         }
         let pieces = (0..size)
-            .map(|index| by_id.remove(&(index as u32)).ok_or_else(|| "sparse token ids".to_owned()))
+            .map(|index| {
+                by_id
+                    .remove(&(index as u32))
+                    .ok_or_else(|| "sparse token ids".to_owned())
+            })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self { pieces, blank_id })
     }
@@ -52,8 +60,13 @@ impl TransducerTokens {
     }
 
     pub fn raw_pieces(&self, tokens: &[u32]) -> Result<Vec<&str>, String> {
-        tokens.iter().filter(|id| **id != self.blank_id)
-            .map(|id| self.piece(*id).ok_or_else(|| "transducer emitted unknown token id".into()))
+        tokens
+            .iter()
+            .filter(|id| **id != self.blank_id)
+            .map(|id| {
+                self.piece(*id)
+                    .ok_or_else(|| "transducer emitted unknown token id".into())
+            })
             .collect()
     }
 }

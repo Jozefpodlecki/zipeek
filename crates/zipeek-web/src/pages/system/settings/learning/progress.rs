@@ -9,8 +9,7 @@ pub(super) fn learning_progress() -> Html {
                 <Icon data={IconData::LUCIDE_SHIELD_CHECK} width="18px" />
                 <h3 id="learning-progress-title" class="font-semibold">{"Pedagogical assessment"}</h3>
             </div>
-            <p class="mt-4 inline-flex rounded-lg border border-line bg-raised px-3 py-2 text-sm font-medium">{"Not connected"}</p>
-            <p class="mt-3 text-xs text-muted">{"Verified recognition evidence is not connected to your saved outcomes. The dragon does not report mastery yet."}</p>
+            <p class="mt-3 text-sm text-muted">{"Not available yet"}</p>
         </section>
     }
 }
