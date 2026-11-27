@@ -505,3 +505,8 @@ The grammar reveal proposal uses seven qualifying days within the previous fourt
 **Status:** Approved product direction, provider integration and scoring acceptance pending.
 
 The new speech-to-text exercise must support both browser recognition and a configured local speech-recognition service behind one typed capability and result boundary. Explicitly signal which provider is active, require microphone permission, handle unavailability and interruptions, and avoid uploading audio to an unapproved remote provider. Browser recognition may use a browser-managed service; disclose that characteristic before enabling it. A transcript match is not automatically pronunciation mastery: assessment confidence and scoring need separate approval and test evidence.
+
+
+## Practice setup controls and Picture vocabulary feedback (2026-11-27)
+
+Approved by the user: make Back an icon button and place it at the left of the setup path widget, with the forward action on the right and a Play icon for Start on Summary. Remove duplicate setup navigation controls, preserve the existing reducer transitions and provide accessible names and keyboard behavior. Also distinguish Picture vocabulary's missing text-model configuration from image backend readiness, with typed Settings links, bounded backend checks and image retry. Preserve the current text-AI scene composition and image-rendering requirements, with no dependency or personal-data format change. The [Practice setup specification](../../learning-practice/practice/practice-session-builder.md) owns the detailed behavior.

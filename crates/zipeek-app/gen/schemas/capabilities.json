@@ -1,1 +1,1 @@
-{}
+{"main-shutdown-events":{"identifier":"main-shutdown-events","description":"Allow the main window to observe native shutdown status.","local":true,"windows":["main"],"permissions":["core:event:allow-listen","core:event:allow-unlisten"]}}

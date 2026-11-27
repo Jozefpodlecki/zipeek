@@ -131,3 +131,18 @@ selected the single-table SQL schema. D16 selected/pinned the primary import and
 resolved its rules; D18's full comparison/serialization contract is now approved.
 D19 was subsequently resolved as Option 1 (keep v1). The earlier v2 forecast
 was speculative, not a commitment; preserve its history with an appended correction.
+
+
+## Desktop shutdown approval (2026-11-27)
+
+The user approved a closing screen and coordinated cleanup of owned desktop services before window exit, including duplicate-request protection and timeout/failure handling. See the [approved shutdown decision](process-and-infra.md#desktop-shutdown-screen-2026-11-27). Native runtime acceptance remains tracked in TASKS.
+
+
+## Practice setup approval (2026-11-27)
+
+The user approved icon navigation inside the setup path widget and clearer Picture vocabulary prerequisite feedback. See [the approved setup decision](web-and-ui.md#practice-setup-controls-and-picture-vocabulary-feedback-2026-11-27) and [Practice setup](../../learning-practice/practice/practice-session-builder.md).
+
+
+## Desktop development model approval (2026-11-27)
+
+The user approved an explicit task-scoped GGUF path for desktop development. See [the model-path decision](process-and-infra.md#desktop-development-gguf-path-2026-11-27).

@@ -15,6 +15,7 @@ use crate::{
 };
 
 mod probe;
+pub(crate) use probe::with_timeout;
 
 const POLL_TICK_MS: u32 = 5_000;
 const HEALTHY_POLL_TICKS: u32 = 6;

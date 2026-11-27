@@ -4,7 +4,10 @@ use std::{
     collections::{HashMap, HashSet},
     net::SocketAddr,
     process::Child,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Duration,
 };
 
@@ -130,6 +133,7 @@ pub(super) struct Registry {
 #[derive(Default)]
 pub(super) struct ServicesInner {
     pub(super) registry: Mutex<Registry>,
+    pub(super) closing: AtomicBool,
 }
 
 #[derive(Clone)]
@@ -139,6 +143,7 @@ impl Default for NativeServices {
     fn default() -> Self {
         Self(Arc::new(ServicesInner {
             registry: Mutex::new(Registry::default()),
+            closing: AtomicBool::new(false),
         }))
     }
 }
@@ -179,6 +184,9 @@ impl NativeServices {
         let kind = ServiceKey::parse(service)?;
         {
             let mut registry = self.lock()?;
+            if self.0.closing.load(Ordering::Acquire) {
+                return Err(ServiceError::StateTransition("Zipeek is closing".into()));
+            }
             if registry.launching.contains(&kind) || registry.stopping.contains(&kind) {
                 return Err(ServiceError::StateTransition(format!(
                     "{} is already changing state",

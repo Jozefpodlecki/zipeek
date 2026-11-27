@@ -9,6 +9,8 @@ mod speech;
 pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
     tauri::generate_handler![
+        crate::shutdown::shutdown_status,
+        crate::shutdown::shutdown_force_exit,
         image::image_generate,
         image::image_health,
         speech::speech_request,

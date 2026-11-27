@@ -1,3 +1,32 @@
+## Desktop development model source snapshot | 2026-11-27
+
+Source archive: `target/zipeek-source-0.1.0-20261127-233531.zip`. Full-source snapshot using the existing pack exclusions, including the earlier Practice setup and shutdown changes. This is not a numbered accepted release.
+
+Added the approved `ZIPEEK_AI_MODEL_PATH` value to the desktop-dev task environment. It points to the existing Qwen3.5-9B Q4_K_M GGUF in the user's LM Studio directory. No model is copied or bundled; other task environments and dependencies are unchanged.
+
+Validation passed: full Makefile TOML parse, exact path comparison, existing GGUF check, task scoping and whitespace checks. Desktop startup, model load and inference were not run. Earlier runtime gates and known test/lint failures remain documented in TASKS and the preceding checkpoints.
+
+## Practice setup source snapshot | 2026-11-27
+
+The Practice setup and shutdown changes are included in the current source snapshot identified above. Their runtime verification limits remain as recorded below.
+
+- Picture vocabulary now explains its separate saved text-model and image-backend requirements. Typed warning actions open the appropriate Settings section. Validated image readiness checks have a five-second timeout, retry, cancellation and stale-result protection; preview backends remain rejected.
+- The setup path widget now holds icon Back on the left and Continue/Play on the right. Duplicate navigation controls are removed; existing reducer/start callbacks, accessible names, keyboard semantics and 44px targets are preserved. Mobile warning actions wrap below the message.
+- No dependencies, stored-data formats, inference prompts or scoring policy changed.
+- Passed: locked offline WASM check, WASM test compilation (tests not executed), final desktop Trunk build, focused formatting, whitespace checks and mocked-IPC Chrome checks of warning branches, timeout/retry/stale results, backend reselection, local exercise independence, desktop/mobile layouts, keyboard navigation and UUID session creation.
+- The native practice-draft run passed 28 tests and hit one existing mixed-session expectation failure. The domain source was unchanged. Existing global formatting and strict Clippy issues remain documented.
+- Remaining: actual Tauri/WebView acceptance with the configured text model and SDXL service, real image inference, and the earlier native shutdown acceptance. See CURRENT and TASKS.
+
+## Desktop shutdown source snapshot | 2026-11-27
+
+The shutdown changes are included in the current full-source snapshot identified above. This remains an implementation checkpoint with native runtime acceptance pending.
+
+- Intercept main-window close and application exit, show Closing Zipeek with the existing themed spinner, stop owned services off the UI thread, then exit.
+- Block new service launches and duplicate cleanup. Report failure or a ten-second timeout with Close now; a subsequent native close request can also exit. External services and development Trunk are left running by this registry.
+- Preserve the user's direct release-CLI Tauri hooks. No dependencies or stored-data formats changed.
+- Passed: 30 native tests, locked offline WASM check, separate desktop Trunk build, focused Rust formatting, and headless Chrome checks with mocked IPC for desktop/mobile, root/Pages prefix, light/dark, reduced motion, focus, stale snapshot and keyboard Close now.
+- Remaining: actual Tauri/WebView X and Alt+F4 shutdown with running/starting services. Full workspace formatting and strict Clippy have existing unrelated failures; see CURRENT and TASKS.
+
 ## R706 WIP - Root script removal and Rust task ownership
 
 Removed the root `scripts/` directory (legacy Node.js and Python helpers), migrated active Makefile tasks to `zipeek-cli` or Rust tests, and repaired the geography catalog include path. Source archive pack/unpack now invoke the existing release CLI directly without hidden Cargo builds. The browser vendor asset build scripts under `crates/zipeek-web/scripts/` are separate required frontend build inputs and remain unchanged. Local Cargo/Windows acceptance is pending.

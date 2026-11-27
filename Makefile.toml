@@ -209,6 +209,7 @@ description = "Rebuild release services and CLI, then stage installer sidecars"
 
 [tasks.desktop-dev]
 description = "Stage already built sidecars and launch Tauri desktop development"
+env = { ZIPEEK_AI_MODEL_PATH = 'C:\Users\jozef\.lmstudio\models\HauhauCS\Qwen3.5-9B-Uncensored-HauhauCS-Aggressive\Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf' }
 dependencies = ["duckdb-env", "desktop-sidecars", "docs"]
 cwd = "crates/zipeek-app"
 command = "cargo"

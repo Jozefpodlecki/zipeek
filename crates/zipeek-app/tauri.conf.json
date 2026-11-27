@@ -5,12 +5,12 @@
   "identifier": "com.jozef.zipeek",
   "build": {
     "beforeDevCommand": {
-      "script": "cargo run --locked -p zipeek-cli -- desktop-frontend --serve",
+      "script": ".\\target\\release\\zipeek-cli.exe desktop-frontend --serve",
       "cwd": "../..",
       "wait": false
     },
     "beforeBuildCommand": {
-      "script": "cargo run --locked -p zipeek-cli -- desktop-frontend --release",
+      "script": ".\\target\\release\\zipeek-cli.exe desktop-frontend --release",
       "cwd": "../.."
     },
     "devUrl": "http://localhost:1421/",

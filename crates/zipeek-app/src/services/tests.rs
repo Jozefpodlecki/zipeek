@@ -61,6 +61,9 @@ fn occupied_external_port_is_not_owned_or_stopped() {
     let services = NativeServices::default();
     assert!(services.start_blocking("image").is_err());
     assert!(services.stop_blocking("image").is_err());
+    services
+        .shutdown()
+        .expect("shutdown leaves external listener alone");
     assert!(TcpStream::connect_timeout(&address, HEALTH_TIMEOUT).is_ok());
     drop(listener);
 }
@@ -107,8 +110,8 @@ fn speech_plaintext_health_is_accepted() {
 fn shutdown_reaps_only_owned_children() {
     #[cfg(windows)]
     let mut command = {
-        let mut command = Command::new("cmd");
-        command.args(["/C", "ping -n 30 127.0.0.1 >NUL"]);
+        let mut command = Command::new("powershell");
+        command.args(["-NoProfile", "-Command", "Start-Sleep -Seconds 30"]);
         command
     };
     #[cfg(not(windows))]
@@ -128,8 +131,24 @@ fn shutdown_reaps_only_owned_children() {
         ServiceKey::parse("image").unwrap(),
         ManagedProcess { child },
     );
-    services.shutdown();
+    services.shutdown().expect("shutdown owned children");
     assert!(services.lock().expect("registry").processes.is_empty());
+}
+
+#[test]
+fn shutdown_rejects_new_service_starts() {
+    let services = NativeServices::default();
+    services.begin_shutdown();
+    assert!(matches!(
+        services.start_blocking("image"),
+        Err(ServiceError::StateTransition(_))
+    ));
+    assert!(matches!(
+        services.launch(ServiceKey::parse("image").unwrap()),
+        Err(ServiceError::StateTransition(_))
+    ));
+    services.shutdown().expect("empty shutdown");
+    services.shutdown().expect("repeated shutdown");
 }
 
 #[test]

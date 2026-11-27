@@ -249,3 +249,13 @@ This scope reuses the existing dictionary and Practice-history IPC handlers. Rem
 ## Confirmed Settings reset (2026-11-26)
 
 The user explicitly approved **Settings > Reset app > Clear all data and start over** after reviewing the permanent data-deletion scope. Delete Zipeek-owned preferences, progress, Word Sets, exclusions, saved sessions and personal snapshots in browser/WebView storage and native Tauri learning history. Preserve dictionary/model files, exported backups and unrelated origin data. Require an explicit in-app confirmation, isolate cleanup from normal providers, block conflicting active app sessions, and return to fresh landing/onboarding only after complete success. Show partial failures with Retry. No dependency addition, migration or broader native storage adapter is approved by this change. Owner: [personal storage](../../dictionary-data/personal/personal-data-storage.md#confirmed-app-reset-2026-11-26).
+
+
+## Desktop shutdown screen (2026-11-27)
+
+Approved by the user: keep the desktop window visible while stopping Zipeek-owned local services. Intercept close/exit requests, show a themed spinner with Closing Zipeek and Stopping local services, reject duplicate shutdown and new service starts, and close after cleanup. A ten-second timeout or cleanup failure offers Close now; a later native close request also permits exit. External services remain untouched. This preserves the existing process termination approach and adds no dependency or personal-data format change. See [native services](../../architecture/modules/tauri-managed-services.md#desktop-shutdown-lifecycle) for implementation and pending acceptance.
+
+
+## Desktop development GGUF path (2026-11-27)
+
+The user approved setting `ZIPEEK_AI_MODEL_PATH` on every `desktop-dev` task invocation to the exact absolute LM Studio GGUF path supplied in the conversation. The owning value lives in Makefile.toml under `tasks.desktop-dev.env`; the selected model is Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf. Scope is the development launch and its inherited child-process environment, with no model copy, dependency change or installed application policy change. See [native services](../../architecture/modules/tauri-managed-services.md#approved-desktop-development-model-path).

@@ -10,18 +10,19 @@ use zipeek_core::{HskLevel, HskSystem};
 use zipeek_exercises::practice_draft::{SessionLength, VocabularySource};
 
 use crate::{
-    components::practice::setup::practice_flow_navigation::PracticeStep,
+    components::practice::setup::practice_flow_navigation::{PracticeStartButton, PracticeStep},
     components::{
         PracticeExercisesPanel, PracticeFlowNavigation, PracticePathSelector, PracticeSetupSummary,
-        PracticeStepFooter, PracticeVocabularyPanel,
+        PracticeVocabularyPanel,
     },
+    contexts::service_management::ServiceAvailability,
     hooks::{SavedExclusions, use_app_environment, use_saved_exclusions},
     preferences::PreferencesStore,
     reducers::{
         practice_setup_flow::{PracticeSetupAction, PracticeSetupFlow},
         setup::{SetupAction, SetupState},
     },
-    services::{practice_session_store::PracticeSessionStore, word_sets},
+    services::{image_generation, practice_session_store::PracticeSessionStore, word_sets},
 };
 
 #[function_component(PracticeSetup)]
@@ -138,6 +139,10 @@ pub fn practice_setup() -> Html {
         })
     };
     let selected_variants = draft.active_formats();
+    let (image_readiness, on_retry_image) = super::image_readiness::use_image_readiness(
+        draft.has_exercise("image-vocabulary"),
+        image_generation::read_api_url(&environment.local_storage),
+    );
     let needs_tts = super::validation::needs_local_tts(&selected_variants);
     let speech_status = use_state(|| None::<Result<(), String>>);
     let speech_revision = use_state(|| 0_u64);
@@ -197,7 +202,7 @@ pub fn practice_setup() -> Html {
     };
     let eligibility = super::validation::evaluate(
         draft,
-        &selected_variants,
+        &image_readiness,
         &personal_sets,
         matches!(saved.status, SavedExclusions::Ready(_)),
         snapshot_error.is_none(),
@@ -281,8 +286,9 @@ pub fn practice_setup() -> Html {
                 gate_message={start_gate_message.clone()}
                 on_length={on_length.clone()}
                 on_count={on_count.clone()}
-                on_start={on_start_any.clone()}
-                on_back={on_back.clone()}
+                missing_service={eligibility.missing_service}
+                on_retry_image={on_retry_image.clone()}
+                image_checking={image_readiness == ServiceAvailability::Checking}
                 profile_name={(*profiles.name).clone()}
                 profile_error={(*profiles.error).clone()}
                 profile_saved_notice={(*profiles.saved_notice).clone()}
@@ -293,23 +299,6 @@ pub fn practice_setup() -> Html {
                 on_save_profile={profiles.on_save.clone()}
             />
         },
-    };
-
-    let practice_step_footer = {
-        if flow.step == PracticeStep::Summary {
-            Html::default()
-        } else {
-            html! {
-                <PracticeStepFooter
-                    current={flow.step}
-                    exercise_stage={flow.exercise_stage}
-                    can_continue={flow.step != PracticeStep::Exercises || !draft.exercise_ids.is_empty()}
-                    embedded={flow.step == PracticeStep::Exercises}
-                    on_back={on_back}
-                    on_continue={on_continue}
-                />
-            }
-        }
     };
 
     if session_creation_blocked {
@@ -409,19 +398,23 @@ pub fn practice_setup() -> Html {
                 current={flow.step}
                 furthest={flow.furthest}
                 on_select={on_select_step.clone()}
+                can_continue={flow.step != PracticeStep::Exercises || !draft.exercise_ids.is_empty()}
+                on_back={on_back}
+                on_continue={on_continue}
+                start_action={html! {
+                    <PracticeStartButton draft={draft.clone()} can_start={can_start} on_start={on_start_any.clone()} />
+                }}
             />
             if flow.step == PracticeStep::Exercises {
                 <div
                     data-practice-exercise-workspace=""
                     class="flex min-h-0 flex-col rounded-xl border border-line bg-surface/95 md:h-0 md:flex-1 md:overflow-hidden"
                 >
-                    {practice_step_footer}
-                    <div class="flex min-h-0 flex-col px-3 pb-3 md:h-0 md:flex-1 md:overflow-hidden">
+                    <div class="flex min-h-0 flex-col p-3 md:h-0 md:flex-1 md:overflow-hidden">
                         {active_panel}
                     </div>
                 </div>
             } else {
-                {practice_step_footer}
                 <div class="min-h-0">
                     {active_panel}
                     if flow.step == PracticeStep::Summary && needs_tts && local_enabled && matches!(&*speech_status, Some(Err(_))) {

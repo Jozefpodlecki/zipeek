@@ -24,3 +24,8 @@ The global header omits active page and exercise titles where these merely repea
 The earlier dated UX compilation is retained only in [historical UX notes](../archive-history/audits/UX.md).
 
 For the approved Statistics 2.0 design, including the deterministic sample-data preview and the separate production evidence gate, see [Statistics product and interaction design](pages/learning-statistics-preview.md).
+
+
+## Practice setup navigation and service feedback
+
+Approved 2026-11-27: place the icon-only Back action at the left of the four-step Practice path widget. Place Continue at the right until Summary, where a Play icon starts practice. Keep accessible names, tooltips, visible focus and disabled states, and remove duplicate navigation controls from the summary and separate step footer. Preserve existing setup state transitions. Picture vocabulary warnings distinguish the saved text-model requirement from image backend readiness, link to the appropriate Settings section, and offer image-service retry. Warning actions wrap below the message on narrow screens. See [Practice setup](../learning-practice/practice/practice-session-builder.md).

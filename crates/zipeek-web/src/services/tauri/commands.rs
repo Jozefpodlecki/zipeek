@@ -2,6 +2,15 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use zipeek_db::contracts::{DatabaseInfo, HistoryRow};
 
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum ShutdownPhase {
+    #[default]
+    Idle,
+    Closing,
+    Failed,
+}
+
 pub(crate) trait Command {
     type Args: Serialize;
     type Output: DeserializeOwned;
@@ -86,6 +95,8 @@ command!(
     PersonalStorageInfo
 );
 command!(PersonalStorageReveal, "personal_storage_reveal", (), ());
+command!(ShutdownStatus, "shutdown_status", (), ShutdownPhase);
+command!(ShutdownForceExit, "shutdown_force_exit", (), ());
 command!(StartService, "start_service", Service, ServiceStatus);
 command!(StopService, "stop_service", Service, ServiceStatus);
 command!(

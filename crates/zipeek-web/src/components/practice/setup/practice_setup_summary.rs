@@ -5,6 +5,7 @@ mod review;
 
 use yew::prelude::*;
 use zipeek_core::practice::ExerciseVariant;
+use zipeek_exercises::definition::ExternalService;
 use zipeek_exercises::practice_draft::{PracticeDraft, SessionLength, VocabularySource};
 
 use crate::{models::PracticeExerciseOptions, services::practice_profiles::PracticeProfile};
@@ -19,8 +20,9 @@ pub(crate) struct PracticeSetupSummaryProps {
     pub gate_message: String,
     pub on_length: Callback<SessionLength>,
     pub on_count: Callback<u16>,
-    pub on_start: Callback<MouseEvent>,
-    pub on_back: Callback<()>,
+    pub missing_service: Option<ExternalService>,
+    pub on_retry_image: Callback<MouseEvent>,
+    pub image_checking: bool,
     pub profile_name: String,
     pub profile_error: Option<String>,
     pub profile_saved_notice: Option<String>,

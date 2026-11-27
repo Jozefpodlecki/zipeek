@@ -36,7 +36,7 @@ pub(super) fn health_url(service: &str, endpoint: &str) -> Result<String, ProbeE
     Ok(format!("{endpoint}/{path}"))
 }
 
-pub(super) async fn with_timeout<T>(
+pub(crate) async fn with_timeout<T>(
     operation: impl Future<Output = Result<T, String>>,
 ) -> Result<T, String> {
     let (send_timeout, timeout) = oneshot::channel::<()>();

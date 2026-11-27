@@ -8,6 +8,7 @@ use std::{
     net::TcpStream,
     path::PathBuf,
     process::{Command, Stdio},
+    sync::atomic::Ordering,
     thread,
     time::{Duration, Instant},
 };
@@ -34,6 +35,9 @@ impl NativeServices {
     }
 
     pub(super) fn launch(&self, kind: ServiceKey) -> Result<(), ServiceError> {
+        if self.0.closing.load(Ordering::Acquire) {
+            return Err(ServiceError::StateTransition("Zipeek is closing".into()));
+        }
         if TcpStream::connect_timeout(&kind.address(), HEALTH_TIMEOUT).is_ok() {
             return Err(ServiceError::PortOccupied(format!(
                 "Port {} is already occupied by an external process. Zipeek will not claim it.",
@@ -66,6 +70,10 @@ impl NativeServices {
             use std::os::windows::process::CommandExt;
             command.creation_flags(0x0800_0000);
         }
+        let mut registry = self.lock()?;
+        if self.0.closing.load(Ordering::Acquire) {
+            return Err(ServiceError::StateTransition("Zipeek is closing".into()));
+        }
         let child = command
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -78,9 +86,8 @@ impl NativeServices {
                     path.display()
                 ))
             })?;
-        self.lock()?
-            .processes
-            .insert(kind, ManagedProcess { child });
+        registry.processes.insert(kind, ManagedProcess { child });
+        drop(registry);
 
         let start = Instant::now();
         loop {
@@ -149,14 +156,39 @@ impl NativeServices {
         Ok(())
     }
 
-    pub fn shutdown(&self) {
-        if let Ok(mut registry) = self.lock() {
-            for (_, mut process) in registry.processes.drain() {
-                let _ = process.child.kill();
-                let _ = process.child.wait();
+    pub fn begin_shutdown(&self) {
+        self.0.closing.store(true, Ordering::Release);
+    }
+
+    pub fn shutdown(&self) -> Result<(), ServiceError> {
+        self.begin_shutdown();
+        let mut registry = self.lock()?;
+        let mut failures = Vec::new();
+        for process in registry.processes.values_mut() {
+            match process.child.try_wait() {
+                Ok(Some(_)) => {}
+                Ok(None) => {
+                    if let Err(error) = process.child.kill() {
+                        failures.push(error.to_string());
+                    }
+                }
+                Err(error) => failures.push(error.to_string()),
             }
-            registry.launching.clear();
-            registry.stopping.clear();
+        }
+        for process in registry.processes.values_mut() {
+            if let Err(error) = process.child.wait() {
+                failures.push(error.to_string());
+            }
+        }
+        registry
+            .processes
+            .retain(|_, process| !matches!(process.child.try_wait(), Ok(Some(_))));
+        registry.launching.clear();
+        registry.stopping.clear();
+        if failures.is_empty() {
+            Ok(())
+        } else {
+            Err(ServiceError::ProcessFailure(failures.join("; ")))
         }
     }
 }

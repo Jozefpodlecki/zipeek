@@ -4,6 +4,7 @@ use web_sys::{ErrorEvent, PromiseRejectionEvent};
 use yew::*;
 use yew_router::{HashRouter, Switch};
 
+use crate::components::desktop_lifecycle::DesktopLifecycle;
 use crate::{
     AppEnvironment,
     components::{
@@ -46,6 +47,7 @@ pub fn app(props: &AppEnvironment) -> Html {
         <ThemeProvider
             manager={props.theme_manager.clone()}
         >
+            <DesktopLifecycle>
             <ToastProvider>
             <ServiceProvider>
             <DatabaseProvider>
@@ -61,6 +63,7 @@ pub fn app(props: &AppEnvironment) -> Html {
             </DatabaseProvider>
             </ServiceProvider>
             </ToastProvider>
+            </DesktopLifecycle>
         </ThemeProvider>
         </ContextProvider<AppEnvironment>>
     }

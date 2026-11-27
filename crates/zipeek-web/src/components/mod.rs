@@ -12,6 +12,7 @@ pub(crate) mod translation;
 
 mod activity_picker;
 mod ai_stream_progress;
+pub(crate) mod desktop_lifecycle;
 pub(crate) mod hanzi_stroke_reference;
 mod hsk_picker;
 mod loader;
@@ -33,9 +34,7 @@ pub(crate) use practice::session::quiz_session_provider::{
     QuizSessionContext, QuizSessionProvider,
 };
 pub(crate) use practice::setup::practice_exercises_panel::PracticeExercisesPanel;
-pub(crate) use practice::setup::practice_flow_navigation::{
-    PracticeFlowNavigation, PracticeStepFooter,
-};
+pub(crate) use practice::setup::practice_flow_navigation::PracticeFlowNavigation;
 pub(crate) use practice::setup::practice_path_selector::PracticePathSelector;
 pub(crate) use practice::setup::practice_setup_panels::PracticeVocabularyPanel;
 pub(crate) use practice::setup::practice_setup_summary::PracticeSetupSummary;

@@ -1,3 +1,23 @@
+## Desktop development model path (approved 2026-11-27)
+
+- [x] Set the exact approved LM Studio GGUF path in `tasks.desktop-dev.env.ZIPEEK_AI_MODEL_PATH`; parse the Makefile and verify the file exists.
+- [ ] Restart with `cargo make desktop-dev`, start Local AI and confirm model loading and discovery. This configuration change does not establish successful inference.
+
+## Picture vocabulary prerequisites and setup navigation (approved 2026-11-27)
+
+- [x] Explain the separate text-model and image-backend requirements, use typed Settings links, and provide bounded image preflight/retry with stale-response protection.
+- [x] Put icon Back at the left of the path widget and Continue/Play at the right; remove duplicate controls and preserve navigation/start callbacks and keyboard behavior.
+- [x] Pass WASM check, WASM test compilation, Trunk build and mocked-IPC Chrome checks at desktop/mobile widths under root and prefixed routes.
+- [ ] Verify the setup flow in the actual Tauri window with a saved text model and running SDXL service. Model-backed image generation remains unverified.
+- [ ] Reconcile the existing native `practice_draft::tests::local_vocabulary_session_support_requires_fixed_count_and_hosted_types` failure with the approved mixed-session contract before changing it. This task did not modify the domain source.
+
+## Desktop shutdown screen (approved 2026-11-27)
+
+- [x] Coordinate close and exit requests before window destruction, prevent duplicate cleanup, and block new owned-service launches during shutdown.
+- [x] Show the themed Closing Zipeek screen, report cleanup failure or a ten-second timeout, and provide Close now without stopping external services.
+- [x] Pass native unit tests, WASM compilation, the desktop Trunk build and Chrome presentation checks with mocked IPC.
+- [ ] Complete actual Tauri/WebView acceptance for title-bar X, Alt+F4, repeated requests, startup races and owned/external service behavior. Global formatting and strict Clippy have existing unrelated failures.
+
 ## R706 explicit desktop build orchestration
 
 - [x] Sidecar launcher must never call `cargo build` implicitly. Makefile build tasks own compilation; CLI sidecar staging only copies existing binaries.
@@ -35,9 +55,9 @@
 - [ ] Execute `cargo test -p zipeek-db-gen --locked` on Windows to verify all generator tests, especially the relationship fixture and FTS smoke test.
 - [ ] Run binary dictionary generation and read-only verification before installing any regenerated artifact.
 
-## Future Practice UI: navigation and outcome lifecycle (design pending)
+## Practice UI: navigation and outcome lifecycle
 
-- [ ] Explore merging Back / Continue / Start controls into the Practice path widget without changing exercise progress ownership or existing animal placement.
+- [x] Move setup Back / Continue / Start into the Practice path widget as accessible icon controls, preserving reducer transitions and exercise progress ownership. Implementation and mocked-IPC Chrome acceptance recorded in the 2026-11-27 completed checkpoint.
 - [ ] Replace `Continue session` with a concise Continue action and directional/play icon.
 - [ ] Make the final completed exercise advance directly to session completion without requiring another Continue click.
 - [ ] Align feedback verdict and primary action in one compact review layout; avoid off-center action placement and redundant feedback framing.

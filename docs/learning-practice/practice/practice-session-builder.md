@@ -4,6 +4,8 @@
 
 The learner follows **Path -> Exercises -> Vocabulary -> Summary**. The setup remains a coherent wizard; Back and Continue never discard configured settings inadvertently. Continue requires the current step to be valid. Selected and unselected controls must be visibly and accessibly distinct.
 
+Approved 2026-11-27: the path widget owns the setup navigation controls. An icon-only Back button sits on its left; an icon-only Continue arrow sits on its right during Exercises and Vocabulary, becoming a Play button labeled Start practice on Summary. The first-step controls are disabled while choosing a path. Preserve the existing reducer transitions, including Back from Configure returning to exercise selection, and preserve configuration when navigating. Buttons have accessible names, tooltips, visible keyboard focus and at least 44px targets. Do not repeat these actions in a separate footer or inside the summary card.
+
 ### Path
 
 Present the supported Practice paths without empty spacer panels. A route that cannot create a valid session explains the reason before launch.
@@ -21,6 +23,12 @@ Select HSK/dictionary filters or personal Word Sets, honoring exact-entry exclus
 ### Summary
 
 Show selected exercise types, source filters, count and effective global policy. Save a named configuration as a Practice profile without including learner results or credentials. Profile management and versioned JSON export/import belong in Saved Practice profiles; see [profile portability](practice-profile-portability.md). Validate the session's eligible source before starting without blocking the UI thread.
+
+### Picture vocabulary prerequisites
+
+Picture vocabulary uses a selected and saved text AI model to compose the scene, then the image generation backend to render it. Starting the image service alone does not satisfy the text-model requirement. Before launch, distinguish missing text configuration from an image backend that is checking, unreachable, preview-only or otherwise unavailable. Use typed missing-service state to select AI settings or Image Generation settings links. Provide Retry image service after a failed check. Text-only generated exercises retain their existing model requirement; local exercises do not require these services.
+
+Image preflight uses the existing backend validation through native IPC in Tauri and through HTTP in the browser. A running process alone does not establish generation readiness. Bound checks to five seconds, cancel obsolete work, reject stale results after selection or endpoint changes, and recheck after retry, service-state changes or reselection. Never invoke inference or send learner data as part of this health check. This preflight does not prove that a saved text model is reachable or that model-backed image inference will succeed.
 
 ## Execution contract
 
