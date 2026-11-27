@@ -1,5 +1,5 @@
 use crate::database::DbError;
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
 

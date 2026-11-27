@@ -86,7 +86,7 @@ These topic pages contain the original approved specification text relocated fro
 | UI state architecture | [State ownership](architecture/ui-state-ownership.md), [Browse state](architecture/ui-browse-state.md) |
 | Rust/WASM browser interoperability | [Browser boundary and thin wrappers](architecture/modules/rust-wasm-interop.md) |
 
-Use the [documentation validation script](../scripts/docs-validate.cjs) to check source links, image references, navigation index freshness and prohibited typography before packaging.
+Use `cargo make docs-validate` (Rust asset preflight) to check source links, image references, navigation index freshness and prohibited typography before packaging.
 
 ## Current approved product requirements
 

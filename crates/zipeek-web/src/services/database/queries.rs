@@ -238,11 +238,13 @@ WHERE strpos(lower(simplified), ?) > 0
    OR strpos(lower(coalesce(pinyin_numeric, '')), ?) > 0
    OR strpos(lower(coalesce(english, '')), ?) > 0
 ORDER BY CASE
-    WHEN lower(simplified) = ? THEN 0
+    WHEN lower(simplified) = ? OR lower(coalesce(traditional, '')) = ? THEN 0
     WHEN lower(pinyin) = ? OR lower(coalesce(pinyin_numeric, '')) = ? THEN 1
     WHEN lower(coalesce(english, '')) = ? THEN 2
-    WHEN strpos(lower(simplified), ?) = 1 THEN 3
-    ELSE 4 END, length(simplified), id
+    WHEN lower(coalesce(english, '')) LIKE ? OR lower(coalesce(english, '')) LIKE ? THEN 3
+    WHEN strpos(lower(simplified), ?) = 1 THEN 4
+    WHEN strpos(lower(coalesce(english, '')), ?) > 0 THEN 5
+    ELSE 6 END, length(simplified), id
 LIMIT ?"#,
             vec![
                 json!(query),
@@ -253,6 +255,10 @@ LIMIT ?"#,
                 json!(query),
                 json!(query),
                 json!(query),
+                json!(query),
+                json!(query),
+                json!(format!("{};%", query)),
+                json!(format!("%; {}%", query)),
                 json!(query),
                 json!(query),
                 json!(limit),

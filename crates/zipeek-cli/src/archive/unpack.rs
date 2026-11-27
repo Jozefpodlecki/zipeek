@@ -550,6 +550,7 @@ mod tests {
             "obsolete",
         )
         .await?;
+        tokio::fs::create_dir_all(root.join("crates/zipeek-web/static/practice")).await?;
         tokio::fs::write(
             root.join("crates/zipeek-web/static/practice/old-creature.webp"),
             "obsolete",

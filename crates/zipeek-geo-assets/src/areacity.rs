@@ -352,7 +352,7 @@ fn inspect(input: &Path) -> Result<(Vec<Region>, Vec<Region>, Audit)> {
     let ids: HashSet<_> = active.iter().map(|record| record.id.as_str()).collect();
     let (geometry, unknown) = geometries(&input.join("ok_geo.csv"), &ids)?;
     let capital_catalog: Vec<CatalogRecord> = serde_json::from_str(include_str!(
-        "../../../scripts/province-quest/provinces.catalog.json"
+        "provinces.catalog.json"
     ))
     .map_err(|error| error.to_string())?;
     let capitals: HashMap<_, _> = capital_catalog

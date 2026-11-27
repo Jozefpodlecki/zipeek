@@ -1,13 +1,13 @@
 use std::collections::BTreeSet;
 
-use duckdb_neo::{Parameters, QueryParameter, connection::Connection};
+use zipeek_db::native::{Parameters, QueryParameter, Connection};
 use sha2::{Digest, Sha256};
 use zipeek_core::Word;
 
 use super::storage::{BULK_ROWS, bulk_sql, report_progress};
 use super::{CharacterReading, ImportError, SourceSense};
 
-fn insert_error(source: duckdb_neo::Error) -> ImportError {
+fn insert_error(source: zipeek_db::native::Error) -> ImportError {
     ImportError::Insert {
         word_id: None,
         source,

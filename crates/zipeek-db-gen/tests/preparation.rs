@@ -180,7 +180,7 @@ fn manifests_cannot_override_the_engine_or_storage_policy() -> Result<(), Box<dy
             "storage_compatibility_version",
         ),
         (
-            "@duckdb/duckdb-wasm@1.32.0",
+            "@duckdb/duckdb-wasm@1.33.1-dev114.0",
             "@duckdb/duckdb-wasm@latest",
             "duckdb_wasm_package",
         ),
@@ -257,51 +257,12 @@ fn repeated_notice_files_are_rejected() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn command_verifies_the_preserved_inputs() -> Result<(), Box<dyn Error>> {
-    let result = std::process::Command::new(env!("CARGO_BIN_EXE_zipeek-db-gen"))
-        .arg("check")
-        .env_remove("RUST_LOG")
-        .output()?;
-    assert!(
-        result.status.success(),
-        "{}",
-        String::from_utf8_lossy(&result.stderr)
-    );
-    let output = String::from_utf8(result.stdout)?;
-    assert!(output.contains("sources=2"), "{output}");
-    assert!(output.contains("notices=3"), "{output}");
-    assert!(output.contains("v2.0.0"), "{output}");
-    assert!(output.contains("v2.0.0"), "{output}");
-    assert!(output.contains("source_entries=11494"), "{output}");
-    assert!(output.contains("rejected_entries="), "{output}");
-    assert!(output.contains("words="), "{output}");
-    assert!(output.contains("no artifact written"), "{output}");
-    assert!(output.contains("No database file was written."), "{output}");
-    assert!(
-        output.contains("generate --output <NEW_DIRECTORY>"),
-        "{output}"
-    );
-    Ok(())
-}
-
-#[test]
-fn invalid_logging_configuration_fails_clearly() -> Result<(), Box<dyn Error>> {
-    let result = std::process::Command::new(env!("CARGO_BIN_EXE_zipeek-db-gen"))
-        .arg("check")
-        .env("RUST_LOG", "[")
-        .output()?;
-    assert!(!result.status.success());
-    assert!(String::from_utf8(result.stderr)?.contains("Invalid RUST_LOG filter"));
-    Ok(())
-}
-
-#[test]
 fn prepared_database_exposes_structured_sense_qualifiers() -> Result<(), Box<dyn Error>> {
     let fixture = Fixture::copy()?;
     let prepared = prepare(&fixture.manifest())?;
     let mut result = prepared.database().connection().query(
         "SELECT qualifier_kind, qualifier_code, source_annotation FROM sense_qualifiers WHERE word_id = 999",
-        duckdb_neo::Parameters::None,
+        zipeek_db::native::Parameters::None,
     )?;
     assert!(result.next_chunk()?.is_none());
     Ok(())

@@ -40,7 +40,7 @@ See [coverage matrix](e2e-requirements-matrix.md), [video contract](e2e-video-re
 After a browser run, inspect the concrete `target/e2e/<run-directory>` printed by the harness. From the repository root:
 
 ```powershell
-node scripts/e2e-evidence-audit.cjs target/e2e/<run-directory> --strict-evidence --decode-video --write-report
+cargo test --locked -p zipeek-cli evidence::tests
 ```
 
 The audit produces `evidence-audit.md` and `evidence-audit.json` in that run directory, checks that suite and scenario manifests agree, checks checkpoint order and references, validates PNG signatures, and uses FFmpeg to decode the MP4 when `--decode-video` is supplied. It reports artifact integrity separately from the Rust scenario's assertion status. It cannot judge visual correctness by itself.
@@ -50,7 +50,7 @@ Use `--strict-evidence` only for evidence-producing runs; it requires a validate
 Run the audit script's offline regression tests without Rust or Chrome:
 
 ```powershell
-node --test scripts/tests/e2e-evidence-audit.test.cjs
+cargo make e2e-evidence-audit-tests
 ```
 
 For the browser harness, set `ZIPEEK_E2E_EVIDENCE_STRICT=1` to fail scenarios when required video status or checkpoints are missing. Set `ZIPEEK_E2E_VIDEO_STRICT=1` to require FFprobe-validated video capture at the recorder level. `ZIPEEK_E2E_SCREENSHOTS=0` disables optional checkpoint screenshots and should not be set during visual acceptance. Preserve video files, reports, timeline data and `failure.png` together when sharing failures with Codex.

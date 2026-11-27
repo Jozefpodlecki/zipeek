@@ -4,6 +4,7 @@ use crate::{
     preferences::PreferencesStore,
 };
 use yew::prelude::*;
+use yew_icons::Icon;
 use yew_router::Routable;
 
 #[function_component(DrawerPreferences)]

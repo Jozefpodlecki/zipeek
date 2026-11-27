@@ -40,6 +40,7 @@ pub(crate) enum ExerciseStage {
 #[derive(Clone, PartialEq)]
 pub(crate) struct PracticeSetupFlow {
     pub draft: PracticeDraft,
+    pub hsk_standard: u8,
     pub step: PracticeStep,
     pub furthest: PracticeStep,
     pub exercise_stage: ExerciseStage,
@@ -126,6 +127,7 @@ impl PracticeSetupFlow {
         }
         Self {
             draft,
+            hsk_standard: 3,
             step: PracticeStep::Path,
             furthest: PracticeStep::Path,
             exercise_stage: ExerciseStage::Choose,
@@ -149,6 +151,20 @@ impl Reducible for PracticeSetupFlow {
                 options,
                 advanced,
             } => {
+                next.hsk_standard = match &draft.vocabulary {
+                    VocabularySource::Dictionary(filters) => {
+                        let two = filters.hsk.iter().any(|band| band.system == 2);
+                        let three = filters.hsk.iter().any(|band| band.system == 3);
+                        if two && three {
+                            0
+                        } else if two {
+                            2
+                        } else {
+                            3
+                        }
+                    }
+                    _ => 3,
+                };
                 next.draft = draft;
                 next.exercise_options = options;
                 next.advanced = advanced;
@@ -222,9 +238,13 @@ impl Reducible for PracticeSetupFlow {
                 vocabulary::toggle_hsk_band(&mut next.draft, band);
             }
             PracticeSetupAction::SelectHskStandard(system) => {
-                if !vocabulary::select_hsk_standard(&mut next.draft, system) {
+                if !matches!(system, 0 | 2 | 3) {
                     return self;
                 }
+                if system != 0 && !vocabulary::select_hsk_standard(&mut next.draft, system) {
+                    return self;
+                }
+                next.hsk_standard = system;
             }
             PracticeSetupAction::ToggleFormat(variant) => {
                 let enabled = !next.draft.selected_formats().contains(&variant);

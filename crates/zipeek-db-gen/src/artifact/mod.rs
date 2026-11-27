@@ -1,7 +1,10 @@
 mod error;
 mod files;
+mod fts;
+mod queries;
 mod report;
 mod snapshot;
+mod sql;
 mod writer;
 
 pub use error::ArtifactError;

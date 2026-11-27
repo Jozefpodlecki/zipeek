@@ -10,6 +10,12 @@ This file is an entry point, not a rolling checkpoint transcript. Dated implemen
 4. [Source reconciliation and unresolved source/policy mismatches](../archive-history/audits/SOURCE_RECONCILIATION.md).
 5. [Architecture](../architecture/architecture.md), [Practice](../learning-practice/practice/practice-session-builder.md), [database](../dictionary-data/schema/db.md), and [E2E](../archive-history/audits/e2e.md).
 
+## Native CLI runtime on Windows
+
+`zipeek-cli` uses the pinned native DuckDB library. Cargo Make tasks invoking the CLI must depend on `duckdb-env`, including `pack`, `unpack`, and database artifact tasks. This task validates `duckdb.lib` and `duckdb.dll` and prepends the DLL directory to `PATH` for the CLI process. A Windows exit code of `-1073741515` (`0xC0000135`) indicates a DLL dependency could not be loaded before the CLI could run. Do not work around it by spawning Cargo from the CLI launcher or by copying arbitrary DLL versions into the project.
+
+Archive pack/unpack use an existing `target/release/zipeek-cli.exe`. Build it explicitly with `cargo make release-cli-build` when missing or outdated; `cargo make unpack` itself does not build or run a nested Cargo process.
+
 ## Current handoff constraints
 
 - Treat the lockfiles and installed asset manifests as authoritative for configured dependency versions. Dependency changes require explicit user approval.

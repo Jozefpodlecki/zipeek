@@ -15,6 +15,25 @@ CREATE TABLE words (
 CREATE INDEX idx_words_hsk3 ON words (hsk3_level);
 CREATE INDEX idx_words_hsk2 ON words (hsk2_level);
 
+CREATE TABLE word_search_documents (
+    word_id INTEGER PRIMARY KEY REFERENCES words(id),
+    english_text VARCHAR NOT NULL
+);
+
+CREATE TABLE word_search_keys (
+    word_id INTEGER PRIMARY KEY REFERENCES words(id),
+    simplified VARCHAR NOT NULL,
+    traditional VARCHAR NOT NULL,
+    pinyin_plain VARCHAR NOT NULL,
+    pinyin_numeric VARCHAR NOT NULL
+);
+
+CREATE INDEX idx_word_search_keys_simplified ON word_search_keys (simplified);
+CREATE INDEX idx_word_search_keys_traditional ON word_search_keys (traditional);
+CREATE INDEX idx_word_search_keys_pinyin_plain ON word_search_keys (pinyin_plain);
+CREATE INDEX idx_word_search_keys_pinyin_numeric ON word_search_keys (pinyin_numeric);
+
+
 CREATE TABLE dictionary_versions (
     snapshot_fingerprint VARCHAR PRIMARY KEY,
     provenance VARCHAR NOT NULL,

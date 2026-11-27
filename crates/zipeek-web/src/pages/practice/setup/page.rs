@@ -16,6 +16,7 @@ use crate::{
         PracticeStepFooter, PracticeVocabularyPanel,
     },
     hooks::{SavedExclusions, use_app_environment, use_saved_exclusions},
+    preferences::PreferencesStore,
     reducers::{
         practice_setup_flow::{PracticeSetupAction, PracticeSetupFlow},
         setup::{SetupAction, SetupState},
@@ -61,7 +62,21 @@ pub fn practice_setup() -> Html {
             .and_then(|location| location.query::<HashMap<String, String>>().ok())
             .as_ref(),
     );
-    let flow = use_reducer(|| PracticeSetupFlow::with_source(Some(preselected_source)));
+    let flow = {
+        let storage = environment.local_storage.clone();
+        use_reducer(move || {
+            let mut initial = PracticeSetupFlow::with_source(Some(preselected_source));
+            if let VocabularySource::Dictionary(filters) = &mut initial.draft.vocabulary {
+                let choice = PreferencesStore::new(&storage)
+                    .read()
+                    .hsk_defaults
+                    .normalized();
+                initial.hsk_standard = choice.standard;
+                filters.hsk = choice.selected_bands();
+            }
+            initial
+        })
+    };
     let profiles =
         super::profiles::use_profile_controls(environment.local_storage.clone(), flow.clone());
     let draft = &flow.draft;
@@ -249,6 +264,7 @@ pub fn practice_setup() -> Html {
         PracticeStep::Vocabulary => html! {
             <PracticeVocabularyPanel
                 source={draft.vocabulary.clone()}
+                hsk_standard={flow.hsk_standard}
                 personal_sets={(*personal_sets).clone()}
                 on_change={on_vocabulary.clone()}
                 on_toggle_hsk_band={on_toggle_hsk_band.clone()}

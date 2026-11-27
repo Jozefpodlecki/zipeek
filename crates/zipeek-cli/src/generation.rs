@@ -78,20 +78,9 @@ pub fn generate(root: &Path, selected_classification_cache: bool) -> Result<()> 
     fs::create_dir_all(&generated)?;
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos();
     let output = generated.join(format!("candidate-{timestamp}"));
-    let binary = root.join("target/release").join(if cfg!(windows) {
-        "zipeek-db-gen.exe"
-    } else {
-        "zipeek-db-gen"
-    });
-    if !binary.is_file() {
-        return Err(format!(
-            "Missing {}. Build zipeek-db-gen in release mode first.",
-            binary.display()
-        )
-        .into());
-    }
+    let binary = std::env::current_exe()?;
     let mut command = Command::new(&binary);
-    command.arg("generate").arg("--output").arg(&output);
+    command.arg("db-gen").arg("generate").arg("--output").arg(&output);
     if selected_classification_cache {
         let selection: Value = serde_json::from_reader(fs::File::open(
             workflow.join("selected-classification.json"),

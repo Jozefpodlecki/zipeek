@@ -1,11 +1,11 @@
 use std::{collections::BTreeSet, fs, path::Path};
 
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
-use crate::import::SourceSense;
+use crate::{database::DatabaseSession, import::SourceSense};
 use zipeek_ai_protocol::prompts::classification::{CATEGORIES, ClassificationInput, POS};
 use zipeek_core::Word;
 
@@ -23,7 +23,12 @@ pub enum ClassificationError {
     #[error("invalid classification: {0}")]
     Invalid(String),
     #[error("classification database write: {0}")]
-    Database(#[from] duckdb_neo::Error),
+    Database(#[from] zipeek_db::native::Error),
+    #[error("classification cache application failed ({original}); rollback also failed: {rollback}")]
+    Rollback {
+        original: Box<ClassificationError>,
+        rollback: zipeek_db::native::Error,
+    },
     #[error("classification model: {0}")]
     Model(#[from] super::LlmError),
 }
@@ -479,23 +484,23 @@ pub fn apply_cache(
         }
         record.validate(sense)?;
     }
-    connection.execute("BEGIN TRANSACTION", Parameters::None)?;
+    let mut transaction = DatabaseSession::new(connection).transaction()?;
     let result = (|| -> Result<(), ClassificationError> {
         for record in records {
             let run = run_id(record);
-            connection.execute(
+            transaction.connection().execute(
                 "INSERT INTO classification_runs (id, model, prompt_version, taxonomy_version, input_digest) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
                 Parameters::Positional(&[&run, &record.model, &record.prompt_version,
                     &(record.taxonomy_version as i32), &record.input_digest]),
             )?;
             for pos in &record.labels.pos {
-                connection.execute(
+                transaction.connection().execute(
                     "INSERT INTO sense_pos (word_id, sense_order, pos_code, classification_run_id) VALUES ($1,$2,$3,$4)",
                     Parameters::Positional(&[&record.word_id, &record.sense_order, pos, &run]),
                 )?;
             }
             for category in &record.labels.categories {
-                connection.execute(
+                transaction.connection().execute(
                     "INSERT INTO sense_categories (word_id, sense_order, category_slug, classification_run_id) VALUES ($1,$2,$3,$4)",
                     Parameters::Positional(&[&record.word_id, &record.sense_order, category, &run]),
                 )?;
@@ -504,14 +509,27 @@ pub fn apply_cache(
         Ok(())
     })();
     match result {
-        Ok(()) => {
-            connection.execute("COMMIT", Parameters::None)?;
-            Ok(records.len())
-        }
-        Err(error) => {
-            let _ = connection.execute("ROLLBACK", Parameters::None);
-            Err(error)
-        }
+        Ok(()) => match transaction.commit() {
+            Ok(()) => Ok(records.len()),
+            Err(source) => rollback_classification(
+                &mut transaction,
+                ClassificationError::Database(source),
+            ),
+        },
+        Err(error) => rollback_classification(&mut transaction, error),
+    }
+}
+
+fn rollback_classification<T>(
+    transaction: &mut crate::database::Transaction<'_>,
+    original: ClassificationError,
+) -> Result<T, ClassificationError> {
+    match transaction.rollback() {
+        Ok(()) => Err(original),
+        Err(rollback) => Err(ClassificationError::Rollback {
+            original: Box::new(original),
+            rollback,
+        }),
     }
 }
 

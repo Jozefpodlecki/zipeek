@@ -1,5 +1,11 @@
+mod session;
+mod transaction;
+
+pub use session::{DatabaseSession, StatementError};
+pub use transaction::Transaction;
+
 pub use duckdb_neo::{
-    Parameters,
+    Error, Parameters, QueryParameter,
     connection::Connection,
     environment::{Environment, StorageLocation},
 };
@@ -76,6 +82,10 @@ impl GeneratorDatabase {
             engine_version,
             storage_version,
         })
+    }
+
+    pub fn session(&self) -> DatabaseSession<'_> {
+        DatabaseSession::from_database(self)
     }
 
     pub fn connection(&self) -> &Connection {

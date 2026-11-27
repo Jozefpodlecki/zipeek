@@ -1,3 +1,64 @@
+## R706 explicit desktop build orchestration
+
+- [x] Sidecar launcher must never call `cargo build` implicitly. Makefile build tasks own compilation; CLI sidecar staging only copies existing binaries.
+- [x] `desktop-sidecars-rebuild` explicitly builds services and CLI before staging; `desktop-dev` requires prebuilt sidecars and gives an actionable failure if missing.
+- [ ] Run Windows `cargo make desktop-sidecars-rebuild` then `cargo make desktop-dev`; verify Windows file-lock behavior with already-running sidecars.
+
+## R706 generator/CLI and database dependency boundaries
+
+- [x] Remove the extra `zipeek-db-gen` binary target and Clap parser; expose `db-gen` commands through `zipeek-cli`.
+- [x] Remove the generator's direct DuckDB driver dependency and relocate native session/transaction ownership into `zipeek-db`.
+- [x] Document semver dependency requirements without leading `=`; preserve existing resolved versions in `Cargo.lock`.
+- [ ] Run `cargo fmt --all -- --check`, `cargo test -p zipeek-db -p zipeek-db-gen -p zipeek-cli --locked` and locked Clippy; regenerate and verify the database artifact before installation.
+
+## R706 artifact report, query and provenance cleanup
+
+- [x] Keep generated attribution bytes intact while moving the maintained notice source to dictionary documentation.
+- [x] Encapsulate report creation as `ArtifactReport::new(ArtifactReportOptions)`.
+- [x] Use the locked `chrono` crate for UTC timestamps instead of handwritten Gregorian conversion.
+- [x] Extract all logical snapshot SQL into `artifact/queries.rs` with readable clauses.
+- [ ] Run formatting, locked generator tests and Clippy; regenerate a verified dictionary before publishing updated artifacts.
+
+## R706 generator database API verification
+
+- [x] Reuse the existing owned `GeneratorDatabase`; centralize generator SQL statement execution and contextual errors behind `DatabaseSession`.
+- [x] Move transaction ownership under `database/` with a scoped RAII API, and retire free artifact SQL execution.
+- [ ] Run `cargo fmt --all`, locked generator tests and Clippy; review any newly surfaced compiler errors before regeneration.
+- [ ] Validate regenerated dictionary, native/WASM FTS and performance after generator tests pass.
+
+## R706: Dictionary artifact writer quality and generator regression
+
+- [x] Isolate FTS construction and reopening verification in `artifact/fts.rs`.
+- [x] Centralize DuckDB statement execution and filesystem path quoting in `artifact/sql.rs`; keep `artifact/writer.rs` focused on generation and publication.
+- [x] Remove `drop` calls on borrowed query vectors by using the shared scalar count reader.
+- [x] Replace nullable single-row relationship fixture assertions with exact count-based assertions for ambiguous, missing and resolved endpoints.
+- [ ] Execute `cargo test -p zipeek-db-gen --locked` on Windows to verify all generator tests, especially the relationship fixture and FTS smoke test.
+- [ ] Run binary dictionary generation and read-only verification before installing any regenerated artifact.
+
+## Future Practice UI: navigation and outcome lifecycle (design pending)
+
+- [ ] Explore merging Back / Continue / Start controls into the Practice path widget without changing exercise progress ownership or existing animal placement.
+- [ ] Replace `Continue session` with a concise Continue action and directional/play icon.
+- [ ] Make the final completed exercise advance directly to session completion without requiring another Continue click.
+- [ ] Align feedback verdict and primary action in one compact review layout; avoid off-center action placement and redundant feedback framing.
+- [ ] Define and validate focus, reduced-motion, keyboard and screen-reader semantics before altering the transition lifecycle.
+
+## R706: Regenerated dictionary search schema and English FTS
+
+- [x] Define per-word full-text documents from lexical senses and indexed normalized Hanzi/pinyin keys.
+- [x] Integrate derived rows in the generator, artifact snapshot, copying and read-only verifier; retain word IDs and personal-data isolation.
+- [x] Update generator tests and schema documentation for the new current dictionary format.
+- [ ] Run generator and produce verified `hanzi.duckdb` using the locked Rust toolchain (unavailable in assistant environment).
+- [ ] Validate native and DuckDB-WASM FTS queries, publish via `cargo make db-install`, and benchmark against existing `strpos` search.
+- [ ] Implement shared runtime dictionary search service and migrate autocomplete only after verified artifact installation.
+
+## R706: Excluded Words reducer and Profile compile repairs
+
+- [x] Consolidate coupled query, suggestion selection, exclusion IDs, loads and errors in one reducer.
+- [x] Guard async dictionary results against stale requests and unify exclusion persistence.
+- [x] Replace unsupported icon and add required Profile drawer icon import.
+- [ ] Run locked WASM compilation and validate autocomplete, keyboard, add/remove and rapid queries in the browser.
+
 ## R706: Image generation readiness
 
 - [x] Stop silently treating the preview-only backend as generated artwork; default to SDXL and distinguish readiness from health.
@@ -1352,3 +1413,5 @@ The historical acceptance backlog remains preserved in the [legacy acceptance le
 
 - [ ] R704: Implement durable, atomic KnowledgeLedger evidence processor with validated target authorization and replay-safe reconciliation; Character Builder construction observations are intentionally not KP-scored.
 - [ ] R704: Add exact visible-presentation timestamp instrumentation and authoritative item-level evidence adapters beyond Character Builder.
+
+- [ ] Verify R706 root-script retirement on Windows: `cargo make unpack`, `pack`, `desktop-sidecars`, `docs-validate`, `asset-integrity-tests`, and Rust E2E evidence checks. Check the existing CLI executable and DuckDB runtime prerequisites.

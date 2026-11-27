@@ -7,6 +7,7 @@ use crate::services::word_sets;
 #[derive(Properties, PartialEq)]
 pub struct PracticeVocabularyPanelProps {
     pub source: VocabularySource,
+    pub hsk_standard: u8,
     pub personal_sets: Result<Vec<word_sets::UserWordSet>, String>,
     pub on_change: Callback<VocabularySource>,
     pub on_toggle_hsk_band: Callback<HskBand>,
@@ -36,6 +37,7 @@ pub fn practice_vocabulary_panel(props: &PracticeVocabularyPanelProps) -> Html {
             {word_set_error}
             <PracticeVocabularySource
                 source={props.source.clone()}
+                hsk_standard={props.hsk_standard}
                 personal_sets={props.personal_sets.clone().unwrap_or_default()}
                 on_change={props.on_change.clone()}
                 on_toggle_hsk_band={props.on_toggle_hsk_band.clone()}

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use duckdb_neo::Parameters;
+use zipeek_db::native::Parameters;
 use zipeek_db_gen::{
     import::{
         CedictIndex, FallbackSummary, ImportDiagnosticKind as Kind, ImportError,

@@ -53,7 +53,7 @@ cargo fmt --all -- --check
 cargo test --locked
 cargo check --locked --target wasm32-unknown-unknown -p zipeek-web
 cargo check --locked -p zipeek-e2e --tests
-node --test scripts/tests/*.test.cjs
+cargo test -p zipeek-cli --locked
 cargo make e2e-full
 ```
 

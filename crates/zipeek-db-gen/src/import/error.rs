@@ -35,11 +35,11 @@ pub enum ImportError {
     Insert {
         word_id: Option<i32>,
         #[source]
-        source: duckdb_neo::Error,
+        source: zipeek_db::native::Error,
     },
     #[error("HSK insertion failed ({original}); rollback also failed: {rollback}")]
     Rollback {
         original: Box<ImportError>,
-        rollback: duckdb_neo::Error,
+        rollback: zipeek_db::native::Error,
     },
 }

@@ -1,3 +1,5 @@
+mod hsk_preferences_selector;
+pub(crate) use hsk_preferences_selector::HskPreferencesSelector;
 pub(crate) mod audio;
 pub(crate) mod browse;
 pub(crate) mod courses;

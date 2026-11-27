@@ -8,4 +8,4 @@ repository.workspace = true
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
-pulldown-cmark = { version = "=0.13.0", default-features = false, features = ["html"] }
+pulldown-cmark = { version = "0.13.0", default-features = false, features = ["html"] }

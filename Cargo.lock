@@ -8807,8 +8807,11 @@ dependencies = [
  "serde_json",
  "sha2 0.11.1",
  "tokio",
+ "tracing",
  "tracing-subscriber",
  "zip",
+ "zipeek-core",
+ "zipeek-db-gen",
  "zipeek-geo-assets",
 ]
 
@@ -8843,8 +8846,7 @@ version = "0.1.0"
 dependencies = [
  "aimux-core",
  "aimux-providers",
- "clap",
- "duckdb-neo",
+ "chrono",
  "futures-util",
  "hex",
  "serde",
@@ -8854,7 +8856,6 @@ dependencies = [
  "tokio",
  "toml 1.2.1+spec-1.1.0",
  "tracing",
- "tracing-subscriber",
  "zipeek-ai-protocol",
  "zipeek-core",
  "zipeek-db",

@@ -232,6 +232,19 @@ fn validate(
     Ok((report, database, compressed, seen.into_iter().collect()))
 }
 
+pub fn browse_check(root: &Path) -> Result<()> {
+    let installed = root.join("crates/zipeek-web/static");
+    let (report, _, _, _) = validate(root, &installed, false)?;
+    let tables = report["tables"].as_array().ok_or("Missing dictionary tables")?;
+    for name in ["word_search_documents", "word_search_keys"] {
+        if !tables.iter().any(|table| table.as_str() == Some(name)) {
+            return Err(format!("Installed dictionary is missing search table {name}").into());
+        }
+    }
+    println!("Installed dictionary bundle and Browse/search schema verified");
+    Ok(())
+}
+
 pub fn compress_latest(root: &Path) -> Result<()> {
     let workflow = root.join("target/db-workflow").canonicalize()?;
     let pointer = workflow.join("latest.json");
@@ -289,8 +302,9 @@ fn compress_candidate(root: &Path, candidate: &Path) -> Result<()> {
         fs::rename(&temporary_manifest, &manifest_path)?;
         validate(root, candidate, false)?;
         println!(
-            "Compressed dictionary: {} ({} bytes)",
+            "Compressed dictionary: {} ({:.2} MiB, {} bytes)",
             compressed.display(),
+            size as f64 / (1024.0 * 1024.0),
             size
         );
         Ok(())

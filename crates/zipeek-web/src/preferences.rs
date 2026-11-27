@@ -3,6 +3,75 @@ use web_sys::Storage;
 
 pub(crate) const KEY: &str = "zipeek.preferences.v1";
 
+/// Persistent default for NEW dictionary Practice sessions. Existing sessions own their snapshot.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub(crate) struct HskPreferences {
+    /// 2 = HSK 2.0, 3 = HSK 3.0, 0 = Mixed.
+    pub standard: u8,
+    pub bands: Vec<(u8, u8)>,
+}
+
+impl Default for HskPreferences {
+    fn default() -> Self {
+        Self {
+            standard: 3,
+            bands: vec![(3, 1)],
+        }
+    }
+}
+
+impl HskPreferences {
+    pub fn selected_bands(
+        &self,
+    ) -> std::collections::BTreeSet<zipeek_exercises::practice_draft::HskBand> {
+        use zipeek_exercises::practice_draft::HskBand;
+        self.bands
+            .iter()
+            .filter_map(|&(system, level)| HskBand::new(system, level).ok())
+            .filter(|band| self.standard == 0 || band.system == self.standard)
+            .collect()
+    }
+
+    pub fn normalized(mut self) -> Self {
+        if !matches!(self.standard, 0 | 2 | 3) {
+            return Self::default();
+        }
+        let bands = self.selected_bands();
+        self.bands = bands.iter().map(|band| (band.system, band.level)).collect();
+        if self.bands.is_empty() {
+            let system = if self.standard == 2 { 2 } else { 3 };
+            self.bands.push((system, 1));
+        }
+        self
+    }
+
+    pub fn select_standard(&mut self, standard: u8) {
+        if !matches!(standard, 0 | 2 | 3) {
+            return;
+        }
+        self.standard = standard;
+        *self = self.clone().normalized();
+    }
+
+    pub fn toggle(&mut self, band: zipeek_exercises::practice_draft::HskBand) {
+        let key = (band.system, band.level);
+        if self.standard != 0 && band.system != self.standard {
+            return;
+        }
+        if self.bands.contains(&key) {
+            // Do not leave the preference with no levels.
+            if self.selected_bands().len() == 1 {
+                return;
+            }
+            self.bands.retain(|value| *value != key);
+        } else {
+            self.bands.push(key);
+        }
+        *self = self.clone().normalized();
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub(crate) struct Preferences {
@@ -14,6 +83,7 @@ pub(crate) struct Preferences {
     pub matching_autoplay: bool,
     pub learning_history_enabled: bool,
     pub hidden_drawer_items: Vec<String>,
+    pub hsk_defaults: HskPreferences,
     pub image_server_url: Option<String>,
     pub ai_url: String,
     pub ai_model: String,
@@ -30,6 +100,7 @@ impl Default for Preferences {
             matching_autoplay: false,
             learning_history_enabled: false,
             hidden_drawer_items: Vec::new(),
+            hsk_defaults: HskPreferences::default(),
             image_server_url: None,
             ai_url: "http://127.0.0.1:1234/v1/".to_owned(),
             ai_model: String::new(),
@@ -112,6 +183,7 @@ mod tests {
         assert_eq!(preferences.preset, "lavender");
         assert!(preferences.dark);
         assert!(!preferences.learning_history_enabled);
+        assert_eq!(preferences.hsk_defaults, HskPreferences::default());
     }
 
     #[test]
@@ -158,5 +230,46 @@ mod tests {
     #[test]
     fn malformed_settings_are_not_accepted() {
         assert!(Preferences::parse("not-json").is_err());
+    }
+}
+
+#[cfg(test)]
+mod hsk_tests {
+    use super::*;
+    use zipeek_exercises::practice_draft::HskBand;
+    #[test]
+    fn mixed_preserves_two_standards_and_rejects_empty_selection() {
+        let mut choice = HskPreferences::default();
+        choice.select_standard(0);
+        choice.toggle(HskBand::new(2, 5).unwrap());
+        assert_eq!(choice.selected_bands().len(), 2);
+        choice.select_standard(2);
+        assert_eq!(choice.selected_bands().len(), 1);
+        choice.toggle(HskBand::new(2, 5).unwrap());
+        assert_eq!(choice.selected_bands().len(), 1);
+    }
+    #[test]
+    fn hsk_defaults_round_trip_through_existing_preferences() {
+        let mut preferences = Preferences::default();
+        preferences.hsk_defaults.select_standard(3);
+        preferences.hsk_defaults.toggle(HskBand::new(3, 6).unwrap());
+        let restored = Preferences::parse(&serde_json::to_string(&preferences).unwrap()).unwrap();
+        assert!(
+            restored
+                .hsk_defaults
+                .selected_bands()
+                .contains(&HskBand::new(3, 6).unwrap())
+        );
+        assert_eq!(restored.hsk_defaults.standard, 3);
+    }
+
+    #[test]
+    fn corrupted_preferences_recover_to_valid_selection() {
+        let prefs = HskPreferences {
+            standard: 7,
+            bands: vec![(9, 9)],
+        }
+        .normalized();
+        assert_eq!(prefs, HskPreferences::default());
     }
 }

@@ -27,7 +27,12 @@ pub enum ArtifactError {
     Query {
         query: String,
         #[source]
-        source: duckdb_neo::Error,
+        source: zipeek_db::native::Error,
+    },
+    #[error("artifact write failed ({original}); rollback also failed: {rollback}")]
+    Rollback {
+        original: Box<ArtifactError>,
+        rollback: zipeek_db::native::Error,
     },
     #[error("artifact query {query} returned a NULL or missing result")]
     MissingValue { query: &'static str },
@@ -37,4 +42,13 @@ pub enum ArtifactError {
     LogicalMismatch { stage: &'static str },
     #[error("artifact notice filename is invalid or collides: {name}")]
     InvalidNotice { name: String },
+}
+
+impl From<crate::database::StatementError> for ArtifactError {
+    fn from(error: crate::database::StatementError) -> Self {
+        Self::Query {
+            query: error.query,
+            source: error.source,
+        }
+    }
 }

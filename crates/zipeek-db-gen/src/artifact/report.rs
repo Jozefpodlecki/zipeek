@@ -2,9 +2,9 @@ use std::{
     collections::BTreeSet,
     fs,
     path::Path,
-    time::{SystemTime, UNIX_EPOCH},
 };
 
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use crate::{PreparedGeneration, import::HskImport};
@@ -25,6 +25,15 @@ impl FileChecksum {
             size_bytes: bytes.len(),
             sha256: files::hash(bytes),
         }
+    }
+
+    fn from_file(name: String, path: &Path) -> Result<Self, ArtifactError> {
+        let (size_bytes, sha256) = files::hash_file(path)?;
+        Ok(Self {
+            path: name,
+            size_bytes,
+            sha256,
+        })
     }
 }
 
@@ -54,124 +63,91 @@ pub struct ArtifactReport {
     pub files: Vec<FileChecksum>,
 }
 
-pub(super) fn write_report(
-    directory: &Path,
-    prepared: &PreparedGeneration,
-    imported: &HskImport,
-    snapshot: &LogicalSnapshot,
-) -> Result<ArtifactReport, ArtifactError> {
-    let mut checksums = Vec::new();
-    let database_bytes = files::read(&directory.join("hanzi.duckdb"))?;
-    checksums.push(FileChecksum::new(
-        "hanzi.duckdb".to_owned(),
-        &database_bytes,
-    ));
-    let diagnostics = serde_json::to_vec_pretty(&imported.diagnostics)?;
-    for (name, bytes) in [
-        ("hanzi.diagnostics.json", diagnostics.as_slice()),
-        ("INPUTS.toml", prepared.inputs().manifest_bytes()),
-        (
-            "ATTRIBUTION.md",
-            include_bytes!("ATTRIBUTION.md").as_slice(),
-        ),
-    ] {
-        files::write(&directory.join(name), bytes)?;
-        checksums.push(FileChecksum::new(name.to_owned(), bytes));
-    }
-    let notices = directory.join("notices");
-    fs::create_dir(&notices)
-        .map_err(|source| files::io("create notices directory", &notices, source))?;
-    let mut seen = BTreeSet::new();
-    for notice in prepared.inputs().notices() {
-        let name = notice
-            .path()
-            .file_name()
-            .and_then(|value| value.to_str())
-            .ok_or_else(|| ArtifactError::InvalidNotice {
-                name: notice.path().display().to_string(),
-            })?;
-        if !seen.insert(name.to_owned()) {
-            return Err(ArtifactError::InvalidNotice {
-                name: name.to_owned(),
-            });
+pub(super) struct ArtifactReportOptions<'a> {
+    pub directory: &'a Path,
+    pub prepared: &'a PreparedGeneration,
+    pub imported: &'a HskImport,
+    pub snapshot: &'a LogicalSnapshot,
+}
+
+impl ArtifactReport {
+    pub(super) fn new(options: ArtifactReportOptions<'_>) -> Result<Self, ArtifactError> {
+        let ArtifactReportOptions {
+            directory,
+            prepared,
+            imported,
+            snapshot,
+        } = options;
+        let mut checksums = Vec::new();
+        checksums.push(FileChecksum::from_file(
+            "hanzi.duckdb".to_owned(),
+            &directory.join("hanzi.duckdb"),
+        )?);
+        let diagnostics = serde_json::to_vec_pretty(&imported.diagnostics)?;
+        for (name, bytes) in [
+            ("hanzi.diagnostics.json", diagnostics.as_slice()),
+            ("INPUTS.toml", prepared.inputs().manifest_bytes()),
+            (
+                "ATTRIBUTION.md",
+                include_bytes!("../../../../docs/dictionary-data/schema/artifact-attribution.md").as_slice(),
+            ),
+        ] {
+            files::write(&directory.join(name), bytes)?;
+            checksums.push(FileChecksum::new(name.to_owned(), bytes));
         }
-        files::write(&notices.join(name), notice.bytes())?;
-        checksums.push(FileChecksum::new(format!("notices/{name}"), notice.bytes()));
-    }
-    let report = ArtifactReport {
-        created_on: utc_timestamp()?,
-        generator_version: env!("CARGO_PKG_VERSION").to_owned(),
-        generator_manifest_sha256: files::hash(include_bytes!("../../Cargo.toml")),
-        engine: prepared.database().engine_version().to_owned(),
-        storage_compatibility: prepared.database().storage_version().to_owned(),
-        wasm_package: crate::policy::WASM_PACKAGE.to_owned(),
-        reproducibility: crate::policy::REPRODUCIBILITY.to_owned(),
-        source_entries: imported.source_entries,
-        rejected_entries: imported.rejected_entries,
-        rows: imported.words.len(),
-        identity_candidates: snapshot.vocabulary_identities.len(),
-        character_occurrences: snapshot.word_characters.len(),
-        character_reading_count: snapshot.character_readings.len(),
-        diagnostics: imported.diagnostics.len(),
-        logical_sha256: files::hash(&serde_json::to_vec(snapshot)?),
-        diagnostics_sha256: files::hash(&diagnostics),
-        tables: snapshot.tables.clone(),
-        columns: snapshot.columns.clone(),
-        constraints: snapshot.constraints.clone(),
-        indexes: snapshot.indexes.clone(),
-        inputs: prepared
-            .inputs()
-            .sources()
-            .iter()
-            .map(|source| FileChecksum::new(source.name().to_owned(), source.file().bytes()))
-            .collect(),
-        files: checksums,
-    };
-    files::write(
-        &directory.join("hanzi.manifest.json"),
-        &serde_json::to_vec_pretty(&report)?,
-    )?;
-    Ok(report)
-}
-
-fn utc_timestamp() -> Result<String, ArtifactError> {
-    let seconds = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|error| ArtifactError::InvalidPath {
-            path: format!("system clock is before Unix epoch: {error}").into(),
-        })?
-        .as_secs();
-    Ok(format_utc_seconds(seconds))
-}
-
-fn format_utc_seconds(seconds: u64) -> String {
-    let days = (seconds / 86_400) as i64 + 719_468;
-    let second_of_day = seconds % 86_400;
-    let era = days.div_euclid(146_097);
-    let day_of_era = days - era * 146_097;
-    let year_of_era =
-        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let year = year_of_era + era * 400;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_parameter = (5 * day_of_year + 2) / 153;
-    let day = day_of_year - (153 * month_parameter + 2) / 5 + 1;
-    let month = month_parameter + if month_parameter < 10 { 3 } else { -9 };
-    let year = year + if month <= 2 { 1 } else { 0 };
-    format!(
-        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
-        second_of_day / 3_600,
-        second_of_day % 3_600 / 60,
-        second_of_day % 60
-    )
-}
-
-#[cfg(test)]
-mod timestamp_tests {
-    use super::format_utc_seconds;
-
-    #[test]
-    fn utc_timestamp_handles_epoch_and_leap_days() {
-        assert_eq!(format_utc_seconds(0), "1970-01-01T00:00:00Z");
-        assert_eq!(format_utc_seconds(951_782_400), "2000-02-29T00:00:00Z");
+        let notices = directory.join("notices");
+        fs::create_dir(&notices)
+            .map_err(|source| files::io("create notices directory", &notices, source))?;
+        let mut seen = BTreeSet::new();
+        for notice in prepared.inputs().notices() {
+            let name = notice
+                .path()
+                .file_name()
+                .and_then(|value| value.to_str())
+                .ok_or_else(|| ArtifactError::InvalidNotice {
+                    name: notice.path().display().to_string(),
+                })?;
+            if !seen.insert(name.to_owned()) {
+                return Err(ArtifactError::InvalidNotice {
+                    name: name.to_owned(),
+                });
+            }
+            files::write(&notices.join(name), notice.bytes())?;
+            checksums.push(FileChecksum::new(format!("notices/{name}"), notice.bytes()));
+        }
+        let report = Self {
+            created_on: Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),
+            generator_version: env!("CARGO_PKG_VERSION").to_owned(),
+            generator_manifest_sha256: files::hash(include_bytes!("../../Cargo.toml")),
+            engine: prepared.database().engine_version().to_owned(),
+            storage_compatibility: prepared.database().storage_version().to_owned(),
+            wasm_package: crate::policy::WASM_PACKAGE.to_owned(),
+            reproducibility: crate::policy::REPRODUCIBILITY.to_owned(),
+            source_entries: imported.source_entries,
+            rejected_entries: imported.rejected_entries,
+            rows: imported.words.len(),
+            identity_candidates: snapshot.vocabulary_identities.len(),
+            character_occurrences: snapshot.word_characters.len(),
+            character_reading_count: snapshot.character_readings.len(),
+            diagnostics: imported.diagnostics.len(),
+            logical_sha256: files::hash(&serde_json::to_vec(snapshot)?),
+            diagnostics_sha256: files::hash(&diagnostics),
+            tables: snapshot.tables.clone(),
+            columns: snapshot.columns.clone(),
+            constraints: snapshot.constraints.clone(),
+            indexes: snapshot.indexes.clone(),
+            inputs: prepared
+                .inputs()
+                .sources()
+                .iter()
+                .map(|source| FileChecksum::new(source.name().to_owned(), source.file().bytes()))
+                .collect(),
+            files: checksums,
+        };
+        files::write(
+            &directory.join("hanzi.manifest.json"),
+            &serde_json::to_vec_pretty(&report)?,
+        )?;
+        Ok(report)
     }
 }

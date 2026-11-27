@@ -82,24 +82,9 @@ cargo test --locked -p zipeek-tts-stt --test stt_inference -- --ignored --nocapt
 
 A successful HTTP 200 and nonempty text are insufficient: the strict STT test compares the normalized transcript with the provided reference. Model-backed tests are ignored by default because the safetensors are not included in source archives and can require substantial memory/time. Passing a test is evidence only of that specific check; it does not establish numerical model parity, multiple-speaker accuracy, or full product/browser acceptance. The Rust toolchain and model files must exist on the testing machine.
 
-### Optional external client probe
+### Speech acceptance
 
-
-The dependency-free Node harness `scripts/speech-api-e2e.cjs` builds the locked `zipeek-tts-stt` binary, starts the actual speech server on a temporary loopback port, polls `/health`, and calls `/v1/capabilities`, `/v1/tts` and `/v1/stt`. It also checks payload validation and browser origin restrictions. The server is stopped after the run. Run from the repository root:
-
-```powershell
-node scripts/speech-api-e2e.cjs
-```
-
-This baseline mode accepts a truthful HTTP 503 for an unavailable backend and prints readiness separately. It is a server/transport check, not proof that neural STT or TTS works. To require operational eSpeak synthesis, supply its binary/data paths and require the WAV response:
-
-```powershell
-$env:ZIPEEK_ESPEAK_BIN = 'C:\path\to\espeak-ng.exe'
-$env:ZIPEEK_ESPEAK_DATA = 'C:\path\to\resources'
-node scripts/speech-api-e2e.cjs --require-tts
-```
-
-The `ZIPEEK_ESPEAK_DATA` directory must contain `espeak-ng-data`. To require both speech directions, use `--require-tts --require-stt`. STT now activates when Qwen3-ASR checkpoint assets pass preflight; the experimental environment toggle has been removed. Set `ZIPEEK_CANDLE_STT_MODEL` to the existing safetensors. The checked-in eSpeak-synthesized 16 kHz Mandarin fixture and `你好世界` reference string are used by both Rust and Node acceptance tests, without external audio-path or transcript variables. A tone is reserved for negative-path tests. The checkpoint decoder and transcription accuracy are not yet verified. The separate `scripts/tests/speech-api-e2e.test.cjs` checks the WAV fixture without starting the server. Use `--no-build` only if the debug executable has already been compiled with `cargo build --locked -p zipeek-tts-stt`. Neither the binary nor downloaded model weights are included in the source archive.
+The retired Node speech harness is no longer part of the source tree. Validate speech with Rust `zipeek-tts-stt` tests and existing Rust E2E suites. The removed harness provided separate HTTP protocol coverage; do not count that coverage as passing until an equivalent Rust test is established.
 
 ## Current browser coverage
 

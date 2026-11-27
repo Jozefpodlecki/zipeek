@@ -1,4 +1,4 @@
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 use zipeek_core::{Hsk2Level, Hsk3Level, HskLevel, HskSystem, PartOfSpeech};
 use zipeek_db_gen::{
     GeneratorError,

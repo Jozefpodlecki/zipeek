@@ -1,12 +1,14 @@
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 use serde::{Deserialize, Serialize};
 
-use super::ArtifactError;
+use super::{ArtifactError, queries};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LogicalSnapshot {
     pub tables: Vec<String>,
     pub rows: Vec<String>,
+    pub search_documents: Vec<String>,
+    pub search_keys: Vec<String>,
     pub dictionary_versions: Vec<String>,
     pub vocabulary_identities: Vec<String>,
     pub characters: Vec<String>,
@@ -32,121 +34,31 @@ pub struct LogicalSnapshot {
 
 pub fn read_snapshot(connection: &Connection) -> Result<LogicalSnapshot, ArtifactError> {
     Ok(LogicalSnapshot {
-        tables: query_strings(
-            connection,
-            "SELECT table_name FROM duckdb_tables() WHERE database_name = current_database() AND schema_name = 'main' AND NOT internal ORDER BY table_name",
-            false,
-        )?,
-        rows: query_strings(
-            connection,
-            "SELECT to_json(words)::VARCHAR FROM words ORDER BY id",
-            true,
-        )?,
-        dictionary_versions: query_strings(
-            connection,
-            "SELECT to_json(dictionary_versions)::VARCHAR FROM dictionary_versions ORDER BY snapshot_fingerprint",
-            true,
-        )?,
-        vocabulary_identities: query_strings(
-            connection,
-            "SELECT to_json(vocabulary_identities)::VARCHAR FROM vocabulary_identities ORDER BY word_id",
-            true,
-        )?,
-        characters: query_strings(
-            connection,
-            "SELECT to_json(characters)::VARCHAR FROM characters ORDER BY unicode_scalar",
-            true,
-        )?,
-        pinyin_syllable_candidates: query_strings(
-            connection,
-            "SELECT to_json(pinyin_syllable_candidates)::VARCHAR FROM pinyin_syllable_candidates ORDER BY pinyin_numeric",
-            true,
-        )?,
-        character_gloss_candidates: query_strings(
-            connection,
-            "SELECT to_json(character_gloss_candidates)::VARCHAR FROM character_gloss_candidates ORDER BY character, source_word_id, sense_order",
-            true,
-        )?,
-        character_readings: query_strings(
-            connection,
-            "SELECT to_json(character_readings)::VARCHAR FROM character_readings ORDER BY character, pinyin_numeric",
-            true,
-        )?,
-        word_relations: query_strings(
-            connection,
-            "SELECT to_json(word_relations)::VARCHAR FROM word_relations ORDER BY relation_id",
-            true,
-        )?,
-        word_characters: query_strings(
-            connection,
-            "SELECT to_json(word_characters)::VARCHAR FROM word_characters ORDER BY word_id, character_position",
-            true,
-        )?,
-        hsk_memberships: query_strings(
-            connection,
-            "SELECT to_json(struct_pack(word_id := word_id, system := system, level := level))::VARCHAR FROM word_hsk_membership ORDER BY word_id, system",
-            true,
-        )?,
-        pos_memberships: query_strings(
-            connection,
-            "SELECT to_json(struct_pack(word_id := word_id, pos := pos))::VARCHAR FROM word_pos_membership ORDER BY word_id, pos",
-            true,
-        )?,
-        senses: query_strings(
-            connection,
-            "SELECT to_json(word_senses)::VARCHAR FROM word_senses ORDER BY word_id, sense_order",
-            true,
-        )?,
-        sense_display: query_strings(
-            connection,
-            "SELECT to_json(sense_display)::VARCHAR FROM sense_display ORDER BY word_id, sense_order",
-            true,
-        )?,
-        sense_qualifiers: query_strings(
-            connection,
-            "SELECT to_json(sense_qualifiers)::VARCHAR FROM sense_qualifiers ORDER BY word_id, sense_order, qualifier_kind, qualifier_code",
-            true,
-        )?,
-        sense_relations: query_strings(
-            connection,
-            "SELECT to_json(sense_relations)::VARCHAR FROM sense_relations ORDER BY word_id, sense_order, relation_order",
-            true,
-        )?,
-        categories: query_strings(
-            connection,
-            "SELECT to_json(categories)::VARCHAR FROM categories ORDER BY slug",
-            true,
-        )?,
-        classification_runs: query_strings(
-            connection,
-            "SELECT to_json(classification_runs)::VARCHAR FROM classification_runs ORDER BY id",
-            true,
-        )?,
-        sense_pos: query_strings(
-            connection,
-            "SELECT to_json(sense_pos)::VARCHAR FROM sense_pos ORDER BY word_id, sense_order, pos_code",
-            true,
-        )?,
-        sense_categories: query_strings(
-            connection,
-            "SELECT to_json(sense_categories)::VARCHAR FROM sense_categories ORDER BY word_id, sense_order, category_slug",
-            true,
-        )?,
-        columns: query_strings(
-            connection,
-            "SELECT to_json(struct_pack(name := column_name, type := data_type, nullable := is_nullable, position := ordinal_position))::VARCHAR FROM information_schema.columns WHERE table_catalog = current_database() AND table_name = 'words' ORDER BY ordinal_position",
-            false,
-        )?,
-        constraints: query_strings(
-            connection,
-            "SELECT to_json(struct_pack(kind := constraint_type, definition := constraint_text, columns := constraint_column_names))::VARCHAR FROM duckdb_constraints() WHERE database_name = current_database() AND table_name = 'words' ORDER BY constraint_type, constraint_text",
-            false,
-        )?,
-        indexes: query_strings(
-            connection,
-            "SELECT to_json(struct_pack(name := index_name, unique_index := is_unique, primary_index := is_primary, expressions := expressions))::VARCHAR FROM duckdb_indexes() WHERE database_name = current_database() AND table_name = 'words' ORDER BY index_name",
-            false,
-        )?,
+        tables: query_strings(connection, queries::TABLES, false)?,
+        rows: query_strings(connection, queries::ROWS, true)?,
+        search_documents: query_strings(connection, queries::SEARCH_DOCUMENTS, true)?,
+        search_keys: query_strings(connection, queries::SEARCH_KEYS, true)?,
+        dictionary_versions: query_strings(connection, queries::DICTIONARY_VERSIONS, true)?,
+        vocabulary_identities: query_strings(connection, queries::VOCABULARY_IDENTITIES, true)?,
+        characters: query_strings(connection, queries::CHARACTERS, true)?,
+        pinyin_syllable_candidates: query_strings(connection, queries::PINYIN_SYLLABLE_CANDIDATES, true)?,
+        character_gloss_candidates: query_strings(connection, queries::CHARACTER_GLOSS_CANDIDATES, true)?,
+        character_readings: query_strings(connection, queries::CHARACTER_READINGS, true)?,
+        word_relations: query_strings(connection, queries::WORD_RELATIONS, true)?,
+        word_characters: query_strings(connection, queries::WORD_CHARACTERS, true)?,
+        hsk_memberships: query_strings(connection, queries::HSK_MEMBERSHIPS, true)?,
+        pos_memberships: query_strings(connection, queries::POS_MEMBERSHIPS, true)?,
+        senses: query_strings(connection, queries::SENSES, true)?,
+        sense_display: query_strings(connection, queries::SENSE_DISPLAY, true)?,
+        sense_qualifiers: query_strings(connection, queries::SENSE_QUALIFIERS, true)?,
+        sense_relations: query_strings(connection, queries::SENSE_RELATIONS, true)?,
+        categories: query_strings(connection, queries::CATEGORIES, true)?,
+        classification_runs: query_strings(connection, queries::CLASSIFICATION_RUNS, true)?,
+        sense_pos: query_strings(connection, queries::SENSE_POS, true)?,
+        sense_categories: query_strings(connection, queries::SENSE_CATEGORIES, true)?,
+        columns: query_strings(connection, queries::COLUMNS, false)?,
+        constraints: query_strings(connection, queries::CONSTRAINTS, false)?,
+        indexes: query_strings(connection, queries::INDEXES, false)?,
     })
 }
 

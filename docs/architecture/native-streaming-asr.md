@@ -46,7 +46,6 @@ $checkpoint = 'models/speech/zipformer-small-streaming'
 New-Item -ItemType Directory -Force target/zipformer-parity | Out-Null
 cargo run --locked -p zipeek-tts-stt --bin streaming_checkpoint_inspect -- --export "$checkpoint/decoder-chunk-32-left-128.onnx" target/zipformer-parity/decoder.safetensors
 cargo run --locked -p zipeek-tts-stt --bin streaming_checkpoint_inspect -- --export "$checkpoint/joiner-chunk-32-left-128.onnx" target/zipformer-parity/joiner.safetensors
-python scripts/zipformer-head-reference.py "$checkpoint/decoder-chunk-32-left-128.onnx" "$checkpoint/joiner-chunk-32-left-128.onnx" target/zipformer-parity/reference.json
 cargo run --locked -p zipeek-tts-stt --bin streaming_head_parity -- target/zipformer-parity/decoder.safetensors target/zipformer-parity/joiner.safetensors target/zipformer-parity/reference.json
 ```
 

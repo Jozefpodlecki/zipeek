@@ -3,10 +3,8 @@
 #![allow(private_interfaces)]
 #![allow(unused_imports)]
 
-mod ai_workflow;
 pub mod artifact;
-mod cedict_classifications;
-mod cli;
+pub mod cedict_classifications;
 pub mod database;
 mod generator;
 pub mod import;
@@ -14,17 +12,14 @@ pub mod inputs;
 pub mod llm;
 mod policy;
 pub mod schema;
+pub mod search;
 
-pub use cli::run_cli;
 pub use generator::{GeneratorError, PreparedGeneration, import_primary, prepare};
 
 pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
 
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
+    hex::encode(Sha256::digest(bytes))
 }
 
 #[cfg(test)]

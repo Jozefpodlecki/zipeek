@@ -1,3 +1,4 @@
+use crate::components::HskPreferencesSelector;
 use web_sys::{HtmlInputElement, HtmlSelectElement, KeyboardEvent};
 use yew::prelude::*;
 use yew_icons::{Icon, IconData};
@@ -16,6 +17,7 @@ use wasm_bindgen_futures::spawn_local;
 #[derive(Properties, PartialEq)]
 pub struct PracticeVocabularySourceProps {
     pub source: VocabularySource,
+    pub hsk_standard: u8,
     pub personal_sets: Vec<UserWordSet>,
     pub on_change: Callback<VocabularySource>,
     pub on_toggle_hsk_band: Callback<HskBand>,
@@ -30,18 +32,6 @@ pub fn practice_vocabulary_source(props: &PracticeVocabularySourceProps) -> Html
         let vocabulary_tab = vocabulary_tab.clone();
         Callback::from(move |tab| vocabulary_tab.set(tab))
     };
-    let hsk_mode = use_state(|| match &props.source {
-        VocabularySource::Dictionary(filters) => {
-            let has_2 = filters.hsk.iter().any(|band| band.system == 2);
-            let has_3 = filters.hsk.iter().any(|band| band.system == 3);
-            match (has_2, has_3) {
-                (true, true) => "mixed".to_owned(),
-                (true, false) => "2".to_owned(),
-                _ => "3".to_owned(),
-            }
-        }
-        VocabularySource::PersonalSet { .. } => "3".to_owned(),
-    });
     let on_dictionary = {
         let on_change = props.on_change.clone();
         Callback::from(move |_| {
@@ -199,111 +189,19 @@ pub fn practice_vocabulary_source(props: &PracticeVocabularySourceProps) -> Html
             let dictionary_source_panel = {
                 if *vocabulary_tab == VocabularyTab::Source {
                     html! {
-                            <div
-                                role="tabpanel"
-                                aria-label="Source and HSK levels"
-                                data-vocabulary-panel="source"
-                            >
-                            <fieldset
-                                class="flex flex-col gap-2"
-                            >
-                                <legend
-                                    class="text-sm font-semibold"
-                                >
-                                    {"HSK standard"}
-                                </legend>
-                                <p
-                                    class="text-xs text-muted"
-                                >
-                                    {"Choose HSK 2.0, HSK 3.0, or Mixed. Selecting a single standard replaces levels from the other standard."}
-                                </p>
-                                <div
-                                    role="group"
-                                    aria-label="HSK standard"
-                                    data-vocabulary-hsk-standard=""
-                                    class="inline-flex flex-wrap gap-2 rounded-xl border border-line bg-raised p-1"
-                                >
-                                    {for [("2", HskSystem::Hsk2.label()), ("3", HskSystem::Hsk3.label()), ("mixed", "Mixed")].into_iter().map(|(mode, label)| {
-                                        let selected = *hsk_mode == mode;
-                                        let hsk_mode = hsk_mode.clone();
-                                        let on_select_standard = props.on_select_hsk_standard.clone();
-                                        let on_change_system = Callback::from(move |_| {
-                                                hsk_mode.set(mode.to_owned());
-                                                match mode {
-                                                    "2" => on_select_standard.emit(2),
-                                                    "3" => on_select_standard.emit(3),
-                                                    _ => (),
-                                                }
-                                            });
-                    let element_classes_1 = classes!(
-                                                        "min-h-10",
-                                                        "rounded-lg",
-                                                        "px-4",
-                                                        "text-sm",
-                                                        "font-semibold",
-                                                        if selected {"bg-brand-action text-white"} else {"text-muted hover:bg-surface hover:text-ink"},
-                                                    );
-                    html! {
-                                            <button
-                                                type="button"
-                                                key={mode}
-                                                data-hsk-standard={mode}
-                                                aria-pressed={selected.to_string()}
-                                                class={element_classes_1}
-                                                onclick={on_change_system}
-                                            >
-                                                {label}
-                                            </button>}
-                                    })}
-                                </div>
-                                <div
-                                    class="mt-2 text-sm font-semibold"
-                                >
-                                    {if *hsk_mode == "mixed" {"HSK 2.0 + 3.0 levels"} else if *hsk_mode == "2" {"HSK 2.0 levels"} else {"HSK 3.0 levels"}}
-                                </div>
-                                <p
-                                    class="text-xs text-muted"
-                                >
-                                    {"Select one or more levels (OR). Categories and parts of speech narrow the result (AND)."}
-                                </p>
-                                <div
-                                    class="flex flex-wrap gap-2"
-                                    data-vocabulary-hsk-multi=""
-                                >
-                                    {for HskSystem::ALL.into_iter().flat_map(|system| {
-                                        system.levels().iter().copied().map(move |level| (system, level))
-                                    }).filter(|(system, _)| *hsk_mode == "mixed" || *hsk_mode == system.code()).map(|(system, level)| {
-                                        let system_number = system.number();
-                                        let band = HskBand::from_level(level);
-                                        let level_number = level.as_i32() as u8;
-                                        let selected = active_filters.as_ref().is_some_and(|filters| filters.hsk.contains(&band));
-                                        let on_toggle = props.on_toggle_hsk_band.clone();
-                                        let label = level.badge_label();
-                                        let on_toggle_band = Callback::from(move |_| on_toggle.emit(band.clone()));
-                                        let element_classes_2 = classes!(
-                                                        "min-h-10",
-                                                        "rounded-lg",
-                                                        "border",
-                                                        "px-3",
-                                                        "text-sm",
-                                                        if selected {"border-brand-action bg-brand-action text-white"} else {"border-line bg-raised"},
-                                                    );
-                                        html! {
-                                            <button
-                                                type="button"
-                                                key={format!("{system_number}:{level_number}")}
-                                                aria-pressed={selected.to_string()}
-                                                data-hsk-band={format!("{system_number}:{level_number}")}
-                                                class={element_classes_2}
-                                                onclick={on_toggle_band}
-                                            >
-                                                {label}
-                                            </button>}
-                                    })}
-                                </div>
-                            </fieldset>
-                            </div>
-                            }
+                    <div
+                        role="tabpanel"
+                        aria-label="Source and HSK levels"
+                        data-vocabulary-panel="source"
+                    >
+                    <HskPreferencesSelector
+                        standard={props.hsk_standard}
+                        bands={active_filters.as_ref().map(|filters| filters.hsk.clone()).unwrap_or_default()}
+                        on_standard={props.on_select_hsk_standard.clone()}
+                        on_toggle={props.on_toggle_hsk_band.clone()}
+                    />
+                    </div>
+                    }
                 } else {
                     Html::default()
                 }

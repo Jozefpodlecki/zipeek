@@ -7,14 +7,12 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-clap = { version = "=4.6.7", features = ["derive"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
-duckdb-neo = { git = "https://github.com/duckdb/duckdb-rs.git", rev = "4acbea84794582c4cd962ee971a3d7a5dcb72e39", features = ["chrono", "r2d2", "uuid"] }
-sha2 = { version = "=0.11.1" }
+sha2 = { version = "0.11.1" }
 hex = { version = "0.4.3" }
 toml = { version = "1.2.1", default-features = false, features = ["std", "serde", "parse"] }
 aimux-core = { version = "0.6.0" }

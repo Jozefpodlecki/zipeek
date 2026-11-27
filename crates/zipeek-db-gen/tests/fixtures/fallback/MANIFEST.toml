@@ -1,6 +1,6 @@
 duckdb_engine = "v2.0.0"
 storage_compatibility_version = "v2.0.0"
-duckdb_wasm_package = "@duckdb/duckdb-wasm@1.32.0"
+duckdb_wasm_package = "@duckdb/duckdb-wasm@1.33.1-dev114.0"
 reproducibility = "logical-content-with-artifact-checksums"
 
 [[inputs]]

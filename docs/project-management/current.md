@@ -1,3 +1,21 @@
+R706 WIP: Root `scripts/` removed; active automation commands route through Rust CLI or Rust tests, with no hidden Cargo fallback for pack/unpack. Desktop staging uses the prebuilt CLI. Native build and task validation pending.
+
+R706 WIP: `zipeek-db-gen` now supplies library-only generation APIs. `zipeek-cli db-gen` owns Clap commands and invokes the generator library; the native DuckDB dependency, scoped session, and transaction implementations are owned by `zipeek-db`. Cargo version requirements use normal semver syntax in touched manifests. Locked CLI/generator tests and regeneration remain unverified.
+
+R706 WIP: Artifact source hygiene pass moves the published attribution source into maintained dictionary docs, centralizes 25 snapshot SQL statements in `artifact/queries.rs`, and constructs reports using `ArtifactReport::new(ArtifactReportOptions)` with chrono UTC formatting. Locked `chrono` 0.4.45 is added as a direct generator dependency; cargo formatting, tests and Clippy remain unverified in this environment.
+
+R706 WIP: Generator SQL/transaction boundaries now use a scoped `DatabaseSession` over the existing owned `GeneratorDatabase`. Artifact writer, FTS, dictionary import, and classification-cache transactions use it; the old artifact SQL execute helper and standalone transaction module are retired. Source package verification pending. Local `cargo fmt --all`, `cargo test -p zipeek-db-gen --locked`, Clippy, generator regeneration and DuckDB-WASM checks remain unverified.
+
+R706 fixture-policy reconciliation: aligned three generator test manifests and policy-override fixture with approved exact DuckDB-WASM 1.33.1-dev114.0. User's 78 unit tests passed; four artifact integration tests previously failed at fixture preflight. Full rerun pending.
+
+R706 WIP generator refactor: consolidated transaction lifecycles, owned staging/publish cleanup, streaming artifact SHA-256. Source-only review; Cargo/test and database generation require local validation. R706 dictionary search regeneration and runtime adoption remain pending.
+
+R706 WIP: Dictionary generator quality checkpoint: extracted FTS and SQL helpers from artifact writer, replaced brittle relationship CSV test probes with exact aggregate assertions. User reported 69/70 db-gen tests passing before these changes; native retest and binary regeneration still pending. Future Practice navigation/feedback UX requirements recorded in TASKS only.
+
+R706 WIP: Approved dictionary search regeneration. Generator schema, lexical search documents, normalized pinyin/Hanzi keys, FTS target, read-only verification and regression coverage updated. Binary regeneration and runtime compatibility still blocked by missing local Cargo/DuckDB executable; the checked-in dictionary artifact and manifest remain unchanged. Next: run locked generator, native/WASM verification and install, then migrate runtime autocomplete.
+
+R706 WIP: Refactored Profile Excluded Words into a single state reducer and repaired missing Profile icon imports. Locked WASM and interactive browser verification pending.
+
 R706 WIP: image generation defaults to SDXL, with explicit model prerequisite and preview-mode rejection; no model weights bundled. Locked WASM/native tests remain pending.
 
 R706 WIP: Profile autocomplete and compact Practice resume UX implemented. Browser acceptance and locked WASM compilation outstanding.

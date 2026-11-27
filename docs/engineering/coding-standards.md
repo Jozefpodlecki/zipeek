@@ -112,8 +112,7 @@ testing strategy in [testing/TESTING.md](../testing-quality/acceptance/testing.m
 - Public functions returning fallible operations use `Result<T, E>` with a
   domain-specific error enum.
 - Use `thiserror` for error enums (already a dependency). Do not use `anyhow`
-  in library code; it's permitted only in `db-gen`'s `main.rs` if needed for
-  user-facing errors.
+  in library code; CLI-only diagnostic formatting belongs in `zipeek-cli`, not the generator library.
 - Errors must be actionable: include the offending input where possible.
   - Bad: `Err(BuildError::InsufficientPool)`
   - Good: `Err(BuildError::InsufficientPool { view: View::Strict, found: 5, needed: 8 })`
@@ -259,7 +258,8 @@ The implemented styling boundary and visual checks are in
 
 ## Database generator (`crates/zipeek-db-gen`)
 
-- Native binary; runs manually, never in an app build.
+- Native library; generation is invoked explicitly through `zipeek-cli db-gen`, never as part of an app build.
+- DuckDB native driver ownership, session and transaction lifecycle live in `zipeek-db`; the generator depends on `zipeek-db`, never directly on `duckdb-neo`.
 - Reads pinned inputs only - no network calls. Source fetching is a separate
   shell script (see DB.md).
 - Verifies SHA-256 of every input file against `MANIFEST.toml` before parsing;
@@ -349,3 +349,14 @@ in the relevant `docs/` file.
 ## Source provenance
 
 A full pre-reconciliation copy is retained in [historical source evidence](../archive-history/audits/maintained-source-snapshots/engineering-coding-standards.md). Dated implementation claims in that snapshot are not current build or browser verification.
+
+## Cargo dependency version requirements
+
+- Use ordinary semver requirements without a leading equals sign. For example, write `sha2 = { version = "0.11.1" }`, not `sha2 = { version = "=0.11.1" }`.
+- Preserve the checked-in root `Cargo.lock` and run native checks with `--locked`. A plain version requirement does not waive the locked resolution or approved version-change controls.
+- Exact immutable source revisions such as a reviewed Git `rev` are separate provenance contracts and must remain intact.
+
+### Build workflow ownership
+
+- The repository root has no `scripts/` directory. Do not add Node.js or Python workflow wrappers; implement native orchestration in `zipeek-cli`, use Rust tests for regression coverage, and declare build prerequisites in `Makefile.toml`.
+- The source archive pack/unpack tasks invoke the existing CLI binary and must not silently spawn Cargo. Browser vendor source files within `crates/zipeek-web/scripts/` remain distinct frontend build inputs.

@@ -18,7 +18,7 @@ provider dropped content. Inspect LM Studio's output when this occurs.
 For an opt-in direct native invocation:
 
 ```powershell
-cargo run -p zipeek-db-gen --locked -- ai-smoke --model "qwen3-14b-claude-4.5-opus-high-reasoning-distill" --endpoint http://127.0.0.1:1234
+cargo run -p zipeek-cli --locked -- db-gen ai-smoke --model "qwen3-14b-claude-4.5-opus-high-reasoning-distill" --endpoint http://127.0.0.1:1234
 ```
 
 When classification work is pending, `db-full` runs the smoke request first
@@ -33,11 +33,11 @@ Run `cargo make db-full` from the repository root while the configured LM Studio
 model and local inference server are available. This command performs a complete
 resumable classification pass **before** creating a candidate, so it does not
 create an intermediate unclassified artifact. It then runs the existing native
-`zipeek-db-gen generate --classification-cache` export and the existing transactional
+`zipeek-cli db-gen generate --classification-cache` export and the existing transactional
 bundle installer. The generator verifies exact sense digests, prompt/taxonomy
 versions and classification records; logical snapshots include AI-derived tables.
 
-The command checks `zipeek-db-gen classify-plan` before and after inference and refuses
+The command checks `zipeek-cli db-gen classify-plan` before and after inference and refuses
 publication unless zero senses remain pending. AI failures preserve checkpoints
 in `target/db-workflow/classification-cache/` and leave the installed bundle
 untouched. A separate cache file is selected for each model. Environment
@@ -128,16 +128,16 @@ Direct generator commands remain available:
 
 ```powershell
 # Show help and examples; no database is written
-cargo run -p zipeek-db-gen --locked -- --help
+cargo run -p zipeek-cli --locked -- db-gen --help
 
 # Verify sources, native engine/storage and import in memory; write no database
-cargo run -p zipeek-db-gen --locked -- check
+cargo run -p zipeek-cli --locked -- db-gen check
 
 # Write a full bundle to a NEW directory
-cargo run -p zipeek-db-gen --locked -- generate --output target/reviewed-dictionary
+cargo run -p zipeek-cli --locked -- db-gen generate --output target/reviewed-dictionary
 ```
 
-A bare cargo run -p zipeek-db-gen now displays Clap help, does no import/generation and
+Running `zipeek-cli db-gen` without a subcommand displays Clap help, does no import/generation and
 returns usage status 2. Previously it imported in memory without writing a file;
 that behavior is now the explicit check command. Successful check ends with
 "No database file was written" plus the generation command to use next.
@@ -151,7 +151,7 @@ directory. Paths with spaces can be quoted. --help and --version exit successful
 
 ```powershell
 # Uses the repository crates/zipeek-web/static directory; only works if it does not exist
-cargo run -p zipeek-db-gen --locked -- generate
+cargo run -p zipeek-cli --locked -- db-gen generate
 ```
 
 The default is repository-relative crates/zipeek-web/static, independent of the shell's working
@@ -211,7 +211,7 @@ AI-derived sense labels. Revisit `mq` and `cc` if the canonical taxonomy gains
 additional subtypes. Reference: ICTPOS 3.0 tag descriptions in
 https://github.com/memect/kg-beijing/wiki/%E4%B8%AD%E6%96%87%E8%AF%8D%E6%80%A7%E6%A0%87%E8%AE%B0%E9%9B%86 .
 
-`zipeek-db-gen classify` now defers empty/invalid JSON/taxonomy outputs after the
+`zipeek-cli db-gen classify` now defers empty/invalid JSON/taxonomy outputs after the
 existing three-attempt classifier policy, continues the normal pass, and tries
 those deferred senses once more at the end (again at most three attempts).
 Reports are JSONL next to the model cache at `<hash>.failures.jsonl`, with
@@ -219,7 +219,7 @@ sense ID, original gloss, model, v3 prompt identity, attempt count, error and
 Unix timestamp. Successful classifications retain the same model-specific
 cache; neither prompt version nor taxonomy version changes.
 
-`zipeek-db-gen classify` may finish with nonzero `Remaining` and `Deferred` while
+`zipeek-cli db-gen classify` may finish with nonzero `Remaining` and `Deferred` while
 returning successfully for its batch. `db-full` independently calls
 `classify-plan` and refuses generation **and installation** until `Remaining=0`.
 Running the command again retries the still-pending senses; it does not accept
@@ -231,7 +231,7 @@ if interrupted, the last saved report survives until the next run begins.
 
 ### Offline AI classification V4 (2026-11-04)
 
-**Developer-only db-gen workflow.** No learner-facing route, AI dashboard, or public model endpoint is added. `zipeek-db-gen classify` sends complete batches of *senses*, not words, to the configured local LM Studio model. The standalone `classify` CLI defaults to 20 senses/request; the `db-full` workflow defaults to a conservative 2 senses/request pending live verification; override with `--batch-size 10`, `20`, `40`, or another positive size up to 100. `ZIPEEK_AI_BATCH_SIZE` controls the `crates/zipeek-db-gen/src/ai_workflow.rs` orchestration; `ZIPEEK_AI_MODEL`, endpoint and timeout retain existing semantics. Context capacity (30k tokens) is not a promise that a 100-sense response fits the output-token budget.
+**Developer-only db-gen workflow.** No learner-facing route, AI dashboard, or public model endpoint is added. `zipeek-cli db-gen classify` sends complete batches of *senses*, not words, to the configured local LM Studio model. The standalone `classify` CLI defaults to 20 senses/request; the `db-full` workflow defaults to a conservative 2 senses/request pending live verification; override with `--batch-size 10`, `20`, `40`, or another positive size up to 100. `ZIPEEK_AI_BATCH_SIZE` controls the `crates/zipeek-db-gen/src/ai_workflow.rs` orchestration; `ZIPEEK_AI_MODEL`, endpoint and timeout retain existing semantics. Context capacity (30k tokens) is not a promise that a 100-sense response fits the output-token budget.
 
 The V4 system prompt distinguishes English sense glosses, grammatical functions and category evidence, prohibits cross-sense label leakage, and treats lexical relationships and source annotations as data rather than an excuse to infer additional semantics. `results` must contain **exactly one** record per requested `(word_id,sense_order)`, no unexpected/duplicated IDs, and only allowed labels. All records are validated before any records from a request are checkpointed. On malformed output or invalid classification, a multi-sense request is split into halves recursively (iteratively scheduled), while single-sense fallback uses the previous bounded recovery procedure. Non-recoverable model/transport errors abort with previous checkpoints intact; malformed single-sense output is deferred and reported.
 

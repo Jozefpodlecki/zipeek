@@ -29,7 +29,7 @@ cargo check --workspace --locked
 cargo check -p zipeek-web --target wasm32-unknown-unknown --locked
 cargo test -p zipeek-exercises --locked crossword
 cargo test -p zipeek-web --locked
-node --test scripts/*.test.cjs
+cargo test --locked -p zipeek-e2e
 ```
 
 `cargo make release-check` runs the configured gates. Source-text Node tests do not certify Rust compilation, DuckDB integration or rendered Chrome behaviour. See [Testing](../acceptance/testing.md) and [UI architecture](../../architecture/ui-architecture.md).

@@ -1,4 +1,4 @@
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 use zipeek_db_gen::{database::GeneratorDatabase, schema::create_schema};
 
 fn scalar(connection: &Connection, query: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -154,7 +154,7 @@ fn identity_candidates_cannot_claim_unapproved_verified_status()
 #[test]
 fn distinct_polyphonic_character_readings_are_supported_by_schema()
 -> Result<(), Box<dyn std::error::Error>> {
-    use duckdb_neo::Parameters;
+    use zipeek_db::native::Parameters;
     use zipeek_db_gen::{database::GeneratorDatabase, schema::create_schema};
 
     let database = GeneratorDatabase::open()?;

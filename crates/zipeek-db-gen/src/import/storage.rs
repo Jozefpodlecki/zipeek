@@ -1,5 +1,7 @@
-use duckdb_neo::{Parameters, QueryParameter, connection::Connection};
+use zipeek_db::native::{Parameters, QueryParameter, Connection};
 use zipeek_core::{PartOfSpeech, Word};
+
+use crate::database::DatabaseSession;
 
 use super::{
     CharacterReading, ImportError, SourceSense, enrichment::enrich_dictionary,
@@ -26,8 +28,8 @@ pub fn insert_full_dictionary(
     senses: &[SourceSense],
     readings: &[CharacterReading],
 ) -> Result<(), ImportError> {
-    connection
-        .execute("BEGIN TRANSACTION", Parameters::None)
+    let mut transaction = DatabaseSession::new(connection)
+        .transaction()
         .map_err(|source| ImportError::Insert {
             word_id: None,
             source,
@@ -38,35 +40,32 @@ pub fn insert_full_dictionary(
         readings = readings.len(),
         "Starting dictionary insertion"
     );
-    let result = insert_batch(connection, words)
+    let result = insert_batch(transaction.connection(), words)
         .and_then(|()| {
             tracing::info!("Populating word memberships");
-            populate_memberships(connection)
+            populate_memberships(transaction.connection())
         })
         .and_then(|()| {
             tracing::info!("Inserting dictionary senses");
-            insert_senses(connection, senses)
+            insert_senses(transaction.connection(), senses)
         })
         .and_then(|()| {
             tracing::info!("Inserting character readings");
-            insert_character_readings(connection, readings)
+            insert_character_readings(transaction.connection(), readings)
         })
         .and_then(|()| {
             tracing::info!("Enriching character and vocabulary relationships");
-            enrich_dictionary(connection, words, senses, readings)
+            enrich_dictionary(transaction.connection(), words, senses, readings)
         });
     match result {
-        Ok(()) => match connection.execute("COMMIT", Parameters::None) {
-            Ok(_) => Ok(()),
+        Ok(()) => match transaction.commit() {
+            Ok(()) => Ok(()),
             Err(source) => rollback(
-                connection,
-                ImportError::Insert {
-                    word_id: None,
-                    source,
-                },
+                &mut transaction,
+                ImportError::Insert { word_id: None, source },
             ),
         },
-        Err(error) => rollback(connection, error),
+        Err(error) => rollback(&mut transaction, error),
     }
 }
 
@@ -395,9 +394,9 @@ fn insert_senses(connection: &Connection, senses: &[SourceSense]) -> Result<(), 
     Ok(())
 }
 
-fn rollback(connection: &Connection, original: ImportError) -> Result<(), ImportError> {
-    match connection.execute("ROLLBACK", Parameters::None) {
-        Ok(_) => Err(original),
+fn rollback(transaction: &mut crate::database::Transaction<'_>, original: ImportError) -> Result<(), ImportError> {
+    match transaction.rollback() {
+        Ok(()) => Err(original),
         Err(rollback) => Err(ImportError::Rollback {
             original: Box::new(original),
             rollback,

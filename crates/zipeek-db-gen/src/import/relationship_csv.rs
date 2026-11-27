@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use duckdb_neo::{Parameters, connection::Connection};
+use zipeek_db::native::{Parameters, Connection};
 
 use super::ImportError;
 
@@ -133,7 +133,7 @@ mod tests {
         time::{SystemTime, UNIX_EPOCH},
     };
 
-    use duckdb_neo::{Parameters, connection::Connection};
+    use zipeek_db::native::{Parameters, Connection};
 
     use crate::{database::GeneratorDatabase, schema::create_schema};
 
@@ -147,22 +147,6 @@ mod tests {
                 .starts_with("word,relation,related_word")
         );
         assert!(BUNDLED_RELATIONSHIPS.lines().count() > 200_000);
-    }
-
-    fn first_string(
-        connection: &Connection,
-        sql: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        let mut result = connection.query(sql, Parameters::None)?;
-        let chunk = result.next_chunk()?.ok_or("no query result")?;
-        let vector = chunk.get_vector_at::<String>(0)?;
-        let reader = vector.reader()?;
-        Ok(reader
-            .iter()
-            .next()
-            .flatten()
-            .ok_or("null result")?
-            .to_owned())
     }
 
     #[test]
@@ -188,45 +172,13 @@ mod tests {
         let imported = import_from_path(connection, &path, 4);
         let _ = fs::remove_file(&path);
         imported?;
-        assert_eq!(
-            first_string(connection, "SELECT COUNT(*)::VARCHAR FROM word_relations")?,
-            "4"
-        );
-        assert_eq!(
-            first_string(
-                connection,
-                "SELECT source_resolution FROM word_relations WHERE source_spelling = '行'"
-            )?,
-            "ambiguous"
-        );
-        assert_eq!(
-            first_string(
-                connection,
-                "SELECT (source_word_id IS NULL)::VARCHAR FROM word_relations WHERE source_spelling = '行'"
-            )?,
-            "true"
-        );
-        assert_eq!(
-            first_string(
-                connection,
-                "SELECT (target_word_id = 3)::VARCHAR FROM word_relations WHERE source_spelling = '行'"
-            )?,
-            "true"
-        );
-        assert_eq!(
-            first_string(
-                connection,
-                "SELECT target_resolution FROM word_relations WHERE target_spelling = '未收录'"
-            )?,
-            "missing"
-        );
-        assert_eq!(
-            first_string(
-                connection,
-                "SELECT COUNT(*)::VARCHAR FROM word_relations WHERE source_resolution = 'resolved' AND target_resolution = 'resolved'"
-            )?,
-            "1"
-        );
+        let count = |query: &'static str| crate::search::count(connection, query);
+        assert_eq!(count("SELECT count(*) FROM word_relations")?, 4);
+        assert_eq!(count("SELECT count(*) FROM word_relations WHERE source_spelling = '行' AND source_resolution = 'ambiguous' AND source_word_id IS NULL")?, 2);
+        assert_eq!(count("SELECT count(*) FROM word_relations WHERE source_spelling = '行' AND target_spelling = '银行' AND target_word_id = 3")?, 1);
+        assert_eq!(count("SELECT count(*) FROM word_relations WHERE target_spelling = '未收录' AND target_resolution = 'missing' AND target_word_id IS NULL")?, 2);
+        assert_eq!(count("SELECT count(*) FROM word_relations WHERE source_spelling = '银行' AND source_resolution = 'resolved' AND source_word_id = 3 AND target_spelling = '猫' AND target_resolution = 'resolved' AND target_word_id = 4")?, 1);
+        assert_eq!(count("SELECT count(*) FROM word_relations WHERE source_resolution = 'resolved' AND target_resolution = 'resolved'")?, 1);
         Ok(())
     }
 

@@ -18,6 +18,15 @@ This index describes the **checked-in source and installed manifest**, not an or
 
 The manifest includes checksums, source metadata, table names and generated-time properties. It declares 312,649 character occurrences and 11,846 explicit character readings. The 12,188 distinct HSK source reading keys described in the source audit are not the row count of this expanded dictionary. The original **12,100-row, 10-column HSK-only snapshot** is historical, not the installed database. The `words` compatibility projection remains ten columns, but normalized tables, senses, membership, classifications and identity candidates are part of the generated schema. The checked-in manifest lists the `character_readings` table, although its physical contents remain unverified until the database file is opened. See [schema](schema.md).
 
+
+The generator copies the maintained [artifact attribution notice](artifact-attribution.md) into the published dictionary as `ATTRIBUTION.md`; the notice source is documentation, not Rust code.
+
+## Generated dictionary search index (R706 pending regeneration)
+
+The generator source now defines `word_search_documents` and `word_search_keys`, both keyed by the unchanged `words.id`. Search documents combine English headword glosses with lexical sense definitions. Search keys preserve Hanzi and precompute compact tone-folded pinyin and numeric pinyin. The DuckDB FTS index targets `word_search_documents.english_text` rather than just `words.english`.
+
+**The installed manifest values above still describe the old generated artifact.** The new schema and FTS index must be generated through `cargo run -p zipeek-cli --locked -- db-gen generate --output target/db-workflow/search-r706`, verified after read-only reopen, tested on both native and WASM, and installed through the existing verified installer. No change to the user's personal database is required. Runtime dictionary autocomplete adoption is a separate milestone.
+
 ## Installer safety
 
 `cargo make db-install` now publishes only verified dictionary artifacts (the database and gzip, manifest, diagnostics, pinned input metadata, attribution, and license notices). It leaves the existing `static/` directory and unrelated Practice, Courses, brand and Docs assets untouched. Obsolete timestamped dictionary files are moved to `target/db-workflow/backups/` for recovery. The preload in `index.html` is changed only after the dictionary files are published. The installer does not regenerate the database.
@@ -68,3 +77,5 @@ Focused generator tests cover unambiguous, ambiguous and missing endpoint resolu
 The generated `character_gloss_candidates` table references `(word_id, sense_order)` in `word_senses`. The artifact writer now copies `word_senses` before this dependent table, preserving the schema's foreign key. A schema-driven unit test checks all foreign-key dependencies between tables in the artifact-copy sequence. The user's 2026-11-23 native generator run reached the artifact-copy stage after populating 267,447 word relationships but failed on the prior copy order; a completed artifact is not yet verified.
 
 Relationship resolution counters are now a mutually exclusive partition: `fully_resolved`, `ambiguous_only`, `missing_only`, and `ambiguous_and_missing`. This avoids double-counting rows that have one ambiguous and one missing endpoint. The source spellings remain intact irrespective of resolution.
+
+The database workflow is implemented by `zipeek-cli`. Use `cargo make db-generate`, `cargo make db-compress`, `cargo make db-install`, then `cargo make db-browse-check`. The final command verifies the installed dictionary manifest, bundled file checksums, pinned inputs, Browse tables and normalized search tables. No Node-based `db-workflow.cjs` implementation is retained.

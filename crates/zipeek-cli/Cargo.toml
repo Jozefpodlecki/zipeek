@@ -8,12 +8,16 @@ license.workspace = true
 publish = false
 
 [dependencies]
-zip = { version = "=9.4.1", default-features = false, features = ["deflate"] }
-clap = { version = "=4.6.7", features = ["derive"] }
-tracing-subscriber = { version = "=0.3.23", features = ["env-filter"] }
+zip = { version = "9.4.1", default-features = false, features = ["deflate"] }
+clap = { version = "4.6.7", features = ["derive"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "fs", "sync"] }
 chrono = { workspace = true }
 serde_json.workspace = true
 sha2 = { workspace = true }
 flate2 = { workspace = true }
 zipeek-geo-assets = { path = "../zipeek-geo-assets" }
+
+zipeek-db-gen = { path = "../zipeek-db-gen" }
+zipeek-core = { path = "../zipeek-core" }
+tracing = { workspace = true }

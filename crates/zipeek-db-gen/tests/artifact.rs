@@ -5,7 +5,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
-use duckdb_neo::Parameters;
+use zipeek_db::native::Parameters;
 use sha2::{Digest, Sha256};
 use zipeek_db_gen::{
     artifact::{ArtifactError, ArtifactReport, generate, verify_database},
@@ -69,6 +69,8 @@ fn independent_exports_have_identical_logical_content_schema_ids_and_diagnostics
     let first = generate(&manifest(), &fixture.directory("first"))?;
     let second = generate(&manifest(), &fixture.directory("second"))?;
     assert_eq!(first.rows, 9);
+    assert_eq!(verify_database(&fixture.directory("first/hanzi.duckdb"))?.search_documents.len(), first.rows);
+    assert_eq!(verify_database(&fixture.directory("first/hanzi.duckdb"))?.search_keys.len(), first.rows);
     assert_eq!(first.identity_candidates, first.rows);
     assert!(first.character_occurrences >= first.rows);
     assert!(first.character_reading_count > 0);
@@ -103,6 +105,8 @@ fn independent_exports_have_identical_logical_content_schema_ids_and_diagnostics
             "word_characters",
             "word_hsk_membership",
             "word_pos_membership",
+            "word_search_documents",
+            "word_search_keys",
             "word_senses",
             "words",
         ]
@@ -200,29 +204,11 @@ fn empty_dictionary_keeps_complete_schema_and_produces_valid_checksums()
     assert_eq!(report.diagnostics, 0);
     let snapshot = verify_database(&fixture.directory("empty/hanzi.duckdb"))?;
     assert!(snapshot.rows.is_empty());
+    assert!(snapshot.search_documents.is_empty());
+    assert!(snapshot.search_keys.is_empty());
     assert_eq!(snapshot.columns.len(), 10);
     assert_eq!(snapshot.constraints.len(), 5);
     assert_eq!(snapshot.indexes.len(), 2);
-    Ok(())
-}
-
-#[test]
-fn command_refuses_existing_output_and_unknown_options() -> Result<(), Box<dyn Error>> {
-    let fixture = Fixture::new()?;
-    let output = fixture.directory("existing");
-    fs::create_dir(&output)?;
-    let result = std::process::Command::new(env!("CARGO_BIN_EXE_zipeek-db-gen"))
-        .arg("generate")
-        .arg("--output")
-        .arg(&output)
-        .output()?;
-    assert!(!result.status.success());
-    assert!(String::from_utf8(result.stderr)?.contains("already exists"));
-    let invalid = std::process::Command::new(env!("CARGO_BIN_EXE_zipeek-db-gen"))
-        .arg("--unknown")
-        .output()?;
-    assert!(!invalid.status.success());
-    assert!(String::from_utf8(invalid.stderr)?.contains("Usage:"));
     Ok(())
 }
 

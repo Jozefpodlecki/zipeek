@@ -11,7 +11,7 @@ Source: CC-CEDICT 2026-10-26 (CC BY-SA 4.0), SHA-256 `3d8967fe566bc23a74f8ba008d
 
 **Important**: These are deterministic pattern-based suggestions, **not classifications manually or individually reviewed by ChatGPT**. Every gloss is present, with explicit unclassified results where evidence is insufficient. A generic subject-word match may still yield a false positive; inspect evidence and review before database publication. The original source-line number and gloss index are stable locators within the source file; they are **not** HSK database word/sense IDs. The production db-gen classification cache has a different schema and source-sense digest, so this export must not be pasted into that cache.
 
-Regenerate from repository root with `node scripts/cedict-classify.cjs`.
+The historical Node classification-export helper was retired. Use the library-backed `zipeek-cli db-gen` workflow and its checked-in classification inputs; no standalone JavaScript exporter is maintained.
 
 ## Consumption by `db-full` (R179)
 

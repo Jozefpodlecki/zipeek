@@ -26,6 +26,8 @@ The Rust CLI command `zipeek-cli desktop-sidecars [--release]` stages existing c
 
 Tauri's `bundle.externalBin` declares all three binary basenames, and bundles them with the installer. Tauri development and installed builds place the runnable sidecars near the app executable under their unsuffixed names. The process registry resolves that sibling path by default; absolute overrides `ZIPEEK_TAURI_AI_SERVER_EXE`, `ZIPEEK_TAURI_IMAGE_SERVER_EXE` and `ZIPEEK_TAURI_SPEECH_SERVER_EXE` remain available for debugging. Build products under `crates/zipeek-app/binaries/` are ignored by Git and excluded from Zipeek source packages.
 
+On Windows, a desktop rebuild can fail in `tauri_build::build()` with `os error 32` when another process has a bundled sidecar executable or DLL open. Stop running Zipeek desktop instances and owned AI/image/speech sidecar processes, then retry `cargo make desktop-dev`. Do not delete the generated dictionary, rebuild it, or terminate unrelated processes to resolve a file lock. The sidecar staging command compares existing files byte-for-byte and skips unchanged binaries and dictionary bytes, reducing unnecessary overwrites; it cannot bypass a lock held by the Tauri build itself or another process.
+
 `cargo tauri` requires the Tauri CLI to be installed (`cargo install tauri-cli --locked`). Web development still requires Trunk and the usual prepared vendor assets. The existing Zipeek favicon is used for the bundled desktop icon files.
 
 ## Supported service modes

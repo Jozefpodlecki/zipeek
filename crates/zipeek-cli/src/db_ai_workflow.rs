@@ -89,7 +89,7 @@ fn pending_from_plan(stdout: &str) -> Result<usize, Box<dyn Error>> {
 fn run_db_gen(args: &[String], capture: bool) -> Result<String, Box<dyn Error>> {
     let exe = env::current_exe()?;
     let mut cmd = Command::new(exe);
-    cmd.args(args);
+    cmd.arg("db-gen").args(args);
     if capture {
         cmd.stdout(Stdio::piped());
     } else {
@@ -206,7 +206,7 @@ fn prepare_cedict_cache(
         &[
             "classify-plan".into(),
             "--model".into(),
-            crate::cedict_classifications::MODEL.into(),
+            zipeek_db_gen::cedict_classifications::MODEL.into(),
             "--cache".into(),
             cache_str.clone(),
         ],
@@ -281,7 +281,7 @@ fn run_inner(smoke_only: bool) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub(crate) fn run(smoke_only: bool) -> std::process::ExitCode {
+pub fn run(smoke_only: bool) -> std::process::ExitCode {
     match run_inner(smoke_only) {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(error) => {

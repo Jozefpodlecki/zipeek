@@ -12,7 +12,7 @@ use crate::{
     llm::classification::{self, ClassificationLabels},
 };
 
-pub(crate) const MODEL: &str = "cedict-gloss-rules-v1";
+pub const MODEL: &str = "cedict-gloss-rules-v1";
 
 #[derive(Debug, Deserialize)]
 struct GlossClassification {
@@ -44,7 +44,7 @@ struct Candidate {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct Summary {
+pub struct Summary {
     pub total: usize,
     pub exact_source: usize,
     pub exact_gloss: usize,
@@ -61,7 +61,7 @@ fn gloss_key(word: &str, pinyin: &str, gloss: &str) -> (String, String, String) 
     )
 }
 
-pub(crate) fn import(
+pub fn import(
     export: &Path,
     manifest_path: &Path,
     cedict_source: &Path,

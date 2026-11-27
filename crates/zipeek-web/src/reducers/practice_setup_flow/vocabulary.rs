@@ -36,6 +36,16 @@ mod tests {
     }
 
     #[test]
+    fn mixed_mode_keeps_both_hsk_systems() {
+        let mut draft = PracticeDraft::default();
+        toggle_hsk_band(&mut draft, HskBand::new(2, 5).unwrap());
+        if let VocabularySource::Dictionary(filters) = &draft.vocabulary {
+            assert!(filters.hsk.contains(&HskBand::new(2, 5).unwrap()));
+            assert!(filters.hsk.contains(&HskBand::new(3, 1).unwrap()));
+        }
+    }
+
+    #[test]
     fn valid_system_replaces_other_system_bands() {
         let mut draft = PracticeDraft::default();
         assert!(select_hsk_standard(&mut draft, 2));

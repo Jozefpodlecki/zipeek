@@ -1,11 +1,11 @@
 # Native dictionary generator
 
-The implemented native generator is [`crates/zipeek-db-gen`](../../../crates/zipeek-db-gen), not the retired `crates/db-gen` path. Its Cargo package, CLI commands and dependency pins are defined by its current Cargo manifest, `src/cli.rs` and `src/policy.rs`.
+The implemented native generator is [`crates/zipeek-db-gen`](../../../crates/zipeek-db-gen), not the retired `crates/db-gen` path. Its library API and generator policy are defined in the crate; command parsing is owned by [`zipeek-cli/src/db_gen.rs`](../../../crates/zipeek-cli/src/db_gen.rs). No `zipeek-db-gen` executable is built.
 
 ## Source-verified pipeline
 
 1. `inputs/` verifies the pinned HSK and CC-CEDICT bytes and associated notices and hashes.
-2. `database.rs` opens `duckdb-neo`, requiring engine `v2.0.0` and explicit writable compatibility `v2.0.0`.
+2. `zipeek-db::native::GeneratorDatabase` owns the native DuckDB connection and session/transaction lifecycle; generator code uses that boundary, requiring engine `v2.0.0` and explicit writable compatibility `v2.0.0`.
 3. `schema.sql` creates compatibility `words` plus normalized senses, memberships, characters, identity candidates, controlled categories/PoS and classification relations.
 4. [`generator.rs`](../../../crates/zipeek-db-gen/src/generator.rs) parses HSK, applies CC-CEDICT gloss fallback and expands additional CC-CEDICT readings, retaining explicit character-reading data. `import/storage.rs` writes the relational representation.
 5. `artifact/writer.rs` stages the native output, copies tables, validates logical snapshots and a reopened read-only database, and publishes only on success. Optional approved classification cache data can be applied before snapshotting.

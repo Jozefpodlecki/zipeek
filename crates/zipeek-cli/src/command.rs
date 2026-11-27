@@ -49,7 +49,14 @@ pub enum Command {
         release: bool,
     },
 
+    DbBrowseCheck,
+
     DbCompress,
+
+    DbGen {
+        #[command(subcommand)]
+        command: crate::db_gen::Command,
+    },
 
     DbGenerate {
         #[arg(long)]
@@ -235,6 +242,15 @@ pub async fn run(args: Cli) -> Result<(), CliError> {
             .map_err(|error| CliError::command("desktop-frontend", error)),
         Command::DesktopSidecars { release } => desktop_sidecars::stage(&root, release)
             .map_err(|error| CliError::command("desktop-sidecars", error.into())),
+        Command::DbGen { command } => {
+            if crate::db_gen::run_cli(command) == std::process::ExitCode::SUCCESS {
+                Ok(())
+            } else {
+                Err(CliError::command("db-gen", std::io::Error::other("generator command failed").into()))
+            }
+        }
+        Command::DbBrowseCheck => database::browse_check(&root)
+            .map_err(|error| CliError::command("db-browse-check", error)),
         Command::DbCompress => database::compress_latest(&root)
             .map_err(|error| CliError::command("db-compress", error)),
         Command::DbGenerate {
@@ -435,15 +451,15 @@ fn release_key(name: &str) -> Option<(u64, bool, String)> {
         return None;
     }
     let number = number.parse::<u64>().ok().filter(|number| *number > 0)?;
-    let (checkpoint, remaining) = match remaining.strip_prefix("WIP-") {
-        Some(rest) => (true, rest),
-        None => match remaining.strip_suffix("-WIP") {
-            Some(rest) => (true, rest),
-            None => (false, remaining),
+    let (description_and_date, timestamp) = remaining.rsplit_once('-')?;
+    let (description_with_marker, date) = description_and_date.rsplit_once('-')?;
+    let (checkpoint, description) = match description_with_marker.strip_prefix("WIP-") {
+        Some(description) => (true, description),
+        None => match description_with_marker.strip_suffix("-WIP") {
+            Some(description) => (true, description),
+            None => (false, description_with_marker),
         },
     };
-    let (description_and_date, timestamp) = remaining.rsplit_once('-')?;
-    let (description, date) = description_and_date.rsplit_once('-')?;
     if description.is_empty()
         || !description
             .bytes()
@@ -606,6 +622,30 @@ mod tests {
             "zipeek-R192-test-20261106-120000.tar.gz",
         ] {
             assert!(release_key(name).is_none(), "unexpectedly accepted {name}");
+        }
+    }
+
+    #[test]
+    fn database_make_tasks_use_the_cli_binary() {
+        assert!(matches!(
+            Cli::try_parse_from(["zipeek-cli", "db-browse-check"])
+                .unwrap()
+                .command,
+            Command::DbBrowseCheck
+        ));
+        let makefile = include_str!("../../../Makefile.toml");
+        assert!(!makefile.contains("db-workflow.cjs"));
+        assert!(!makefile.contains("scripts/"));
+        assert!(!makefile.contains("command = \"node\""));
+        assert!(makefile.contains("target/release/zipeek-cli.exe"));
+        assert!(makefile.contains("\"db-browse-check\""));
+        assert!(!makefile.contains("\"-p\", \"zipeek-db-gen\""));
+        for command in [
+            "\"db-gen\", \"check\"",
+            "\"db-gen\", \"ai-workflow\", \"--smoke\"",
+            "\"db-gen\", \"ai-workflow\", \"--classify-only\"",
+        ] {
+            assert!(makefile.contains(command), "missing CLI task: {command}");
         }
     }
 

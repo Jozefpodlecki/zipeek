@@ -1,5 +1,6 @@
 use std::{
-    fs, io,
+    fs,
+    io::{self, Read},
     path::{Path, PathBuf},
     process::Command,
 };
@@ -37,6 +38,52 @@ fn stage_paths(root: &Path, release: bool, triple: &str) -> [(PathBuf, PathBuf);
     })
 }
 
+fn files_match(source: &Path, destination: &Path) -> io::Result<bool> {
+    let source_metadata = fs::metadata(source)?;
+    let destination_metadata = match fs::metadata(destination) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+    };
+    if !source_metadata.is_file()
+        || !destination_metadata.is_file()
+        || source_metadata.len() != destination_metadata.len()
+    {
+        return Ok(false);
+    }
+    let mut source_reader = io::BufReader::new(fs::File::open(source)?);
+    let mut destination_reader = io::BufReader::new(fs::File::open(destination)?);
+    let mut source_chunk = [0_u8; 64 * 1024];
+    let mut destination_chunk = [0_u8; 64 * 1024];
+    loop {
+        let count = source_reader.read(&mut source_chunk)?;
+        if count == 0 {
+            return Ok(destination_reader.read(&mut destination_chunk[..1])? == 0);
+        }
+        destination_reader.read_exact(&mut destination_chunk[..count])?;
+        if source_chunk[..count] != destination_chunk[..count] {
+            return Ok(false);
+        }
+    }
+}
+
+fn stage_file(source: &Path, destination: &Path) -> io::Result<bool> {
+    if files_match(source, destination)? {
+        return Ok(false);
+    }
+    fs::copy(source, destination).map_err(|error| {
+        io::Error::new(
+            error.kind(),
+            format!(
+                "Cannot stage {} to {}: {error}. On Windows, close running Zipeek processes before rebuilding sidecars.",
+                source.display(),
+                destination.display(),
+            ),
+        )
+    })?;
+    Ok(true)
+}
+
 pub fn stage(root: &Path, release: bool) -> io::Result<()> {
     let rustc = Command::new("rustc").arg("-vV").output()?;
     if !rustc.status.success() {
@@ -71,19 +118,23 @@ pub fn stage(root: &Path, release: bool) -> io::Result<()> {
     fs::create_dir_all(root.join("crates/zipeek-app/binaries"))?;
     let dictionary_dir = root.join("crates/zipeek-app/binaries/dictionary");
     fs::create_dir_all(&dictionary_dir)?;
-    let staged = dictionary_dir.join("hanzi.duckdb.staging");
-    fs::copy(&dictionary.path, &staged)?;
-    let staged_hash =
-        crate::database::hash_file(&staged).map_err(|error| io::Error::other(error.to_string()))?;
-    if staged_hash.0 != dictionary.size_bytes || staged_hash.1 != dictionary.sha256 {
-        return Err(io::Error::other(
-            "Staged native dictionary checksum mismatch",
-        ));
+    let installed_dictionary = dictionary_dir.join("hanzi.duckdb");
+    if !files_match(&dictionary.path, &installed_dictionary)? {
+        let staged = dictionary_dir.join("hanzi.duckdb.staging");
+        fs::copy(&dictionary.path, &staged)?;
+        let staged_hash = crate::database::hash_file(&staged)
+            .map_err(|error| io::Error::other(error.to_string()))?;
+        if staged_hash.0 != dictionary.size_bytes || staged_hash.1 != dictionary.sha256 {
+            return Err(io::Error::other(
+                "Staged native dictionary checksum mismatch",
+            ));
+        }
+        fs::rename(&staged, &installed_dictionary)?;
     }
-    fs::rename(&staged, dictionary_dir.join("hanzi.duckdb"))?;
     for (source, destination) in paths {
-        fs::copy(&source, &destination)?;
-        println!("Staged {} -> {}", source.display(), destination.display());
+        if stage_file(&source, &destination)? {
+            println!("Staged {} -> {}", source.display(), destination.display());
+        }
     }
     if cfg!(windows) {
         let dll_dir = std::env::var_os("DUCKDB_LIB_DIR")
@@ -104,8 +155,9 @@ pub fn stage(root: &Path, release: bool) -> io::Result<()> {
             ));
         }
         let output = root.join("crates/zipeek-app/binaries/duckdb.dll");
-        fs::copy(&dll, &output)?;
-        println!("Staged {} -> {}", dll.display(), output.display());
+        if stage_file(&dll, &output)? {
+            println!("Staged {} -> {}", dll.display(), output.display());
+        }
     }
     Ok(())
 }
@@ -113,6 +165,28 @@ pub fn stage(root: &Path, release: bool) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unchanged_sidecar_is_not_rewritten() {
+        let directory = std::env::temp_dir().join(format!(
+            "zipeek-sidecar-copy-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&directory).unwrap();
+        let source = directory.join("source.exe");
+        let destination = directory.join("destination.exe");
+        fs::write(&source, b"same executable").unwrap();
+        assert!(stage_file(&source, &destination).unwrap());
+        assert!(!stage_file(&source, &destination).unwrap());
+        fs::write(&source, b"updated executable").unwrap();
+        assert!(stage_file(&source, &destination).unwrap());
+        assert_eq!(fs::read(destination).unwrap(), b"updated executable");
+        fs::remove_dir_all(directory).unwrap();
+    }
 
     #[test]
     fn reads_host_triple() {
